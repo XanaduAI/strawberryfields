@@ -256,7 +256,7 @@ def applied_cmds(monkeypatch):
                 for c in cmd.op._decompose(cmd.reg, **kwargs):
                     c.op.apply(c.reg, self.backend, **kwargs)
                     applied.append(c)
-        return applied, values
+        return applied, values, values
 
     with monkeypatch.context() as m:
         m.setattr(sf.LocalEngine, "_run_program", mock_run_prog)

@@ -56,6 +56,7 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
+        self.all_samples = None
 
         if isinstance(backend, str):
             self.backend_name = backend
@@ -123,6 +124,7 @@ class BaseEngine(abc.ABC):
             p._clear_regrefs()
         self.run_progs.clear()
         self.samples = None
+        self.all_samples = None
 
     def print_applied(self, print_fn=print):
         """Print all the Programs run since the backend was initialized.
@@ -272,12 +274,12 @@ class BaseEngine(abc.ABC):
                 p = p.compile(target, **compile_options)
             p.lock()
 
-            _, self.samples = self._run_program(p, **kwargs)
+            _, self.samples, self.all_samples = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
             prev = p
 
-        return Result(self.samples)
+        return Result(self.samples, all_samples=self.all_samples)
 
 
 class LocalEngine(BaseEngine):
@@ -316,7 +318,6 @@ class LocalEngine(BaseEngine):
     """
 
     def __init__(self, backend, *, backend_options=None):
-        self._all_samples = {}
         backend_options = backend_options or {}
         super().__init__(backend, backend_options)
 
@@ -324,7 +325,6 @@ class LocalEngine(BaseEngine):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
     def reset(self, backend_options=None):
-        self._all_samples = {}
         backend_options = backend_options or {}
         super().reset(backend_options)
         self.backend.reset(**self.backend_options)
@@ -336,11 +336,9 @@ class LocalEngine(BaseEngine):
     def _run_program(self, prog, **kwargs):
         applied = []
         samples_dict = {}
+        all_samples = {}
         batches = self.backend_options.get("batch_size", 0)
 
-        # Reset _all_samples for multiple runs
-        # _all_samples contains a list of measurements (values) for each mode (keys)
-        self._all_samples = {}
         for cmd in prog.circuit:
             try:
                 # try to apply it to the backend and, if op is a measurement, store it in values
@@ -351,16 +349,16 @@ class LocalEngine(BaseEngine):
                             samples_dict[r.ind] = val[:, :, i]
 
                             # Internally also store all the measurement outcomes
-                            if r.ind not in self._all_samples:
-                                self._all_samples[r.ind] = list()
-                            self._all_samples[r.ind].append(val[:, :, i])
+                            if r.ind not in all_samples:
+                                all_samples[r.ind] = list()
+                            all_samples[r.ind].append(val[:, :, i])
                         else:
                             samples_dict[r.ind] = val[:, i]
 
                             # Internally also store all the measurement outcomes
-                            if r.ind not in self._all_samples:
-                                self._all_samples[r.ind] = list()
-                            self._all_samples[r.ind].append(val[:, i])
+                            if r.ind not in all_samples:
+                                all_samples[r.ind] = list()
+                            all_samples[r.ind].append(val[:, i])
 
                 applied.append(cmd)
 
@@ -380,7 +378,7 @@ class LocalEngine(BaseEngine):
 
         samples = self._combine_and_sort_samples(samples_dict)
 
-        return applied, samples
+        return applied, samples, all_samples
 
     def _combine_and_sort_samples(self, samples_dict):
         """Helper function to combine the values in the samples dictionary sorted by its keys."""

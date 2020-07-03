@@ -222,14 +222,14 @@ class TestEngineProgramInteraction:
 
         # Check that the number of all the samples equals to the number
         # of measurements
-        assert len(eng._all_samples.values()) == 3
+        assert len(result.all_samples.values()) == 3
 
         correct_modes = [2, 1, 3]
         correct_samples = [[0], [0], [0]]
 
-        assert eng._all_samples[1] == [0]
-        assert eng._all_samples[3] == [0]
-        assert eng._all_samples[2] == [0]
+        assert result.all_samples[1] == [0]
+        assert result.all_samples[3] == [0]
+        assert result.all_samples[2] == [0]
 
     @pytest.mark.parametrize("eng", engines)
     def test_all_samples_multi_meas_per_mode(self, eng):
@@ -243,9 +243,9 @@ class TestEngineProgramInteraction:
 
         result = eng.run(prog)
 
-        assert eng._all_samples[1] == [0]
-        assert eng._all_samples[3] == [0]
-        assert [bool(i) for i in eng._all_samples[2]] == [0,1]
+        assert result.all_samples[1] == [0]
+        assert result.all_samples[3] == [0]
+        assert [bool(i) for i in result.all_samples[2]] == [0,1]
 
     @pytest.mark.parametrize("eng", engines)
     def test_all_samples_multi_runs(self, eng):
@@ -261,9 +261,9 @@ class TestEngineProgramInteraction:
 
         # Check that the number of all the samples equals to the number
         # of measurements
-        assert eng._all_samples[1] == [0]
-        assert eng._all_samples[3] == [0]
-        assert [bool(i) for i in eng._all_samples[2]] == [0,1]
+        assert result.all_samples[1] == [0]
+        assert result.all_samples[3] == [0]
+        assert [bool(i) for i in result.all_samples[2]] == [0,1]
 
         prog = sf.Program(5)
         with prog.context as q:
@@ -273,7 +273,7 @@ class TestEngineProgramInteraction:
 
         # Check that _all_samples contains the same elements and new items were
         # not appended
-        assert eng._all_samples[0] == [0]
+        assert result.all_samples[0] == [0]
 
     def test_all_samples_multiple_shots(self):
         """Test the case of storing all samples for multiple shots"""
@@ -285,16 +285,16 @@ class TestEngineProgramInteraction:
             ops.MeasureFock() | (q[1], q[3])
             ops.MeasureFock() | q[2]
 
-        eng.run(prog, shots=shots)
+        result = eng.run(prog, shots=shots)
 
-        assert len(eng._all_samples[1]) == 1
-        assert len(eng._all_samples[3]) == 1
-        assert len(eng._all_samples[2]) == 2
+        assert len(result.all_samples[1]) == 1
+        assert len(result.all_samples[3]) == 1
+        assert len(result.all_samples[2]) == 2
 
-        assert np.array_equal(eng._all_samples[1][0], np.array([0, 0, 0, 0, 0]))
-        assert np.array_equal(eng._all_samples[3][0], np.array([0, 0, 0, 0, 0]))
-        assert np.array_equal(eng._all_samples[2][0], np.array([0, 0, 0, 0, 0]))
-        assert np.array_equal(eng._all_samples[2][1], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[1][0], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[3][0], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[2][0], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[2][1], np.array([0, 0, 0, 0, 0]))
 
     def test_all_samples_batched(self):
         """Test the case of storing all samples for batches"""
@@ -306,15 +306,15 @@ class TestEngineProgramInteraction:
             ops.MeasureFock() | (q[1], q[3])
             ops.MeasureFock() | q[2]
 
-        res = eng.run(prog)
-        assert len(eng._all_samples[1]) == 1
-        assert len(eng._all_samples[3]) == 1
-        assert len(eng._all_samples[2]) == 2
+        result = eng.run(prog)
+        assert len(result.all_samples[1]) == 1
+        assert len(result.all_samples[3]) == 1
+        assert len(result.all_samples[2]) == 2
 
-        assert np.array_equal(eng._all_samples[1][0].numpy(), np.array([[0], [0]]))
-        assert np.array_equal(eng._all_samples[3][0].numpy(), np.array([[0], [0]]))
-        assert np.array_equal(eng._all_samples[2][0].numpy(), np.array([[0], [0]]))
-        assert np.array_equal(eng._all_samples[2][1].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[1][0].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[3][0].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[2][0].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[2][1].numpy(), np.array([[0], [0]]))
 
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""
