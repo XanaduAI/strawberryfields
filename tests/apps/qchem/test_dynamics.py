@@ -296,9 +296,8 @@ class TestSampleTMSV:
             assert (samples >= 0).all()
 
 
-@pytest.mark.parametrize("func", sampling_func)
-@pytest.mark.parametrize("par", [d1, tmsv1])
-class CommonTests:
+@pytest.mark.parametrize("func, par", list(zip(sampling_func, [d1, tmsv1])))
+class TestCommon:
     """Common tests for all sample functions in the module, namely:
     ``strawberryfields.apps.qchem.dynamics.sample_fock``,
     ``strawberryfields.apps.qchem.dynamics.sample_coherent``,
