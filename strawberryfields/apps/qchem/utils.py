@@ -88,8 +88,8 @@ def duschinsky(
 
     d = (ri - rf) @ (Lf.T * m).T
 
-    l0 = np.diag((h / (wf * 100.0 * c)) ** 0.5 / 2.0 / pi) * 1.0e10 / m_u ** 0.5
+    l0_inv = np.diag((h / (wf * 100 * c)) ** (-0.5) * 2.0 * pi) / 1e10 * m_u ** 0.5
 
-    delta = np.array(d @ np.linalg.inv(l0))
+    delta = np.array(d @ l0_inv)
 
     return U, delta
