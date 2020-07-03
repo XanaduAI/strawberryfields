@@ -29,17 +29,18 @@ def duschinsky(
     The Duschinsky transformation relates the normal coordinates of the initial and
     final states in a vibronic transition, :math:`q_i` and :math:`q_f` respectively, as:
 
-    .. math:: q_f = U_d q_i + d.
+    .. math:: q_f = U q_i + d,
 
-    where :math:`U_d` is a matrix known as the Duschinsky rotation matrix and the displacement parameter
-    :math:`d` is related to the structural changes of the molecule during a vibronic transition.
-    The normal coordinates of a molecule can be represented in terms of atomic displacements as:
+    where :math:`U` is the Duschinsky rotation matrix and :math:`d` is a vector giving the
+    displacement between the equilibrium structures of the two states involved in the vibronic
+    transition. The normal coordinates of a molecule can be represented in terms of atomic
+    displacements as:
 
     .. math:: q = L^T \sqrt{m} (r -r_e),
 
     where :math:`r_e` represents the equilibrium geometry of the molecule, :math:`m` represents
     atomic masses and :math:`L` is a matrix containing the eigenvectors of the mass-weighted
-    Hessian. The Duschinsky parameters :math:`U_d` and :math:`d` can be obtained as:
+    Hessian. The Duschinsky parameters :math:`U` and :math:`d` can be obtained as:
 
     .. math:: U = L_f^T L_i,
 
@@ -49,8 +50,8 @@ def duschinsky(
 
     .. math:: \delta = l^{-1} d,
 
-    where :math:`l` is a diagonal matrix with elements containing the vibrational frequency of the final
-    state normal modes :math:`\omega`:
+    where :math:`l` is a diagonal matrix containing the vibrational frequencies :math:`\omega` of
+    the final state:
 
     .. math:: l_{kk} = \left ( \frac{\hbar }{2 \pi \omega_k c} \right )^{1/2},
 
@@ -68,7 +69,7 @@ def duschinsky(
     >>>                 1.4397000000, 0.0000000000, 0.0000000000])
     >>> wf = np.array([1363.210])
     >>> m = np.array([11.00931] * 3 + [1.00782] * 3)
-    >>> Ud, delta = duschinsky(Li, Lf, ri, rf, wf, m)
+    >>> U, delta = duschinsky(Li, Lf, ri, rf, wf, m)
     (array([[0.99999546]]), array([-1.1755024]))
 
     Args:
@@ -80,10 +81,10 @@ def duschinsky(
         m (array): atomic masses in unified atomic mass units
 
     Returns:
-        tuple[array, array]: Duschinsky rotation matrix :math:`U_d`, Duschinsky displacement vector
+        tuple[array, array]: Duschinsky rotation matrix :math:`U`, Duschinsky displacement vector
         :math:`\delta`
     """
-    Ud = (Lf.T * m ** 0.5) @ (Li.T * m ** 0.5).T
+    U = (Lf.T * m ** 0.5) @ (Li.T * m ** 0.5).T
 
     d = (ri - rf) @ (Lf.T * m).T
 
@@ -91,4 +92,4 @@ def duschinsky(
 
     delta = np.array(d @ np.linalg.inv(l0))
 
-    return Ud, delta
+    return U, delta

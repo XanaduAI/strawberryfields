@@ -29,7 +29,7 @@ wi_1 = np.array([2330.4])
 wf_1 = np.array([1363.2])
 m_1 = np.array([11.0093] * 3 + [1.0078] * 3)
 
-Ud_1 = np.array([0.99977449])
+U_1 = np.array([0.99977449])
 delta_1 = np.array([-1.17623073])
 
 Li_2 = np.array(
@@ -73,7 +73,7 @@ rf_2 = np.array(
 wf_2 = np.array([80.3, 143.9, 527.4, 1625.3, 3771.7, 3935.9])
 m_2 = np.array([18.9] * 3 + [15.9] * 3 + [1.0] * 6)
 
-Ud_2 = np.array(
+U_2 = np.array(
     [
         [0.98804024, -0.08463515, 0.0, 0.02641942, 0.0418268, 0.00652302],
         [0.08253868, 0.94550407, 0.0, -0.2482175, 0.11579147, -0.08123613],
@@ -85,8 +85,8 @@ Ud_2 = np.array(
 )
 delta_2 = np.array([-1.98471372, -0.04722818, 0.0, 0.21337783, 0.76966615, 0.53978258])
 
-p1 = [Li_1, Lf_1, ri_1, rf_1, wf_1, m_1, Ud_1, delta_1]
-p2 = [Li_2, Lf_2, ri_2, rf_2, wf_2, m_2, Ud_2, delta_2]
+p1 = [Li_1, Lf_1, ri_1, rf_1, wf_1, m_1, U_1, delta_1]
+p2 = [Li_2, Lf_2, ri_2, rf_2, wf_2, m_2, U_2, delta_2]
 
 
 @pytest.mark.parametrize("p", [p1, p2])
@@ -96,7 +96,7 @@ class TestDuschinsky:
     def test_duschinsky_parameters(self, p):
         """Test if function outputs the correct duschinsky parameters."""
 
-        Li, Lf, ri, rf, wf, m, Ud, delta = p
+        Li, Lf, ri, rf, wf, m, U, delta = p
 
-        assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[0], Ud)
+        assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[0], U)
         assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[1], delta)
