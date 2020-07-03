@@ -354,31 +354,32 @@ class TestNumberExpectation:
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
         n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
 
-        def analytic_var(a, r, phi):
+        def squared_term(a, r, phi):
             magnitude_squared = np.abs(a) ** 2
-            var_ex = - magnitude_squared + magnitude_squared ** 2 + 2 *\
+            squared_term = - magnitude_squared + magnitude_squared ** 2 + 2 *\
                 magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
                 np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
-                np.cosh(r)*np.sinh(r) + np.sinh(r)**4 - (magnitude_squared +\
-                        np.conj(np.sinh(r))*np.sinh(r)) ** 2 +\
+                np.cosh(r)*np.sinh(r) + np.sinh(r)**4 +\
                 np.cosh(r)*np.sinh(r)*np.sinh(2*r)
-            return var_ex
+            return squared_term
 
-        var_tol = 0.01
-        v0 = analytic_var(a0, r0, phi0)
-        v1 = analytic_var(a1, r1, phi1)
-
+        # Increasing the tolerance when using
+        # a cutoff
+        var_tol = tol if isinstance(backend, backends.BaseGaussian) else 7 * tol
         res = state.number_expectation([0, 1])
+        var = squared_term(a0, r0, phi0) * squared_term(a1, r1, phi1) - n0 ** 2 * n1 ** 2
         assert np.allclose(res[0], n0 * n1, atol=tol, rtol=0)
-        assert np.allclose(res[1], v0 * v1, atol=var_tol, rtol=0)
+        assert np.allclose(res[1], var, atol=var_tol, rtol=0)
 
         res = state.number_expectation([0])
+        var = squared_term(a0, r0, phi0) - n0 ** 2
         assert np.allclose(res[0], n0, atol=tol, rtol=0)
-        assert np.allclose(res[1], v0, atol=var_tol, rtol=0)
+        assert np.allclose(res[1], var, atol=var_tol, rtol=0)
 
         res = state.number_expectation([1])
+        var = squared_term(a1, r1, phi1) - n1 ** 2
         assert np.allclose(res[0], n1, atol=tol, rtol=0)
-        assert np.allclose(res[1], v1, atol=var_tol, rtol=0)
+        assert np.allclose(res[1], var, atol=var_tol, rtol=0)
 
     def test_number_expectation_repeated_modes(self, setup_backend, tol):
         """Tests that the correct exception is raised for repeated modes"""
