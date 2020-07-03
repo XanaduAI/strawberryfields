@@ -254,8 +254,7 @@ def prob(samples: list, excited_state: list) -> float:
 
     return samples.count(excited_state) / len(samples)
 
-  
-  
+
 def sample_tmsv(
     r: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
 ) -> list:
@@ -308,7 +307,7 @@ def sample_tmsv(
     eng = sf.LocalEngine(backend="gaussian")
     prog = sf.Program(2 * N)
 
-    # pylint: disable=expression-not-assigned,pointless-statement
+    # pylint: disable=expression-not-assigned
     with prog.context as q:
 
         for i in range(N):
@@ -330,7 +329,6 @@ def sample_tmsv(
     return s.tolist()
 
 
- 
 def sample_coherent(
     alpha: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
 ) -> list:
@@ -455,4 +453,3 @@ def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> n
             p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar=hbar))
 
     return p
-  

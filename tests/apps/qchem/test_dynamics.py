@@ -24,7 +24,7 @@ from strawberryfields.apps.qchem import dynamics
 
 pytestmark = pytest.mark.apps
 
-sampling_func = [dynamics.sample_fock, , dynamics.sample_coherent, dynamics.sample_tmsv]
+sampling_func = [dynamics.sample_fock, dynamics.sample_coherent, dynamics.sample_tmsv]
 
 t1 = 10.0
 t2 = 100.0
@@ -110,7 +110,6 @@ alpha2 = [[0.3, 0.5], [1.4, 0.1], [0.3, 0.5]]
 
 c1 = [alpha1, t1, U1, w1, ns1]
 c2 = [alpha2, t2, U2, w2, ns2]
-
 
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
@@ -241,7 +240,6 @@ class TestProb:
         with pytest.raises(ValueError, match="The excited state must not contain negative values"):
             samples, state, _ = e
             dynamics.prob(samples, [-i for i in state])
-
 
 
 @pytest.mark.parametrize("c", [c1, c2])
@@ -429,9 +427,8 @@ class TestMarginals:
         larger than zero."""
         with pytest.raises(ValueError, match="The number of vibrational states must be larger"):
             dynamics.marginals(self.mu, self.V, 0)
-            
-            
-            
+
+
 @pytest.mark.parametrize("tmsv", [tmsv1, tmsv2])
 class TestSampleTMSV:
     """Tests for the function ``strawberryfields.apps.qchem.dynamics.sample_tmsv``"""
