@@ -243,7 +243,7 @@ into canonical Gaussian boson sampling form.
 
 >>> prog2 = prog.compile('gbs')
 
-Programs can also be compiled for specifric hardware devices using the Xanadu Cloud platform.
+Programs can also be compiled for specific hardware devices using the Xanadu Cloud platform.
 After instantiating a remote engine for the target hardware, the device specifications
 can be accessed and used for compilation:
 

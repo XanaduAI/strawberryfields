@@ -20,7 +20,7 @@ from .gaussian import Gaussian
 
 
 class GBS(Gaussian):
-    """Circuit specifications for the general GBS class of circuits."""
+    """Compiler for the general GBS class of circuits."""
 
     short_name = "gbs"
     primitives = {

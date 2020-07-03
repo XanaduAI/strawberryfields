@@ -266,7 +266,7 @@ class BaseEngine(abc.ABC):
             # bind free parameters to their values
             p.bind_params(args)
 
-            # if the program hasn't been compiled for this backend, do it now
+            # compile the program for the correct backend
             target = self.backend.compiler
             if target is not None:
                 p = p.compile(target, **compile_options)

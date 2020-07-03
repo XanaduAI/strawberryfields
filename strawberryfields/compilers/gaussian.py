@@ -16,7 +16,7 @@ from .compiler import Compiler
 
 
 class Gaussian(Compiler):
-    """Circuit specifications for Gaussian backends."""
+    """Compiler for general Gaussian backends."""
 
     short_name = "gaussian"
     interactive = True
