@@ -15,12 +15,20 @@
 
 .. currentmodule:: strawberryfields.apps.qchem
 
+The following submodules are available:
+
 .. autosummary::
     :toctree: api
 
     dynamics
     vibronic
-    utils
+
+An additional utility function is also available:
+
+.. autosummary::
+    :toctree: api
+
+    duschinsky
 """
 import strawberryfields.apps.qchem.dynamics
 import strawberryfields.apps.qchem.vibronic
