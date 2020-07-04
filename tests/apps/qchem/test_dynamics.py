@@ -24,7 +24,8 @@ from strawberryfields.apps.qchem import dynamics
 
 pytestmark = pytest.mark.apps
 
-sampling_func = [dynamics.sample_fock, dynamics.sample_coherent]
+sampling_func = [dynamics.sample_fock, dynamics.sample_coherent, dynamics.sample_tmsv]
+
 t1 = 10.0
 t2 = 100.0
 a = 1.0 / np.sqrt(2.0)
@@ -96,6 +97,13 @@ sample2 = [
 ]
 prob1 = 0.4
 prob2 = 0.3
+
+
+sq1 = [[0.2, 0.1], [0.8, 0.2]]
+sq2 = [[0.2, 0.1], [0.8, 0.2], [0.2, 0.1]]
+
+tmsv1 = [sq1, t1, U1, w1, ns1]
+tmsv2 = [sq2, t2, U2, w2, ns2]
 
 alpha1 = [[0.3, 0.5], [1.4, 0.1]]
 alpha2 = [[0.3, 0.5], [1.4, 0.1], [0.3, 0.5]]
@@ -282,7 +290,7 @@ class TestSampleCoherent:
             assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
 
 
-@pytest.mark.parametrize("func, par", list(zip(sampling_func, [d1, c1])))
+@pytest.mark.parametrize("func, par", list(zip(sampling_func, [d1, c1, tmsv1])))
 class TestCommon:
     """Common tests for all sample functions in the dynamics module, namely:
     ``strawberryfields.apps.qchem.dynamics.sample_fock``,
@@ -355,10 +363,10 @@ class TestCommon:
         dims = samples.shape
 
         assert len(dims) == 2
-        # if func == dynamics.sample_tmsv:
-        #     assert dims == (par[4], 2 * len(par[2]))
-        # else:
-        assert dims == (par[4], len(par[2]))
+        if func == dynamics.sample_tmsv:
+            assert dims == (par[4], 2 * len(par[2]))
+        else:
+            assert dims == (par[4], len(par[2]))
         assert samples.dtype == "int"
         assert (samples >= 0).all()
 
@@ -419,3 +427,51 @@ class TestMarginals:
         larger than zero."""
         with pytest.raises(ValueError, match="The number of vibrational states must be larger"):
             dynamics.marginals(self.mu, self.V, 0)
+
+
+@pytest.mark.parametrize("tmsv", [tmsv1, tmsv2])
+class TestSampleTMSV:
+    """Tests for the function ``strawberryfields.apps.qchem.dynamics.sample_tmsv``"""
+
+    def test_invalid_n_samples(self, tmsv):
+        """Test if function raises a ``ValueError`` when a number of samples less than one is
+        requested."""
+        with pytest.raises(ValueError, match="Number of samples must be at least one"):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, U, w, 0)
+
+    def test_complex_unitary(self, tmsv):
+        """Test if function raises a ``ValueError`` when a complex unitary is given."""
+        with pytest.raises(
+            ValueError, match="The normal mode to local mode transformation matrix must be real"
+        ):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r, t, 1.0j * U, w, ns)
+
+    def test_invalid_mode(self, tmsv):
+        """Test if function raises a ``ValueError`` when the number of modes in the input state and
+        the normal-to-local transformation matrix are different."""
+        with pytest.raises(
+            ValueError,
+            match="Number of squeezing parameters and the number of modes in the normal-to-local",
+        ):
+            r, t, U, w, ns = tmsv
+            dynamics.sample_tmsv(r + [[0, 0]], t, U, w, ns)
+
+    def test_op_order(self, monkeypatch, tmsv):
+        """Test if function correctly applies the operations."""
+        if len(tmsv[0]) == 2:
+            mock_eng_run = mock.MagicMock()
+
+            with monkeypatch.context() as m:
+                m.setattr(sf.LocalEngine, "run", mock_eng_run)
+                dynamics.sample_tmsv(*tmsv)
+                p_func = mock_eng_run.call_args[0][0]
+
+            assert isinstance(p_func.circuit[0].op, sf.ops.S2gate)
+            assert isinstance(p_func.circuit[1].op, sf.ops.S2gate)
+            assert isinstance(p_func.circuit[2].op, sf.ops.Interferometer)
+            assert isinstance(p_func.circuit[3].op, sf.ops.Rgate)
+            assert isinstance(p_func.circuit[4].op, sf.ops.Rgate)
+            assert isinstance(p_func.circuit[5].op, sf.ops.Interferometer)
+            assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
