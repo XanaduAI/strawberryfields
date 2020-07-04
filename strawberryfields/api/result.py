@@ -60,10 +60,11 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, samples, is_stateful=True):
+    def __init__(self, samples, all_samples=None, is_stateful=True):
         self._state = None
         self._is_stateful = is_stateful
         self._samples = samples
+        self._all_samples = all_samples
 
     @property
     def samples(self):
@@ -76,6 +77,20 @@ class Result:
             program execution
         """
         return self._samples
+
+    @property
+    def all_samples(self):
+        """All measurement samples.
+
+        Returns a dictionary which associates each mode (keys) with the
+        list of measurements outcomes (values). For multiple shots or
+        batched execution arrays and tensors are stored.
+
+        Returns:
+            dict[int, list]: mode index associated with the list of
+                measurement outcomes
+        """
+        return self._all_samples
 
     @property
     def state(self):
