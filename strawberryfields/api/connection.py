@@ -154,6 +154,8 @@ class Connection:
 
         circuit = bb.serialize()
 
+        self.log.debug("Submitting job\n%s", circuit)
+
         path = "/jobs"
         response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit})
         if response.status_code == 201:

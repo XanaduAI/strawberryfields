@@ -52,7 +52,7 @@ import strawberryfields.api.job as job
 import strawberryfields.api.connection as connection
 import strawberryfields.engine as engine
 
-from strawberryfields.logger import logging_handler_defined, default_handler, create_logger
+from strawberryfields.logger import logging_handler_defined, output_handler, create_logger
 
 modules_contain_logging = [job, connection, engine]
 
@@ -114,7 +114,7 @@ class TestLogger:
         logger = create_logger(module.__name__)
         assert logger.level == logging.INFO
         assert logging_handler_defined(logger)
-        assert logger.handlers[0] == default_handler
+        assert logger.handlers[0] == output_handler
 
 class TestLoggerIntegration:
     """Tests that the SF logger integrates well with user defined logging

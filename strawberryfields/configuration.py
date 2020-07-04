@@ -15,12 +15,12 @@ r"""
 This module contains functions used to load, store, save, and modify
 configuration options for Strawberry Fields.
 """
+import collections
 import os
 
 import toml
 from appdirs import user_config_dir
 
-from strawberryfields.logger import create_logger
 
 DEFAULT_CONFIG_SPEC = {
     "api": {
@@ -28,15 +28,124 @@ DEFAULT_CONFIG_SPEC = {
         "hostname": (str, "platform.strawberryfields.ai"),
         "use_ssl": (bool, True),
         "port": (int, 443),
-    }
+    },
+    "logging": {"level": (str, "info"), "logfile": ((str, type(None)), None)},
 }
+"""dict: Nested dictionary representing the allowed configuration
+sections, options, default values, and allowed types for Strawberry
+Fields configurations. For each configuration option key, the
+corresponding value is a length-2 tuple, containing:
+
+* A type or tuple of types, representing the allowed type
+  for that configuration option.
+
+* The default value for that configuration option.
+
+.. note::
+
+    By TOML convention, keys with a default value of ``None``
+    will **not** be present in the generated/loaded configuration
+    file. This is because TOML has no concept of ``NoneType`` or ``Null``,
+    instead, the non-presence of a key indicates that the configuration
+    value is not set.
+"""
 
 
 class ConfigurationError(Exception):
     """Exception used for configuration errors"""
 
 
-def load_config(filename="config.toml", **kwargs):
+def _deep_update(source, overrides):
+    """Recursively update a nested dictionary.
+
+    This function is a generalization of Python's built in
+    ``dict.update`` method, modified to recursively update
+    keys with nested dictionaries.
+    """
+    for key, value in overrides.items():
+        if isinstance(value, collections.Mapping) and value:
+            # Override value is a non-empty dictionary.
+            # Update the source key with the override dictionary.
+            returned = _deep_update(source.get(key, {}), value)
+            source[key] = returned
+        elif value != {}:
+            # Override value is not an empty dictionary.
+            source[key] = overrides[key]
+    return source
+
+
+def _generate_config(config_spec, **kwargs):
+    """Generates a configuration, given a Strawberry Fields configuration
+    specification.
+
+    See :attr:`~.DEFAULT_CONFIG_SPEC` for an example of a valid configuration
+    specification.
+
+    Optional keyword arguments may be provided to override default values
+    in the cofiguration specification. If the provided override values
+    do not match the expected type defined in the configuration spec,
+    a ``ConfigurationError`` is raised.
+
+    **Example**
+
+    >>> _generate_config(DEFAULT_CONFIG_SPEC, api={"port": 54})
+    {
+        "api": {
+            "authentication_token": "",
+            "hostname": "platform.strawberryfields.ai",
+            "use_ssl": True,
+            "port": 54,
+        },
+ 'logging': {'level': 'info'}
+    }
+
+    Args:
+        config_spec (dict): nested dictionary representing the
+            configuration specification
+
+    Keyword Args:
+        Provided keyword arguments may overwrite default values of
+        matching keys.
+
+    Returns:
+        dict: the default configuration defined by the input config spec
+
+    Raises:
+        ConfigurationError: if provided keyword argument overrides do not
+        match the expected type defined in the configuration spec.
+    """
+    res = {}
+    for k, v in config_spec.items():
+        if isinstance(v, tuple):
+            # config spec value v represents the allowed type and default value
+
+            if k in kwargs:
+                # Key also exists as a keyword argument.
+                # Perform type validation.
+                if not isinstance(kwargs[k], v[0]):
+                    raise ConfigurationError(
+                        "Expected type {} for option {}, received {}".format(
+                            v[0], k, type(kwargs[k])
+                        )
+                    )
+
+                if kwargs[k] is not None:
+                    # Only add the key to the configuration object
+                    # if the provided override is not None.
+                    res[k] = kwargs[k]
+            else:
+                if v[1] is not None:
+                    # Only add the key to the configuration object
+                    # if the default value is not None.
+                    res[k] = v[1]
+
+        elif isinstance(v, dict):
+            # config spec value is a configuration section
+            res[k] = _generate_config(v, **kwargs.get(k, {}))
+    return res
+
+
+def load_config(filename="config.toml", logging=True, **kwargs):
     """Load configuration from keyword arguments, configuration file or
     environment variables.
 
@@ -50,66 +159,65 @@ def load_config(filename="config.toml", **kwargs):
         2. data contained in environmental variables (if any)
         3. data contained in a configuration file (if exists)
 
+    Args:
+        filename (str): the name of the configuration file to look for
+        logging (bool): whether or not to log details
+
     Keyword Args:
-        filename (str): the name of the configuration file to look for.
-            Additional configuration options are detailed in
+        Additional configuration options are detailed in
             :doc:`/code/sf_configuration`
 
     Returns:
         dict[str, dict[str, Union[str, bool, int]]]: the configuration
     """
-    config = create_config()
-
     filepath = find_config_file(filename=filename)
 
-    if filepath is not None:
-        loaded_config = load_config_file(filepath)
-        api_config = get_api_config(loaded_config, filepath)
+    if logging:
+        # We import the create_logger function only if logging
+        # has been requested, to avoid circular imports.
+        from strawberryfields.logger import create_logger #pylint: disable=import-outside-toplevel
 
-        valid_api_options = keep_valid_options(api_config)
-        config["api"].update(valid_api_options)
-    else:
         log = create_logger(__name__)
-        log.warning("No Strawberry Fields configuration file found.")
 
+    if filepath is not None:
+        # load the configuration file
+        with open(filepath, "r") as f:
+            config = toml.load(f)
+
+        if logging:
+            log.debug("Configuration file %s loaded", filepath)
+
+        if "api" not in config and logging:
+            # Raise a warning if the configuration doesn't contain
+            # an API section.
+            log.warning(
+                'The configuration from the %s file does not contain an "api" section.', filepath
+            )
+
+    else:
+        config = {}
+
+        if logging:
+            log.warning("No Strawberry Fields configuration file found.")
+
+    # update the configuration from environment variables
     update_from_environment_variables(config)
 
-    valid_kwargs_config = keep_valid_options(kwargs)
-    config["api"].update(valid_kwargs_config)
+    # update the configuration from keyword arguments
+    for config_section, section_options in kwargs.items():
+        _deep_update(config, {config_section: section_options})
 
-    return config
+    # generate the configuration object by using the defined
+    # configuration specification at the top of the file
+    config = _generate_config(DEFAULT_CONFIG_SPEC, **config)
 
+    # Log the loaded configuration details, masking out the API key.
+    if logging:
+        config_details = "Loaded configuration: {}".format(config)
+        auth_token = config.get("api", {}).get("authentication_token", "")
+        config_details = config_details.replace(auth_token[5:], "*" * len(auth_token[5:]))
+        log.debug(config_details)
 
-def create_config(authentication_token=None, **kwargs):
-    """Create a configuration object that stores configuration related data
-    organized into sections.
-
-    The configuration object contains API-related configuration options. This
-    function takes into consideration only pre-defined options.
-
-    If called without passing any keyword arguments, then a default
-    configuration object is created.
-
-    Keyword Args:
-        Configuration options as detailed in :doc:`/code/sf_configuration`
-
-    Returns:
-        dict[str, dict[str, Union[str, bool, int]]]: the configuration
-            object
-    """
-    authentication_token = authentication_token or ""
-    hostname = kwargs.get("hostname", DEFAULT_CONFIG_SPEC["api"]["hostname"][1])
-    use_ssl = kwargs.get("use_ssl", DEFAULT_CONFIG_SPEC["api"]["use_ssl"][1])
-    port = kwargs.get("port", DEFAULT_CONFIG_SPEC["api"]["port"][1])
-
-    config = {
-        "api": {
-            "authentication_token": authentication_token,
-            "hostname": hostname,
-            "use_ssl": use_ssl,
-            "port": port,
-        }
-    }
     return config
 
 
@@ -164,11 +272,10 @@ def find_config_file(filename="config.toml"):
          Union[str, None]: the filepath to the configuration file or None, if
              no file was found
     """
-    directories = directories_to_check()
-    for directory in directories:
-        filepath = os.path.join(directory, filename)
-        if os.path.exists(filepath):
-            return filepath
+    directories = get_available_config_paths(filename=filename)
+
+    if directories:
+        return directories[0]
 
     return None
 
@@ -194,63 +301,13 @@ def directories_to_check():
     sf_user_config_dir = user_config_dir("strawberryfields", "Xanadu")
 
     directories.append(current_dir)
-    if sf_env_config_dir != "":
+
+    if sf_env_config_dir:
         directories.append(sf_env_config_dir)
+
     directories.append(sf_user_config_dir)
 
     return directories
-
-
-def load_config_file(filepath):
-    """Load a configuration object from a TOML formatted file.
-
-    Args:
-        filepath (str): path to the configuration file
-
-    Returns:
-         dict[str, dict[str, Union[str, bool, int]]]: the configuration
-            object that was loaded
-    """
-    with open(filepath, "r") as f:
-        config_from_file = toml.load(f)
-    return config_from_file
-
-
-def get_api_config(loaded_config, filepath):
-    """Gets the API section from the loaded configuration.
-
-    Args:
-        loaded_config (dict): the configuration that was loaded from the TOML config
-            file
-        filepath (str): path to the configuration file
-
-    Returns:
-        dict[str, Union[str, bool, int]]: the api section of the configuration
-
-    Raises:
-        ConfigurationError: if the api section was not defined in the
-            configuration
-    """
-    try:
-        return loaded_config["api"]
-    except KeyError:
-        log = create_logger(__name__)
-        log.error('The configuration from the %s file does not contain an "api" section.', filepath)
-        raise ConfigurationError
-
-
-def keep_valid_options(sectionconfig):
-    """Filters the valid options in a section of a configuration dictionary.
-
-    Args:
-        sectionconfig (dict[str, Union[str, bool, int]]): the section of the
-            configuration to check
-
-    Returns:
-        dict[str, Union[str, bool, int]]: the keep section of the
-            configuration
-    """
-    return {k: v for k, v in sectionconfig.items() if k in VALID_KEYS}
 
 
 def update_from_environment_variables(config):
@@ -271,13 +328,14 @@ def update_from_environment_variables(config):
         for key in sectionconfig:
             env = env_prefix + key.upper()
             if env in os.environ:
-                config[section][key] = parse_environment_variable(key, os.environ[env])
+                config[section][key] = _parse_environment_variable(section, key, os.environ[env])
 
 
-def parse_environment_variable(key, value):
+def _parse_environment_variable(section, key, value):
     """Parse a value stored in an environment variable.
 
     Args:
+        section (str): configuration section name
         key (str): the name of the environment variable
         value (Union[str, bool, int]): the value obtained from the environment
             variable
@@ -288,7 +346,7 @@ def parse_environment_variable(key, value):
     trues = (True, "true", "True", "TRUE", "1", 1)
     falses = (False, "false", "False", "FALSE", "0", 0)
 
-    if DEFAULT_CONFIG_SPEC["api"][key][0] is bool:
+    if DEFAULT_CONFIG_SPEC[section][key][0] is bool:
         if value in trues:
             return True
 
@@ -297,7 +355,7 @@ def parse_environment_variable(key, value):
 
         raise ValueError("Boolean could not be parsed")
 
-    if DEFAULT_CONFIG_SPEC["api"][key][0] is int:
+    if DEFAULT_CONFIG_SPEC[section][key][0] is int:
         return int(value)
 
     return value
@@ -450,21 +508,28 @@ def store_account(authentication_token, filename="config.toml", location="user_c
 
     filepath = os.path.join(directory, filename)
 
-    config = create_config(authentication_token=authentication_token, **kwargs)
-    save_config_to_file(config, filepath)
+    config = {}
 
+    # load the existing config if it already exists
+    if os.path.isfile(filepath):
+        with open(filepath, "r") as f:
+            config = toml.load(f)
 
-def save_config_to_file(config, filepath):
-    """Saves a configuration to a TOML file.
+    # update the loaded configuration file with the specified
+    # authentication token
+    kwargs.update({"authentication_token": authentication_token})
 
-    Args:
-        config (dict[str, dict[str, Union[str, bool, int]]]): the
-            configuration to be saved
-        filepath (str): path to the configuration file
-    """
+    # update the loaded configuration with any
+    # provided API options passed as keyword arguments
+    _deep_update(config, {"api": kwargs})
+
+    # generate the configuration object by using the defined
+    # configuration specification at the top of the file
+    config = _generate_config(DEFAULT_CONFIG_SPEC, **config)
+
     with open(filepath, "w") as f:
         toml.dump(config, f)
 
 
-VALID_KEYS = set(create_config()["api"].keys())
-DEFAULT_CONFIG = create_config()
+DEFAULT_CONFIG = _generate_config(DEFAULT_CONFIG_SPEC)
+SESSION_CONFIG = load_config(logging=False)

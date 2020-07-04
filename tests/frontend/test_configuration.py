@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Unit tests for the configuration module"""
+import copy
 import os
 import logging
 import pytest
@@ -46,7 +47,8 @@ EXPECTED_CONFIG = {
         "hostname": "platform.strawberryfields.ai",
         "use_ssl": True,
         "port": 443,
-    }
+    },
+    'logging': {'level': 'info'}
 }
 
 OTHER_EXPECTED_CONFIG = {
@@ -55,7 +57,8 @@ OTHER_EXPECTED_CONFIG = {
         "hostname": "SomeHost",
         "use_ssl": False,
         "port": 56,
-    }
+    },
+    "logging": {"level": "info"}
 }
 
 environment_variables = [
@@ -91,9 +94,12 @@ class TestLoadConfig:
             m.setenv("SF_API_PORT", "42")
 
             m.setattr(os, "getcwd", lambda: tmpdir)
-            configuration = conf.load_config(
-                authentication_token="SomeAuth", hostname="SomeHost", use_ssl=False, port=56
-            )
+            configuration = conf.load_config(api={
+                "authentication_token": "SomeAuth",
+                "hostname": "SomeHost",
+                "use_ssl": False,
+                "port": 56
+            })
 
         assert configuration == OTHER_EXPECTED_CONFIG
 
@@ -142,9 +148,8 @@ class TestLoadConfig:
             f.write(empty_file)
 
         with monkeypatch.context() as m:
-            with pytest.raises(conf.ConfigurationError, match=""):
-                m.setattr(os, "getcwd", lambda: tmpdir)
-                configuration = conf.load_config()
+            m.setattr(os, "getcwd", lambda: tmpdir)
+            configuration = conf.load_config()
 
         assert "does not contain an \"api\" section" in caplog.text
 
@@ -290,32 +295,31 @@ class TestActiveConfigs:
                                    general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
 
 
-class TestCreateConfigObject:
+class TestGenerateConfigObject:
     """Test the creation of a configuration object"""
 
-    def test_empty_config_object(self):
-        """Test that an empty configuration object can be created."""
-        config = conf.create_config(authentication_token="", hostname="", use_ssl="", port="")
-
-        assert all(value == "" for value in config["api"].values())
+    def test_type_validation(self):
+        """Test that passing an incorrect type raises an exception"""
+        with pytest.raises(conf.ConfigurationError, match="Expected type"):
+            config = conf._generate_config(
+                conf.DEFAULT_CONFIG_SPEC, api={"use_ssl":""}
+            )
 
     def test_config_object_with_authentication_token(self):
         """Test that passing only the authentication token creates the expected
         configuration object."""
-        assert (
-            conf.create_config(authentication_token="071cdcce-9241-4965-93af-4a4dbc739135")
-            == EXPECTED_CONFIG
+        config = conf._generate_config(
+            conf.DEFAULT_CONFIG_SPEC, api={"authentication_token":"071cdcce-9241-4965-93af-4a4dbc739135",}
         )
+        assert config == EXPECTED_CONFIG
 
     def test_config_object_every_keyword_argument(self):
         """Test that passing every keyword argument creates the expected
         configuration object."""
-        assert (
-            conf.create_config(
-                authentication_token="SomeAuth", hostname="SomeHost", use_ssl=False, port=56
-            )
-            == OTHER_EXPECTED_CONFIG
+        config = conf._generate_config(
+            conf.DEFAULT_CONFIG_SPEC, api={"authentication_token":"SomeAuth", "hostname":"SomeHost", "use_ssl":False, "port":56}
         )
+        assert config == OTHER_EXPECTED_CONFIG
 
 class TestRemoveConfigFile:
     """Test the removal of configuration files"""
@@ -475,61 +479,6 @@ class TestGetConfigFilepath:
         assert config_filepath is None
 
 
-class TestLoadConfigFile:
-    """Tests the load_config_file function."""
-
-    def test_load_config_file(self, monkeypatch, tmpdir):
-        """Tests that configuration is loaded correctly from a TOML file."""
-        filename = tmpdir.join("test_config.toml")
-
-        with open(filename, "w") as f:
-            f.write(TEST_FILE)
-
-        loaded_config = conf.load_config_file(filepath=filename)
-
-        assert loaded_config == EXPECTED_CONFIG
-
-    def test_loading_absolute_path(self, monkeypatch, tmpdir):
-        """Test that the default configuration file can be loaded
-        via an absolute path."""
-        filename = tmpdir.join("test_config.toml")
-
-        with open(filename, "w") as f:
-            f.write(TEST_FILE)
-
-        with monkeypatch.context() as m:
-            m.setenv("SF_CONF", "")
-            loaded_config = conf.load_config_file(filepath=filename)
-
-        assert loaded_config == EXPECTED_CONFIG
-
-
-class TestKeepValidOptions:
-    def test_only_invalid_options(self):
-        section_config_with_invalid_options = {"NotValid1": 1, "NotValid2": 2, "NotValid3": 3}
-        assert conf.keep_valid_options(section_config_with_invalid_options) == {}
-
-    def test_valid_and_invalid_options(self):
-        section_config_with_invalid_options = {
-            "authentication_token": "MyToken",
-            "NotValid1": 1,
-            "NotValid2": 2,
-            "NotValid3": 3,
-        }
-        assert conf.keep_valid_options(section_config_with_invalid_options) == {
-            "authentication_token": "MyToken"
-        }
-
-    def test_only_valid_options(self):
-        section_config_only_valid = {
-            "authentication_token": "071cdcce-9241-4965-93af-4a4dbc739135",
-            "hostname": "platform.strawberryfields.ai",
-            "use_ssl": True,
-            "port": 443,
-        }
-        assert conf.keep_valid_options(section_config_only_valid) == EXPECTED_CONFIG["api"]
-
-
 value_mapping = [
     ("SF_API_AUTHENTICATION_TOKEN", "SomeAuth"),
     ("SF_API_HOSTNAME", "SomeHost"),
@@ -558,7 +507,7 @@ class TestUpdateFromEnvironmentalVariables:
             for env_var, value in value_mapping:
                 m.setenv(env_var, value)
 
-            config = conf.create_config()
+            config = copy.deepcopy(conf.DEFAULT_CONFIG)
             for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
                 assert v != parsed_value
 
@@ -581,7 +530,7 @@ class TestUpdateFromEnvironmentalVariables:
         with monkeypatch.context() as m:
             m.setenv(env_var, value)
 
-            config = conf.create_config()
+            config = copy.deepcopy(conf.DEFAULT_CONFIG)
             for v, parsed_value in zip(config["api"].values(), parsed_values_mapping.values()):
                 assert v != parsed_value
 
@@ -598,24 +547,24 @@ class TestUpdateFromEnvironmentalVariables:
         """Tests that boolean values can be parsed correctly from environment
         variables."""
         monkeypatch.setattr(conf, "DEFAULT_CONFIG_SPEC", {"api": {"some_boolean": (bool, True)}})
-        assert conf.parse_environment_variable("some_boolean", "true") is True
-        assert conf.parse_environment_variable("some_boolean", "True") is True
-        assert conf.parse_environment_variable("some_boolean", "TRUE") is True
-        assert conf.parse_environment_variable("some_boolean", "1") is True
-        assert conf.parse_environment_variable("some_boolean", 1) is True
+        assert conf._parse_environment_variable("api", "some_boolean", "true") is True
+        assert conf._parse_environment_variable("api", "some_boolean", "True") is True
+        assert conf._parse_environment_variable("api", "some_boolean", "TRUE") is True
+        assert conf._parse_environment_variable("api", "some_boolean", "1") is True
+        assert conf._parse_environment_variable("api", "some_boolean", 1) is True
 
-        assert conf.parse_environment_variable("some_boolean", "false") is False
-        assert conf.parse_environment_variable("some_boolean", "False") is False
-        assert conf.parse_environment_variable("some_boolean", "FALSE") is False
-        assert conf.parse_environment_variable("some_boolean", "0") is False
-        assert conf.parse_environment_variable("some_boolean", 0) is False
+        assert conf._parse_environment_variable("api", "some_boolean", "false") is False
+        assert conf._parse_environment_variable("api", "some_boolean", "False") is False
+        assert conf._parse_environment_variable("api", "some_boolean", "FALSE") is False
+        assert conf._parse_environment_variable("api", "some_boolean", "0") is False
+        assert conf._parse_environment_variable("api", "some_boolean", 0) is False
 
     def test_parse_environment_variable_integer(self, monkeypatch):
         """Tests that integer values can be parsed correctly from environment
         variables."""
 
         monkeypatch.setattr(conf, "DEFAULT_CONFIG_SPEC", {"api": {"some_integer": (int, 123)}})
-        assert conf.parse_environment_variable("some_integer", "123") == 123
+        assert conf._parse_environment_variable("api", "some_integer", "123") == 123
 
 
 DEFAULT_KWARGS = {"hostname": "platform.strawberryfields.ai", "use_ssl": True, "port": 443}
@@ -656,8 +605,7 @@ class TestStoreAccount:
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: tmpdir)
             m.setattr(conf, "user_config_dir", lambda *args: "NotTheCorrectDir")
-            m.setattr(conf, "create_config", mock_create_config)
-            m.setattr(conf, "save_config_to_file", lambda a, b: mock_save_config_file.update(a, b))
+            m.setattr("toml.dump", lambda a, b: mock_save_config_file.update(a, b.name))
             conf.store_account(
                 authentication_token, filename="config.toml", location="local", **DEFAULT_KWARGS
             )
@@ -676,8 +624,7 @@ class TestStoreAccount:
         with monkeypatch.context() as m:
             m.setattr(os, "getcwd", lambda: "NotTheCorrectDir")
             m.setattr(conf, "user_config_dir", lambda *args: tmpdir)
-            m.setattr(conf, "create_config", mock_create_config)
-            m.setattr(conf, "save_config_to_file", lambda a, b: mock_save_config_file.update(a, b))
+            m.setattr("toml.dump", lambda a, b: mock_save_config_file.update(a, b.name))
             conf.store_account(
                 authentication_token,
                 filename="config.toml",
@@ -800,32 +747,3 @@ class TestStoreAccountIntegration:
         filepath = os.path.join(recursive_dir, "config.toml")
         result = toml.load(filepath)
         assert result == EXPECTED_CONFIG
-
-
-class TestSaveConfigToFile:
-    """Tests for the store_account function."""
-
-    def test_correct(self, tmpdir):
-        """Test saving a configuration file."""
-        filepath = str(tmpdir.join("config.toml"))
-
-        conf.save_config_to_file(OTHER_EXPECTED_CONFIG, filepath)
-
-        result = toml.load(filepath)
-        assert result == OTHER_EXPECTED_CONFIG
-
-    def test_file_already_existed(self, tmpdir):
-        """Test saving a configuration file even if the file already
-        existed."""
-        filepath = str(tmpdir.join("config.toml"))
-
-        with open(filepath, "w") as f:
-            f.write(TEST_FILE)
-
-        result_for_existing_file = toml.load(filepath)
-        assert result_for_existing_file == EXPECTED_CONFIG
-
-        conf.save_config_to_file(OTHER_EXPECTED_CONFIG, filepath)
-
-        result_for_new_file = toml.load(filepath)
-        assert result_for_new_file == OTHER_EXPECTED_CONFIG

@@ -20,7 +20,7 @@ import argparse
 import sys
 
 from strawberryfields.api import Connection
-from strawberryfields.configuration import ConfigurationError, create_config, store_account
+from strawberryfields.configuration import ConfigurationError, DEFAULT_CONFIG, store_account
 from strawberryfields.engine import RemoteEngine
 from strawberryfields.io import load
 
@@ -162,7 +162,7 @@ def configuration_wizard():
     Returns:
         dict[str, Union[str, bool, int]]: the configuration options
     """
-    default_config = create_config()["api"]
+    default_config = DEFAULT_CONFIG["api"]
 
     # Getting default values that can be used for as messages when getting inputs
     hostname_default = default_config["hostname"]

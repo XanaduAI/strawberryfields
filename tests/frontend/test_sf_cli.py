@@ -15,6 +15,7 @@ r"""
 Unit tests for the Strawberry Fields command line interface.
 """
 # pylint: disable=no-self-use,unused-argument
+import copy
 import os
 import functools
 import argparse
@@ -160,7 +161,7 @@ class TestConfigure:
         configuration takes place using the configuration_wizard function."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
-            m.setattr(cli, "configuration_wizard", lambda: cli.create_config()["api"])
+            m.setattr(cli, "configuration_wizard", lambda: cli.DEFAULT_CONFIG["api"])
             m.setattr(cli, "store_account", mock_store_account.store_account)
 
             args = MockArgs()
@@ -190,7 +191,7 @@ class TestConfigure:
         the configuration_wizard function."""
         with monkeypatch.context() as m:
             mock_store_account = MockStoreAccount()
-            m.setattr(cli, "configuration_wizard", lambda: cli.create_config()["api"])
+            m.setattr(cli, "configuration_wizard", lambda: cli.DEFAULT_CONFIG["api"])
             m.setattr(cli, "store_account", mock_store_account.store_account)
 
             args = MockArgs()
@@ -278,7 +279,7 @@ class TestConfigureEverything:
         correctly, once the authentication token is passed."""
         with monkeypatch.context() as m:
             auth_prompt = "Please enter the authentication token"
-            default_config = cli.create_config()["api"]
+            default_config = copy.deepcopy(cli.DEFAULT_CONFIG["api"])
             default_auth = "SomeAuth"
             default_config['authentication_token'] = default_auth
 
@@ -291,7 +292,7 @@ class TestConfigureEverything:
         with monkeypatch.context() as m:
 
             auth_prompt = "Please enter the authentication token"
-            default_config = cli.create_config()["api"]
+            default_config = copy.deepcopy(cli.DEFAULT_CONFIG["api"])
             default_auth = "SomeAuth"
             default_config['authentication_token'] = default_auth
 

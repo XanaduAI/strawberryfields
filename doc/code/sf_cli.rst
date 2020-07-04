@@ -136,4 +136,4 @@ Code details
 .. automodapi:: strawberryfields.cli
     :no-heading:
     :no-inheritance-diagram:
-    :skip: store_account, create_config, load, RemoteEngine, Connection, ConfigurationError, ping
+    :skip: store_account, DEFAULT_CONFIG, load, RemoteEngine, Connection, ConfigurationError, ping

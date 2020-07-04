@@ -33,6 +33,11 @@ and has the following format:
     use_ssl = true
     port = 443
 
+    [logging]
+    # Options for the logger
+    level = "warning"
+    logfile = "sf.log"
+
 Configuration options
 ---------------------
 
@@ -40,7 +45,6 @@ Configuration options
 ^^^^^^^^^
 
 Settings for the Xanadu cloud platform.
-
 
 **authentication_token (str)** (*required*)
     API token for authentication to the Xanadu cloud platform. This is required
@@ -63,6 +67,29 @@ Settings for the Xanadu cloud platform.
 
     *Corresponding environment variable:* ``SF_API_PORT``
 
+``[logging]``
+^^^^^^^^^^^^^
+
+Settings for the Strawberry Fields logger.
+
+**level (str)** (*optional*)
+    Specifies the level of information that should be printed to the standard
+    output. Defaults to ``"info"``, which indicates that all logged details
+    are displayed as output.
+
+    Other options include ``"error"``, ``"warning"``, ``"info"``, ``"debug"``,
+    in decreasing levels of verbosity.
+
+    *Corresponding environment variable:* ``SF_LOGGING_LEVEL``
+
+**logfile (str)** (*optional*)
+    The filepath of an output logfile. This may be a relative or an
+    absolute path. If specified, all logging data is appended to this
+    file during Strawberry Fields execution.
+
+    *Corresponding environment variable:* ``SF_LOGGING_LOGFILE``
+
+
 Functions
 ---------
 
@@ -73,5 +100,5 @@ Functions
 
 .. automodapi:: strawberryfields.configuration
     :no-heading:
-    :skip: user_config_dir, store_account, active_configs, reset_config, create_logger
+    :skip: user_config_dir, store_account, active_configs, reset_config, create_logger, delete_config
     :no-inheritance-diagram:
