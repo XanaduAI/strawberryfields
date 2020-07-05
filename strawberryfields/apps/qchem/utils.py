@@ -24,7 +24,7 @@ from scipy.constants import c, h, m_u, pi
 def duschinsky(
     Li: np.ndarray, Lf: np.ndarray, ri: np.ndarray, rf: np.ndarray, wf: np.ndarray, m: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
-    r"""Generate the Duschinsky rotation matrix :math:`U` and displacement vector :math:`delta`.
+    r"""Generate the Duschinsky rotation matrix :math:`U` and displacement vector :math:`\delta`.
 
     The Duschinsky transformation relates the normal coordinates of the initial and
     final states in a vibronic transition, :math:`q_i` and :math:`q_f` respectively, as:
@@ -46,7 +46,8 @@ def duschinsky(
 
     .. math:: d = L_f^T \sqrt{m} (r_e^i-r_e^f).
 
-    Note that :math:`d` is usually represented as a dimensionless parameter :math:`\delta` as:
+    Note that :math:`i` and :math:`f` refer to the initial and final states, respectively. The
+    parameter :math:`d` is usually represented as a dimensionless parameter :math:`\delta` as:
 
     .. math:: \delta = l^{-1} d,
 
@@ -56,6 +57,11 @@ def duschinsky(
     .. math:: l_{kk} = \left ( \frac{\hbar }{2 \pi \omega_k c} \right )^{1/2},
 
     where :math:`\hbar` is the reduced Planck constant and :math:`c` is the speed of light.
+
+    The vibrational normal mode matrix for a molecule with :math:`M` vibrational modes and
+    :math:`N` atoms is a :math:`3N * M` matrix where :math:`M = 3N - 6` for nonlinear molecules and
+    :math:`M = 3N - 5` for linear molecules. The Duschinsky rotation matrix for this molecule is a
+    :math:`M * M` matrix and the Duschinsky displacement vector has :math:`M` components.
 
     **Example usage:**
 
