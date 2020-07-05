@@ -24,7 +24,7 @@ from scipy.constants import c, h, m_u, pi
 def duschinsky(
     Li: np.ndarray, Lf: np.ndarray, ri: np.ndarray, rf: np.ndarray, wf: np.ndarray, m: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
-    r"""Generate the Duschinsky rotation matrix and displacement vector.
+    r"""Generate the Duschinsky rotation matrix :math:`U` and displacement vector :math:`delta`.
 
     The Duschinsky transformation relates the normal coordinates of the initial and
     final states in a vibronic transition, :math:`q_i` and :math:`q_f` respectively, as:
@@ -59,22 +59,18 @@ def duschinsky(
 
     **Example usage:**
 
-    >>> Li = np.array([[-0.08727946], [ 0.00000000], [ 0.00000000],
-    >>>                [ 0.95342606], [-0.00000000], [-0.00000000]])
-    >>> Lf = np.array([[-0.08727946], [ 0.00000000], [ 0.00000000],
-    >>>                [ 0.95342606], [-0.00000000], [-0.00000000]])
-    >>> ri = np.array([-0.0236542994, 0.0000000000, 0.0000000000,
-    >>>                 1.2236542994, 0.0000000000, 0.0000000000])
-    >>> rf = np.array([ 0.0000000000, 0.0000000000, 0.0000000000,
-    >>>                 1.4397000000, 0.0000000000, 0.0000000000])
-    >>> wf = np.array([1363.210])
-    >>> m = np.array([11.00931] * 3 + [1.00782] * 3)
+    >>> Li = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
+    >>> Lf = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
+    >>> ri = np.array([-0.0236, 0.0, 0.0, 1.2236, 0.0, 0.0])
+    >>> np.array([0.0, 0.0, 0.0, 1.4397, 0.0, 0.0])
+    >>> wf = np.array([1363.2])
+    >>> m = np.array([11.0093] * 3 + [1.0078] * 3)
     >>> U, delta = duschinsky(Li, Lf, ri, rf, wf, m)
-    (array([[0.99999546]]), array([-1.1755024]))
+    (array([[0.99977449]]), array([-1.17623073]))
 
     Args:
-        Li (array): normal modes of the initial electronic state
-        Lf (array): normal modes of the final electronic state
+        Li (array): mass-weighted normal modes of the initial electronic state
+        Lf (array): mass-weighted normal modes of the final electronic state
         ri (array): equilibrium molecular geometry of the initial electronic state
         rf (array): equilibrium molecular geometry of the final electronic state
         wf (array): normal mode frequencies of the final electronic state in units of :math:`\mbox{cm}^{-1}`
@@ -84,11 +80,11 @@ def duschinsky(
         tuple[array, array]: Duschinsky rotation matrix :math:`U`, Duschinsky displacement vector
         :math:`\delta`
     """
-    U = (Lf.T * m ** 0.5) @ (Li.T * m ** 0.5).T
+    U = Lf.T @ Li
 
-    d = (ri - rf) @ (Lf.T * m).T
+    d = Lf.T * m ** 0.5 @ (ri - rf)
 
-    l0_inv = np.diag((h / (wf * 100 * c)) ** (-0.5) * 2.0 * pi) / 1e10 * m_u ** 0.5
+    l0_inv = np.diag((h / (wf * 100.0 * c)) ** (-0.5) * 2.0 * pi) / 1.0e10 * m_u ** 0.5
 
     delta = np.array(d @ l0_inv)
 
