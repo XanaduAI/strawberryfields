@@ -401,6 +401,82 @@ class TestValidation:
         with pytest.raises(program.CircuitError, match="program contains 3 modes, but the device 'None' only supports a 2-mode program"):
             new_prog = prog.compile(device_or_compiler=spec, force_compiler=DummyCircuit())
 
+    def test_no_default_compiler(self):
+        """Test that an exception is raised if the DeviceSpec has no compilers
+        specified (and thus no default compiler)"""
+
+        spec = sf.api.DeviceSpec("dummy_target", None, 3, None, None, None)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.S2gate(0.6) | [q[1], q[2]]
+
+        with pytest.raises(program.CircuitError, match="does not specify a compiler."):
+            new_prog = prog.compile(device_or_compiler=spec)
+
+    def test_run_optimizations(self):
+        """Test that circuit is optimized when optimize is True"""
+
+        class DummyCircuit(Compiler):
+            """A circuit with 2 modes"""
+            interactive = True
+            primitives = {'Rgate'}
+            decompositions = set()
+
+        spec = sf.api.DeviceSpec("dummy_target", None, 3, None, None, None)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.Rgate(0.3) | q[0]
+            ops.Rgate(0.4) | q[0]
+
+        new_prog = prog.compile(
+            device_or_compiler=DummyCircuit(),
+            optimize=True,
+        )
+        assert new_prog.circuit[0].__str__() == "Rgate(0.7) | (q[0])"
+
+    def test_validate_parameters(self):
+        """Test that the parameters are validated in the compile method"""
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": [],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        class DummyCircuit(Compiler):
+            """A circuit with 2 modes"""
+            interactive = True
+            primitives = {'S2gate'}
+            decompositions = set()
+
+        spec = sf.api.DeviceSpec(**device_dict, connection=None)
+
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.S2gate(1.5) | q  # invalid value 1.5
+
+        with pytest.raises(ValueError, match="has invalid value"):
+            new_prog = prog.compile(
+                device_or_compiler=spec,
+                force_compiler=DummyCircuit(),
+            )
+
+
     def test_no_decompositions(self):
         """Test that no decompositions take
         place if the circuit spec doesn't support it."""
