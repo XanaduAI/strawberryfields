@@ -50,6 +50,12 @@
   [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
   [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401)
 
+* Adds the `apps.qchem.utils` module to host various utility functions needed to perform quantum
+  chemistry calculations with Strawberry Fields. The `utils.duschinsky()` function generates the
+  Duschinsky rotation matrix and displacement vector which are needed to program to simulate a
+  vibronic transition.
+  [(#434)](https://github.com/XanaduAI/strawberryfields/pull/434)
+
 * Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
   The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
   information for use in a Strawberry Fields `Program`. The `dynamics.sample_coherent()`,
@@ -64,7 +70,6 @@
   [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
   [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
   [(#430)](https://github.com/XanaduAI/strawberryfields/pull/430)
-
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
