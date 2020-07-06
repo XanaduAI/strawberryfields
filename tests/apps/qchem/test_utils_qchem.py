@@ -89,7 +89,7 @@ p2 = [Li_2, Lf_2, ri_2, rf_2, wf_2, m_2, U_2, delta_2]
 
 @pytest.mark.parametrize("p", [p1, p2])
 class TestDuschinsky:
-    """Tests for the function ``strawberryfields.apps.qchem.vibronic.duschinsky``"""
+    """Tests for the function ``strawberryfields.apps.qchem.utils.duschinsky``"""
 
     def test_duschinsky_parameters(self, p):
         """Test if function outputs the correct duschinsky parameters."""
