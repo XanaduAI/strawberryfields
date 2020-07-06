@@ -480,7 +480,7 @@ class Program:
                 compiler name or device specification object to use for program compilation
 
         Keyword Args:
-            force_compiler (str): Optionally provide a compile strategy. This overrides the compile
+            force_compiler (str, ~strawberryfields.compilers.Compiler): Optionally provide a compile strategy. This overrides the compile
                 strategy specified by a hardware :class:`~.DevicSpec`.
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
                 The default is False.
