@@ -146,7 +146,7 @@ class Connection:
             strawberryfields.api.DeviceSpec: the created device specification
         """
         device_dict = self._get_device_dict(target)
-        return DeviceSpec(target=target, connection=self, **device_dict)
+        return DeviceSpec(target=target, device=device_dict, connection=self)
 
     def _get_device_dict(self, target: str) -> dict:
         """Returns the device specifications as a dictionary"""

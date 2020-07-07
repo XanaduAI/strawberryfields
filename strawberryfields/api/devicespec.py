@@ -28,22 +28,22 @@ class DeviceSpec:
 
     Args:
         target (str): name of the target hardware device
-        layout (str): string containing the Blackbird circuit layout
-        modes (int): number of modes supported by the target
-        compiler (list): list of supported compilers
-        gate_parameters (dict): parameters for the circuit gates
+        device (dict): dictionary representing the raw device specification.
+            This dictionary should contain the following key-value pairs:
+
+            - layout (str): string containing the Blackbird circuit layout
+            - modes (int): number of modes supported by the target
+            - compiler (list): list of supported compilers
+            - gate_parameters (dict): parameters for the circuit gates
+
         connection (strawberryfields.api.Connection): connection over which the
             job is managed
     """
 
-    def __init__(self, target, layout, modes, compiler, gate_parameters, connection):
+    def __init__(self, target, device, connection):
         self._target = target
-        self._layout = layout
-        self._modes = modes
-        self._compiler = compiler
-        self._gate_parameters = gate_parameters
-
         self._connection = connection
+        self._spec = device
 
     @property
     def target(self):
@@ -53,18 +53,18 @@ class DeviceSpec:
     @property
     def layout(self):
         """str: Returns a string containing the Blackbird circuit layout."""
-        return self._layout
+        return self._spec["layout"]
 
     @property
     def modes(self):
         """int: Number of modes supported by the device."""
-        return self._modes
+        return self._spec["modes"]
 
     @property
     def compiler(self):
         """list[str]: A list of strings corresponding to Strawberry Fields compilers supported
         by the hardware device."""
-        return self._compiler
+        return self._spec["compiler"]
 
     @property
     def default_compiler(self):
@@ -87,7 +87,7 @@ class DeviceSpec:
         """
         gate_parameters = dict()
 
-        for gate_name, param_ranges in self._gate_parameters.items():
+        for gate_name, param_ranges in self._spec["gate_parameters"].items():
             # convert gate parameter allowed ranges to Range objects
             range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
             gate_parameters[gate_name] = Ranges(*range_list, variable_name=gate_name)
@@ -152,5 +152,4 @@ class DeviceSpec:
 
     def refresh(self):
         """Refreshes the device specifications"""
-        device = self._connection._get_device_dict(self.target)  # pylint: disable=protected-access
-        self.__init__(target=self.target, connection=self._connection, **device)
+        self._spec = self._connection._get_device_dict(self.target)  # pylint: disable=protected-access

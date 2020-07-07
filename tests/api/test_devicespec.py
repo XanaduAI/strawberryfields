@@ -39,7 +39,6 @@ mock_layout = textwrap.dedent(
 )
 
 device_dict = {
-    "target": "abc",
     "layout": mock_layout,
     "modes": 2,
     "compiler": [],
@@ -56,9 +55,9 @@ class TestDeviceSpec:
 
     def test_initialization(self, connection):
         """Test that the device spec class initializes correctly."""
-        spec = DeviceSpec(connection=None, **device_dict)
+        spec = DeviceSpec(connection=None, device=device_dict, target="abc")
 
-        assert spec.target == device_dict["target"]
+        assert spec.target == "abc"
         assert spec.layout == device_dict["layout"]
         assert spec.modes == device_dict["modes"]
         assert spec.compiler == device_dict["compiler"]
@@ -70,7 +69,7 @@ class TestDeviceSpec:
             "phase_0": Ranges([0], [0, 6.3], variable_name="phase_0"),
             "phase_1": Ranges([0.5, 1.4], variable_name="phase_1"),
         }
-        spec_params = DeviceSpec(connection=None, **device_dict).gate_parameters
+        spec_params = DeviceSpec(connection=None, device=device_dict, target="abc").gate_parameters
         assert true_params == spec_params
 
     def test_create_program(self, monkeypatch):
@@ -82,7 +81,7 @@ class TestDeviceSpec:
         ]
 
         params = {"phase_0": 1.23}
-        prog = DeviceSpec(connection=None, **device_dict).create_program(**params)
+        prog = DeviceSpec(connection=None, device=device_dict, target="abc").create_program(**params)
 
         assert prog.target is None
         assert prog.name == "mock"
@@ -94,7 +93,7 @@ class TestDeviceSpec:
     def test_invalid_parameter_value(self, params):
         """Test that error is raised when an invalid parameter value is supplied"""
         with pytest.raises(ValueError, match="has invalid value"):
-            DeviceSpec(connection=None, **device_dict).create_program(**params)
+            DeviceSpec(connection=None, device=device_dict, target="abc").create_program(**params)
 
     @pytest.mark.parametrize(
         "params", [{"invalid_type": 7.5}, {"phase_42": 0.4}, {"squeezing_amplitude_1": 0.5}]
@@ -102,16 +101,15 @@ class TestDeviceSpec:
     def test_unknown_parameter(self, params):
         """Test that error is raised when an unknown parameter is supplied"""
         with pytest.raises(ValueError, match="not a valid parameter for this device"):
-            DeviceSpec(connection=None, **device_dict).create_program(**params)
+            DeviceSpec(connection=None, device=device_dict, target="abc").create_program(**params)
 
     def test_refresh(self, connection, monkeypatch):
         """Tests that the refresh method refreshes the device spec"""
-        spec = DeviceSpec(connection=connection, **device_dict)
+        spec = DeviceSpec(connection=connection, device=device_dict, target="abc")
         assert spec.modes == device_dict["modes"]
 
         new_spec_dict = device_dict.copy()
         new_spec_dict["modes"] = 42
-        del new_spec_dict["target"]
         monkeypatch.setattr(connection, "_get_device_dict", lambda target: new_spec_dict)
 
         spec.refresh()

@@ -209,6 +209,113 @@ class TestEngineProgramInteraction:
         correct_samples = [0, 1, 0]
         assert [bool(i) for i in result.samples[0]] == correct_samples
 
+    @pytest.mark.parametrize("eng", engines)
+    def test_all_samples_one_meas_per_mode(self, eng):
+        """Test that samples are stored for the correct modes with
+        a single measurement each mode."""
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+
+        result = eng.run(prog)
+
+        # Check that the number of all the samples equals to the number
+        # of measurements
+        assert len(result.all_samples.values()) == 3
+
+        correct_modes = [2, 1, 3]
+        correct_samples = [[0], [0], [0]]
+
+        assert result.all_samples[1] == [0]
+        assert result.all_samples[3] == [0]
+        assert result.all_samples[2] == [0]
+
+    @pytest.mark.parametrize("eng", engines)
+    def test_all_samples_multi_meas_per_mode(self, eng):
+        """Test that samples are stored for the correct modes with
+        multiple measurements on certain modes."""
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureX | q[2]
+
+        result = eng.run(prog)
+
+        assert result.all_samples[1] == [0]
+        assert result.all_samples[3] == [0]
+        assert [bool(i) for i in result.all_samples[2]] == [0,1]
+
+    @pytest.mark.parametrize("eng", engines)
+    def test_all_samples_multi_runs(self, eng):
+        """Test that consequtive engine runs reset the _all_samples
+        attribute by checking the length of the attribute."""
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureX | q[2]
+
+        result = eng.run(prog)
+
+        # Check that the number of all the samples equals to the number
+        # of measurements
+        assert result.all_samples[1] == [0]
+        assert result.all_samples[3] == [0]
+        assert [bool(i) for i in result.all_samples[2]] == [0,1]
+
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[0]
+
+        result = eng.run(prog)
+
+        # Check that _all_samples contains the same elements and new items were
+        # not appended
+        assert result.all_samples[0] == [0]
+
+    def test_all_samples_multiple_shots(self):
+        """Test the case of storing all samples for multiple shots"""
+        eng = sf.Engine("gaussian", backend_options={"cutoff_dim": 6})
+        shots = 5
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureFock() | q[2]
+
+        result = eng.run(prog, shots=shots)
+
+        assert len(result.all_samples[1]) == 1
+        assert len(result.all_samples[3]) == 1
+        assert len(result.all_samples[2]) == 2
+
+        assert np.array_equal(result.all_samples[1][0], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[3][0], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[2][0], np.array([0, 0, 0, 0, 0]))
+        assert np.array_equal(result.all_samples[2][1], np.array([0, 0, 0, 0, 0]))
+
+    def test_all_samples_batched(self):
+        """Test the case of storing all samples for batches"""
+        batch_size = 2
+        eng = sf.Engine("tf", backend_options={"batch_size": batch_size, "cutoff_dim": 6})
+        prog = sf.Program(5)
+        with prog.context as q:
+            ops.MeasureFock() | q[2]
+            ops.MeasureFock() | (q[1], q[3])
+            ops.MeasureFock() | q[2]
+
+        result = eng.run(prog)
+        assert len(result.all_samples[1]) == 1
+        assert len(result.all_samples[3]) == 1
+        assert len(result.all_samples[2]) == 2
+
+        assert np.array_equal(result.all_samples[1][0].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[3][0].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[2][0].numpy(), np.array([[0], [0]]))
+        assert np.array_equal(result.all_samples[2][1].numpy(), np.array([[0], [0]]))
+
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""
 
