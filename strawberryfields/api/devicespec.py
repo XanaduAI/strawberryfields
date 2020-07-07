@@ -152,4 +152,6 @@ class DeviceSpec:
 
     def refresh(self):
         """Refreshes the device specifications"""
-        self._spec = self._connection._get_device_dict(self.target)  # pylint: disable=protected-access
+        self._spec = self._connection._get_device_dict(
+            self.target
+        )  # pylint: disable=protected-access
