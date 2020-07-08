@@ -44,7 +44,6 @@ class TestMeasurement:
     def test_heterodyne(self, setup_eng, tol):
         """Test Fock measurements return expected results"""
         eng, prog = setup_eng(2)
-        a = [0.43 - 0.12j, 0.02 + 0.2j]
         a0 = 0.44643
         phi0 = -0.2721457
         a1 = 0.200998
