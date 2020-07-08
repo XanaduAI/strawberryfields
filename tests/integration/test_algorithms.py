@@ -28,11 +28,13 @@ def test_teleportation_fidelity(setup_eng, pure):
     z = 2
     BS = BSgate(np.pi / 4, 0)
     alpha = 0.5 + 0.2j
+    a = 0.538516
+    phi = 0.380506212
 
     with prog.context as q:
         # TODO: at some point, use the blackbird parser to
         # read in the following directly from the examples folder
-        Coherent(alpha) | q[0]
+        Coherent(a, phi) | q[0]
 
         Squeezed(-z) | q[1]
         Squeezed(z) | q[2]
