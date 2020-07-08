@@ -136,7 +136,7 @@ class Connection:
         """
         return self._use_ssl
 
-    def get_device(self, target: str) -> DeviceSpec:
+    def get_device_spec(self, target: str) -> DeviceSpec:
         """Gets the device specifications for target.
 
         Args:
@@ -146,7 +146,7 @@ class Connection:
             strawberryfields.api.DeviceSpec: the created device specification
         """
         device_dict = self._get_device_dict(target)
-        return DeviceSpec(target=target, device=device_dict, connection=self)
+        return DeviceSpec(target=target, spec=device_dict, connection=self)
 
     def _get_device_dict(self, target: str) -> dict:
         """Returns the device specifications as a dictionary"""

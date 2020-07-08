@@ -28,7 +28,7 @@ class DeviceSpec:
 
     Args:
         target (str): name of the target hardware device
-        device (dict): dictionary representing the raw device specification.
+        spec (dict): dictionary representing the raw device specification.
             This dictionary should contain the following key-value pairs:
 
             - layout (str): string containing the Blackbird circuit layout
@@ -40,10 +40,10 @@ class DeviceSpec:
             job is managed
     """
 
-    def __init__(self, target, device, connection):
+    def __init__(self, target, spec, connection):
         self._target = target
         self._connection = connection
-        self._spec = device
+        self._spec = spec
 
     @property
     def target(self):
