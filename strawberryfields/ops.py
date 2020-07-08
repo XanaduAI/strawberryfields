@@ -590,15 +590,7 @@ class Coherent(Preparation):
     def __init__(self, r=0.0, phi=0.0):
         if (np.iscomplex([r, phi])).any():
             raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
-        if phi is None:
-            phi = 0.0
-            # TODO: remove warning in the new release
-            warnings.warn(
-                f"""Warning: since strawberryfields version v0.15.0,
-            Coherent(r, phi) takes two real arguments which represent
-            the polar decomposition of the complex displacement parameter.
-            Using the arguments r={r} and phi=0.0"""
-            )
+
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
@@ -721,23 +713,10 @@ class DisplacedSqueezed(Preparation):
         where :math:`z=r` is sufficiently large.
     """
 
-    def __init__(self, r_d=0.0, phi_d=None, r_s=0.0, phi_s=None):
+    def __init__(self, r_d=0.0, phi_d=0.0, r_s=0.0, phi_s=0.0):
         if (np.iscomplex([r_d, phi_d, r_s, phi_s])).any():
             raise ValueError("The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex")
-        if phi_d is None:
-            phi_d = 0.0
-            warn = True
-        if phi_s is None:
-            phi_s = 0.0
-            warn = True
-            # TODO: remove warning in the new release
-        if warn:
-            warnings.warn(
-                f"""Warning: since strawberryfields version v0.15.0,
-            DisplacedSqueezed(r_d, phi_d, r_s, phi_s) takes four real arguments which represent
-            the polar decomposition of the displacement and squeezing parameters.
-            Using the arguments r_d={r_d}, phi_d={phi_d}, r_s={r_s}, phi_s={phi_s}"""
-            )
+
         super().__init__([r_d, phi_d, r_s, phi_s])
 
     def _apply(self, reg, backend, **kwargs):
@@ -1342,18 +1321,9 @@ class Dgate(Gate):
         where :math:`L_n^{m}(x)` is a generalized Laguerre polynomial :cite:`dlmf`.
     """
 
-    def __init__(self, r, phi=None):
+    def __init__(self, r, phi=0.0):
         if (np.iscomplex([r, phi])).any():
             raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
-        if phi is None:
-            phi = 0.0
-            # TODO: remove warning in the new release
-            warnings.warn(
-                f"""Warning: since strawberryfields version v0.15.0,
-            Dgate(r, phi) takes two real arguments which represent
-            the polar decomposition of the complex displacement parameter.
-            Using the arguments r={r} and phi=0.0"""
-            )
 
         super().__init__([r, phi])
 
@@ -1759,17 +1729,7 @@ class BSgate(Gate):
     """
     ns = 2
 
-    def __init__(self, theta=np.pi / 4, phi=None):
-        if (np.iscomplex([theta, phi])).any():
-            raise ValueError("The arguments of BSgate(theta, phi) cannot be complex")
-        if phi is None:
-            phi = 0.0
-            # TODO: remove warning in the new release
-            warnings.warn(
-                f"""Warning: since strawberryfields version v0.15.0,
-            BSgate(theta, phi) takes two angles rather than the transmission and
-            reflection coefficients. Using the arguments theta={theta} and phi=0.0"""
-            )
+    def __init__(self, theta=np.pi / 4, phi=0.0):
         # default: 50% beamsplitter
         super().__init__([theta, phi])
 
@@ -1846,8 +1806,6 @@ class S2gate(Gate):
     ns = 2
 
     def __init__(self, r, phi=0.0):
-        if (np.iscomplex([r, phi])).any():
-            raise ValueError("The arguments of S2gate(r, phi) cannot be complex")
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
