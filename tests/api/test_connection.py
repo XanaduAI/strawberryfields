@@ -24,6 +24,8 @@ import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
 from strawberryfields import configuration as conf
+from strawberryfields.circuitspecs import Ranges
+
 from .conftest import mock_return
 
 # pylint: disable=no-self-use,unused-argument
@@ -82,6 +84,40 @@ class TestConnection:
 
         # pylint: disable=protected-access
         assert connection._url("/abc") == "https://host:123/abc"
+
+    def test_get_device_spec(self, prog, connection, monkeypatch):
+        """Tests a successful device spec request."""
+        target = "abc"
+        layout = ""
+        modes = 42
+        compiler = []
+        gate_parameters = {"param": Ranges([0, 1], variable_name="param")}
+
+        monkeypatch.setattr(
+            requests,
+            "get",
+            mock_return(MockResponse(
+                200,
+                {"layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": [[0, 1]]}}
+            )),
+        )
+
+        device_spec = connection.get_device_spec(target)
+
+        assert device_spec.target == target
+        assert device_spec.layout == layout
+        assert device_spec.modes == modes
+        assert device_spec.compiler == compiler
+
+        spec_params = device_spec.gate_parameters
+        assert gate_parameters == spec_params
+
+    def test_get_device_spec_error(self, connection, monkeypatch):
+        """Tests a failed device spec request."""
+        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+
+        with pytest.raises(RequestFailedError, match="Failed to get device specifications"):
+            connection.get_device_spec("123")
 
     def test_create_job(self, prog, connection, monkeypatch):
         """Tests a successful job creation flow."""
