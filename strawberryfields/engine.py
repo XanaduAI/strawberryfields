@@ -549,7 +549,7 @@ class RemoteEngine:
     def device_spec(self):
         """The device specifications for target device"""
         if self._spec is None:
-            self._spec = self._connection.get_device(self.target)
+            self._spec = self._connection.get_device_spec(self.target)
         return self._spec
 
     def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:

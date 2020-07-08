@@ -392,7 +392,7 @@ class TestValidation:
             decompositions = set()
 
         device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": None}
-        spec = sf.api.DeviceSpec(target=None, connection=None, device=device_dict)
+        spec = sf.api.DeviceSpec(target=None, connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -407,7 +407,7 @@ class TestValidation:
         specified (and thus no default compiler)"""
 
         device_dict = {"modes": 3, "layout": None, "gate_parameters": None, "compiler": None}
-        spec = sf.api.DeviceSpec(target="dummy_target", connection=None, device=device_dict)
+        spec = sf.api.DeviceSpec(target="dummy_target", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -427,7 +427,7 @@ class TestValidation:
             decompositions = set()
 
         device_dict = {"modes": 3, "layout": None, "gate_parameters": None, "compiler": None}
-        spec = sf.api.DeviceSpec(target="dummy_target", connection=None, device=device_dict)
+        spec = sf.api.DeviceSpec(target="dummy_target", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -466,7 +466,7 @@ class TestValidation:
             primitives = {'S2gate'}
             decompositions = set()
 
-        spec = sf.api.DeviceSpec(target=None, device=device_dict, connection=None)
+        spec = sf.api.DeviceSpec(target=None, spec=device_dict, connection=None)
 
         prog = sf.Program(2)
         with prog.context as q:
