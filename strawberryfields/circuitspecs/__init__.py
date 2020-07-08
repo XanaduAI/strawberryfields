@@ -36,7 +36,7 @@ In particular, for each backend supported by Strawberry Fields the database cont
 corresponding CircuitSpecs instance with the same short name, used to validate Programs to be
 executed on that backend.
 """
-from .circuit_specs import CircuitSpecs
+from .circuit_specs import CircuitSpecs, Ranges
 from .X8 import X8Specs, X8_01
 from .X12 import X12Specs, X12_01, X12_02
 from .xcov import Xcov
@@ -66,4 +66,4 @@ circuit_db = {c.short_name: c for c in specs}
 """dict[str, ~strawberryfields.circuitspecs.CircuitSpecs]: Map from circuit
 family short name to the corresponding class."""
 
-__all__ = ["circuit_db", "CircuitSpecs"] + [i.__name__ for i in specs]
+__all__ = ["circuit_db", "CircuitSpecs", "Ranges"] + [i.__name__ for i in specs]

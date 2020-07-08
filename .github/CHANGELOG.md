@@ -52,15 +52,19 @@
 
 * Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
   The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
-  information for use in a Strawberry Fields `Program`. The `dynamics.sample_fock()` function allows
-  for generation of samples from an input Fock state. The probability of an excited state can
-  then be estimated with the `dynamics.prob()` function, which calculates the relative frequency
-  of the excited state among the generated samples. The `dynamics.marginals()` function generates
-  marginal distributions. 
+  information for use in a Strawberry Fields `Program`. The `dynamics.sample_coherent()`,
+  `dynamics.sample_fock()` and `dynamics.sample_tmsv()` functions allow for generation of samples
+  from a variety of input states. The probability of an excited state can then be estimated with
+  the `dynamics.prob()` function, which calculates the relative frequency of the excited state
+  among the generated samples.  The `dynamics.marginals()` function generates marginal
+  distributions.
   [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
   [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
   [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
   [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
+  [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
+  [(#430)](https://github.com/XanaduAI/strawberryfields/pull/430)
+
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
@@ -115,6 +119,11 @@
   in `thewalrus`. This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high cutoff values.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
   [(#381)](https://github.com/XanaduAI/strawberryfields/pull/381)
+
+* Strawberry Fields can now access the Xanadu Cloud device specifications API.
+  The ``Connection`` class has a new method ``Connection.get_device``,
+  which returns a ``DeviceSpec`` class.
+  [(#429)](https://github.com/XanaduAI/strawberryfields/pull/429)
 
 <h3>Breaking Changes</h3>
 
