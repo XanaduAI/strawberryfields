@@ -3,6 +3,7 @@ from strawberryfields import ops
 import numpy as np
 from matplotlib import pyplot as plt
 import time
+from pathlib import Path
 
 class TDMstate:
     # def __init__(self):
@@ -13,6 +14,9 @@ class TDMstate:
     xi = 0
 
     def assignsetup(self, r, eta, xi):
+        '''
+        Assigns squeezing parameter, total transmission and excess noise xi. If a TDM state class is initialzied without these parameters, the default values defines on TDMstate class level are used.
+        '''
 
         if r is not None:
             self.r = r
@@ -23,9 +27,31 @@ class TDMstate:
 
     @property
     def tdm_program(self):
-        """docstring"""
+        '''
+        Runs a sequence of Gaussian gates with compiled lists of phase settings. Returns a SF Program object.
+        '''
 
-        nbar = self.xi/2
+        prog = sf.Program(3)
+        with prog.context as q:
+
+            for a, p, t in zip(self.alpha_, self.phi_, self.theta_):
+                ops.Sgate(self.r, 0) | q[2]
+                ops.ThermalLossChannel(self.eta, self.nbar) | q[2]
+                ops.BSgate(a) | (q[2], q[1])
+                ops.Rgate(p) | q[2]
+                ops.MeasureHomodyne(t) | q[0]
+                q = q[1:] + q[:1]
+
+        return prog
+
+    def compile(self):
+        '''
+        - Converts excess noise xi to mean photon number nbar. xi is the excess quadrature variance on top of quantum noise: V = V_qu + xi. nbar is the mean photon number of a thermal state mixed with a quantum mode yielding a quadrature variance of V = V_qu + 2*nbar.
+        - Converts list with beamsplitter settings (intensity transmission coefficients), phase gate and measurement gate (phase angles in multiples of pi) to radians.
+        - Extends gate sequences to repetitive sequences according to the number of copies.
+        '''
+
+        self.nbar = self.xi/2
 
         # convert from intensity transmission T to phase angle
         alpha = np.arccos(np.sqrt(np.array(self.BS)))
@@ -36,27 +62,16 @@ class TDMstate:
         # convert from multiples of pi to angle
         theta = np.pi*np.array(self.M)
 
-        alpha_ = np.tile(alpha, self.copies)
-        phi_ = np.tile(phi, self.copies)
-        theta_ = np.tile(theta, self.copies)
-
-        prog = sf.Program(3)
-        with prog.context as q:
-
-            for a, p, t in zip(alpha_, phi_, theta_):
-                ops.Sgate(self.r, 0) | q[2]
-                ops.ThermalLossChannel(self.eta, nbar) | q[2]
-                ops.BSgate(a) | (q[2], q[1])
-                ops.Rgate(p) | q[2]
-                ops.MeasureHomodyne(t) | q[0]
-                q = q[1:] + q[:1]
-
-        return prog
-
+        self.alpha_ = np.tile(alpha, self.copies)
+        self.phi_ = np.tile(phi, self.copies)
+        self.theta_ = np.tile(theta, self.copies)
     # def printgates(self):
     #     self.prog.print()
     
     def run_local(self):
+        '''
+        Run local SF engine. The result list X_vals will be created as object parameter to perform statistical evaluations and plots on.
+        '''
 
         eng = sf.Engine('gaussian')
         result = eng.run(self.tdm_program) # local simulation
@@ -68,43 +83,68 @@ class TDMstate:
                 self.X_vals.append(float(dd[j][i]))
 
     def run_remote(self):
+        '''
+        Run remote SF engine. The result list X_vals will be created as object parameter to perform statistical evaluations and plots on.
+        '''
+
         eng = sf.Engine('tdm')
         result = eng.run(self.tdm_program) # local simulation
 
-    def saveresults(self):
-        f = open('results/results.txt', 'w+')
+    def saveresults(self, path=None):
+        '''
+        Saves list of quadrature samples X_vals to file in user-defined or default path.
+        '''
+
+        if path is None:
+            path = Path.home() / 'tdm_data' / 'results'
+        Path(path).mkdir(parents=True, exist_ok=True)
+
+        f = open(path / 'results.txt', 'w+')
         f.write('QUADRATURE SAMPLES\n\n')
         for x in self.X_vals:
             f.write(str(x)+'\n')
         f.close()
 
-    def savesettings(self):
-        
+    def savesettings(self, path=None):
+        '''
+        Saves compiled lists of gate settings to file in user-defined or default path. All gate settings are given in radians.
+        '''
+
+        if path is None:
+            path = Path.home() / 'tdm_data' / 'waveforms'
+        Path(path).mkdir(parents=True, exist_ok=True)
+
         start = time.time()
 
-        f = open('waveforms/beamsplitter.txt', 'w+')
+        f = open(path / 'beamsplitter.txt', 'w+')
         f.write('BEAMSPLITTER SETTINGS\n\n')
-        for x in self.BS_:
+        for x in self.alpha_:
             f.write(str(x)+'\n')
         f.close()
                
-        f = open('waveforms/phase_gate.txt', 'w+')
+        f = open(path / 'phase_gate.txt', 'w+')
         f.write('PHASE-GATE SETTINGS\n\n')
-        for x in self.R_:
+        for x in self.phi_:
             f.write(str(x)+'\n')
         f.close()
         
-        f = open('waveforms/homodyne_measurement.txt', 'w+')
+        f = open(path / 'homodyne_measurement.txt', 'w+')
         f.write('MEASUREMENT SETTINGS\n\n')
-        for x in self.M_:
+        for x in self.theta_:
             f.write(str(x)+'\n')  
         f.close()
                 
         duration = time.time() - start
         print('Took me '+str(duration)+' sec.')
 
-    def histogram(self):
+    def histogram(self, X_vals=None):
+        '''
+        Plots a histogram of quadrature samples X_vals. X_vals can either be an object parameter or an external list passed to this function.
+        '''
         
+        if X_vals is None:
+            X_vals = self.X_vals
+
         fig, ax = plt.subplots()
         fig.suptitle('Sample histogram', fontsize=18)
         
@@ -113,30 +153,10 @@ class TDMstate:
         ax.grid(True)
         plt.hist(self.X_vals,50)
 
-
-class EPRstate(TDMstate):
-    def __init__(self, copies=1, r=None, eta=None, xi=None):
-        super().__init__()
-
-        self.copies = copies
-
-        self.gatesettings()
-        self.assignsetup(r, eta, xi)
-
-    def gatesettings(self):
-        '''
-        Pre-compiled settings for two-mode-squeezed states (EPR states)
-        '''
-
-        # dictionary for four EPR states to accomodate all X-P-measurement permutations
-        self.BS = [1,1/2]*4 # BS intensity transmission coefficients
-        self.R = [1/2,0]*4 # phase angles in multiples of pi
-        self.M = [0, 0]+[0, 1/2]+[1/2, 0]+[1/2, 1/2] # measurement angles in multiples of pi
-                
-        # compensating for list multiplication
-        self.copies = int(np.ceil(self.copies/4))
-
     def nearest_neighbour_corr(self, X_vals=None):
+        '''
+        Plots a 2x2 grid of nearest neighbour correlations between subsequent quadrature samples XX, XP, PX, PP. X_vals can either be an object parameter or an external list passed to this function.
+        '''
 
         if X_vals is None:
             X_vals = self.X_vals
@@ -169,8 +189,42 @@ class EPRstate(TDMstate):
         for ax in axs.flat:
             ax.grid(True)
 
-    def insep_param(self, X_vals=None):
 
+class EPRstate(TDMstate):
+    def __init__(self, copies=1, r=None, eta=None, xi=None):
+        super().__init__()
+
+        self.copies = copies
+
+        self.gatesettings()
+        self.assignsetup(r, eta, xi)
+
+    def gatesettings(self):
+        '''
+        Pre-compiled settings for two-mode-squeezed states (EPR states)
+        '''
+
+        # dictionary for four EPR states to accomodate all X-P-measurement permutations
+        self.BS = [1,1/2]*4 # BS intensity transmission coefficients
+        self.R = [1/2,0]*4 # phase angles in multiples of pi
+        self.M = [0, 0]+[0, 1/2]+[1/2, 0]+[1/2, 1/2] # measurement angles in multiples of pi
+                
+        # compensating for list multiplication
+        self.copies = int(np.ceil(self.copies/4))
+
+        self.compile()
+
+    def insep_param(self, X_vals=None):
+        '''
+        Computes the inseparability parameter of EPR states. It is obtained by
+
+        < (X_(i)-X_(i+1))**2 > + < (P_(i)+P_(i+1))**2 >.
+
+        Reference: https://advances.sciencemag.org/content/advances/5/5/eaaw4530.full.pdf
+
+        X_vals can either be an object parameter or an external list passed to this function.
+        '''
+        
         if X_vals is None:
             X_vals = self.X_vals
         
@@ -194,9 +248,9 @@ class GHZstate(TDMstate):
 
         self.copies = copies
 
-
         self.gatesettings()
         self.assignsetup(r, eta, xi)
+        self.compile()
 
     def gatesettings(self):
         '''
@@ -207,7 +261,12 @@ class GHZstate(TDMstate):
         self.M = [0, 0, 0] # measurement angles in multiples of pi
 
     def insep_param(self, X_vals):
+        '''
+        Computes the inseparability parameter of three-mode GHZ states. X_vals can either be an object parameter or an external list passed to this function.
 
+        +++ COMING SOON +++
+
+        '''
         if X_vals is None:
             X_vals = self.X_vals
         pass
@@ -222,6 +281,7 @@ class Clusterstate(TDMstate):
 
         self.gatesettings()
         self.assignsetup(r, eta, xi)
+        self.compile()
 
     def gatesettings(self):
         '''
@@ -230,8 +290,14 @@ class Clusterstate(TDMstate):
         self.BS = [1/2]*self.modes # BS intensity transmission coefficients
         self.R = [1/2]*self.modes # phase angles in multiples of pi
         self.M = [0]*self.modes # measurement angles in multiples of pi
-    
+
     def insep_param(self, X_vals):
+        '''
+        Computes the inseparability parameter of one-dimensional cluster states. X_vals can either be an object parameter or an external list passed to this function.
+
+        +++ COMING SOON +++
+
+        '''
 
         if X_vals is None:
             X_vals = self.X_vals
@@ -246,10 +312,11 @@ class Randomnumbers(TDMstate):
 
         self.gatesettings()
         self.assignsetup(r, eta, xi)
+        self.compile()
 
     def gatesettings(self):
         '''
-        Pre-compiled settings for 1D cluster state
+        Pre-compiled settings for a Gaussian-distributed quantum random number
         '''
         self.BS = [0] # BS intensity transmission coefficients
         self.R = [0] # phase angles in multiples of pi
@@ -284,10 +351,11 @@ class Customstate(TDMstate):
         self.M = M
         self.copies = copies
 
-        self.compiler()
+        self.check_input()
         self.assignsetup(r, eta, xi)
+        self.compile()
 
-    def compiler(self):
+    def check_input(self):
         '''
         Check user input here:
         - all lists of equal length?
