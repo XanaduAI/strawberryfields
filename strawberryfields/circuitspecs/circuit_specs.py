@@ -345,6 +345,9 @@ class Range:
 
         return "{}≤{}≤{}".format(self.x, self.name, self.y)
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
 
 class Ranges:
     """Lightweight class for representing a set of ranges of floats.
@@ -380,3 +383,9 @@ class Ranges:
 
     def __repr__(self):
         return ", ".join([str(i) for i in self.ranges])
+
+    def __eq__(self, other):
+        if len(self.ranges) != len(other.ranges):
+            return False
+
+        return all(i == j for i, j in zip(self.ranges, other.ranges))
