@@ -715,7 +715,9 @@ class DisplacedSqueezed(Preparation):
 
     def __init__(self, r_d=0.0, phi_d=0.0, r_s=0.0, phi_s=0.0):
         if (np.iscomplex([r_d, phi_d, r_s, phi_s])).any():
-            raise ValueError("The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex")
+            raise ValueError(
+                "The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex"
+            )
 
         super().__init__([r_d, phi_d, r_s, phi_s])
 
