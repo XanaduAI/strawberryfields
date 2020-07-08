@@ -17,7 +17,7 @@
 **Module name:** :mod:`strawberryfields.compilers.compiler`
 """
 
-from typing import List, Set, Dict, Union
+from typing import Set, Dict
 import abc
 
 import networkx as nx
@@ -213,12 +213,12 @@ class Compiler(abc.ABC):
                     if op_name in self.primitives:
                         compiled.append(cmd)
                         continue
-                    else:
-                        raise pu.CircuitError(
-                            "The operation {} is not a primitive for the compiler '{}'".format(
-                                cmd.op.__class__.__name__, self.short_name
-                            )
+
+                    raise pu.CircuitError(
+                        "The operation {} is not a primitive for the compiler '{}'".format(
+                            cmd.op.__class__.__name__, self.short_name
                         )
+                    )
                 try:
                     kwargs = self.decompositions[op_name]
                     temp = cmd.op.decompose(cmd.reg, **kwargs)

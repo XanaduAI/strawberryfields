@@ -490,6 +490,7 @@ class Program:
         Returns:
             Program: compiled program
         """
+        # pylint: disable=too-many-branches
 
         def _get_compiler(compiler):
             if compiler in compiler_db:
