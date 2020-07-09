@@ -60,7 +60,7 @@ def duschinsky(
 
     The vibrational normal mode matrix for a molecule with :math:`M` vibrational modes and
     :math:`N` atoms is a :math:`3N * M` matrix where :math:`M = 3N - 6` for nonlinear molecules and
-    :math:`M = 3N - 5` for linear molecules. The Duschinsky rotation matrix for this molecule is a
+    :math:`M = 3N - 5` for linear molecules. The Duschinsky rotation matrix of a molecule is an
     :math:`M * M` matrix and the Duschinsky displacement vector has :math:`M` components.
 
     **Example usage:**
