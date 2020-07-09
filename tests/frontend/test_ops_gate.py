@@ -168,7 +168,7 @@ class TestComplexError:
     """Tests for raising an error if a parameter passed is complex"""
 
     @pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
-    def test_complex_first_argument_error(gate):
+    def test_complex_first_argument_error(self, gate):
         """Test that passing a complex parameter to gates that previously accepted
         complex parameters raises an error."""
         with pytest.raises(ValueError, match="cannot be complex"):
