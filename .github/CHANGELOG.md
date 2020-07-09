@@ -50,8 +50,7 @@
   [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
   [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401)
 
-* Adds the `apps.qchem.utils` module to host various utility functions needed to perform quantum
-  chemistry calculations with Strawberry Fields. The `utils.duschinsky()` function generates the
+* Adds the `apps.qchem.duschinsky()` function for generation of the
   Duschinsky rotation matrix and displacement vector which are needed to simulate a vibronic process
   with Strawberry Fields.
   [(#434)](https://github.com/XanaduAI/strawberryfields/pull/434)

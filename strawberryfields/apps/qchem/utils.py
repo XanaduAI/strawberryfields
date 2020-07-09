@@ -59,16 +59,16 @@ def duschinsky(
     where :math:`\hbar` is the reduced Planck constant and :math:`c` is the speed of light.
 
     The vibrational normal mode matrix for a molecule with :math:`M` vibrational modes and
-    :math:`N` atoms is a :math:`3N * M` matrix where :math:`M = 3N - 6` for nonlinear molecules and
+    :math:`N` atoms is a :math:`3N \times M` matrix where :math:`M = 3N - 6` for nonlinear molecules and
     :math:`M = 3N - 5` for linear molecules. The Duschinsky rotation matrix of a molecule is an
-    :math:`M * M` matrix and the Duschinsky displacement vector has :math:`M` components.
+    :math:`M \times M` matrix and the Duschinsky displacement vector has :math:`M` components.
 
     **Example usage:**
 
     >>> Li = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
     >>> Lf = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
     >>> ri = np.array([-0.0236, 0.0, 0.0, 1.2236, 0.0, 0.0])
-    >>> np.array([0.0, 0.0, 0.0, 1.4397, 0.0, 0.0])
+    >>> rf = np.array([0.0, 0.0, 0.0, 1.4397, 0.0, 0.0])
     >>> wf = np.array([1363.2])
     >>> m = np.array([11.0093] * 3 + [1.0078] * 3)
     >>> U, delta = duschinsky(Li, Lf, ri, rf, wf, m)
