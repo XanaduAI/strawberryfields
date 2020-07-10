@@ -24,7 +24,7 @@ from typing import Optional
 
 import numpy as np
 
-from strawberryfields.api import Connection, Job, Result, RequestFailedError
+from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -316,6 +316,7 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
+
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
