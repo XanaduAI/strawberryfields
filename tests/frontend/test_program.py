@@ -391,7 +391,7 @@ class TestValidation:
             primitives = {'S2gate', 'Interferometer'}
             decompositions = set()
 
-        device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": None}
+        device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
         spec = sf.api.DeviceSpec(target=None, connection=None, spec=device_dict)
 
         prog = sf.Program(3)
@@ -406,7 +406,7 @@ class TestValidation:
         """Test that an exception is raised if the DeviceSpec has no compilers
         specified (and thus no default compiler)"""
 
-        device_dict = {"modes": 3, "layout": None, "gate_parameters": None, "compiler": None}
+        device_dict = {"modes": 3, "layout": None, "gate_parameters": None, "compiler": [None]}
         spec = sf.api.DeviceSpec(target="dummy_target", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
@@ -426,7 +426,7 @@ class TestValidation:
             primitives = {'Rgate'}
             decompositions = set()
 
-        device_dict = {"modes": 3, "layout": None, "gate_parameters": None, "compiler": None}
+        device_dict = {"modes": 3, "layout": None, "gate_parameters": None, "compiler": [None]}
         spec = sf.api.DeviceSpec(target="dummy_target", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
