@@ -71,7 +71,10 @@ class DeviceSpec:
         """sf.compilers.Compiler: Specified default compiler"""
         if self.compiler:
             return self.compiler[0]
-        return None
+
+        # For now, use Xcov compiler by default for devices
+        # if the default compiler is not specified.
+        return "Xcov"
 
     @property
     def gate_parameters(self):

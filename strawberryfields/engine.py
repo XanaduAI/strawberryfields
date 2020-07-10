@@ -613,16 +613,8 @@ class RemoteEngine:
 
         device = self.device_spec
 
-        if device.default_compiler is None:
-            if "force_compiler" not in compile_options:
-                # For now, use Xcov compiler by default for devices
-                # if the default compiler is not specified.
-                compile_options["force_compiler"] = "Xcov"
-
-            msg = f"Compiling program for device {device.target} using compiler {compile_options['force_compiler']}."
-        else:
-            msg = f"Compiling program for device {device.target} using compiler {device.default_compiler}."
-
+        compiler_name = compile_options.get("force_compiler", device.default_compiler)
+        msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
         self.log.info(msg)
 
         program = program.compile(device, **compile_options)

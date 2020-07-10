@@ -192,7 +192,7 @@ class TestRemoteEngineIntegration:
             # check parameters are the same
             assert all(p1 == p2 for p1, p2 in zip(cmd1.op.p, cmd2.op.p))
 
-    def test_default_compiler(self, prog, monkeypatch, mocker, caplog):
+    def test_default_compiler(self, prog, monkeypatch, caplog):
         """Test that if the device does not provide a default compiler,
         that Xcov is used by default."""
         caplog.set_level(logging.INFO)
@@ -201,10 +201,9 @@ class TestRemoteEngineIntegration:
 
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
-        spy = mocker.spy(prog, "compile")
 
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
-        spy.assert_called_once_with(engine.device_spec, force_compiler="Xcov")
+        assert engine.device_spec.default_compiler == "Xcov"
         assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xcov."
