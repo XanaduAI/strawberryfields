@@ -60,7 +60,6 @@ import strawberryfields as sf
 
 import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
-from strawberryfields.api.devicespec import DeviceSpec
 import strawberryfields.program_utils as pu
 
 from .program_utils import Command, RegRef, CircuitError, RegRefError
