@@ -215,7 +215,7 @@ class TestXCompilation:
         )
 
         expected = to_program(bb)
-        res = expected.compile("Xcov")
+        res = expected.compile(compiler="Xcov")
 
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
@@ -231,7 +231,7 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | (q[0], q[num_pairs])
         with pytest.raises(CircuitError, match="All modes must be measured"):
-            prog.compile("Xcov")
+            prog.compile(compiler="Xcov")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_no_s2gates(self, num_pairs, tol):
@@ -254,8 +254,8 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("Xcov")
-        expected = expected.compile("Xcov")
+        res = prog.compile(compiler="Xcov")
+        expected = expected.compile(compiler="Xcov")
         assert program_equivalence(res, expected, atol=tol)
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
@@ -283,8 +283,8 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("Xcov")
-        expected = expected.compile("Xcov")
+        res = prog.compile(compiler="Xcov")
+        expected = expected.compile(compiler="Xcov")
         assert program_equivalence(res, expected, atol=tol)
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
@@ -307,7 +307,7 @@ class TestXCompilation:
                 0, half_n_modes - 1, half_n_modes, n_modes - 1
             ),
         ):
-            res = prog.compile("Xcov")
+            res = prog.compile(compiler="Xcov")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_incorrect_s2gate_params(self, num_pairs):
@@ -324,7 +324,7 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
-            res = prog.compile("Xcov")
+            res = prog.compile(compiler="Xcov")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_s2gate_repeated_modes(self, num_pairs):
@@ -341,7 +341,7 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
-            prog.compile("Xcov")
+            prog.compile(compiler="Xcov")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
@@ -359,7 +359,7 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("Xcov")
+        res = prog.compile(compiler="Xcov")
         assert np.allclose(res.circuit[0].op.p[0], SQ_AMPLITUDE)
 
     def test_gates_compile(self):
@@ -382,7 +382,7 @@ class TestXCompilation:
             unitary(q[4:])
             ops.MeasureFock() | q
 
-        prog.compile("Xcov")
+        prog.compile(compiler="Xcov")
 
     def test_no_unitary(self, tol):
         """Test compilation works with no unitary provided"""
@@ -395,7 +395,7 @@ class TestXCompilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile("Xcov")
+        res = prog.compile(compiler="Xcov")
         expected = sf.Program(8)
 
         with expected.context as q:
@@ -442,7 +442,7 @@ class TestXCompilation:
         res.circuit = res.circuit[:-1]
 
         # extract the Gaussian symplectic matrix
-        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
+        O = res.compile(compiler="gaussian_unitary").circuit[0].op.p[0]
 
         # construct the expected symplectic matrix corresponding
         # to just the initial two mode squeeze gates
@@ -469,7 +469,7 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile("Xcov")
+        res = prog.compile(compiler="Xcov")
 
         expected = sf.Program(2 * num_pairs)
 
@@ -484,7 +484,7 @@ class TestXCompilation:
             )
             ops.MeasureFock() | q
 
-        expected = expected.compile(DummyCircuit())
+        expected = expected.compile(compiler=DummyCircuit())
         # Note that since DummyCircuit() has a hard coded limit of 8 modes we only check for this number
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
@@ -504,7 +504,7 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="The applied unitary on modes"):
-            res = prog.compile("Xcov")
+            res = prog.compile(compiler="Xcov")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_unitary_too_large(self, num_pairs):
@@ -520,4 +520,4 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
-            res = prog.compile("Xcov")
+            res = prog.compile(compiler="Xcov")

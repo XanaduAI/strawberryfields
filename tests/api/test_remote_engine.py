@@ -132,7 +132,7 @@ class TestRemoteEngine:
 
         # run options from keyword arguments overwrite
         # run options provided by the program object
-        prog = prog.compile(engine.device_spec, shots=15)
+        prog = prog.compile(device=engine.device_spec, shots=15)
         _, _, _, run_options = engine.run_async(prog, shots=1234)
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
 
@@ -143,7 +143,7 @@ class TestRemoteEngine:
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8")
 
-        prog = prog.compile(engine.device_spec, shots=15)
+        prog = prog.compile(device=engine.device_spec, shots=15)
         assert prog.run_options == {"shots": 15}
 
         _, _, _, run_options = engine.run_async(prog)
@@ -174,7 +174,7 @@ class TestRemoteEngineIntegration:
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
 
         # check program is compiled to match the chip template
-        expected = prog.compile(engine.device_spec).circuit
+        expected = prog.compile(device=engine.device_spec).circuit
         res = res_prog.circuit
 
         for cmd1, cmd2 in zip(res, expected):

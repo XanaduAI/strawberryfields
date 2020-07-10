@@ -104,7 +104,7 @@ class TestSFToBlackbirdConversion:
         assert bb.version == "1.0"
         assert bb.target["name"] is None
 
-        bb = io.to_blackbird(prog.compile("gaussian"))
+        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
@@ -113,7 +113,7 @@ class TestSFToBlackbirdConversion:
     def test_metadata_run_options(self):
         """Test run options correctly converts"""
         prog = Program(4, name="test_program")
-        bb = io.to_blackbird(prog.compile("gaussian", shots=1024))
+        bb = io.to_blackbird(prog.compile(compiler="gaussian", shots=1024))
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
@@ -213,7 +213,7 @@ class TestSFToBlackbirdConversion:
         expected = {"op": "Pgate", "modes": [0], "args": [0.43], "kwargs": {}}
         assert bb.operations[0] == expected
 
-        bb = io.to_blackbird(prog.compile("gaussian"))
+        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
         assert bb.operations[0]["op"] == "Sgate"
         assert bb.operations[1]["op"] == "Rgate"
 

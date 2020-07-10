@@ -367,7 +367,7 @@ class TestValidation:
             ops.MeasureFock() | q
 
         with pytest.raises(ValueError, match="Unknown compiler 'foo'"):
-            new_prog = prog.compile(device_or_compiler='foo')
+            new_prog = prog.compile(compiler='foo')
 
     def test_disconnected_circuit(self):
         """Test the detection of a disconnected circuit."""
@@ -379,7 +379,7 @@ class TestValidation:
             ops.MeasureX | q[2]
 
         with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
-            new_prog = prog.compile(device_or_compiler='fock')
+            new_prog = prog.compile(compiler='fock')
 
     def test_incorrect_modes(self):
         """Test that an exception is raised if the compiler
@@ -400,7 +400,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(program.CircuitError, match="program contains 3 modes, but the device 'None' only supports a 2-mode program"):
-            new_prog = prog.compile(device_or_compiler=spec, force_compiler=DummyCircuit())
+            new_prog = prog.compile(device=spec, compiler=DummyCircuit())
 
     def test_no_default_compiler(self):
         """Test that an exception is raised if the DeviceSpec has no compilers
@@ -415,7 +415,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(program.CircuitError, match="does not specify a compiler."):
-            new_prog = prog.compile(device_or_compiler=spec)
+            new_prog = prog.compile(device=spec)
 
     def test_run_optimizations(self):
         """Test that circuit is optimized when optimize is True"""
@@ -435,7 +435,7 @@ class TestValidation:
             ops.Rgate(0.4) | q[0]
 
         new_prog = prog.compile(
-            device_or_compiler=DummyCircuit(),
+            compiler=DummyCircuit(),
             optimize=True,
         )
         assert new_prog.circuit[0].__str__() == "Rgate(0.7) | (q[0])"
@@ -474,8 +474,8 @@ class TestValidation:
 
         with pytest.raises(ValueError, match="has invalid value"):
             new_prog = prog.compile(
-                device_or_compiler=spec,
-                force_compiler=DummyCircuit(),
+                device=spec,
+                compiler=DummyCircuit(),
             )
 
 
@@ -498,7 +498,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(device_or_compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCircuit())
 
         # check compiled program only has two gates
         assert len(new_prog) == 2
@@ -526,7 +526,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(device_or_compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCircuit())
 
         # check compiled program now has 5 gates
         # the S2gate should decompose into two BS and two Sgates
@@ -559,7 +559,7 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
 
         with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
-            new_prog = prog.compile(device_or_compiler=DummyCircuit())
+            new_prog = prog.compile(compiler=DummyCircuit())
 
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
@@ -573,7 +573,7 @@ class TestValidation:
             ops.Kgate(0.6) | q[0]
 
         with pytest.raises(program.CircuitError, match="Kgate cannot be used with the compiler"):
-            new_prog = prog.compile(device_or_compiler='gaussian')
+            new_prog = prog.compile(compiler='gaussian')
 
     def test_user_defined_decomposition_false(self):
         """Test that an operation that is both a primitive AND
@@ -588,14 +588,14 @@ class TestValidation:
         with prog.context as q:
             ops.Gaussian(cov, r, decomp=False) | q
 
-        prog = prog.compile(device_or_compiler='gaussian')
+        prog = prog.compile(compiler='gaussian')
         assert len(prog) == 1
         circuit = prog.circuit
         assert circuit[0].op.__class__.__name__ == "Gaussian"
 
         # test compilation against multiple targets in sequence
         with pytest.raises(program.CircuitError, match="The operation Gaussian is not a primitive for the compiler 'fock'"):
-            prog = prog.compile(device_or_compiler='fock')
+            prog = prog.compile(compiler='fock')
 
     def test_user_defined_decomposition_true(self):
         """Test that an operation that is both a primitive AND
@@ -611,7 +611,7 @@ class TestValidation:
         with prog.context:
             ops.Gaussian(cov, decomp=True) | 0
 
-        new_prog = prog.compile(device_or_compiler='gaussian')
+        new_prog = prog.compile(compiler='gaussian')
 
         assert len(new_prog) == 1
 
@@ -654,7 +654,7 @@ class TestValidation:
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
 
-        new_prog = prog.compile(device_or_compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCircuit())
 
         # no exception should be raised; topology correctly validated
         assert len(new_prog) == 5
@@ -696,7 +696,7 @@ class TestValidation:
             ops.MeasureFock() | q[0]
 
         with pytest.raises(program.CircuitError, match="incompatible topology"):
-            new_prog = prog.compile(device_or_compiler=DummyCircuit())
+            new_prog = prog.compile(compiler=DummyCircuit())
 
 
 class TestGBS:
@@ -710,7 +710,7 @@ class TestGBS:
             ops.Rgate(1.0)  | q[0]
 
         with pytest.raises(program.CircuitError, match="Operations following the Fock measurements."):
-            prog.compile('gbs')
+            prog.compile(compiler='gbs')
 
     def test_GBS_compile_no_fock_meas(self):
         """Tests that GBS compilation fails when no fock measurements are made."""
@@ -720,7 +720,7 @@ class TestGBS:
             ops.Sgate(-0.5) | q[1]
 
         with pytest.raises(program.CircuitError, match="GBS circuits must contain Fock measurements."):
-            prog.compile('gbs')
+            prog.compile(compiler='gbs')
 
     def test_GBS_compile_nonconsec_measurefock(self):
         """Tests that GBS compilation fails when Fock measurements are made with an intervening gate."""
@@ -733,7 +733,7 @@ class TestGBS:
             ops.MeasureFock() | q[1]
 
         with pytest.raises(program.CircuitError, match="The Fock measurements are not consecutive."):
-            prog.compile('gbs')
+            prog.compile(compiler='gbs')
 
     def test_GBS_compile_measure_same_twice(self):
         """Tests that GBS compilation fails when the same mode is measured more than once."""
@@ -744,7 +744,7 @@ class TestGBS:
             ops.MeasureFock() | q
 
         with pytest.raises(program.CircuitError, match="Measuring the same mode more than once."):
-            prog.compile('gbs')
+            prog.compile(compiler='gbs')
 
     def test_GBS_success(self):
         """GBS check passes."""
@@ -757,7 +757,7 @@ class TestGBS:
             ops.Rgate(-1.0) | q[1]
             ops.MeasureFock() | q[1]
 
-        prog = prog.compile('gbs')
+        prog = prog.compile(compiler='gbs')
         assert len(prog) == 4
         last_cmd = prog.circuit[-1]
         assert isinstance(last_cmd.op, ops.MeasureFock)
@@ -774,7 +774,7 @@ class TestGBS:
             ops.BSgate(0.54, -0.12) | (q[0], q[1])
             ops.MeasureFock() | (q[0], q[3], q[2], q[1])
 
-        prog = prog.compile("gbs")
+        prog = prog.compile(compiler="gbs")
         last_cmd = prog.circuit[-1]
         assert isinstance(last_cmd.op, ops.MeasureFock)
         assert [x.ind for x in last_cmd.reg] == list(range(4))
