@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-branches,too-many-statements
 """General interferometer compiler for the X class of circuits."""
 
+from collections import defaultdict
 import copy
 
 import numpy as np
@@ -22,9 +24,18 @@ from strawberryfields.program_utils import CircuitError, Command, group_operatio
 
 import strawberryfields.ops as ops
 
-from .compiler import Compiler, Ranges
+from .compiler import Compiler
 from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
+
+
+def list_duplicates(seq):
+    """Returns a generator representing the duplicated values in the sequence
+    mapped to the indices they appear at."""
+    tally = defaultdict(list)
+    for i, item in enumerate(seq):
+        tally[item].append(i)
+    return ((key, locs) for key, locs in tally.items() if len(locs) > 1)
 
 
 class Xunitary(Compiler):
@@ -32,8 +43,6 @@ class Xunitary(Compiler):
 
     short_name = "Xunitary"
     interactive = False
-    allowed_sq_ranges = Ranges([0], [1.0], variable_name="r")
-    sq_amplitude = 1.0
 
     primitives = {
         "S2gate",
@@ -100,22 +109,27 @@ class Xunitary(Compiler):
             # insert S2gates with 0 squeezing
             B.insert(0, Command(ops.S2gate(0, 0), [registers[i], registers[j]]))
 
-        sqs = [cmd.op.p[0] for cmd in B]
+        # get list of circuit registers as a tuple for each S2gate
+        regrefs = [(cmd.reg[0].ind, cmd.reg[1].ind) for cmd in B]
 
-        # ensure provided S2gates all have the allowed squeezing values
-        if not all(s in self.allowed_sq_ranges for s in sqs):
-            wrong_sq_values = [np.round(s, 4) for s in sqs if s not in self.allowed_sq_ranges]
-            raise CircuitError(
-                "Incorrect squeezing value(s) r={}. Allowed squeezing "
-                "value(s) are {}.".format(wrong_sq_values, self.allowed_sq_ranges)
-            )
-        # This could in principle be changed
-        phases = [cmd.op.p[1] for cmd in B]
-        if not np.allclose(phases, 0):
-            raise CircuitError(
-                "Incorrect phase value(s) phi={}. Allowed squeezing "
-                "value(s) are 0.0.".format(phases)
-            )
+        # merge S2gates
+        if len(regrefs) > half_n_modes:
+            for mode, indices in list_duplicates(regrefs):
+                r = 0
+                phi = 0
+
+                for k, i in enumerate(sorted(indices, reverse=True)):
+                    removed_cmd = B.pop(i)
+                    r += removed_cmd.op.p[0]
+                    phi_new = removed_cmd.op.p[1]
+
+                    if k > 0 and phi_new != phi:
+                        raise CircuitError("Cannot merge S2gates with different phase values.")
+
+                    phi = phi_new
+
+                i, j = mode
+                B.insert(indices[0], Command(ops.S2gate(r, phi), [registers[i], registers[j]]))
 
         meas_seq = [C[-1]]
         seq = GaussianUnitary().compile(C[:-1], registers)

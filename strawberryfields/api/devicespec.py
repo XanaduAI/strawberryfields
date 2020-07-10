@@ -28,7 +28,7 @@ class DeviceSpec:
 
     Args:
         target (str): name of the target hardware device
-        device (dict): dictionary representing the raw device specification.
+        spec (dict): dictionary representing the raw device specification.
             This dictionary should contain the following key-value pairs:
 
             - layout (str): string containing the Blackbird circuit layout
@@ -40,10 +40,10 @@ class DeviceSpec:
             job is managed
     """
 
-    def __init__(self, target, device, connection):
+    def __init__(self, target, spec, connection):
         self._target = target
         self._connection = connection
-        self._spec = device
+        self._spec = spec
 
     @property
     def target(self):
@@ -71,7 +71,10 @@ class DeviceSpec:
         """sf.compilers.Compiler: Specified default compiler"""
         if self.compiler:
             return self.compiler[0]
-        return None
+
+        # For now, use Xcov compiler by default for devices
+        # if the default compiler is not specified.
+        return "Xcov"
 
     @property
     def gate_parameters(self):
@@ -90,7 +93,7 @@ class DeviceSpec:
         for gate_name, param_ranges in self._spec["gate_parameters"].items():
             # convert gate parameter allowed ranges to Range objects
             range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
-            gate_parameters[gate_name] = Ranges(*range_list, variable_name=gate_name)
+            gate_parameters[gate_name] = Ranges(*range_list)
 
         return gate_parameters
 
@@ -152,6 +155,4 @@ class DeviceSpec:
 
     def refresh(self):
         """Refreshes the device specifications"""
-        self._spec = self._connection._get_device_dict(
-            self.target
-        )  # pylint: disable=protected-access
+        self._spec = self._connection._get_device_dict(self.target)

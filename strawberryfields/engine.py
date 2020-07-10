@@ -24,7 +24,7 @@ from typing import Optional
 
 import numpy as np
 
-from strawberryfields.api import Connection, Job, Result, RequestFailedError
+from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -44,7 +44,7 @@ class BaseEngine(abc.ABC):
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
-    def __init__(self, backend, backend_options=None):
+    def __init__(self, backend, *, backend_options=None):
         if backend_options is None:
             backend_options = {}
 
@@ -317,10 +317,6 @@ class LocalEngine(BaseEngine):
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
 
-    def __init__(self, backend, *, backend_options=None):
-        backend_options = backend_options or {}
-        super().__init__(backend, backend_options)
-
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
@@ -549,7 +545,7 @@ class RemoteEngine:
     def device_spec(self):
         """The device specifications for target device"""
         if self._spec is None:
-            self._spec = self._connection.get_device(self.target)
+            self._spec = self._connection.get_device_spec(self.target)
         return self._spec
 
     def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
@@ -615,10 +611,11 @@ class RemoteEngine:
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
-        try:
-            device = self.device_spec
-        except RequestFailedError:
-            device = self.target
+        device = self.device_spec
+
+        compiler_name = compile_options.get("force_compiler", device.default_compiler)
+        msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
+        self.log.info(msg)
 
         program = program.compile(device=device, **compile_options)
 

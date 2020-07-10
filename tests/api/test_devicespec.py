@@ -55,7 +55,7 @@ class TestDeviceSpec:
 
     def test_initialization(self, connection):
         """Test that the device spec class initializes correctly."""
-        spec = DeviceSpec(connection=None, device=device_dict, target="abc")
+        spec = DeviceSpec(connection=None, spec=device_dict, target="abc")
 
         assert spec.target == "abc"
         assert spec.layout == device_dict["layout"]
@@ -69,7 +69,7 @@ class TestDeviceSpec:
             "phase_0": Ranges([0], [0, 6.3], variable_name="phase_0"),
             "phase_1": Ranges([0.5, 1.4], variable_name="phase_1"),
         }
-        spec_params = DeviceSpec(connection=None, device=device_dict, target="abc").gate_parameters
+        spec_params = DeviceSpec(connection=None, spec=device_dict, target="abc").gate_parameters
         assert true_params == spec_params
 
     def test_create_program(self, monkeypatch):
@@ -81,7 +81,7 @@ class TestDeviceSpec:
         ]
 
         params = {"phase_0": 1.23}
-        prog = DeviceSpec(connection=None, device=device_dict, target="abc").create_program(**params)
+        prog = DeviceSpec(connection=None, spec=device_dict, target="abc").create_program(**params)
 
         assert prog.target is None
         assert prog.name == "mock"
@@ -93,7 +93,7 @@ class TestDeviceSpec:
     def test_invalid_parameter_value(self, params):
         """Test that error is raised when an invalid parameter value is supplied"""
         with pytest.raises(ValueError, match="has invalid value"):
-            DeviceSpec(connection=None, device=device_dict, target="abc").create_program(**params)
+            DeviceSpec(connection=None, spec=device_dict, target="abc").create_program(**params)
 
     @pytest.mark.parametrize(
         "params", [{"invalid_type": 7.5}, {"phase_42": 0.4}, {"squeezing_amplitude_1": 0.5}]
@@ -101,11 +101,11 @@ class TestDeviceSpec:
     def test_unknown_parameter(self, params):
         """Test that error is raised when an unknown parameter is supplied"""
         with pytest.raises(ValueError, match="not a valid parameter for this device"):
-            DeviceSpec(connection=None, device=device_dict, target="abc").create_program(**params)
+            DeviceSpec(connection=None, spec=device_dict, target="abc").create_program(**params)
 
     def test_refresh(self, connection, monkeypatch):
         """Tests that the refresh method refreshes the device spec"""
-        spec = DeviceSpec(connection=connection, device=device_dict, target="abc")
+        spec = DeviceSpec(connection=connection, spec=device_dict, target="abc")
         assert spec.modes == device_dict["modes"]
 
         new_spec_dict = device_dict.copy()

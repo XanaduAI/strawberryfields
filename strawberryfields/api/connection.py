@@ -136,7 +136,7 @@ class Connection:
         """
         return self._use_ssl
 
-    def get_device(self, target: str) -> DeviceSpec:
+    def get_device_spec(self, target: str) -> DeviceSpec:
         """Gets the device specifications for target.
 
         Args:
@@ -146,7 +146,7 @@ class Connection:
             strawberryfields.api.DeviceSpec: the created device specification
         """
         device_dict = self._get_device_dict(target)
-        return DeviceSpec(target=target, device=device_dict, connection=self)
+        return DeviceSpec(target=target, spec=device_dict, connection=self)
 
     def _get_device_dict(self, target: str) -> dict:
         """Returns the device specifications as a dictionary"""
@@ -154,6 +154,7 @@ class Connection:
         response = requests.get(self._url(path), headers=self._headers)
 
         if response.status_code == 200:
+            self.log.info("The device spec %s has been successfully retrieved.", target)
             return response.json()
         raise RequestFailedError(
             "Failed to get device specifications: {}".format(self._format_error_message(response))

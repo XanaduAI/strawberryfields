@@ -71,6 +71,9 @@ from .parameters import FreeParameter, ParameterError
 __all__ = []
 
 
+ALLOWED_RUN_OPTIONS = ["shots"]
+
+
 class Program:
     """Represents a photonic quantum circuit.
 
@@ -152,6 +155,8 @@ class Program:
         directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
         here.
         """
+
+        self.backend_options = {}
 
         # create subsystem references
         # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
@@ -491,6 +496,7 @@ class Program:
         Returns:
             Program: compiled program
         """
+        # pylint: disable=too-many-branches
         if device is None and compiler is None:
             raise ValueError("Either one or both of 'device' and 'compiler' must be specified")
 
@@ -555,14 +561,13 @@ class Program:
         compiled.circuit = seq
         compiled._target = target
 
-        # get run options of compiled program
-        # for the moment, shots is the only supported run option.
-        if "shots" in kwargs:
-            compiled.run_options["shots"] = kwargs["shots"]
+        # Get run options of compiled program.
+        run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
+        compiled.run_options.update(run_options)
 
-        compiled.backend_options = {}
-        if "cutoff_dim" in kwargs:
-            compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
+        # set backend options of the program
+        backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
+        compiled.backend_options.update(backend_options)
 
         # validate gate parameters
         if device is not None and device.gate_parameters:
