@@ -24,7 +24,7 @@ from strawberryfields.program_utils import CircuitError, Command, group_operatio
 
 import strawberryfields.ops as ops
 
-from .compiler import Compiler, Ranges
+from .compiler import Compiler
 from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
 
