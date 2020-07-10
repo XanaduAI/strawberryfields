@@ -14,9 +14,12 @@
 """
 Unit tests for strawberryfields.engine.RemoteEngine
 """
+import logging
+
 import numpy as np
 import pytest
 
+import strawberryfields as sf
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.engine import RemoteEngine
 
@@ -162,15 +165,17 @@ class TestRemoteEngine:
 class TestRemoteEngineIntegration:
     """Integration tests for the remote engine"""
 
-    def test_compilation(self, prog, monkeypatch):
+    def test_compilation(self, prog, monkeypatch, caplog):
         """Test that the remote engine correctly compiles a program
         for the intended backend"""
+        caplog.set_level(logging.INFO)
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
 
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
+        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler fock."
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
 
         # check program is compiled to match the chip template
@@ -186,3 +191,20 @@ class TestRemoteEngineIntegration:
             assert all(i.ind == j.ind for i, j in zip(cmd1.reg, cmd2.reg))
             # check parameters are the same
             assert all(p1 == p2 for p1, p2 in zip(cmd1.op.p, cmd2.op.p))
+
+    def test_default_compiler(self, prog, monkeypatch, mocker, caplog):
+        """Test that if the device does not provide a default compiler,
+        that Xcov is used by default."""
+        caplog.set_level(logging.INFO)
+        test_device_dict = mock_device_dict.copy()
+        test_device_dict["compiler"] = []
+
+        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        spy = mocker.spy(prog, "compile")
+
+        engine = RemoteEngine("X8")
+        _, target, res_prog, _ = engine.run_async(prog, shots=10)
+
+        spy.assert_called_once_with(engine.device_spec, force_compiler="Xcov")
+        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xcov."
