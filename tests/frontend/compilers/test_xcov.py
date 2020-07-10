@@ -521,3 +521,27 @@ class TestXCompilation:
 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
             res = prog.compile("Xcov")
+
+    def test_error_odd_number_modes(self):
+        """Test that an error is raised if the number of modes provided is odd"""
+        prog = sf.Program(5)
+
+        with pytest.raises(CircuitError, match="only supports programs with an even number of modes"):
+            res = prog.compile("Xcov")
+
+    def test_symplectic_smaller_than_program(self):
+        """Test that compilation correctly works if the provided gates act only
+        on a subset of program modes"""
+        prog = sf.Program(4)
+
+        with prog.context as q:
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[2])
+            ops.MeasureFock() | q
+
+        # remove the Fock measurements
+        prog.circuit = prog.circuit[:-1]
+
+        # extract the Gaussian symplectic matrix
+        c = prog.compile("gaussian_unitary").circuit[0]
+        assert [i.ind for i in c.reg] == [0, 2]
+        assert c.op.p[0].shape == (4, 4)

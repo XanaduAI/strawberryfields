@@ -44,7 +44,7 @@ class BaseEngine(abc.ABC):
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
-    def __init__(self, backend, backend_options=None):
+    def __init__(self, backend, *, backend_options=None):
         if backend_options is None:
             backend_options = {}
 
@@ -316,11 +316,6 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
-
-    def __init__(self, backend, *, backend_options=None):
-        backend_options = backend_options or {}
-        super().__init__(backend, backend_options)
-
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
@@ -615,11 +610,7 @@ class RemoteEngine:
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
-        try:
-            device = self.device_spec
-        except RequestFailedError:
-            device = self.target
-
+        device = self.device_spec
         program = program.compile(device, **compile_options)
 
         # update the run options if provided

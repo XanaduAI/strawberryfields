@@ -71,6 +71,9 @@ from .parameters import FreeParameter, ParameterError
 __all__ = []
 
 
+ALLOWED_RUN_OPTIONS = ["shots"]
+
+
 class Program:
     """Represents a photonic quantum circuit.
 
@@ -152,6 +155,8 @@ class Program:
         directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
         here.
         """
+
+        self.backend_options = {}
 
         # create subsystem references
         # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
@@ -478,10 +483,10 @@ class Program:
         Args:
             device_or_compiler (str, ~strawberryfields.compilers.Compiler, ~strawberryfields.api.DeviceSpec):
                 compiler name or device specification object to use for program compilation
+            force_compiler (str, ~strawberryfields.compilers.Compiler): Optionally provide a compile strategy.
+                This overrides the compile strategy specified by a hardware :class:`~.DevicSpec`.
 
         Keyword Args:
-            force_compiler (str, ~strawberryfields.compilers.Compiler): Optionally provide a compile strategy. This overrides the compile
-                strategy specified by a hardware :class:`~.DevicSpec`.
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
                 The default is False.
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
@@ -554,14 +559,13 @@ class Program:
         compiled.circuit = seq
         compiled._target = target
 
-        # get run options of compiled program
-        # for the moment, shots is the only supported run option.
-        if "shots" in kwargs:
-            compiled.run_options["shots"] = kwargs["shots"]
+        # Get run options of compiled program.
+        run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
+        compiled.run_options.update(run_options)
 
-        compiled.backend_options = {}
-        if "cutoff_dim" in kwargs:
-            compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
+        # set backend options of the program
+        backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
+        compiled.backend_options.update(backend_options)
 
         # validate gate parameters
         if isinstance(device_or_compiler, DeviceSpec) and device.gate_parameters:
