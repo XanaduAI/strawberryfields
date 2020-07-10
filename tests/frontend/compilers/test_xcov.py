@@ -310,40 +310,6 @@ class TestXCompilation:
             res = prog.compile("Xcov")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
-    def test_incorrect_s2gate_params(self, num_pairs):
-        """Test exceptions raised if S2gates have illegal parameters"""
-        prog = sf.Program(2 * num_pairs)
-        U = random_interferometer(num_pairs)
-        with prog.context as q:
-            for i in range(num_pairs - 1):
-                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
-
-            ops.S2gate(SQ_AMPLITUDE + 0.1) | (q[num_pairs - 1], q[2 * num_pairs - 1])
-            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
-            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
-            ops.MeasureFock() | q
-
-        with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
-            res = prog.compile("Xcov")
-
-    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
-    def test_s2gate_repeated_modes(self, num_pairs):
-        """Test exceptions raised if S2gates are repeated"""
-        prog = sf.Program(2 * num_pairs)
-        U = random_interferometer(num_pairs)
-        with prog.context as q:
-            for i in range(num_pairs):
-                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
-
-            ops.S2gate(SQ_AMPLITUDE + 0.1) | (q[0], q[num_pairs])
-            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
-            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
-            ops.MeasureFock() | q
-
-        with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
-            prog.compile("Xcov")
-
-    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
         """Test that squeezing gates are correctly merged"""
         prog = sf.Program(2 * num_pairs)
@@ -538,10 +504,28 @@ class TestXCompilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[0], q[2])
             ops.MeasureFock() | q
 
+        res = prog.compile("Xcov")
+
         # remove the Fock measurements
-        prog.circuit = prog.circuit[:-1]
+        res.circuit = res.circuit[:-1]
 
         # extract the Gaussian symplectic matrix
-        c = prog.compile("gaussian_unitary").circuit[0]
-        assert [i.ind for i in c.reg] == [0, 2]
-        assert c.op.p[0].shape == (4, 4)
+        c = res.compile("gaussian_unitary").circuit[0]
+        assert [i.ind for i in c.reg] == [0, 1, 2, 3]
+        assert c.op.p[0].shape == (8, 8)
+
+    def test_identity_program(self, tol):
+        """Test that compilation correctly works if the gate consists only of measurements"""
+        prog = sf.Program(4)
+
+        with prog.context as q:
+            ops.MeasureFock() | q
+
+        res = prog.compile("Xcov")
+
+        # remove the Fock measurements
+        res.circuit = res.circuit[:-1]
+
+        # extract the Gaussian symplectic matrix
+        res = res.compile("gaussian_unitary")
+        assert not res.circuit
