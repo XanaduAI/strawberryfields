@@ -72,6 +72,7 @@ def duschinsky(
     >>> wf = np.array([1363.2])
     >>> m = np.array([11.0093] * 3 + [1.0078] * 3)
     >>> U, delta = duschinsky(Li, Lf, ri, rf, wf, m)
+    >>> U, delta
     (array([[0.99977449]]), array([-1.17623073]))
 
     Args:
