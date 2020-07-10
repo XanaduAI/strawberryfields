@@ -30,7 +30,7 @@ from .gaussian_unitary import GaussianUnitary
 
 
 def list_duplicates(seq):
-    """Returns a dictionary representing the duplicated values in the sequence
+    """Returns a generator representing the duplicated values in the sequence
     mapped to the indices they appear at."""
     tally = defaultdict(list)
     for i, item in enumerate(seq):
