@@ -245,14 +245,14 @@ into canonical Gaussian boson sampling form.
 
 Programs can also be compiled for specific hardware devices using the Xanadu Cloud platform.
 After instantiating a remote engine for the target hardware, the device specifications
-can be accessed and used for compilation using the keywords argument ``device``:
+can be accessed and used for compilation using the ``device`` keyword argument:
 
 >>> eng = sf.RemoteEngine("X8")
 >>> device = eng.device_spec
 >>> prog2 = prog.compile(device=device)
 
 If no compile strategy is supplied, the default compiler from the device
-specification is used. This can be overridden by also defining a compiler:
+specification is used. This can be overridden by also providing the compiler to be used:
 
 >>> prog2 = prog.compile(device=device, compiler="Xunitary")
 
