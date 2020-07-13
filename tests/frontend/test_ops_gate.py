@@ -177,9 +177,12 @@ class TestComplexError:
             with prog.context as q:
                 gate(0.2+1j) | q
 
-    def test_complex_measurement(self, gate):
-        """Test that passing a complex parameter to gates that previously accepted
-        complex parameters raises an error."""
+    def test_complex_symbolic(self, gate):
+        """Test that passing a complex value to symbolic parameter of a gate
+        that previously accepted complex parameters raises an error.
+
+        An example here is testing heterodyne measurements.
+        """
         with pytest.raises(ValueError, match="cannot be complex"):
 
             prog = Program(1)
