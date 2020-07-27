@@ -18,7 +18,7 @@ import pytest
 import textwrap
 
 from strawberryfields.api import DeviceSpec
-from strawberryfields.circuitspecs import Ranges
+from strawberryfields.compilers import Ranges
 import strawberryfields as sf
 
 import blackbird

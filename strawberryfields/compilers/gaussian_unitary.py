@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit specifications for the Gaussian simulator backend."""
+"""This module contains a compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form."""
 
 import numpy as np
 from strawberryfields.program_utils import Command
@@ -26,13 +26,14 @@ from thewalrus.symplectic import (
     interferometer,
     beam_splitter,
 )
-from .circuit_specs import CircuitSpecs
+
+from .compiler import Compiler
 
 
-class GaussianUnitary(CircuitSpecs):
+class GaussianUnitary(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
 
-    This compile specification checks whether the circuit can be implemented as a sequence of
+    This compiler checks whether the circuit can be implemented as a sequence of
     Gaussian operations. If so, it arranges them in the canonical order with displacement at the end.
     After compilation, the circuit will consist of at most two operations, a :class:`~.GaussianTransform`
     and a :class:`~.Dgate`.
@@ -57,7 +58,7 @@ class GaussianUnitary(CircuitSpecs):
             Rgate(0.3) | q[0]
             Sgate(0.6, 1.0) | q[0]
 
-        compiled_circuit = circuit.compile("gaussian_unitary")
+        compiled_circuit = circuit.compile(compiler="gaussian_unitary")
 
     We can now print the compiled circuit, consisting of one
     :class:`~.GaussianTransform` and one :class:`~.Dgate`:
@@ -69,9 +70,6 @@ class GaussianUnitary(CircuitSpecs):
     """
 
     short_name = "gaussian_unitary"
-    modes = None
-    local = True
-    remote = True
     interactive = True
 
     primitives = {

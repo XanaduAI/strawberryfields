@@ -14,9 +14,12 @@
 """
 Unit tests for strawberryfields.engine.RemoteEngine
 """
+import logging
+
 import numpy as np
 import pytest
 
+import strawberryfields as sf
 from strawberryfields.api import Connection, Job, JobStatus, Result
 from strawberryfields.engine import RemoteEngine
 
@@ -48,6 +51,14 @@ class MockServer:
         return Job(id_="123", status=status, connection=None, meta={"foo": "bar"})
 
 
+mock_device_dict = {
+    "layout": "",
+    "modes": 8,
+    "compiler": ["fock"],
+    "gate_parameters": {},
+}
+
+
 @pytest.fixture
 def job_to_complete(connection, monkeypatch):
     """Mocks a remote job that is completed after a certain number of requests."""
@@ -62,6 +73,12 @@ def job_to_complete(connection, monkeypatch):
         Connection,
         "get_job_result",
         mock_return(Result(np.array([[1, 2], [3, 4]]), is_stateful=False)),
+    )
+
+    monkeypatch.setattr(
+        Connection,
+        "_get_device_dict",
+        mock_return(mock_device_dict),
     )
 
 
@@ -111,13 +128,14 @@ class TestRemoteEngine:
         passes all keyword argument backend and runtime options to the create_job
         method."""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
         _, _, _, run_options = engine.run_async(prog, shots=1234)
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
 
         # run options from keyword arguments overwrite
         # run options provided by the program object
-        prog = prog.compile("X8", shots=15)
+        prog = prog.compile(device=engine.device_spec, shots=15)
         _, _, _, run_options = engine.run_async(prog, shots=1234)
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
 
@@ -125,17 +143,19 @@ class TestRemoteEngine:
         """Test that the remote engine run_async method correctly
         parses runtime options compiled into the program"""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8")
 
-        prog = prog.compile("X8", shots=15)
+        prog = prog.compile(device=engine.device_spec, shots=15)
         assert prog.run_options == {"shots": 15}
 
         _, _, _, run_options = engine.run_async(prog)
         assert run_options == {"shots": 15}
 
-    def test_no_shots(self, prog, connection):
+    def test_no_shots(self, prog, connection, monkeypatch):
         """Test that if the number of shots is not provided, an
         exception is raised"""
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8", connection=connection)
 
         with pytest.raises(ValueError, match="Number of shots must be specified"):
@@ -145,18 +165,21 @@ class TestRemoteEngine:
 class TestRemoteEngineIntegration:
     """Integration tests for the remote engine"""
 
-    def test_compilation(self, prog, monkeypatch):
+    def test_compilation(self, prog, monkeypatch, caplog):
         """Test that the remote engine correctly compiles a program
         for the intended backend"""
+        caplog.set_level(logging.INFO)
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
 
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
+        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler fock."
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
 
         # check program is compiled to match the chip template
-        expected = prog.compile("X8").circuit
+        expected = prog.compile(device=engine.device_spec).circuit
         res = res_prog.circuit
 
         for cmd1, cmd2 in zip(res, expected):
@@ -168,3 +191,19 @@ class TestRemoteEngineIntegration:
             assert all(i.ind == j.ind for i, j in zip(cmd1.reg, cmd2.reg))
             # check parameters are the same
             assert all(p1 == p2 for p1, p2 in zip(cmd1.op.p, cmd2.op.p))
+
+    def test_default_compiler(self, prog, monkeypatch, caplog):
+        """Test that if the device does not provide a default compiler,
+        that Xcov is used by default."""
+        caplog.set_level(logging.INFO)
+        test_device_dict = mock_device_dict.copy()
+        test_device_dict["compiler"] = []
+
+        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+
+        engine = RemoteEngine("X8")
+        _, target, res_prog, _ = engine.run_async(prog, shots=10)
+
+        assert engine.device_spec.default_compiler == "Xcov"
+        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xcov."

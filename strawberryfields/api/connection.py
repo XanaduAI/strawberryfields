@@ -154,6 +154,7 @@ class Connection:
         response = requests.get(self._url(path), headers=self._headers)
 
         if response.status_code == 200:
+            self.log.info("The device spec %s has been successfully retrieved.", target)
             return response.json()
         raise RequestFailedError(
             "Failed to get device specifications: {}".format(self._format_error_message(response))

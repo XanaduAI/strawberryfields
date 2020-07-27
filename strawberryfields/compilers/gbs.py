@@ -11,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit class specification for the general Gaussian Boson Sampling class of circuits."""
+"""Compiler for the general Gaussian Boson Sampling class of circuits."""
 
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
 
-from .gaussian import GaussianSpecs
+from .gaussian import Gaussian
 
 
-class GBSSpecs(GaussianSpecs):
-    """Circuit specifications for the general GBS class of circuits."""
+class GBS(Gaussian):
+    """Compiler for the general GBS class of circuits."""
 
     short_name = "gbs"
     primitives = {

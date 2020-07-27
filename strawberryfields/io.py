@@ -135,10 +135,13 @@ def to_program(bb):
                 # the gate has no arguments
                 gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
-    # compile the program if a compile target is given
-    targ = bb.target
-    if targ["name"] is not None:
-        prog = prog.compile(targ["name"], **targ["options"])
+    prog._target = bb.target["name"]
+
+    if "shots" in bb.target["options"]:
+        prog.run_options["shots"] = bb.target["options"]["shots"]
+
+    if "cutoff_dim" in bb.target["options"]:
+        prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
 
     return prog
 
