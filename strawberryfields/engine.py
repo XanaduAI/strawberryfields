@@ -271,7 +271,7 @@ class BaseEngine(abc.ABC):
             # compile the program for the correct backend
             target = self.backend.compiler
             if target is not None:
-                p = p.compile(target, **compile_options)
+                p = p.compile(compiler=target, **compile_options)
             p.lock()
 
             _, self.samples, self.all_samples = self._run_program(p, **kwargs)
@@ -617,7 +617,7 @@ class RemoteEngine:
         msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
         self.log.info(msg)
 
-        program = program.compile(device, **compile_options)
+        program = program.compile(device=device, **compile_options)
 
         # update the run options if provided
         run_options = {}

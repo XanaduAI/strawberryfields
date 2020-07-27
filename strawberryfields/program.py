@@ -60,7 +60,6 @@ import strawberryfields as sf
 
 import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
-from strawberryfields.api.devicespec import DeviceSpec
 import strawberryfields.program_utils as pu
 
 from .program_utils import Command, RegRef, CircuitError, RegRefError
@@ -447,7 +446,7 @@ class Program:
             p.source = self.source
         return p
 
-    def compile(self, device_or_compiler, force_compiler=None, **kwargs):
+    def compile(self, *, device=None, compiler=None, **kwargs):
         """Compile the program given a Strawberry Fields photonic compiler, or
         hardware device specification.
 
@@ -470,7 +469,7 @@ class Program:
         compile a circuit consisting of Gaussian operations and Fock measurements
         into canonical Gaussian boson sampling form.
 
-        >>> prog2 = prog.compile("gbs")
+        >>> prog2 = prog.compile(compiler="gbs")
 
         For a hardware device a :class:`~.DeviceSpec` object, and optionally a specified compile strategy,
         must be supplied. If no compile strategy is supplied the default compiler from the device
@@ -478,13 +477,14 @@ class Program:
 
         >>> eng = sf.RemoteEngine("X8")
         >>> device = eng.device_spec
-        >>> prog2 = prog.compile(device, "Xcov")
+        >>> prog2 = prog.compile(device=device, compiler="Xcov")
 
         Args:
-            device_or_compiler (str, ~strawberryfields.compilers.Compiler, ~strawberryfields.api.DeviceSpec):
-                compiler name or device specification object to use for program compilation
-            force_compiler (str, ~strawberryfields.compilers.Compiler): Optionally provide a compile strategy.
-                This overrides the compile strategy specified by a hardware :class:`~.DevicSpec`.
+            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+                program compilation
+            compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
+                to use. If a device is specified, this overrides the compile strategy specified by
+                the hardware :class:`~.DevicSpec`.
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
@@ -496,21 +496,22 @@ class Program:
             Program: compiled program
         """
         # pylint: disable=too-many-branches
+        if device is None and compiler is None:
+            raise ValueError("Either one or both of 'device' and 'compiler' must be specified")
 
-        def _get_compiler(compiler):
-            if compiler in compiler_db:
-                return compiler_db[compiler]()
+        def _get_compiler(compiler_or_name):
+            if compiler_or_name in compiler_db:
+                return compiler_db[compiler_or_name]()
 
-            if isinstance(compiler, Compiler):
-                return compiler
+            if isinstance(compiler_or_name, Compiler):
+                return compiler_or_name
 
-            raise ValueError(f"Unknown compiler '{device_or_compiler}'.")
+            raise ValueError(f"Unknown compiler '{compiler_or_name}'.")
 
-        if isinstance(device_or_compiler, DeviceSpec):
-            device = device_or_compiler
+        if device is not None:
             target = device.target
 
-            if force_compiler is None:
+            if compiler is None:
                 # get the default compiler from the device spec
                 compiler_name = device.default_compiler
 
@@ -522,7 +523,7 @@ class Program:
                         "must be manually provided when calling Program.compile()."
                     )
             else:
-                compiler = _get_compiler(force_compiler)
+                compiler = _get_compiler(compiler)
 
             if device.modes is not None:
                 # Check that the number of modes in the program is valid for the given device.
@@ -537,7 +538,7 @@ class Program:
                         f"only supports a {device.modes}-mode program."
                     )
         else:
-            compiler = _get_compiler(device_or_compiler)
+            compiler = _get_compiler(compiler)
             target = compiler.short_name
 
         seq = compiler.decompose(self.circuit)
@@ -568,18 +569,10 @@ class Program:
         compiled.backend_options.update(backend_options)
 
         # validate gate parameters
-        if isinstance(device_or_compiler, DeviceSpec) and device.gate_parameters:
+        if device is not None and device.gate_parameters:
             bb_device = bb.loads(device.layout)
             bb_compiled = sf.io.to_blackbird(compiled)
-
-            try:
-                user_parameters = match_template(bb_device, bb_compiled)
-            except bb.utils.TemplateError:
-                raise CircuitError(
-                    f"Program cannot be used with the compiler '{compiler.short_name}' "
-                    "due to incompatible topology."
-                )
-
+            user_parameters = match_template(bb_device, bb_compiled)
             device.validate_parameters(**user_parameters)
 
         return compiled

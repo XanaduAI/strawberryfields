@@ -58,7 +58,7 @@ class GaussianUnitary(Compiler):
             Rgate(0.3) | q[0]
             Sgate(0.6, 1.0) | q[0]
 
-        compiled_circuit = circuit.compile("gaussian_unitary")
+        compiled_circuit = circuit.compile(compiler="gaussian_unitary")
 
     We can now print the compiled circuit, consisting of one
     :class:`~.GaussianTransform` and one :class:`~.Dgate`:
