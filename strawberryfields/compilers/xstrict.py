@@ -29,7 +29,7 @@ class Xstrict(Compiler):
 
     >>> eng = sf.RemoteEngine("X8")
     >>> spec = eng.device_spec
-    >>> prog.compile(spec, force_compiler="Xstrict")
+    >>> prog.compile(device=spec, compiler="Xstrict")
     """
 
     short_name = "Xstrict"

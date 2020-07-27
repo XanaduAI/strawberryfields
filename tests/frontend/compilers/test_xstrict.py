@@ -29,7 +29,7 @@ class TestCompilation:
         """Test compilation works for the exact circuit"""
         params = generate_X8_params(1, 0.3)
         prog = X8_spec.create_program(**params)
-        prog2 = prog.compile(X8_spec, force_compiler="Xstrict")
+        prog2 = prog.compile(device=X8_spec, compiler="Xstrict")
         assert program_equivalence(prog, prog2, atol=tol, rtol=0)
 
     def test_invalid_parameter(self, tol):
@@ -39,7 +39,7 @@ class TestCompilation:
         prog.circuit[0].op.p = [0.5, 0]
 
         with pytest.raises(ValueError, match="has invalid value"):
-            prog.compile(X8_spec, force_compiler="Xstrict")
+            prog.compile(device=X8_spec, compiler="Xstrict")
 
     def test_invalid_gate(self, tol):
         """Test exception is raised with invalid primitive"""
@@ -48,7 +48,7 @@ class TestCompilation:
         prog.circuit[0].op.__class__ = sf.ops.CXgate
 
         with pytest.raises(sf.program_utils.CircuitError, match="CXgate cannot be used with the compiler"):
-            prog.compile(X8_spec, force_compiler="Xstrict")
+            prog.compile(device=X8_spec, compiler="Xstrict")
 
     def test_invalid_topology(self, tol):
         """Test exception is raised with invalid topology"""
@@ -57,4 +57,4 @@ class TestCompilation:
         del prog.circuit[0]
 
         with pytest.raises(sf.program_utils.CircuitError, match="incompatible topology"):
-            prog.compile(X8_spec, force_compiler="Xstrict")
+            prog.compile(device=X8_spec, compiler="Xstrict")
