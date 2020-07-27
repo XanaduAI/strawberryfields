@@ -24,7 +24,7 @@ import requests
 
 from strawberryfields.api import Connection, JobStatus, RequestFailedError
 from strawberryfields import configuration as conf
-from strawberryfields.circuitspecs import Ranges
+from strawberryfields.compilers import Ranges
 
 from .conftest import mock_return
 

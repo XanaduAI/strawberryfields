@@ -98,7 +98,7 @@ def test_parameters_with_operations(eng_prog_params, G):
 
     This test is successful if no exceptions are raised.
 
-    Some operation/backend combinations are forbidden by the CircuitSpecs instance of the backend.
+    Some operation/backend combinations are forbidden by the Compiler instance of the backend.
     We catch these exceptions and convert them into warnings.
     """
     kwargs = {}
@@ -126,7 +126,7 @@ def test_parameters_with_operations(eng_prog_params, G):
         try:
             eng.run(prog, **kwargs)
         except pu.CircuitError as err:
-            # record CircuitSpecs-forbidden op/backend combinations here
+            # record Compiler-forbidden op/backend combinations here
             warnings.warn(str(err))
         eng.reset()
 

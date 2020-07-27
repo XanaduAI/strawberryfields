@@ -34,7 +34,6 @@ class TFBackend(BaseFock):
     """
 
     short_name = "tf"
-    circuit_spec = "tf"
 
     def __init__(self):
         """Initialize a TFBackend object.

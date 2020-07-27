@@ -2296,7 +2296,7 @@ class Interferometer(Decomposition):
                 # local phase shifts
                 q = np.log(expphi).imag if np.abs(expphi - 1) >= _decomposition_tol else 0
                 if not (drop_identity and q == 0):
-                    cmds.append(Command(Rgate(q), reg[n]))
+                    cmds.append(Command(Rgate(np.mod(q, 2 * np.pi)), reg[n]))
 
             if BS2 is not None:
                 # Clements style beamsplitters
