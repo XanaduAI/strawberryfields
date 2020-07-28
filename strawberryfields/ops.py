@@ -722,8 +722,9 @@ class DisplacedSqueezed(Preparation):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
 
-
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [p[0], p[1], p[2], p[3]])
+        tf_complex = any(
+            hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [p[0], p[1], p[2], p[3]]
+        )
 
         if (np.iscomplex([p[0], p[1], p[2], p[3]])).any() or tf_complex:
             raise ValueError(
