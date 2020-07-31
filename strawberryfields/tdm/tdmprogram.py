@@ -15,6 +15,7 @@
 """
 This module implements the :class:`.TDMProgram` class which acts as a representation for time-domain quantum circuits.
 """
+# pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
 from operator import itemgetter
 import strawberryfields as sf
@@ -65,6 +66,7 @@ def validate_measurements(circuit, shift):
     return spatial_modes
 
 def input_check(args, copies):
+	"""Checks the input arguments have consistent dimensions"""
     # check if all lists of equal length
     param_lengths = [len(param) for param in args]
     if len(set(param_lengths)) != 1:
@@ -75,6 +77,8 @@ def input_check(args, copies):
         raise TypeError("Number of copies must be a real positive integer.")
 
 class TDMProgram(sf.Program):
+	"""Represents a photonic quantum circuit in the time domain encoding"""
+
     def __init__(self, N, name=None):
         self.concurr_modes = N
         self.total_timebins = 0
