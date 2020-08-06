@@ -352,3 +352,21 @@ class TestParameterTFIntegration:
         assert isinstance(applied_cmds[0].op, sf.ops.Dgate)
         assert par_evaluate(applied_cmds[0].op.p[0]) == mapping["p"] / np.sqrt(2 * hbar)
         assert applied_cmds[0].op.p[1] == np.pi/2
+
+    @pytest.mark.parametrize("gate", [sf.ops.Dgate, sf.ops.Coherent, sf.ops.DisplacedSqueezed])
+    def test_complex_symbolic_tf(self, gate):
+        """Test that passing a TF Variable to gates that previously accepted
+        complex parameters raises an error when using the TF backend."""
+        import tensorflow as tf
+        with pytest.raises(ValueError, match="cannot be complex"):
+
+            prog = sf.Program(1)
+            alpha = prog.params("alpha")
+
+            with prog.context as q:
+                gate(alpha) | q[0]
+
+            eng = sf.Engine("tf", backend_options={"cutoff_dim":5})
+
+            with tf.GradientTape() as tape:
+                res = eng.run(prog, args={"alpha": tf.Variable(0.5+1j)})

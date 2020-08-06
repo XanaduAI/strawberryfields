@@ -20,6 +20,7 @@ import numpy as np
 
 import strawberryfields.program_utils as pu
 
+from strawberryfields import Engine
 from strawberryfields import ops
 from strawberryfields.program import Program
 from strawberryfields.program_utils import MergeFailure, RegRefError
@@ -176,6 +177,25 @@ class TestComplexError:
             with prog.context as q:
                 gate(0.2+1j) | q
 
+            eng = Engine("gaussian")
+            res = eng.run(prog)
+
+    def test_complex_symbolic(self, gate):
+        """Test that passing a complex value to symbolic parameter of a gate
+        that previously accepted complex parameters raises an error.
+
+        An example here is testing heterodyne measurements.
+        """
+        with pytest.raises(ValueError, match="cannot be complex"):
+
+            prog = Program(1)
+
+            with prog.context as q:
+                ops.MeasureHD | q[0]
+                gate(q[0].par) | q
+
+            eng = Engine("gaussian")
+            res = eng.run(prog)
 
 def test_merge_measured_pars():
     """Test merging two gates with measured parameters."""
