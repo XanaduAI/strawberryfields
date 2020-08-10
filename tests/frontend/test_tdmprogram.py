@@ -25,9 +25,9 @@ np.random.seed(42)
 
 def test_end_to_end():
 	np.random.seed(137)
-	R =  [1/2, 1, 0.3, 1.4, 0.4, 1] # phase angles
-	BS = [1, 1/3, 1/2, 1, 1/5, 2/10] # BS angles
-	M =  [1, 2.3, 1.2, 1/2, 5/3, 0.1] # measurement angles
+	R =  [1/2, 1, 0.3, 1.4, 0.4] # phase angles
+	BS = [1, 1/3, 1/2, 1, 1/5] # BS angles
+	M =  [1, 2.3, 1.2, 1/2, 5/3] # measurement angles
 	r = 0.8
 	eta = 0.99
 	nbar = 0.1
@@ -49,5 +49,5 @@ def test_end_to_end():
 	    ops.MeasureHomodyne(p[2]) | q[0]
 	eng = sf.Engine('gaussian')
 	result = eng.run(prog)
-	samples = reshape_samples(result.all_samples, c)
-	assert samples.shape == (c,len(R))
+	samples = reshape_samples(result.all_samples, c=1)
+	assert samples.shape == (1, len(R)*c)
