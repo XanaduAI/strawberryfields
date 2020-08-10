@@ -24,7 +24,6 @@ np.random.seed(42)
 
 
 def test_end_to_end():
-	np.random.seed(137)
 	R =  [1/2, 1, 0.3, 1.4, 0.4] # phase angles
 	BS = [1, 1/3, 1/2, 1, 1/5] # BS angles
 	M =  [1, 2.3, 1.2, 1/2, 5/3] # measurement angles
@@ -51,3 +50,23 @@ def test_end_to_end():
 	result = eng.run(prog)
 	samples = reshape_samples(result.all_samples, c=1)
 	assert samples.shape == (1, len(R)*c)
+
+def test_epr():
+	sq_r = 1.0
+	N = 3
+	prog = tdmprogram.TDMProgram(N=N)
+	c = 1
+	copies = 1000
+	alpha = [0, np.pi/2]*c
+	phi = [np.pi/4, 0]*c
+	M = [0, 0]*c
+	with prog.context(alpha, phi, M, copies=copies) as (p, q):
+	    ops.Sgate(sq_r, 0) | q[2]
+	    ops.Rgate(p[0]) | q[2]
+	    ops.BSgate(p[1]) | (q[2], q[1])
+	    ops.MeasureHomodyne(p[2]) | q[0]
+	eng = sf.Engine('gaussian')
+	result = eng.run(prog)
+	samples = result.all_samples
+	x = reshape_samples(samples)
+	### This test is not quite correct
