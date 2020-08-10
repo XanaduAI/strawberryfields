@@ -82,11 +82,21 @@ def input_check(args, copies):
         raise TypeError("Number of copies must be a real positive integer.")
 
 
-def reshape_samples(all_samples, c):
-    """Reshapes the samples so that they have the expected correct shape,
-    namely, number of copies by number of modes"""
-    samples_as_array  = np.array([np.array(all_samples[i]).flatten() for i in range(len(all_samples))])
-    return samples_as_array.T.flatten().reshape(c,-1)
+def reshape_samples(samples, c=None):
+    """Reshapes the samples so that they have the expected correct shape"""
+    num_modes = len(samples)
+    len_samples = [len(samples[i]) for i in range(num_modes)]
+    max_len = max(len_samples)
+    reshaped_samples = np.zeros([sum(len_samples)])
+    index = 0
+    for j in range(max_len):
+        for i in range(num_modes):
+            if j < len_samples[i]:
+                reshaped_samples[index] = samples[i][j]
+                index += 1
+    if c is None:
+        return reshaped_samples
+    return reshaped_samples.reshape(c, -1)
 
 
 class TDMProgram(sf.Program):
