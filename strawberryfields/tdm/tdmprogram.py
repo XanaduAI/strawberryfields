@@ -22,6 +22,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 
+
 def shift(l, n):
     """Convenience function to shift a list by a number of steps.
 
@@ -33,6 +34,7 @@ def shift(l, n):
     """
     return l[n:] + l[:n]
 
+
 def get_modes(cmd, q):
     """Returns the registers from q required by a command"""
     reg_getter = itemgetter(*[r.ind for r in cmd.reg])
@@ -42,6 +44,7 @@ def get_modes(cmd, q):
         modes = (modes,)
 
     return modes
+
 
 def validate_measurements(circuit, shift):
     """Validate the TDM program measurements are correct"""
@@ -65,8 +68,9 @@ def validate_measurements(circuit, shift):
 
     return spatial_modes
 
+
 def input_check(args, copies):
-	"""Checks the input arguments have consistent dimensions"""
+    """Checks the input arguments have consistent dimensions"""
     # check if all lists of equal length
     param_lengths = [len(param) for param in args]
     if len(set(param_lengths)) != 1:
@@ -76,8 +80,16 @@ def input_check(args, copies):
     if not isinstance(copies, int) or copies < 1:
         raise TypeError("Number of copies must be a real positive integer.")
 
+
+def reshape_samples(all_samples, c):
+    """Reshapes the samples so that they have the expected correct shape,
+    namely, number of copies by number of modes"""
+    samples_asarray  = np.array([np.array(samples[i]).flatten() for i in range(len(samples))])
+    return samples_asrray.T.flatten().reshape(c,-1)
+
+
 class TDMProgram(sf.Program):
-	"""Represents a photonic quantum circuit in the time domain encoding"""
+    """Represents a photonic quantum circuit in the time domain encoding"""
 
     def __init__(self, N, name=None):
         self.concurr_modes = N
@@ -117,10 +129,10 @@ class TDMProgram(sf.Program):
                 self.apply_op(cmd, q, i)
 
                 if self.shift == "after" and isinstance(cmd.op, ops.Measurement):
-                    q = shift(q, 1) # shift after each measurement
+                    q = shift(q, 1)  # shift after each measurement
 
             if self.shift == "end":
-                q = shift(q, self.spatial_modes) # shift at end of each time bin
+                q = shift(q, self.spatial_modes)  # shift at end of each time bin
 
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
