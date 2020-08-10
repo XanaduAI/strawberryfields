@@ -17,6 +17,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
+import numpy as np
 from operator import itemgetter
 import strawberryfields as sf
 from strawberryfields import ops
@@ -84,8 +85,8 @@ def input_check(args, copies):
 def reshape_samples(all_samples, c):
     """Reshapes the samples so that they have the expected correct shape,
     namely, number of copies by number of modes"""
-    samples_asarray  = np.array([np.array(samples[i]).flatten() for i in range(len(samples))])
-    return samples_asrray.T.flatten().reshape(c,-1)
+    samples_as_array  = np.array([np.array(all_samples[i]).flatten() for i in range(len(all_samples))])
+    return samples_as_array.T.flatten().reshape(c,-1)
 
 
 class TDMProgram(sf.Program):
