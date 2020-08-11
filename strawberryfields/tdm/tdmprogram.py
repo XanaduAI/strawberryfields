@@ -79,7 +79,7 @@ def input_check(args, copies):
 
     # check copies
     if not isinstance(copies, int) or copies < 1:
-        raise TypeError("Number of copies must be a real positive integer.")
+        raise TypeError("Number of copies must be a positive integer.")
 
 
 def reshape_samples(samples, c=None):
