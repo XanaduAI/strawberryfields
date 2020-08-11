@@ -24,7 +24,7 @@ from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 
 
-def shift(l, n):
+def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 
     If ``n`` is positive it shifts to the left.
@@ -140,10 +140,10 @@ class TDMProgram(sf.Program):
                 self.apply_op(cmd, q, i)
 
                 if self.shift == "after" and isinstance(cmd.op, ops.Measurement):
-                    q = shift(q, 1)  # shift after each measurement
+                    q = shift_by(q, 1)  # shift after each measurement
 
             if self.shift == "end":
-                q = shift(q, self.spatial_modes)  # shift at end of each time bin
+                q = shift_by(q, self.spatial_modes)  # shift at end of each time bin
 
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
