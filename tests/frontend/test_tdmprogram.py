@@ -18,6 +18,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import reshape_samples
+from matplotlib import pyplot as plt
 
 # make test deterministic
 np.random.seed(42)
@@ -55,18 +56,61 @@ def test_epr():
 	sq_r = 1.0
 	N = 3
 	prog = tdmprogram.TDMProgram(N=N)
-	c = 1
-	copies = 1000
-	alpha = [0, np.pi/2]*c
-	phi = [np.pi/4, 0]*c
-	M = [0, 0]*c
+	c = 4
+	copies = 400
+
+	 # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
+	alpha = [0, np.pi/4]*c
+	phi = [np.pi/2, 0]*c
+
+	# Measurement of 4 subsequent EPR states in XX, XP, PX, PP to investigate nearest-neighbour correlations in all basis permutations
+	M = [0, 0]+[0, np.pi/2]+[np.pi/2, 0]+[np.pi/2, np.pi/2] # 
+
 	with prog.context(alpha, phi, M, copies=copies) as (p, q):
 	    ops.Sgate(sq_r, 0) | q[2]
-	    ops.Rgate(p[0]) | q[2]
-	    ops.BSgate(p[1]) | (q[2], q[1])
+	    ops.BSgate(p[0]) | (q[2], q[1])
+	    ops.Rgate(p[1]) | q[2]
 	    ops.MeasureHomodyne(p[2]) | q[0]
 	eng = sf.Engine('gaussian')
 	result = eng.run(prog)
 	samples = result.all_samples
 	x = reshape_samples(samples)
+
+	X0 = x[0::8]
+	X1 = x[1::8]
+
+	X2 = x[2::8]
+	P0 = x[3::8]
+
+	P1 = x[4::8]
+	X3 = x[5::8]
+
+	P2 = x[6::8]
+	P3 = x[7::8]   
+	           
+	fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+	fig.suptitle('Nearest-neighbour correlations', fontsize=18)
+
+	axs[0,0].scatter(X1, X0)
+	axs[0,1].scatter(P0, X2)
+	axs[1,0].scatter(X3, P1)
+	axs[1,1].scatter(P3, P2)
+
+	axs[0,0].set_ylabel('$X_{i-1}$', fontsize=18)
+	axs[1,0].set_xlabel('$X_{i}$', fontsize=18)
+	axs[1,0].set_ylabel('$P_{i-1}$', fontsize=18)
+	axs[1,1].set_xlabel('$P_{i}$', fontsize=18)
+
+	for ax in axs.flat:
+		ax.grid(True)
+
+	plt.show()
+
 	### This test is not quite correct
+
+test_epr()
+
+
+	    # print('p[0]',p[0])
+	    # print('p[1]',p[1])
+	    # print('p[2]',p[2])
