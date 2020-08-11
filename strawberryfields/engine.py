@@ -28,7 +28,7 @@ from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
-
+from strawberryfields.tdm.tdmprogram import reshape_samples
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
 
@@ -465,6 +465,9 @@ class LocalEngine(BaseEngine):
         result = super()._run(
             program, args=args, compile_options=compile_options, **eng_run_options
         )
+
+        if isinstance(prog, TDMProgram):
+            result.samples = reshape_samples(self.all_samples)
 
         modes = temp_run_options["modes"]
 
