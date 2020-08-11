@@ -18,7 +18,6 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import reshape_samples
-from matplotlib import pyplot as plt
 
 # make test deterministic
 np.random.seed(42)
