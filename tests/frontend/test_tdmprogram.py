@@ -19,6 +19,9 @@ from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import reshape_samples
 
+# remove after Fabian's test:
+from matplotlib import pyplot as plt
+
 # make test deterministic
 np.random.seed(42)
 
@@ -44,7 +47,7 @@ def test_end_to_end():
     with prog.context(R, BS, M, copies=c) as (p, q):
         ops.Sgate(r, 0) | q[2]
         ops.ThermalLossChannel(eta, nbar) | q[2]
-        ops.BSgate(p[0]) | (q[2], q[1])
+        ops.BSgate(p[0]) | (q[1], q[2])
         ops.Rgate(p[1]) | q[2]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
@@ -70,13 +73,14 @@ def test_epr():
 
     with prog.context(alpha, phi, M, copies=copies) as (p, q):
         ops.Sgate(sq_r, 0) | q[2]
-        ops.BSgate(p[0]) | (q[2], q[1])
+        ops.BSgate(p[0]) | (q[1], q[2])
         ops.Rgate(p[1]) | q[2]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
     result = eng.run(prog)
     samples = result.all_samples
     x = reshape_samples(samples)
+
     X0 = x[0::8]
     X1 = x[1::8]
     X2 = x[2::8]
@@ -89,12 +93,12 @@ def test_epr():
     minusstdX1X0 = (X1 - X0).std() / np.sqrt(2)
     plusstdX1X0 = (X1 + X0).std() / np.sqrt(2)
     squeezed_std = np.exp(-sq_r)
-    assert np.allclose(minusstdX1X0, 1 / squeezed_std, atol=atol)
-    assert np.allclose(plusstdX1X0, squeezed_std, atol=atol)
+    assert np.allclose(minusstdX1X0, squeezed_std, atol=atol)
+    assert np.allclose(plusstdX1X0, 1 /  squeezed_std, atol=atol)
     minusstdP2P3 = (P2 - P3).std() / np.sqrt(2)
     plusstdP2P3 = (P2 + P3).std() / np.sqrt(2)
-    assert np.allclose(minusstdP2P3, squeezed_std, atol=atol)
-    assert np.allclose(plusstdP2P3, 1 / squeezed_std, atol=atol)
+    assert np.allclose(minusstdP2P3, 1 / squeezed_std, atol=atol)
+    assert np.allclose(plusstdP2P3, squeezed_std, atol=atol)
     minusstdP0X2 = (P0 - X2).std()
     plusstdP0X2 = (P0 + X2).std()
     expected = 2 * np.sinh(sq_r) ** 2
@@ -104,7 +108,6 @@ def test_epr():
     plusstdX3P1 = (X3 + P1).std()
     assert np.allclose(minusstdX3P1, expected, atol=atol)
     assert np.allclose(plusstdX3P1, expected, atol=atol)
-
 
 def test_error_no_measurement():
     """Test error is raised when there is no measurement"""
@@ -119,7 +122,7 @@ def test_error_no_measurement():
         with prog.context(R, BS, M, copies=c) as (p, q):
             ops.Sgate(r, 0) | q[2]
             ops.ThermalLossChannel(eta, nbar) | q[2]
-            ops.BSgate(p[0]) | (q[2], q[1])
+            ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]
 
 
@@ -137,7 +140,7 @@ def test_error_unequal_length():
         with prog.context(R, BS, M, copies=c) as (p, q):
             ops.Sgate(r, 0) | q[2]
             ops.ThermalLossChannel(eta, nbar) | q[2]
-            ops.BSgate(p[0]) | (q[2], q[1])
+            ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]
             ops.MeasureHomodyne(p[2]) | q[0]
 
@@ -155,7 +158,7 @@ def test_error_noninteger_number_copies():
         with prog.context(R, BS, M, copies=1/137) as (p, q):
             ops.Sgate(r, 0) | q[2]
             ops.ThermalLossChannel(eta, nbar) | q[2]
-            ops.BSgate(p[0]) | (q[2], q[1])
+            ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]
             ops.MeasureHomodyne(p[2]) | q[0]
 
@@ -172,7 +175,7 @@ def test_error_wrong_mode_measurement_end():
     with pytest.raises(ValueError, match="Measurements must be on consecutive modes starting from"):
         with prog.context(R, BS, M, copies=1, shift="end") as (p, q):
             ops.Sgate(r, 0) | q[2]
-            ops.BSgate(p[0]) | (q[2], q[1])
+            ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]
             ops.MeasureHomodyne(p[2]) | q[1]
 
@@ -189,6 +192,114 @@ def test_error_wrong_mode_measurement_after():
     with pytest.raises(ValueError, match="Measurements allowed only on"):
         with prog.context(R, BS, M, copies=1, shift="after") as (p, q):
             ops.Sgate(r, 0) | q[2]
-            ops.BSgate(p[0]) | (q[2], q[1])
+            ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]
             ops.MeasureHomodyne(p[2]) | q[1]
+
+
+def test_ghz():
+    """Check the correct GHZ correlations are generated"""
+    sq_r = 5
+    N = 3
+    prog = tdmprogram.TDMProgram(N=N)
+    copies = 1
+    vac_modes = 2 # number of vacuum modes in the initial setup
+
+    n = 20 # for an n-mode GHZ state
+    c = 2 # number of n-mode GHZ states per copy
+
+    # reference for gate parameters alpha and phi: https://advances.sciencemag.org/content/5/5/eaaw4530, paragraph above Eq (5)
+
+    alpha = []
+    for i in range(n+vac_modes):
+        if i == 0 or i==n+vac_modes-2 or i==n+vac_modes-1:
+            T = 1
+        else:
+            T = 1/(n-i+1)
+        # checking if the BS transmissions match with https://advances.sciencemag.org/content/5/5/eaaw4530    
+        print(i+1,':',T)
+        alpha.append(np.arccos(np.sqrt(T)))
+
+    phi = list(np.zeros(n+vac_modes))
+    phi[0] = np.pi/2
+
+    # # This will generate c GHZ states per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
+    alpha = alpha*c
+    phi = phi*c
+
+    # Measurement of 2 subsequent GHZ states: one for investivation of x-correlations and one for p-correlations
+    theta = [0]*(n+vac_modes) + [np.pi/2]*(n+vac_modes)
+
+    with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        ops.Sgate(sq_r, 0) | q[2]
+        ops.BSgate(p[0]) | (q[1], q[2])
+        ops.Rgate(p[1]) | q[2]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+    x = reshape_samples(samples)
+
+    X = x[vac_modes:n+2]
+    P = x[n+2+vac_modes:]
+
+    print('X:', X) # <-- these should all be the same, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
+    print('P:', P)
+    print('sum(P):',np.sum(P)) # <-- this should be as close as possible to zero, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
+
+
+def test_1Dcluster():
+    """Check the correct 1-clusterstate correlations are generated"""
+    sq_r = 5
+    N = 3
+    prog = tdmprogram.TDMProgram(N=N)
+    copies = 1
+
+    n = 100 # for an n-mode cluster state
+
+    # reference for gate parameters alpha and phi: https://advances.sciencemag.org/content/5/5/eaaw4530, paragraph above Eq (1)
+    alpha = []
+    for i in range(n):
+        if i == 0:
+            T = 1
+        else:
+            T = (np.sqrt(5)-1)/2
+        alpha.append(np.arccos(np.sqrt(T)))
+
+    phi = [np.pi/2]*n
+    
+    # alternating measurement basis because nullifiers are defined by -X_(k-2)+P_(k-1)-X_(k)
+    theta = [0,np.pi/2]*int(n/2)
+
+    with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        ops.Sgate(sq_r, 0) | q[2]
+        ops.BSgate(p[0]) | (q[1], q[2])
+        ops.Rgate(p[1]) | q[2]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+    x = reshape_samples(samples)
+
+    strip = 2 # first two modes are worthless and will be removed
+
+    X = x[0+strip::2]
+    P = x[1+strip::2]
+
+    # nullifier_k = -X_(k-2)+P_(k-1)-X_(k)
+    # see: https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (1)
+    for i in range(2,n-strip,2):
+        # x[i-2] was measured in X basis, see theta
+        # x[i-1] was measured in P basis, see theta
+        # x[i]   was measured in X basis, see theta
+        nullif = -x[i-2]+x[i-1]-x[i] # <-- clusterstate generation successful when this close to zero
+        print(nullif)
+
+    # # this is the same thing, only expressed in terms of X and P
+    # for i in range(2,int((n-strip)/2)):
+    #     nullif = -X[i-1]+P[i-1]-X[i] # <-- clusterstate generation successful when this close to zero
+    #     print(nullif)
+
+# test_epr()
+# test_ghz()
+# test_1Dcluster()
