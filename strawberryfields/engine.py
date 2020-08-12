@@ -469,7 +469,7 @@ class LocalEngine(BaseEngine):
         )
 
         if isinstance(program, TDMProgram):
-            result._samples = reshape_samples(result.all_samples)
+            result._samples = reshape_samples(result.all_samples, c=program.copies)
 
         modes = temp_run_options["modes"]
 
