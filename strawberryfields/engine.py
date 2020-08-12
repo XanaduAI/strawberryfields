@@ -415,6 +415,8 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
+        from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
+
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
@@ -465,6 +467,9 @@ class LocalEngine(BaseEngine):
         result = super()._run(
             program, args=args, compile_options=compile_options, **eng_run_options
         )
+
+        if isinstance(program, TDMProgram):
+            result._samples = reshape_samples(result.all_samples)
 
         modes = temp_run_options["modes"]
 

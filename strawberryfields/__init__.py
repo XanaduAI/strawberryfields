@@ -29,6 +29,7 @@ from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
 from .parameters import par_funcs as math
 from .program import Program
+from . import tdm
 
 __all__ = [
     "Engine",
