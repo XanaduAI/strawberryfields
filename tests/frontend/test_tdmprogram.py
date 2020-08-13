@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for program.py"""
+r"""Unit tests for tdmprogram.py"""
 import pytest
 import numpy as np
 import strawberryfields as sf
@@ -146,7 +146,6 @@ def test_error_noninteger_number_copies():
     R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
     BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
     M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    # Note M has one less element than R and BS
     r = 0.8
     N = 3
     prog = tdmprogram.TDMProgram(N=N)
@@ -164,7 +163,6 @@ def test_error_wrong_mode_measurement_end():
     R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
     BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
     M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    # Note M has one less element than R and BS
     r = 0.8
     N = 3
     prog = tdmprogram.TDMProgram(N=N)
