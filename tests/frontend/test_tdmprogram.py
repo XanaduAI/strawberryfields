@@ -300,6 +300,59 @@ def test_1Dcluster():
     #     nullif = -X[i-1]+P[i-1]-X[i] # <-- clusterstate generation successful when this close to zero
     #     print(nullif)
 
+
+def test_millionmodes():
+
+    sq_r = 5
+    N = 3 # concurrent modes
+    prog = tdmprogram.TDMProgram(N=N)
+
+    delay = 1 # number of timebins in the delay line
+    n = 100 # for an n-mode cluster state
+    copies = 1
+
+    # first half of cluster state measured in X, second half in P
+    theta1 = [0]*int(n/2) + [np.pi/2]*int(n/2) # measurement angles for detector A
+    theta2 = theta1 # measurement angles for detector B
+
+    with prog.context(theta1, theta2, copies=copies, shift='end') as (p, q):
+        ops.Sgate(sq_r, 0) | q[2]
+        ops.Rgate(np.pi/2) | q[2]
+        ops.Sgate(sq_r, 0) | q[1]
+        ops.BSgate(np.pi/4) | (q[1],q[2])
+        ops.BSgate(np.pi/4) | (q[1],q[0])
+        ops.MeasureHomodyne(p[0]) | q[1]
+        ops.MeasureHomodyne(p[1]) | q[0]
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+
+    # x seems to be of shape (n*2), i.e. (timebins*spatial_modes). I suggest a two-dimensional array to clearly distinguish samples from detector A and B
+    x = reshape_samples(samples)
+
+    X_A = x[0:n:2] # X samples from detector A
+    X_B = x[1:n:2] # X samples from detector B
+    P_A = x[n::2] # P samples from detector A
+    P_B = x[n+1::2] # P samples from detector B
+
+    # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
+    nX = []
+    nP = []
+    print('nullif_X,                  nullif_P')
+    for i in range(len(X_A)-1):
+        nullif_X = X_A[i] + X_B[i] + X_A[i+1] - X_B[i+1]
+        nullif_P = P_A[i] + P_B[i] - P_A[i+1] + P_B[i+1]
+        nX.append(nullif_X)
+        nP.append(nullif_P)
+        print(nullif_X, '     ', nullif_P)
+
+    nXvar=np.var(np.array(nX))
+    nPvar=np.var(np.array(nP))
+
+    print('nullif_X variance:', nXvar)
+    print('nullif_P variance:', nPvar)
+
 # test_epr()
 # test_ghz()
 # test_1Dcluster()
+# test_millionmodes()
