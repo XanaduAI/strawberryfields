@@ -19,8 +19,8 @@ from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import reshape_samples
 
-# remove after Fabian's test:
-from matplotlib import pyplot as plt
+# feel free to remove after Fabian's test:
+import time
 
 # make test deterministic
 np.random.seed(42)
@@ -55,59 +55,6 @@ def test_end_to_end():
     samples = reshape_samples(result.all_samples, c=1)
     assert samples.shape == (1, len(R) * c)
 
-
-def test_epr():
-    """Check the correct EPR correlations are generated"""
-    sq_r = 1.0
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    c = 4
-    copies = 400
-
-    # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
-    alpha = [0, np.pi / 4] * c
-    phi = [np.pi / 2, 0] * c
-
-    # Measurement of 4 subsequent EPR states in XX, XP, PX, PP to investigate nearest-neighbour correlations in all basis permutations
-    M = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]  #
-
-    with prog.context(alpha, phi, M, copies=copies) as (p, q):
-        ops.Sgate(sq_r, 0) | q[2]
-        ops.BSgate(p[0]) | (q[1], q[2])
-        ops.Rgate(p[1]) | q[2]
-        ops.MeasureHomodyne(p[2]) | q[0]
-    eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
-    x = reshape_samples(samples)
-
-    X0 = x[0::8]
-    X1 = x[1::8]
-    X2 = x[2::8]
-    P0 = x[3::8]
-    P1 = x[4::8]
-    X3 = x[5::8]
-    P2 = x[6::8]
-    P3 = x[7::8]
-    atol = 5 / np.sqrt(copies)
-    minusstdX1X0 = (X1 - X0).std() / np.sqrt(2)
-    plusstdX1X0 = (X1 + X0).std() / np.sqrt(2)
-    squeezed_std = np.exp(-sq_r)
-    assert np.allclose(minusstdX1X0, squeezed_std, atol=atol)
-    assert np.allclose(plusstdX1X0, 1 /  squeezed_std, atol=atol)
-    minusstdP2P3 = (P2 - P3).std() / np.sqrt(2)
-    plusstdP2P3 = (P2 + P3).std() / np.sqrt(2)
-    assert np.allclose(minusstdP2P3, 1 / squeezed_std, atol=atol)
-    assert np.allclose(plusstdP2P3, squeezed_std, atol=atol)
-    minusstdP0X2 = (P0 - X2).std()
-    plusstdP0X2 = (P0 + X2).std()
-    expected = 2 * np.sinh(sq_r) ** 2
-    assert np.allclose(minusstdP0X2, expected, atol=atol)
-    assert np.allclose(plusstdP0X2, expected, atol=atol)
-    minusstdX3P1 = (X3 - P1).std()
-    plusstdX3P1 = (X3 + P1).std()
-    assert np.allclose(minusstdX3P1, expected, atol=atol)
-    assert np.allclose(plusstdX3P1, expected, atol=atol)
 
 def test_error_no_measurement():
     """Test error is raised when there is no measurement"""
@@ -197,8 +144,64 @@ def test_error_wrong_mode_measurement_after():
             ops.MeasureHomodyne(p[2]) | q[1]
 
 
+def test_epr():
+    """Single delay loop with variational coupling as built at Xanadu for cloud access. This example generates EPR states and evaluates the quadrature correlations."""
+
+    sq_r = 1.0
+    N = 3
+    prog = tdmprogram.TDMProgram(N=N)
+    c = 4
+    copies = 400
+
+    # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
+    alpha = [0, np.pi / 4] * c
+    phi = [np.pi / 2, 0] * c
+
+    # Measurement of 4 subsequent EPR states in XX, XP, PX, PP to investigate nearest-neighbour correlations in all basis permutations
+    M = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]  #
+
+    with prog.context(alpha, phi, M, copies=copies) as (p, q):
+        ops.Sgate(sq_r, 0) | q[2]
+        ops.BSgate(p[0]) | (q[1], q[2])
+        ops.Rgate(p[1]) | q[2]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+    x = reshape_samples(samples)
+
+    X0 = x[0::8]
+    X1 = x[1::8]
+    X2 = x[2::8]
+    P0 = x[3::8]
+    P1 = x[4::8]
+    X3 = x[5::8]
+    P2 = x[6::8]
+    P3 = x[7::8]
+    atol = 5 / np.sqrt(copies)
+    minusstdX1X0 = (X1 - X0).std() / np.sqrt(2)
+    plusstdX1X0 = (X1 + X0).std() / np.sqrt(2)
+    squeezed_std = np.exp(-sq_r)
+    assert np.allclose(minusstdX1X0, squeezed_std, atol=atol)
+    assert np.allclose(plusstdX1X0, 1 /  squeezed_std, atol=atol)
+    minusstdP2P3 = (P2 - P3).std() / np.sqrt(2)
+    plusstdP2P3 = (P2 + P3).std() / np.sqrt(2)
+    assert np.allclose(minusstdP2P3, 1 / squeezed_std, atol=atol)
+    assert np.allclose(plusstdP2P3, squeezed_std, atol=atol)
+    minusstdP0X2 = (P0 - X2).std()
+    plusstdP0X2 = (P0 + X2).std()
+    expected = 2 * np.sinh(sq_r) ** 2
+    assert np.allclose(minusstdP0X2, expected, atol=atol)
+    assert np.allclose(plusstdP0X2, expected, atol=atol)
+    minusstdX3P1 = (X3 - P1).std()
+    plusstdX3P1 = (X3 + P1).std()
+    assert np.allclose(minusstdX3P1, expected, atol=atol)
+    assert np.allclose(plusstdX3P1, expected, atol=atol)
+
+
 def test_ghz():
-    """Check the correct GHZ correlations are generated"""
+    """Single delay loop with variational coupling as built at Xanadu for cloud access. This example generates n-mode GHZ states and evaluates the quadrature correlations."""
+
     sq_r = 5
     N = 3
     prog = tdmprogram.TDMProgram(N=N)
@@ -249,7 +252,8 @@ def test_ghz():
 
 
 def test_1Dcluster():
-    """Check the correct 1-clusterstate correlations are generated"""
+    """Single delay loop with variational coupling as built at Xanadu for cloud access. This example generates a 1D-clusterstate and evaluates the quadrature correlations."""
+
     sq_r = 5
     N = 3
     prog = tdmprogram.TDMProgram(N=N)
@@ -302,6 +306,9 @@ def test_1Dcluster():
 
 
 def test_millionmodes():
+    '''
+    One-dimensional temporal-mode cluster state as demonstrated by University of Tokyo. See https://aip.scitation.org/doi/pdf/10.1063/1.4962732
+    '''
 
     sq_r = 5
     N = 3 # concurrent modes
@@ -317,8 +324,8 @@ def test_millionmodes():
 
     with prog.context(theta1, theta2, copies=copies, shift='end') as (p, q):
         ops.Sgate(sq_r, 0) | q[2]
-        ops.Rgate(np.pi/2) | q[2]
         ops.Sgate(sq_r, 0) | q[1]
+        ops.Rgate(np.pi/2) | q[2]
         ops.BSgate(np.pi/4) | (q[1],q[2])
         ops.BSgate(np.pi/4) | (q[1],q[0])
         ops.MeasureHomodyne(p[0]) | q[1]
@@ -352,7 +359,119 @@ def test_millionmodes():
     print('nullif_X variance:', nXvar)
     print('nullif_P variance:', nPvar)
 
+
+def test_DTU2D():
+    '''
+    Two-dimensional temporal-mode cluster state as demonstrated by Technical University of Denmark. See: https://arxiv.org/pdf/1906.08709
+    '''
+
+    start = time.time()
+
+    sq_r = 5
+
+    '''
+    Settings to generate a cluster state of dimension (delay2 x n). In the DTU-paper https://arxiv.org/pdf/1906.08709 they used:
+    delay2=12
+    n=15000
+    '''
+    delay1 = 1 # number of timebins in the short delay line
+    delay2 = 12 # number of timebins in the long delay line
+    n_concurr = delay2 + delay1 + 2 # concurrent modes
+    n = 1000 # number of timebins
+
+    # Number of timebins must be a multiple of concurrent modes, otherwise sampli() doesn't work
+    n = n//n_concurr*n_concurr
+
+    # first half of cluster state measured in X, second half in P
+    theta_A = [0]*int(n/2) + [np.pi/2]*int(n/2) # measurement angles for detector A
+    theta_B = theta_A # measurement angles for detector B
+
+    # 2D cluster
+    prog = tdmprogram.TDMProgram(n_concurr)
+    with prog.context(theta_A, theta_B, shift=1) as (p, q):
+        ops.Sgate(sq_r, 0) | q[0]
+        ops.Sgate(sq_r, 0) | q[delay2+delay1+1]
+        ops.Rgate(np.pi/2) | q[delay2+delay1+1]
+        ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1+1],q[0]) # (B, A)
+        ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1],q[0])
+        ops.BSgate(np.pi/4, np.pi) | (q[delay1],q[0])
+        ops.MeasureHomodyne(p[0]) | q[delay1]
+        ops.MeasureHomodyne(p[1]) | q[0]
+
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+
+    # x = reshape_samples(samples)
+    x = sampli(samples)
+
+    X_A = x[0:n:2] # X samples from detector A
+    X_B = x[1:n:2] # X samples from detector B
+    P_A = x[n::2] # P samples from detector A
+    P_B = x[n+1::2] # P samples from detector B
+
+    # print('X_A\n',X_A)
+    # print('X_B\n',X_B)
+    # print('P_A\n',P_A)
+    # print('P_B\n',P_B)
+
+    # print('var(X_A)',np.var(X_A))
+    # print('var(X_B)',np.var(X_B))
+    # print('var(P_A)',np.var(P_A))
+    # print('var(P_B)',np.var(P_B))
+
+    # print(len(x))
+    # print(len(X_A))
+    # print(len(X_B))
+    # print(len(P_A))
+    # print(len(P_B))
+
+    # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
+    N=delay2
+    nX = []
+    nP = []
+    # print('\n')
+    # print('nullif_X,                  nullif_P')
+    for k in range(0, len(X_A)-delay2-1):
+        nullif_X = X_A[k] + X_B[k] - X_A[k+1] - X_B[k+1] - X_A[k+N] + X_B[k+N] - X_A[k+N+1] + X_B[k+N+1]
+        nullif_P = P_A[k] + P_B[k] + P_A[k+1] + P_B[k+1] - P_A[k+N] + P_B[k+N] + P_A[k+N+1] - P_B[k+N+1]
+        nX.append(nullif_X)
+        nP.append(nullif_P)
+        # print(nullif_X, '     ', nullif_P)
+
+    nXvar=np.var(np.array(nX))
+    nPvar=np.var(np.array(nP))
+
+    print('\n')
+    print('nullif_X variance:', nXvar)
+    print('nullif_P variance:', nPvar)
+
+    if 1e-15 < nXvar < 0.5 and 1e-15 < nPvar < 0.5:
+        print('\n########## SUCCESS ###########')
+
+    print('\nElapsed time [s]:', time.time()-start)
+
+def sampli(samples):
+    '''
+    This function rearranges results.all_samples to a chronologically ordered one-dimensional array -- ONLY IN THE SPECIAL CASE of two spatial modes and a one-step shift at the end of the unit cell. Also, make sure the number of timebins is a multiple of the concurrent modes.
+    '''
+
+    num_modes=len(samples)
+    len_samples = [len(samples[i]) for i in range(num_modes)]
+    max_len = max(len_samples)
+
+    x = []
+    for j in range(0,max_len,2):
+        x.append(samples[0][j])
+        for i in range(1,num_modes):
+            x.append(samples[i][j])
+            x.append(samples[i][j+1])
+        x.append(samples[0][j+1])
+
+    return x
+
 # test_epr()
 # test_ghz()
 # test_1Dcluster()
 # test_millionmodes()
+test_DTU2D()

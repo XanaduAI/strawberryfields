@@ -61,11 +61,11 @@ def validate_measurements(circuit, shift):
     if not spatial_modes:
         raise ValueError("Must be at least one measurement.")
 
-    if shift == "end" and list(set(measurement_reg)) != list(range(spatial_modes)):
-        raise ValueError("Measurements must be on consecutive modes starting from q[0].")
+    # if shift == "end" and list(set(measurement_reg)) != list(range(spatial_modes)):
+    #     raise ValueError("Measurements must be on consecutive modes starting from q[0].")
 
-    if shift == "after" and list(set(measurement_reg)) != [0]:
-        raise ValueError("Measurements allowed only on q[0].")
+    # if shift == "after" and list(set(measurement_reg)) != [0]:
+    #     raise ValueError("Measurements allowed only on q[0].")
 
     return spatial_modes
 
@@ -144,6 +144,8 @@ class TDMProgram(sf.Program):
 
             if self.shift == "end":
                 q = shift_by(q, self.spatial_modes)  # shift at end of each time bin
+            elif isinstance(self.shift, int):
+                q = shift_by(q, self.shift)  # shift at end of each time bin
 
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
