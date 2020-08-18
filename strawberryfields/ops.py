@@ -792,17 +792,18 @@ class Catstate(Preparation):
     A cat state is the coherent superposition of two coherent states,
 
     .. math::
-       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}),
+       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\theta} \ket{-\alpha}),
 
-    where :math:`N = \sqrt{2 (1+\cos(\phi)e^{-2|\alpha|^2})}` is the normalization factor.
+    where :math:`N = \sqrt{2 (1+\cos(\theta)e^{-2|\alpha|^2})}` is the normalization factor and :math:`\alpha = a e^{i\phi}`.
 
     .. warning::
         Cat states are **non-Gaussian**, and thus can
         only be used in the Fock backends, *not* the Gaussian backend.
 
     Args:
-        alpha (complex): displacement parameter
-        p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+        a (float): displacement magnitude :math:`|\alpha|`
+        phi (float): displacement angle :math:`\phi`
+        p (float): parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
 
     .. details::
@@ -813,11 +814,11 @@ class Catstate(Preparation):
             The cat state is a non-Gaussian superposition of coherent states
 
             .. math::
-                |cat\rangle = \frac{e^{-|\alpha|^2/2}}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\phi))}}
-                \left(|\alpha\rangle +e^{i\phi}|-\alpha\rangle\right)
+                |cat\rangle = \frac{e^{-|\alpha|^2/2}}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\theta))}}
+                \left(|\alpha\rangle +e^{i\theta}|-\alpha\rangle\right)
 
-            with the even cat state given for :math:`\phi=0`, and the odd cat state
-            given for :math:`\phi=\pi`.
+            with the even cat state given for :math:`\theta=0`, and the odd cat state
+            given for :math:`\theta=\pi`.
 
         .. tip::
 
@@ -828,24 +829,34 @@ class Catstate(Preparation):
         the squeezed single photon state :math:`S\ket{1}`.
     """
 
-    def __init__(self, alpha=0, p=0):
-        super().__init__([alpha, p])
+    def __init__(self, a=0.0, phi=0.0, p=0):
+        super().__init__([a, phi, p])
 
     def _apply(self, reg, backend, **kwargs):
-        alpha = self.p[0]
-        phi = np.pi * self.p[1]
+
+        a = par_evaluate(self.p[0])
+        phi = par_evaluate(self.p[1])
+        p = self.p[2]
+
+        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [a, phi, p])
+
+        if (np.iscomplex([a, phi, p])).any() or tf_complex:
+            raise ValueError("The arguments of Catstate(a, phi, p) cannot be complex")
+
+        alpha = phi * np.exp(1j*a)
+        theta = np.pi * p
         D = backend.get_cutoff_dim()
         l = np.arange(D)[:, np.newaxis]
 
         # normalization constant
         temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
-        N = temp / pf.sqrt(2 * (1 + pf.cos(phi) * temp ** 4))
+        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
 
         # coherent states
         c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
         c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
         # add them up with a relative phase
-        ket = (c1 + pf.exp(1j * phi) * c2) * N
+        ket = (c1 + pf.exp(1j * theta) * c2) * N
 
         # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
         ket = np.transpose(ket)

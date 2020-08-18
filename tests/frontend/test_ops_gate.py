@@ -197,6 +197,21 @@ class TestComplexError:
             eng = Engine("gaussian")
             res = eng.run(prog)
 
+class TestComplexErrorFock:
+    """Tests for raising an error if a parameter passed is complex using the
+    fock backend"""
+
+    def test_catstate_complex_error(self):
+        """Test that passing a complex parameter to gates that previously accepted
+        complex parameters raises an error."""
+        with pytest.raises(ValueError, match="cannot be complex"):
+            prog = Program(1)
+            with prog.context as q:
+                ops.Catstate(0.2+1j) | q
+
+            eng = Engine("fock", backend_options={"cutoff_dim":5})
+            res = eng.run(prog)
+
 def test_merge_measured_pars():
     """Test merging two gates with measured parameters."""
     prog = Program(2)
