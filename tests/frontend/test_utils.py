@@ -224,7 +224,7 @@ class TestInitialStates:
         cutoff = 10
         p = 0
 
-        state = utils.cat_state(a, p, fock_dim=cutoff)
+        state = utils.cat_state(a, 0, p, fock_dim=cutoff)
 
         n = np.arange(cutoff)
         expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) + np.exp(
@@ -240,7 +240,7 @@ class TestInitialStates:
         cutoff = 10
         p = 1
 
-        state = utils.cat_state(a, p, fock_dim=cutoff)
+        state = utils.cat_state(a, 0, p, fock_dim=cutoff)
 
         n = np.arange(cutoff)
         expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) - np.exp(
