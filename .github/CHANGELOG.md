@@ -175,14 +175,12 @@
 * Complex parameters now are expected in polar form as two separate real parameters.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
 
-<h3>Bug fixes</h3>
-
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Soran
-Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada, Antal Száva
+Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Nathan
+Killoran, Soran Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada, Antal Száva
 
 
 # Release 0.14.0
