@@ -54,6 +54,7 @@ info = {
     },
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),
+    "long_description_content_type": "text/x-rst",
     "provides": ["strawberryfields"],
     "install_requires": requirements,
     # 'extras_require': extra_requirements,
