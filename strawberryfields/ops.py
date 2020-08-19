@@ -852,18 +852,9 @@ class Catstate(Preparation):
         alpha = a * np.exp(1j * phi)
         theta = np.pi * p
 
+
         D = backend.get_cutoff_dim()
-        l = np.arange(D)[:, np.newaxis]
-
-        # normalization constant
-        temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
-        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
-
-        # coherent states
-        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
-        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
-        # add them up with a relative phase
-        ket = (c1 + pf.exp(1j * theta) * c2) * N
+        ket = self._create_ket(alpha, theta, D)
 
         # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
         ket = np.transpose(ket)
@@ -875,6 +866,33 @@ class Catstate(Preparation):
         ket = par_evaluate(ket)
 
         backend.prepare_ket_state(ket, *reg)
+
+    @staticmethod
+    def _create_ket(alpha, theta, cutoff_dim):
+        """Creates the statevector of the cat state determined by input
+        arguments and a cutoff dimension.
+
+        alpha (complex): the displacement
+        theta (float): argument of the cat state based on parity
+        cutoff_dim (int): the truncation cutoff dimension to be used
+
+        Returns:
+            array (complex): the state vector of the cat state
+        """
+
+        l = np.arange(cutoff_dim)[:, np.newaxis]
+
+        # normalization constant
+        temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
+        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
+
+        # coherent states
+        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
+        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
+
+        # add them up with a relative phase
+        ket = (c1 + pf.exp(1j * theta) * c2) * N
+        return ket
 
 
 class Ket(Preparation):
