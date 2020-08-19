@@ -9,9 +9,9 @@
   [(#393)](https://github.com/XanaduAI/strawberryfields/pull/393)
   [(#414)](https://github.com/XanaduAI/strawberryfields/pull/414)
   [(#415)](https://github.com/XanaduAI/strawberryfields/pull/415)
-  
+
   Trainable parameters can be embedded into a VGBS class:
-  
+
   ```python
   from strawberryfields.apps import data, train
 
@@ -21,10 +21,10 @@
 
   vgbs = train.VGBS(d.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
   ```
-  
+
   Properties of the variational GBS distribution for different choices of
   trainable parameters can then be inspected:
-  
+
   ```python
   >>> params = 0.1 * np.ones(d.modes)
   >>> vgbs.n_mean(params)
@@ -32,7 +32,7 @@
   ```
 
   A cost function can then be created and its value and gradient accessed:
-  
+
   ```python
   >>> h = lambda x: np.sum(x)
   >>> cost = train.Stochastic(h, vgbs)
@@ -87,9 +87,10 @@
   functions for obtaining counting statistics from samples.
   [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
 
-* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
+* Adds new `Xstrict`, `Xcov`, and `Xunitary` compilers for compiling programs into the X
   architecture.
   [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+  [(#438)](https://github.com/XanaduAI/strawberryfields/pull/438)
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.

@@ -217,7 +217,6 @@ class TestXCompilation:
 
         expected = to_program(bb)
         res = expected.compile(compiler="Xunitary")
-        print("hello")
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])

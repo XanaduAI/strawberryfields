@@ -43,7 +43,8 @@ Features
 
 * Execute algorithms on  **photonic quantum computing chips** via the Xanadu Quantum Cloud
 
-* Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**
+* Includes high-level functions for **solving practical problems** including **graph and network
+  optimization**, **machine learning** and **chemistry**
 
 * Includes **quantum simulators** implemented using **NumPy** and **TensorFlow**—with built-in quantum compilation
 
