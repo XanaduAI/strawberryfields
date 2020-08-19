@@ -237,6 +237,7 @@ class Operation:
         if (np.iscomplex(arguments)).any() or tf_complex:
             raise ValueError(f"The arguments of {gate_info} cannot be complex")
 
+
 # ====================================================================
 # Derived operation classes
 # ====================================================================
@@ -735,7 +736,9 @@ class DisplacedSqueezed(Preparation):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
 
-        self._check_for_complex_args([p[0], p[1], p[2], p[3]], "DisplacedSqueezed(r_d, phi_d, r_s, phi_s)")
+        self._check_for_complex_args(
+            [p[0], p[1], p[2], p[3]], "DisplacedSqueezed(r_d, phi_d, r_s, phi_s)"
+        )
 
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], p[3], *reg)
