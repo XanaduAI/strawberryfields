@@ -248,8 +248,8 @@ class TestInitialStatesAgreeFock:
         assert np.allclose(expected, ket, atol=tol, rtol=0)
 
     def test_cat_state_error(self, setup_eng, cutoff, bsize, pure, tol):
-        """Test that the cat state function raises an error for a complex
-        arugment"""
+        """Test that the cat_state function raises an error for a complex
+        argument"""
         alpha = 0.3j + 0.4
         p = 1
         with pytest.raises(ValueError, match="cannot be complex"):
