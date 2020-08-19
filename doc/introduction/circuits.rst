@@ -256,6 +256,22 @@ specification is used. This can be overridden by also providing the compiler to 
 
 >>> prog2 = prog.compile(device=device, compiler="Xunitary")
 
+For the ``X``-series of chips, available compilers include:
+
+.. raw:: html
+
+  <div class="summary-table">
+
+.. autosummary::
+    ~strawberryfields.compilers.Xstrict
+    ~strawberryfields.compilers.Xunitary
+    ~strawberryfields.compilers.Xcov
+
+.. raw:: html
+
+    </div>
+
+
 For more details on using Strawberry Fields with remote hardware, see the
 :doc:`photonic_hardware` guide.
 

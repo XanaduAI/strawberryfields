@@ -19,9 +19,9 @@ from .gbs import GBS
 class Xstrict(Compiler):
     """Strict compiler for the X class of circuits.
 
-    Ensure that the compiled program exactly matches the devices topology.
+    Ensures that the program exactly matches the devices topology.
     As a result, this compiler only accepts :class:`~.ops.S2gate`, :class:`~.ops.MZgate`,
-    and :class:`~.ops.MeasureFock` operations.
+    :class:`~.ops.Rgate`, and :class:`~.ops.MeasureFock` operations.
 
     This compiler must be used with an X series device specification.
 
