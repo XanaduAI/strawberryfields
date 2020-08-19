@@ -303,7 +303,7 @@ def cat_state(a, phi=0, p=0, fock_dim=5):
     if (np.iscomplex([a, phi])).any() or tf_complex:
         raise ValueError("Arguments of the cat_state (a, r, p) cannot be complex")
 
-    alpha = phi * np.exp(1j*a)
+    alpha = a * np.exp(1j*phi)
     # p=0 if even, p=pi if odd
     theta = np.pi * p
 
