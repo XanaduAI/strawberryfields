@@ -220,6 +220,22 @@ class Operation:
         # call the child class specialized _apply method
         return self._apply(temp, backend, **kwargs)
 
+    @staticmethod
+    def _check_for_complex_args(arguments, gate_info):
+        """Check if any of the input arguments are of complex type for an
+        operation that doesn't support complex inputs.
+
+        Args:
+            arguments (list): list of input arguments to check
+            gate_info (str): information about the gate to be used
+
+        Raises:
+            ValueError: there were complex arguments specified
+        """
+        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in arguments)
+
+        if (np.iscomplex(arguments)).any() or tf_complex:
+            raise ValueError(f"The arguments of {gate_info} cannot be complex")
 
 # ====================================================================
 # Derived operation classes
@@ -594,10 +610,7 @@ class Coherent(Preparation):
         r = par_evaluate(self.p[0])
         phi = par_evaluate(self.p[1])
 
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [r, phi])
-
-        if (np.iscomplex([r, phi])).any() or tf_complex:
-            raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
+        self._check_for_complex_args([r, phi], "Coherent(r, phi)")
 
         backend.prepare_coherent_state(r, phi, *reg)
 
@@ -722,14 +735,7 @@ class DisplacedSqueezed(Preparation):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
 
-        tf_complex = any(
-            hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [p[0], p[1], p[2], p[3]]
-        )
-
-        if (np.iscomplex([p[0], p[1], p[2], p[3]])).any() or tf_complex:
-            raise ValueError(
-                "The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex"
-            )
+        self._check_for_complex_args([p[0], p[1], p[2], p[3]], "DisplacedSqueezed(r_d, phi_d, r_s, phi_s)")
 
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], p[3], *reg)
@@ -838,13 +844,11 @@ class Catstate(Preparation):
         phi = par_evaluate(self.p[1])
         p = self.p[2]
 
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [a, phi, p])
+        self._check_for_complex_args([a, phi, p], "Catstate(a, phi, p)")
 
-        if (np.iscomplex([a, phi, p])).any() or tf_complex:
-            raise ValueError("The arguments of Catstate(a, phi, p) cannot be complex")
-
-        alpha = phi * np.exp(1j*a)
+        alpha = phi * np.exp(1j * a)
         theta = np.pi * p
+
         D = backend.get_cutoff_dim()
         l = np.arange(D)[:, np.newaxis]
 
@@ -1348,10 +1352,7 @@ class Dgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         r, phi = par_evaluate(self.p)
 
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [r, phi])
-
-        if (np.iscomplex([r, phi])).any() or tf_complex:
-            raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
+        self._check_for_complex_args([r, phi], "Dgate(r, phi)")
 
         backend.displacement(r, phi, *reg)
 
