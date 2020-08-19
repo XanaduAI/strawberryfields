@@ -846,7 +846,7 @@ class Catstate(Preparation):
 
         self._check_for_complex_args([a, phi, p], "Catstate(a, phi, p)")
 
-        alpha = phi * np.exp(1j * a)
+        alpha = a * np.exp(1j * phi)
         theta = np.pi * p
 
         D = backend.get_cutoff_dim()
