@@ -852,7 +852,6 @@ class Catstate(Preparation):
         alpha = a * np.exp(1j * phi)
         theta = np.pi * p
 
-
         D = backend.get_cutoff_dim()
         ket = self._create_ket(alpha, theta, D)
 
