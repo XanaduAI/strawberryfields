@@ -144,12 +144,42 @@ def test_error_wrong_mode_measurement_after():
             ops.MeasureHomodyne(p[2]) | q[1]
 
 
-def test_epr():
-    """Single delay loop with variational coupling as built at Xanadu for cloud access. This example generates EPR states and evaluates the quadrature correlations."""
+######################################################################################
+### XANADU'S SINGLE-LOOP SETUP FOR CLOUD ACCESS AND SOME EXAMPLE PROGRAMS TO RUN ON IT
+######################################################################################
+
+# This function defines Xanadu's experimental architecture
+##########################################################
+
+def test_singleloop(r, alpha, phi, theta, copies, shift='end'):
+    """
+    Single delay loop with variational coupling as built at Xanadu for cloud access.
+    r........squeezing parameter
+    alpha....list of beamsplitter arguments in rad
+    phi......list of phase-gate arguments in rad
+    theta....list of homodyne-measurement angles in rad
+    """
+
+    prog = tdmprogram.TDMProgram(N=3)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Sgate(r, 0) | q[2]
+        ops.BSgate(p[0]) | (q[1], q[2])
+        ops.Rgate(p[1]) | q[2]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+    
+    return reshape_samples(samples)
+
+# The following three functions describe example programs to be run on the above architecture
+#############################################################################################
+
+def test_epr_cloud():
+    """This example generates EPR states in the 'singleloop' architecture and evaluates the quadrature correlations."""
 
     sq_r = 1.0
     N = 3
-    prog = tdmprogram.TDMProgram(N=N)
     c = 4
     copies = 400
 
@@ -158,17 +188,9 @@ def test_epr():
     phi = [np.pi / 2, 0] * c
 
     # Measurement of 4 subsequent EPR states in XX, XP, PX, PP to investigate nearest-neighbour correlations in all basis permutations
-    M = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]  #
+    theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]  #
 
-    with prog.context(alpha, phi, M, copies=copies) as (p, q):
-        ops.Sgate(sq_r, 0) | q[2]
-        ops.BSgate(p[0]) | (q[1], q[2])
-        ops.Rgate(p[1]) | q[2]
-        ops.MeasureHomodyne(p[2]) | q[0]
-    eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
-    x = reshape_samples(samples)
+    x = test_singleloop(sq_r, alpha, phi, theta, copies)
 
     X0 = x[0::8]
     X1 = x[1::8]
@@ -199,13 +221,11 @@ def test_epr():
     assert np.allclose(plusstdX3P1, expected, atol=atol)
 
 
-def test_ghz():
-    """Single delay loop with variational coupling as built at Xanadu for cloud access. This example generates n-mode GHZ states and evaluates the quadrature correlations."""
+def test_ghz_cloud():
+    """This example generates n-mode GHZ states in the 'singleloop' architecture and evaluates the quadrature correlations."""
 
     sq_r = 5
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    copies = 1
+    copies = 400
     vac_modes = 2 # number of vacuum modes in the initial setup
 
     n = 20 # for an n-mode GHZ state
@@ -215,44 +235,52 @@ def test_ghz():
 
     alpha = []
     for i in range(n+vac_modes):
-        if i == 0 or i==n+vac_modes-2 or i==n+vac_modes-1:
+        if i == 0 or i in  range(n+1,n+vac_modes+1):
             T = 1
         else:
             T = 1/(n-i+1)
         # checking if the BS transmissions match with https://advances.sciencemag.org/content/5/5/eaaw4530    
-        print(i+1,':',T)
+        # print(i+1,':',T)
         alpha.append(np.arccos(np.sqrt(T)))
 
     phi = list(np.zeros(n+vac_modes))
     phi[0] = np.pi/2
 
-    # # This will generate c GHZ states per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
+    # # This will generate c GHZ states per copy. I chose c = 2 because it allows us to make 2 GHZ states per copy: one measured in X and one measured in P.
     alpha = alpha*c
     phi = phi*c
 
-    # Measurement of 2 subsequent GHZ states: one for investivation of x-correlations and one for p-correlations
+    # Measurement of 2 subsequent GHZ states: one for investigation of X-correlations and one for P-correlations
     theta = [0]*(n+vac_modes) + [np.pi/2]*(n+vac_modes)
 
-    with prog.context(alpha, phi, theta, copies=copies) as (p, q):
-        ops.Sgate(sq_r, 0) | q[2]
-        ops.BSgate(p[0]) | (q[1], q[2])
-        ops.Rgate(p[1]) | q[2]
-        ops.MeasureHomodyne(p[2]) | q[0]
-    eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
-    x = reshape_samples(samples)
+    x = test_singleloop(sq_r, alpha, phi, theta, copies)
 
-    X = x[vac_modes:n+2]
-    P = x[n+2+vac_modes:]
+    X = []
+    P = []
+    nXP = []
+    for i in range(0,copies):
+        # This slicing will be a lot simpler once we output the samples ordered by copy.
+        startX = i*(n+vac_modes)*c+vac_modes
+        startP = i*(n+vac_modes)*c+vac_modes+n+vac_modes
+        X_i = x[startX : startX+n] # <-- If the GHZ-state generation was successful, all elements in X_i should be the same (up to squeezing, loss and noise).
+        P_i = x[startP : startP+n] # <-- If the GHZ-state generation was successful, all elements in P_i should add up to zero (up to squeezing, loss and noise).
+        X.append(X_i)
+        P.append(P_i)
 
-    print('X:', X) # <-- these should all be the same, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
-    print('P:', P)
-    print('sum(P):',np.sum(P)) # <-- this should be as close as possible to zero, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
+        insepX = np.var(X_i) # <-- this should be as close as possible to zero, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
+        # ^ Computing the variance here is kind of a cheat. Actually, we would need to build the difference between all possible pairs within X_i which becomes very bulky for large n.
+
+        insepP = sum(P_i) # <-- this should be as close as possible to zero, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
+
+        nullif = insepX + insepP
+        nXP.append(nullif)
+
+    nXPvar=np.var(np.array(nXP))
+    print('\nNullifier variance:', nXPvar)
 
 
-def test_1Dcluster():
-    """Single delay loop with variational coupling as built at Xanadu for cloud access. This example generates a 1D-clusterstate and evaluates the quadrature correlations."""
+def test_1Dcluster_cloud():
+    """This example generates a 1D-clusterstate in the 'singleloop' architecture and evaluates the quadrature correlations."""
 
     sq_r = 5
     N = 3
@@ -275,35 +303,37 @@ def test_1Dcluster():
     # alternating measurement basis because nullifiers are defined by -X_(k-2)+P_(k-1)-X_(k)
     theta = [0,np.pi/2]*int(n/2)
 
-    with prog.context(alpha, phi, theta, copies=copies) as (p, q):
-        ops.Sgate(sq_r, 0) | q[2]
-        ops.BSgate(p[0]) | (q[1], q[2])
-        ops.Rgate(p[1]) | q[2]
-        ops.MeasureHomodyne(p[2]) | q[0]
-    eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
-    x = reshape_samples(samples)
+    x = test_singleloop(sq_r, alpha, phi, theta, copies)
 
-    strip = 2 # first two modes are worthless and will be removed
+    strip = 4 # first four modes will not satisfy inseparability criteria
 
     X = x[0+strip::2]
     P = x[1+strip::2]
 
     # nullifier_k = -X_(k-2)+P_(k-1)-X_(k)
     # see: https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (1)
-    for i in range(2,n-strip,2):
+    nXP = []
+    for i in range(strip,n-strip,2):
         # x[i-2] was measured in X basis, see theta
         # x[i-1] was measured in P basis, see theta
         # x[i]   was measured in X basis, see theta
         nullif = -x[i-2]+x[i-1]-x[i] # <-- clusterstate generation successful when this close to zero
+        nXP.append(nullif)
         print(nullif)
 
     # # this is the same thing, only expressed in terms of X and P
     # for i in range(2,int((n-strip)/2)):
     #     nullif = -X[i-1]+P[i-1]-X[i] # <-- clusterstate generation successful when this close to zero
+    #     nXP.append(nullif)
     #     print(nullif)
 
+    nXPvar=np.var(np.array(nXP))
+    print('\nNullifier variance:', nXPvar)
+
+
+####################################
+### OTHER EXPERIMENTAL ARCHITECTURES
+####################################
 
 def test_millionmodes():
     '''
@@ -314,7 +344,6 @@ def test_millionmodes():
     N = 3 # concurrent modes
     prog = tdmprogram.TDMProgram(N=N)
 
-    delay = 1 # number of timebins in the delay line
     n = 100 # for an n-mode cluster state
     copies = 1
 
@@ -345,18 +374,18 @@ def test_millionmodes():
     # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
     nX = []
     nP = []
-    print('nullif_X,                  nullif_P')
+    # print('nullif_X,                  nullif_P')
     for i in range(len(X_A)-1):
         nullif_X = X_A[i] + X_B[i] + X_A[i+1] - X_B[i+1]
         nullif_P = P_A[i] + P_B[i] - P_A[i+1] + P_B[i+1]
         nX.append(nullif_X)
         nP.append(nullif_P)
-        print(nullif_X, '     ', nullif_P)
+        # print(nullif_X, '     ', nullif_P)
 
     nXvar=np.var(np.array(nX))
     nPvar=np.var(np.array(nP))
 
-    print('nullif_X variance:', nXvar)
+    print('\nnullif_X variance:', nXvar)
     print('nullif_P variance:', nPvar)
 
 
@@ -392,7 +421,7 @@ def test_DTU2D():
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[delay2+delay1+1]
         ops.Rgate(np.pi/2) | q[delay2+delay1+1]
-        ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1+1],q[0]) # (B, A)
+        ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1+1],q[0])
         ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1],q[0])
         ops.BSgate(np.pi/4, np.pi) | (q[delay1],q[0])
         ops.MeasureHomodyne(p[0]) | q[delay1]
@@ -403,28 +432,14 @@ def test_DTU2D():
     samples = result.all_samples
 
     # x = reshape_samples(samples)
+
+    # small helper function to reshape samples in case the step size of the qumode shift does not match with the number of spatial modes (like in this example) -- should become redundant as soon result.all_samples outputs the samples ordered by the qumode index that was spefified for measurement
     x = sampli(samples)
 
     X_A = x[0:n:2] # X samples from detector A
     X_B = x[1:n:2] # X samples from detector B
     P_A = x[n::2] # P samples from detector A
     P_B = x[n+1::2] # P samples from detector B
-
-    # print('X_A\n',X_A)
-    # print('X_B\n',X_B)
-    # print('P_A\n',P_A)
-    # print('P_B\n',P_B)
-
-    # print('var(X_A)',np.var(X_A))
-    # print('var(X_B)',np.var(X_B))
-    # print('var(P_A)',np.var(P_A))
-    # print('var(P_B)',np.var(P_B))
-
-    # print(len(x))
-    # print(len(X_A))
-    # print(len(X_B))
-    # print(len(P_A))
-    # print(len(P_B))
 
     # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
     N=delay2
@@ -470,8 +485,8 @@ def sampli(samples):
 
     return x
 
-# test_epr()
-# test_ghz()
-# test_1Dcluster()
+# test_epr_cloud()
+# test_ghz_cloud()
+# test_1Dcluster_cloud()
 # test_millionmodes()
-test_DTU2D()
+# test_DTU2D()
