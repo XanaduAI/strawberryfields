@@ -529,3 +529,18 @@ class TestXCompilation:
         # extract the Gaussian symplectic matrix
         res = res.compile(compiler="gaussian_unitary")
         assert not res.circuit
+
+
+    def test_nothing_happens_and_nothing_crashes(self):
+        """Test that even a program that does nothing compiles correctly"""
+        n_modes = 4
+        squeezing_amplitudes = [0] * n_modes
+        unitary = np.identity(n_modes)
+        prog = sf.Program(n_modes * 2)
+        with prog.context as q:
+            for i in range(n_modes):
+                ops.S2gate(squeezing_amplitudes[i]) | (q[i], q[i + n_modes])
+            for qumodes in (q[:n_modes], q[n_modes:]):
+                ops.Interferometer(unitary) | qumodes
+            ops.MeasureFock() | q
+        prog.compile(compiler="Xcov")

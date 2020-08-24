@@ -93,7 +93,10 @@ class Xcov(Compiler):
             used_modes = [x.ind for x in seq[0].reg]
 
             # extract the compiled symplectic matrix
-            S = seq[0].op.p[0]
+            try:
+            	S = seq[0].op.p[0]
+            except:
+            	S = np.identity(2*n_modes)
 
             if len(used_modes) != n_modes:
                 # The symplectic transformation acts on a subset of
