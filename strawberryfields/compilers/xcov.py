@@ -92,6 +92,13 @@ class Xcov(Compiler):
             # determine the modes that are acted on by the symplectic transformation
             used_modes = [x.ind for x in seq[0].reg]
 
+            # Since this compiler does not allow for displacements
+            # when its parameter are passed to the GaussianUnitary compiler
+            # the latter either returns a GaussianTransform + MeasureFock
+            # or just MeasureFock. This is because the GaussianUnitary checks
+            # if the symplectic matrix is just the identity it simply elides it
+
+
             # extract the compiled symplectic matrix
             try:
             	S = seq[0].op.p[0]
