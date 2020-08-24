@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for tdmprogram.py"""
+r"""Unit tests for program.py"""
 import pytest
 import numpy as np
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.tdm import tdmprogram
+from strawberryfields.tdm import tdmprogram2
 from strawberryfields.tdm.tdmprogram import reshape_samples
 
 # feel free to remove after Fabian's test:
@@ -24,122 +24,6 @@ import time
 
 # make test deterministic
 np.random.seed(42)
-
-
-def test_end_to_end():
-    """Check the samples have the correct shape"""
-    R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
-    BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
-    M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    r = 0.8
-    eta = 0.99
-    nbar = 0.1
-    # Instantiate a TDMProgram by passing the number of concurrent modes required
-    # (the number of modes that are alive at the same time).
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    MM = 1
-    # The context manager has the signature prog.context(*args, copies=1),
-    # where args contains the gate parameters, and copies determines how
-    # many copies of the state should be prepared.
-    # It returns the 'zipped' parameters, and the automatically shifted register.
-    c = 10
-    with prog.context(R, BS, M, copies=c) as (p, q):
-        ops.Sgate(r, 0) | q[2]
-        ops.ThermalLossChannel(eta, nbar) | q[2]
-        ops.BSgate(p[0]) | (q[1], q[2])
-        ops.Rgate(p[1]) | q[2]
-        ops.MeasureHomodyne(p[2]) | q[0]
-    eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = reshape_samples(result.all_samples, c=1)
-    assert samples.shape == (1, len(R) * c)
-
-
-def test_error_no_measurement():
-    """Test error is raised when there is no measurement"""
-    R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
-    BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
-    M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    r = 0.8
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    c = 10
-    with pytest.raises(ValueError, match="Must be at least one measurement"):
-        with prog.context(R, BS, M, copies=c) as (p, q):
-            ops.Sgate(r, 0) | q[2]
-            ops.ThermalLossChannel(eta, nbar) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-
-
-def test_error_unequal_length():
-    """Test error is raised when the parameters don't have matching lengths"""
-    R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
-    BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
-    M = [1, 2.3, 1.2, 1 / 2]  # measurement angles
-    # Note M has one less element than R and BS
-    r = 0.8
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    c = 10
-    with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length"):
-        with prog.context(R, BS, M, copies=c) as (p, q):
-            ops.Sgate(r, 0) | q[2]
-            ops.ThermalLossChannel(eta, nbar) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[2]) | q[0]
-
-def test_error_noninteger_number_copies():
-    """Test error is raised when the number of copies is not an integer"""
-    R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
-    BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
-    M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    r = 0.8
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    c = 10
-    with pytest.raises(TypeError, match="Number of copies must be a positive integer"):
-        with prog.context(R, BS, M, copies=1/137) as (p, q):
-            ops.Sgate(r, 0) | q[2]
-            ops.ThermalLossChannel(eta, nbar) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[2]) | q[0]
-
-def test_error_wrong_mode_measurement_end():
-    """Test error is raised when the wrong mode is measured"""
-    R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
-    BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
-    M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    r = 0.8
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    c = 10
-    with pytest.raises(ValueError, match="Measurements must be on consecutive modes starting from"):
-        with prog.context(R, BS, M, copies=1, shift="end") as (p, q):
-            ops.Sgate(r, 0) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[2]) | q[1]
-
-def test_error_wrong_mode_measurement_after():
-    """Test error is raised when the wrong mode is measured"""
-    R = [1 / 2, 1, 0.3, 1.4, 0.4]  # phase angles
-    BS = [1, 1 / 3, 1 / 2, 1, 1 / 5]  # BS angles
-    M = [1, 2.3, 1.2, 1 / 2, 5 / 3]  # measurement angles
-    # Note M has one less element than R and BS
-    r = 0.8
-    N = 3
-    prog = tdmprogram.TDMProgram(N=N)
-    c = 10
-    with pytest.raises(ValueError, match="Measurements allowed only on"):
-        with prog.context(R, BS, M, copies=1, shift="after") as (p, q):
-            ops.Sgate(r, 0) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[2]) | q[1]
 
 
 ######################################################################################
@@ -158,7 +42,7 @@ def test_singleloop(r, alpha, phi, theta, copies, shift='end'):
     theta....list of homodyne-measurement angles in rad
     """
 
-    prog = tdmprogram.TDMProgram(N=3)
+    prog = tdmprogram2.TDMProgram(N=3)
     with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
         ops.Sgate(r, 0) | q[2]
         ops.BSgate(p[0]) | (q[1], q[2])
@@ -179,7 +63,7 @@ def test_epr_cloud():
     sq_r = 1.0
     N = 3
     c = 4
-    copies = 400
+    copies = 1
 
     # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
     alpha = [0, np.pi / 4] * c
@@ -283,6 +167,7 @@ def test_1Dcluster_cloud():
     sq_r = 5
     N = 3
     copies = 1
+
     n = 100 # for an n-mode cluster state
 
     # reference for gate parameters alpha and phi: https://advances.sciencemag.org/content/5/5/eaaw4530, paragraph above Eq (1)
@@ -338,32 +223,33 @@ def test_millionmodes():
 
     sq_r = 5
     N = 3 # concurrent modes
-    n = 100 # for an n-mode cluster state
+
+    n = 20 # for an n-mode cluster state
     copies = 1
 
     # first half of cluster state measured in X, second half in P
     theta1 = [0]*int(n/2) + [np.pi/2]*int(n/2) # measurement angles for detector A
     theta2 = theta1 # measurement angles for detector B
 
-    prog = tdmprogram.TDMProgram(N=3)
+    prog = tdmprogram2.TDMProgram(N=[1,2])
     with prog.context(theta1, theta2, copies=copies, shift='end') as (p, q):
+        ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
-        ops.Sgate(sq_r, 0) | q[1]
         ops.Rgate(np.pi/2) | q[2]
-        ops.BSgate(np.pi/4) | (q[1],q[2])
-        ops.BSgate(np.pi/4) | (q[1],q[0])
-        ops.MeasureHomodyne(p[0]) | q[1]
-        ops.MeasureHomodyne(p[1]) | q[0]
+        ops.BSgate(np.pi/4) | (q[0],q[2])
+        ops.BSgate(np.pi/4) | (q[0],q[1])
+        ops.MeasureHomodyne(p[0]) | q[0]
+        ops.MeasureHomodyne(p[1]) | q[1]
     eng = sf.Engine("gaussian")
     result = eng.run(prog)
     samples = result.all_samples
-
-    x = reshape_samples(samples)
-
-    X_A = x[0:n:2] # X samples from detector A
-    X_B = x[1:n:2] # X samples from detector B
-    P_A = x[n::2] # P samples from detector A
-    P_B = x[n+1::2] # P samples from detector B
+    # print(samples)
+    x  = sampli2(samples)
+    X_A = x[1][:n//2] # X samples from detector A
+    P_A = x[1][n//2:] # P samples from detector A
+    X_B = x[0][:n//2] # X samples from detector B
+    P_B = x[0][n//2:] # P samples from detector B
+    # print('\n',x)
 
     # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
     nX = []
@@ -399,8 +285,8 @@ def test_DTU2D():
     '''
     delay1 = 1 # number of timebins in the short delay line
     delay2 = 12 # number of timebins in the long delay line
-    n_concurr = delay2 + delay1 + 2 # concurrent modes
-    n = 1000 # number of timebins
+    n_concurr = delay2 + delay1 + 1 # concurrent modes
+    n = 400 # number of timebins
 
     # Number of timebins must be a multiple of concurrent modes, otherwise sampli() doesn't work
     n = n//n_concurr*n_concurr
@@ -410,30 +296,27 @@ def test_DTU2D():
     theta_B = theta_A # measurement angles for detector B
 
     # 2D cluster
-    prog = tdmprogram.TDMProgram(n_concurr)
-    with prog.context(theta_A, theta_B, shift=1) as (p, q):
+    prog = tdmprogram2.TDMProgram([1,delay2+delay1+1])
+    with prog.context(theta_A, theta_B, shift='end') as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[delay2+delay1+1]
         ops.Rgate(np.pi/2) | q[delay2+delay1+1]
         ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1+1],q[0])
         ops.BSgate(np.pi/4, np.pi) | (q[delay2+delay1],q[0])
         ops.BSgate(np.pi/4, np.pi) | (q[delay1],q[0])
-        ops.MeasureHomodyne(p[0]) | q[delay1]
         ops.MeasureHomodyne(p[1]) | q[0]
-
+        ops.MeasureHomodyne(p[0]) | q[delay1]
     eng = sf.Engine("gaussian")
     result = eng.run(prog)
     samples = result.all_samples
 
-    # x = reshape_samples(samples)
+    x = sampli2(samples)
+    # small helper function to reshape samples appropriately -- should become redundant as soon result.all_samples outputs the samples ordered by the qumode index that was spefified for measurement
 
-    # small helper function to reshape samples in case the step size of the qumode shift does not match with the number of spatial modes (like in this example) -- should become redundant as soon result.all_samples outputs the samples ordered by the qumode index that was spefified for measurement
-    x = sampli(samples)
-
-    X_A = x[0:n:2] # X samples from detector A
-    X_B = x[1:n:2] # X samples from detector B
-    P_A = x[n::2] # P samples from detector A
-    P_B = x[n+1::2] # P samples from detector B
+    X_A = x[0][:n//2] # X samples from detector A
+    P_A = x[0][n//2:] # P samples from detector A
+    X_B = x[1][:n//2] # X samples from detector B
+    P_B = x[1][n//2:] # P samples from detector B
 
     # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
     N=delay2
@@ -460,25 +343,33 @@ def test_DTU2D():
 
     print('\nElapsed time [s]:', time.time()-start)
 
-def sampli(samples):
+
+def sampli2(samples):
     '''
-    This function rearranges results.all_samples to a chronologically ordered one-dimensional array -- ONLY IN THE SPECIAL CASE of two spatial modes and a one-step shift at the end of the unit cell. Also, make sure the number of timebins is a multiple of the concurrent modes.
+    This function rearranges results.all_samples to a dict with key 0 corresponding to spatial mode A and keys 1--N corresponding to spatial mode B. ONLY works if the number of timebins is a multiple of the concurrent modes in spatial mode B.
     --- THIS FUNCTION IS REDUNDANT AS SOON AS all_samples WILL ORDER THE SAMPLES IN THE CORRECT WAY ---
     '''
 
-    num_modes=len(samples)
-    len_samples = [len(samples[i]) for i in range(num_modes)]
-    max_len = max(len_samples)
+    samplesA = {0: samples[0]}
 
-    x = []
-    for j in range(0,max_len,2):
-        x.append(samples[0][j])
-        for i in range(1,num_modes):
-            x.append(samples[i][j])
-            x.append(samples[i][j+1])
-        x.append(samples[0][j+1])
+    samplesB = samples.copy()
+    del samplesB[0]
 
-    return x
+    num_modes = len(samplesB)
+    len_samples = [len(samplesB[i]) for i in range(1,num_modes+1)]
+    min_len = min(len_samples)
+
+    xB = []
+    # for j in range(min_len):
+    for j in range(len(samplesB[1])):
+        for i in range(1,len(samplesB)+1):
+            xB.append(samplesB[i][j])
+
+    print(len(samples[0]))
+    print(len(xB))
+
+    return {0: samples[0], 1: xB}
+
 
 # test_epr_cloud()
 # test_ghz_cloud()
