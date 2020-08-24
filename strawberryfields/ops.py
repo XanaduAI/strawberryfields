@@ -588,14 +588,17 @@ class Coherent(Preparation):
     """
 
     def __init__(self, r=0.0, phi=0.0):
-        if (np.iscomplex([r, phi])).any():
-            raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
-
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
         r = par_evaluate(self.p[0])
         phi = par_evaluate(self.p[1])
+
+        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [r, phi])
+
+        if (np.iscomplex([r, phi])).any() or tf_complex:
+            raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
+
         backend.prepare_coherent_state(r, phi, *reg)
 
 
@@ -714,15 +717,20 @@ class DisplacedSqueezed(Preparation):
     """
 
     def __init__(self, r_d=0.0, phi_d=0.0, r_s=0.0, phi_s=0.0):
-        if (np.iscomplex([r_d, phi_d, r_s, phi_s])).any():
-            raise ValueError(
-                "The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex"
-            )
-
         super().__init__([r_d, phi_d, r_s, phi_s])
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
+
+        tf_complex = any(
+            hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [p[0], p[1], p[2], p[3]]
+        )
+
+        if (np.iscomplex([p[0], p[1], p[2], p[3]])).any() or tf_complex:
+            raise ValueError(
+                "The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex"
+            )
+
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], p[3], *reg)
 
@@ -1324,13 +1332,16 @@ class Dgate(Gate):
     """
 
     def __init__(self, r, phi=0.0):
-        if (np.iscomplex([r, phi])).any():
-            raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
-
         super().__init__([r, phi])
 
     def _apply(self, reg, backend, **kwargs):
         r, phi = par_evaluate(self.p)
+
+        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [r, phi])
+
+        if (np.iscomplex([r, phi])).any() or tf_complex:
+            raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
+
         backend.displacement(r, phi, *reg)
 
 
