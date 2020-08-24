@@ -101,9 +101,9 @@ class Xcov(Compiler):
 
             # extract the compiled symplectic matrix
             if isinstance(seq[0].op, ops.MeasureFock):
-            	S = np.identity(2 * n_modes)
+                S = np.identity(2 * n_modes)
             else:
-            	S = seq[0].op.p[0]
+                S = seq[0].op.p[0]
 
             if len(used_modes) != n_modes:
                 # The symplectic transformation acts on a subset of
