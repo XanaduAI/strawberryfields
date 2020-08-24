@@ -83,7 +83,8 @@ def input_check(args, copies):
 
 
 def reshape_samples(samples, c=None):
-    """Reshapes the samples so that they have the expected correct shape"""
+    """Reshapes the samples so that they have the expected correct shape.
+    """
     num_modes = len(samples)
     len_samples = [len(samples[i]) for i in range(num_modes)]
     max_len = max(len_samples)
@@ -98,6 +99,9 @@ def reshape_samples(samples, c=None):
         return reshaped_samples
     return reshaped_samples.reshape(c, -1)
 
+def reshape_samples_with_copies(samples, copies, spatial_modes):
+    reshaped_samples = reshape_samples(samples)
+    return reshaped_samples.reshape([copies, spatial_modes, -1])
 
 class TDMProgram(sf.Program):
     """Represents a photonic quantum circuit in the time domain encoding"""
