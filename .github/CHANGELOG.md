@@ -16,6 +16,8 @@
 
 This release contains contributions from (in alphabetical order):
 
+Nicolás Quesada
+
 # Release 0.15.0 (current release)
 
 <h3>New features since last release</h3>
