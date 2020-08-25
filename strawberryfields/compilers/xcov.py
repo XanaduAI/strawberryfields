@@ -126,7 +126,7 @@ class Xcov(Compiler):
             # when its parameters are passed to the GaussianUnitary compiler,
             # the latter either returns a GaussianTransform + MeasureFock
             # or just MeasureFock. This is because the GaussianUnitary checks
-            # if the symplectic matrix is just the identity it simply elides it
+            # if the symplectic matrix is just the identity; if so, it simply elides it
 
             # extract the compiled symplectic matrix
             if isinstance(seq[0].op, ops.MeasureFock):
