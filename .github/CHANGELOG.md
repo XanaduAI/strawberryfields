@@ -8,6 +8,8 @@
 
 <h3>Bug fixes</h3>
 
+* Fixes a bug where a program that amounts to the identity operation would cause an error when compiled using the `xcov` compiler [(#444)](https://github.com/XanaduAI/strawberryfields/pull/444)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
