@@ -6,6 +6,11 @@
 
 <h3>Breaking Changes</h3>
 
+* Changes the default compiler for devices that don't specify a default from `"Xcov"` to `"Xunitary"`.
+  This compiler is slightly more strict and only compiles the unitary, not the initial squeezers,
+  however avoids any unintentional permutations.
+  [(#445)](https://github.com/XanaduAI/strawberryfields/pull/445)
+
 <h3>Bug fixes</h3>
 
 * Fixes a bug where a program that amounts to the identity operation would cause an error when
@@ -18,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Nicolás Quesada
+Josh Izaac, Nicolás Quesada
 
 # Release 0.15.0 (current release)
 
