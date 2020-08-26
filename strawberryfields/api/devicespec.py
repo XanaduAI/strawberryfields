@@ -72,7 +72,7 @@ class DeviceSpec:
         if self.compiler:
             return self.compiler[0]
 
-        # For now, use Xcov compiler by default for devices
+        # For now, use Xunitary compiler by default for devices
         # if the default compiler is not specified.
         return "Xunitary"
 
