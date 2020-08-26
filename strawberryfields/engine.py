@@ -559,6 +559,7 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
@@ -614,10 +615,19 @@ class RemoteEngine:
         device = self.device_spec
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
-        msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
-        self.log.info(msg)
 
-        program = program.compile(device=device, **compile_options)
+        if program.compiled_with is None:
+            msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
+            self.log.info(msg)
+
+            program = program.compile(device=device, **compile_options)
+
+        elif program.compiled_with != compiler_name:
+            msg = f"No compilation, program already compiled for {program.compiled_with}. Set recompile=true to compile with {compiler_name}."
+            self.log.info(msg)
+        else:
+            msg = f"No compilation, program compiled for {program.compiled_with}."
+            self.log.info(msg)
 
         # update the run options if provided
         run_options = {}
