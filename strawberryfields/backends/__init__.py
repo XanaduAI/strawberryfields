@@ -80,6 +80,7 @@ from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
 from .states import BaseState, BaseGaussianState, BaseFockState
+from .gkp import GKPBackend
 
 # There is no import for the TFBackend to avoid TensorFlow being a direct
 # requirement of SF through a chain of imports
@@ -94,12 +95,13 @@ __all__ = [
     "BaseState",
     "BaseFockState",
     "BaseGaussianState",
+    "GKPBackend",
 ]
 
 
 virtual_backends = ["X8_01"]
 
-local_backends = {b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend)}
+local_backends = {b.short_name: b for b in (BaseBackend, GaussianBackend, FockBackend, GKPBackend)}
 
 
 def load_backend(name):
