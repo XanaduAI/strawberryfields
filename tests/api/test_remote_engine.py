@@ -194,7 +194,7 @@ class TestRemoteEngineIntegration:
 
     def test_default_compiler(self, prog, monkeypatch, caplog):
         """Test that if the device does not provide a default compiler,
-        that Xcov is used by default."""
+        that Xunitary is used by default."""
         caplog.set_level(logging.INFO)
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = []
@@ -205,5 +205,5 @@ class TestRemoteEngineIntegration:
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
-        assert engine.device_spec.default_compiler == "Xcov"
-        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xcov."
+        assert engine.device_spec.default_compiler == "Xunitary"
+        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xunitary."
