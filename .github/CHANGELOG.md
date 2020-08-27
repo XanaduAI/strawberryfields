@@ -4,6 +4,10 @@
 
 <h3>Improvements</h3>
 
+* Adds the ability to bypass recompilation of programs if they have been
+  compiled already to the target device.
+  [(#447)](https://github.com/XanaduAI/strawberryfields/pull/447)
+
 <h3>Breaking Changes</h3>
 
 * Changes the default compiler for devices that don't specify a default from `"Xcov"` to `"Xunitary"`.
@@ -23,7 +27,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Josh Izaac, Nicolás Quesada
+Josh Izaac, Nicolás Quesada, Antal Száva
 
 # Release 0.15.0 (current release)
 

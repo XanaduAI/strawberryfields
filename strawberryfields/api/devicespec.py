@@ -151,7 +151,7 @@ class DeviceSpec:
         # evaluate the blackbird template
         bb = bb(**parameters)
         prog = sf.io.to_program(bb)
-        prog._compiled_with = self.default_compiler
+        prog._compile_info = (self, self.default_compiler)
         return prog
 
     def refresh(self):
