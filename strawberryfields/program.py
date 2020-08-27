@@ -144,8 +144,9 @@ class Program:
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target Compiler template, otherwise None
         self._target = None
-        #: str, None: for compiled Programs, the short name of Compiler that was used, otherwise None
-        self._compiled_with = None
+        #: tuple, None: for compiled Programs, the device spec and the short
+        # name of Compiler that was used, otherwise None
+        self._compile_info = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
         #: dict[str, Parameter]: free circuit parameters owned by this Program
@@ -561,7 +562,7 @@ class Program:
         compiled = self._linked_copy()
         compiled.circuit = seq
         compiled._target = target
-        compiled._compiled_with = compiler.short_name
+        compiled._compiler_info = compiler.short_name
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -659,16 +660,17 @@ class Program:
         return self._target
 
     @property
-    def compiled_with(self):
-        """The compiler that was used during compilation.
+    def compiler_info(self):
+        """The device specification and the compiler that was used during
+        compilation.
 
         If the program has not been compiled, this will return ``None``.
 
         Returns:
-            str or None: the short name of the Compiler that was used if
-            compiled, otherwise None
+            tuple or None: device specification and the short name of the
+            Compiler that was used if compiled, otherwise None
         """
-        return self._compiled_with
+        return self._compiler_info
 
     def params(self, *args):
         """Create and access free circuit parameters.
