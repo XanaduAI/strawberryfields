@@ -610,24 +610,49 @@ class RemoteEngine:
         """
         # get the specific chip to submit the program to
         compile_options = compile_options or {}
+        recompile = compile_options.pop("recompile", False)
         kwargs.update(self._backend_options)
 
         device = self.device_spec
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
-        if program.compiled_with is None:
+        program_compile_device = program.compile_info[0]
+        if program.compile_info is None:
+            # program is uncompiled
             msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
             self.log.info(msg)
-
             program = program.compile(device=device, **compile_options)
 
-        elif program.compiled_with != compiler_name:
-            msg = f"No compilation, program already compiled for {program.compiled_with}. Set recompile=true to compile with {compiler_name}."
+        elif program_compile_device.target != device.target or program_compile_device._spec != device._spec:
+            # program was compiled for a different device
+            if not recompile:
+                raise ValueError(f"Cannot use program compiled for "\
+                        "{program._compile_info[0].target} for target "\
+                        "{self.target}. Set the \"recompile\" entry in the "\
+                        "compile_options dictionary to true to compile with "\
+                                "{compiler_name}.")
+
+            msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
             self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
+
+        elif program.compile_info[1] != compiler_name:
+            # program was compiled for the device, but using a different compiler
+
+            if compile_options is None or not compile_options:
+                msg = (f"No compile options specified, compiling program for "\
+                f"device {device.target} using compiler Xstrict.")
+                self.log.info(msg)
+
+                program = program.compile(device=device, compiler="Xstrict")
+            else:
+                # User has explicitly provided compile_options to the engine
+                program = program.compile(device=device, **compile_options)
         else:
-            msg = f"No compilation, program compiled for {program.compiled_with}."
+            msg = f"No compilation, compiled program compatible with device {device.target} and compiler {compiler_name}."
             self.log.info(msg)
+
 
         # update the run options if provided
         run_options = {}
