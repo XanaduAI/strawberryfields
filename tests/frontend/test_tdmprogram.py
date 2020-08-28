@@ -16,7 +16,7 @@ import pytest
 import numpy as np
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.tdm import tdmprogram2
+from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import reshape_samples
 
 # feel free to remove after Fabian's test:
@@ -42,7 +42,7 @@ def singleloop(r, alpha, phi, theta, copies, shift='end'):
     theta....list of homodyne-measurement angles in rad
     """
 
-    prog = tdmprogram2.TDMProgram(N=3)
+    prog = tdmprogram.TDMProgram(N=3)
     with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
         ops.Sgate(r, 0) | q[2]
         ops.BSgate(p[0]) | (q[1], q[2])
@@ -231,7 +231,7 @@ def test_millionmodes():
     theta1 = [0]*int(n/2) + [np.pi/2]*int(n/2) # measurement angles for detector A
     theta2 = theta1 # measurement angles for detector B
 
-    prog = tdmprogram2.TDMProgram(N=[1,2])
+    prog = tdmprogram.TDMProgram(N=[1,2])
     with prog.context(theta1, theta2, copies=copies, shift='end') as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
@@ -296,7 +296,7 @@ def test_DTU2D():
     theta_B = theta_A # measurement angles for detector B
 
     # 2D cluster
-    prog = tdmprogram2.TDMProgram([1,delay2+delay1+1])
+    prog = tdmprogram.TDMProgram([1,delay2+delay1+1])
     with prog.context(theta_A, theta_B, shift='end') as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[delay2+delay1+1]
