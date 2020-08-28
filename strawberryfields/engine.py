@@ -469,7 +469,7 @@ class LocalEngine(BaseEngine):
         )
 
         if isinstance(program, TDMProgram):
-            reshape_samples(result.all_samples, program.measured_modes)
+            result._all_samples = reshape_samples(result.all_samples, program.measured_modes)
             result._samples = np.array(list(result.all_samples.values()))
 
         modes = temp_run_options["modes"]

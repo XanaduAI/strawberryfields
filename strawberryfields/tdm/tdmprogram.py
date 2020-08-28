@@ -102,8 +102,9 @@ def reshape_samples(all_samples, modes):
                 new_samples[m] = []
             new_samples[m].append(all_samples[shifted_modes[i]].pop(0))
         # shift the modes one step to the left and repeat
-        shifted_modes = [(m-1) % len(all_samples) for m in shifted_modes]
-    all_samples = new_samples
+        shifted_modes = [(m+1) % len(all_samples) for m in shifted_modes]
+    return new_samples
+
 
 
 class TDMProgram(sf.Program):
@@ -186,6 +187,9 @@ class TDMProgram(sf.Program):
         q[sm[3]] as concurrent modes of spatial mode D.
 
         '''
+        for cmd in cmds:
+            if isinstance(cmd.op, ops.Measurement):
+                self.measured_modes.append(cmd.reg[0].ind)
 
         for i in range(self.total_timebins):
             for cmd in cmds:
@@ -193,9 +197,6 @@ class TDMProgram(sf.Program):
 
                 if self.shift == "after" and isinstance(cmd.op, ops.Measurement):
                     q = shift_by(q, 1)  # shift after each measurement
-
-                if isinstance(cmd.op, ops.Measurement):
-                    self.measured_modes.append(cmd.reg[0].ind)
 
             if self.shift == "end":
                 #####################################################################################
