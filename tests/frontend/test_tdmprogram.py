@@ -50,9 +50,8 @@ def singleloop(r, alpha, phi, theta, copies, shift='end'):
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
     result = eng.run(prog)
-    samples = result.all_samples
-
-    return reshape_samples(samples)
+    
+    return result.samples[0]
 
 # The following three functions describe example programs to be run on the above architecture
 #############################################################################################
@@ -63,7 +62,7 @@ def test_epr_cloud():
     sq_r = 1.0
     N = 3
     c = 4
-    copies = 1
+    copies = 200
 
     # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
     alpha = [0, np.pi / 4] * c
@@ -107,7 +106,7 @@ def test_ghz_cloud():
     """This example generates n-mode GHZ states in the 'singleloop' architecture and evaluates the quadrature correlations."""
 
     sq_r = 5
-    copies = 400
+    copies = 10
     vac_modes = 2 # number of vacuum modes in the initial setup
 
     n = 20 # for an n-mode GHZ state
@@ -242,13 +241,15 @@ def test_millionmodes():
         ops.MeasureHomodyne(p[1]) | q[1]
     eng = sf.Engine("gaussian")
     result = eng.run(prog)
-    samples = result.all_samples
-    # print(samples)
-    x  = sampli2(samples)
-    X_A = x[1][:n//2] # X samples from detector A
-    P_A = x[1][n//2:] # P samples from detector A
-    X_B = x[0][:n//2] # X samples from detector B
-    P_B = x[0][n//2:] # P samples from detector B
+
+    xA = result.all_samples[0]
+    xB = result.all_samples[1]
+    
+    X_A = xA[:n//2] # X samples from detector A
+    P_A = xA[n//2:] # P samples from detector A
+    X_B = xB[:n//2] # X samples from detector B
+    P_B = xB[n//2:] # P samples from detector B
+
     # print('\n',x)
 
     # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
@@ -310,13 +311,13 @@ def test_DTU2D():
     result = eng.run(prog)
     samples = result.all_samples
 
-    x = sampli2(samples)
-    # small helper function to reshape samples appropriately -- should become redundant as soon result.all_samples outputs the samples ordered by the qumode index that was spefified for measurement
-
-    X_A = x[0][:n//2] # X samples from detector A
-    P_A = x[0][n//2:] # P samples from detector A
-    X_B = x[1][:n//2] # X samples from detector B
-    P_B = x[1][n//2:] # P samples from detector B
+    xA = result.all_samples[0]
+    xB = result.all_samples[1]
+    
+    X_A = xA[:n//2] # X samples from detector A
+    P_A = xA[n//2:] # P samples from detector A
+    X_B = xB[:n//2] # X samples from detector B
+    P_B = xB[n//2:] # P samples from detector B
 
     # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
     N=delay2
@@ -342,33 +343,6 @@ def test_DTU2D():
         print('\n########## SUCCESS ###########')
 
     print('\nElapsed time [s]:', time.time()-start)
-
-
-def sampli2(samples):
-    '''
-    This function rearranges results.all_samples to a dict with key 0 corresponding to spatial mode A and keys 1--N corresponding to spatial mode B. ONLY works if the number of timebins is a multiple of the concurrent modes in spatial mode B.
-    --- THIS FUNCTION IS REDUNDANT AS SOON AS all_samples WILL ORDER THE SAMPLES IN THE CORRECT WAY ---
-    '''
-
-    samplesA = {0: samples[0]}
-
-    samplesB = samples.copy()
-    del samplesB[0]
-
-    num_modes = len(samplesB)
-    len_samples = [len(samplesB[i]) for i in range(1,num_modes+1)]
-    min_len = min(len_samples)
-
-    xB = []
-    # for j in range(min_len):
-    for j in range(len(samplesB[1])):
-        for i in range(1,len(samplesB)+1):
-            xB.append(samplesB[i][j])
-
-    print(len(samples[0]))
-    print(len(xB))
-
-    return {0: samples[0], 1: xB}
 
 
 # test_epr_cloud()
