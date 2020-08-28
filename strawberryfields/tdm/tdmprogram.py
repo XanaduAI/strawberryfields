@@ -89,21 +89,21 @@ def input_check(args, copies):
         raise TypeError("Number of copies must be a positive integer.")
 
 
-def reshape_samples(samples, c=None):
-    """Reshapes the samples so that they have the expected correct shape"""
-    num_modes = len(samples)
-    len_samples = [len(samples[i]) for i in range(num_modes)]
-    max_len = max(len_samples)
-    reshaped_samples = np.zeros([sum(len_samples)])
-    index = 0
-    for j in range(max_len):
-        for i in range(num_modes):
-            if j < len_samples[i]:
-                reshaped_samples[index] = samples[i][j]
-                index += 1
-    if c is None:
-        return reshaped_samples
-    return reshaped_samples.reshape(c, -1)
+def reshape_samples(all_samples, modes):
+    """Reshapes the samples dict so that they have the expected correct shape"""
+    num_of_samples = len([i for j in all_samples.values() for i in j])
+    new_samples = dict()
+    shifted_modes = modes.copy()
+
+    # walk through all_samples and insert each value in the correct spot in new_samples
+    for _ in range(num_of_samples//len(modes)):
+        for i, m in enumerate(modes):
+            if m not in new_samples:
+                new_samples[m] = []
+            new_samples[m].append(all_samples[shifted_modes[i]].pop(0))
+        # shift the modes one step to the left and repeat
+        shifted_modes = [(m-1) % len(all_samples) for m in shifted_modes]
+    all_samples = new_samples
 
 
 class TDMProgram(sf.Program):
@@ -122,6 +122,7 @@ class TDMProgram(sf.Program):
 
         self.total_timebins = 0
         self.spatial_modes = 0
+        self.measured_modes = []
         super().__init__(num_subsystems=self.concurr_modes, name=name)
 
     def context(self, *args, copies=1, shift="end"):
@@ -171,7 +172,7 @@ class TDMProgram(sf.Program):
         4 concurrent modes in spatial mode B
         9 concurrent modes in spatial mode C
         1 concurrent modes in spatial mode D.
-    
+
         The entries of sm will then be:
         slice(0, 6, None)   for spatial mode A
         slice(6, 10, None)  for spatial mode B
@@ -183,7 +184,7 @@ class TDMProgram(sf.Program):
         q[sm[1]] as concurrent modes of spatial mode B
         q[sm[2]] as concurrent modes of spatial mode C
         q[sm[3]] as concurrent modes of spatial mode D.
-    
+
         '''
 
         for i in range(self.total_timebins):
@@ -192,6 +193,9 @@ class TDMProgram(sf.Program):
 
                 if self.shift == "after" and isinstance(cmd.op, ops.Measurement):
                     q = shift_by(q, 1)  # shift after each measurement
+
+                if isinstance(cmd.op, ops.Measurement):
+                    self.measured_modes.append(cmd.reg[0].ind)
 
             if self.shift == "end":
                 #####################################################################################
@@ -202,7 +206,7 @@ class TDMProgram(sf.Program):
                 for i in range(len(self.N)):
                     q_aux[sm[i]] = shift_by(q_aux[sm[i]], 1)
                 q = tuple(q_aux)
-               
+
             elif isinstance(self.shift, int):
                 q = shift_by(q, self.shift)  # shift at end of each time bin
 
