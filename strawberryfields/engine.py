@@ -630,8 +630,8 @@ class RemoteEngine:
             # program was compiled for a different device
             if not recompile:
                 raise ValueError(
-                    f"Cannot use program compiled for "
-                    "{program._compile_info[0].target} for target "
+                    "Cannot use program compiled for "
+                    f"{program._compile_info[0].target} for target "
                     '{self.target}. Set the "recompile" entry in the '
                     "compile_options dictionary to true to compile with "
                     "{compiler_name}."
