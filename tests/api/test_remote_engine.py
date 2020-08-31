@@ -281,7 +281,10 @@ class TestRemoteEngineIntegration:
         assert isinstance(program, self.MockProgram)
         assert caplog.records[-1].message == "Recompiling program for device X8_01 using compiler Xunitary."
 
-    def test_recompile_different_compiler_no_options(self, prog, monkeypatch, caplog):
+    # One case tests that the "recompile": True option gets popped from
+    # compile_options
+    @pytest.mark.parametrize("compile_options", [{"recompile": True}, None])
+    def test_recompile_different_compiler_no_options(self, prog, monkeypatch, caplog, compile_options):
         """Test that recompilation happens in a default way if program was
         compiled with a different compiler but no compile options were
         provided."""
@@ -295,8 +298,6 @@ class TestRemoteEngineIntegration:
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
-        # Setting recompile in compile options
-        # This will be popped
         compile_options = {"recompile": True}
 
         engine = sf.RemoteEngine("X8")
@@ -309,3 +310,62 @@ class TestRemoteEngineIntegration:
         assert isinstance(program, self.MockProgram)
         assert caplog.records[-1].message == ("No compile options specified, "
         f"compiling program for device X8_01 using compiler {default_compiler}.")
+
+    def test_recompile_different_compiler_with_compile_options(self, prog, monkeypatch, caplog):
+        """Test that recompilation happens according to the compile options if
+        program was compiled with a different compiler but no compile options
+        were provided."""
+        default_compiler = "Xstrict"
+
+        caplog.set_level(logging.INFO)
+        test_device_dict = mock_device_dict.copy()
+        test_device_dict["compiler"] = []
+
+        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
+
+        # Setting recompile in compile options
+        # This will be popped
+        compile_options = {"compiler": None}
+
+        engine = sf.RemoteEngine("X8_01")
+
+        device = engine.device_spec
+        # Setting compile_info
+        prog._compile_info = (device, device.compiler)
+
+        program = engine.run_async(prog, shots=10, compile_options=compile_options)
+        assert isinstance(program, self.MockProgram)
+        assert caplog.records[-1].message == (f"Compiling program for device {device.target}"\
+                       f"using the specified compiler options.")
+
+    def test_no_recompile(self, prog, monkeypatch, caplog):
+        """Test that no recompilation happens is needed when the target device
+        and the compiler match."""
+        compiler = "Xunitary"
+
+        caplog.set_level(logging.INFO)
+        test_device_dict = mock_device_dict.copy()
+        test_device_dict["compiler"] = compiler
+
+        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+
+        # Setting recompile in compile options
+        # This will be popped
+        compile_options = {"compiler": compiler}
+
+        engine = sf.RemoteEngine("X8")
+
+        device = engine.device_spec
+
+        # Setting compile_info
+        prog._compile_info = (device, device.compiler)
+
+        program = engine.run_async(prog, shots=10, compile_options=compile_options)
+
+        # No recompilation, original Program
+        assert prog is program
+        assert caplog.records[-1].message == (f"No compilation, compiled program compatible with device "\
+                       f"X8_01 and compiler {compiler}.")

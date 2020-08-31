@@ -617,14 +617,13 @@ class RemoteEngine:
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
-        program_compile_device = program.compile_info[0]
         if program.compile_info is None:
             # program is uncompiled
             msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
             self.log.info(msg)
             program = program.compile(device=device, **compile_options)
 
-        elif program_compile_device.target != device.target or program_compile_device._spec != device._spec:
+        elif program.compile_info[0].target != device.target or program.compile_info[0]._spec != device._spec:
             # program was compiled for a different device
             if not recompile:
                 raise ValueError(f"Cannot use program compiled for "\
@@ -648,9 +647,14 @@ class RemoteEngine:
                 program = program.compile(device=device, compiler="Xstrict")
             else:
                 # User has explicitly provided compile_options to the engine
+                msg = (f"Compiling program for device {device.target}"\
+                       f"using the specified compiler options.")
+                self.log.info(msg)
+
                 program = program.compile(device=device, **compile_options)
         else:
-            msg = f"No compilation, compiled program compatible with device {device.target} and compiler {compiler_name}."
+            msg = (f"No compilation, compiled program compatible with device "\
+                   f"{device.target} and compiler {compiler_name}.")
             self.log.info(msg)
 
 
