@@ -623,14 +623,19 @@ class RemoteEngine:
             self.log.info(msg)
             program = program.compile(device=device, **compile_options)
 
-        elif program.compile_info[0].target != device.target or program.compile_info[0]._spec != device._spec:
+        elif (
+            program.compile_info[0].target != device.target
+            or program.compile_info[0]._spec != device._spec
+        ):
             # program was compiled for a different device
             if not recompile:
-                raise ValueError(f"Cannot use program compiled for "\
-                        "{program._compile_info[0].target} for target "\
-                        "{self.target}. Set the \"recompile\" entry in the "\
-                        "compile_options dictionary to true to compile with "\
-                                "{compiler_name}.")
+                raise ValueError(
+                    f"Cannot use program compiled for "
+                    "{program._compile_info[0].target} for target "
+                    '{self.target}. Set the "recompile" entry in the '
+                    "compile_options dictionary to true to compile with "
+                    "{compiler_name}."
+                )
 
             msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
             self.log.info(msg)
@@ -640,23 +645,28 @@ class RemoteEngine:
             # program was compiled for the device, but using a different compiler
 
             if compile_options is None or not compile_options:
-                msg = (f"No compile options specified, compiling program for "\
-                f"device {device.target} using compiler Xstrict.")
+                msg = (
+                    f"No compile options specified, compiling program for "
+                    f"device {device.target} using compiler Xstrict."
+                )
                 self.log.info(msg)
 
                 program = program.compile(device=device, compiler="Xstrict")
             else:
                 # User has explicitly provided compile_options to the engine
-                msg = (f"Compiling program for device {device.target}"\
-                       f"using the specified compiler options.")
+                msg = (
+                    f"Compiling program for device {device.target}"
+                    f"using the specified compiler options."
+                )
                 self.log.info(msg)
 
                 program = program.compile(device=device, **compile_options)
         else:
-            msg = (f"No compilation, compiled program compatible with device "\
-                   f"{device.target} and compiler {compiler_name}.")
+            msg = (
+                f"No compilation, compiled program compatible with device "
+                f"{device.target} and compiler {compiler_name}."
+            )
             self.log.info(msg)
-
 
         # update the run options if provided
         run_options = {}
