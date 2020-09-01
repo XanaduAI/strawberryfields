@@ -91,6 +91,7 @@ def input_check(args, copies):
 
 
 def _get_mode_order(num_of_values, N):
+    """Get the order by which the modes where measured"""
     N = N.copy()
 
     all_modes = []
@@ -105,7 +106,20 @@ def _get_mode_order(num_of_values, N):
 
 
 def reshape_samples(all_samples, modes, N):
-    """Reshapes the samples dict so that they have the expected correct shape"""
+    """Reshapes the samples dict so that they have the expected correct shape
+
+    Reshapes the samples dict so that they the measured modes are the ones
+    defined to be measured in the circuit instead of being spread over a larger
+    number of modes due to the mode-shifting occuring in TDMProgram.
+
+    Args:
+        all_samples (dict[int, list]): the raw measured samples
+        modes (Sequence[int]): the modes that are measured in the circuit
+        N (Sequence[int]): the number of used modes per belt/spatial modes
+
+    Returns:
+        new_samples (dict[int, list]): the re-shaped samples
+    """
     num_of_values = len([i for j in all_samples.values() for i in j])
     mode_order = _get_mode_order(num_of_values, N)
 
