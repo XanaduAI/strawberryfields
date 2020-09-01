@@ -104,7 +104,7 @@ class TestSFToBlackbirdConversion:
         assert bb.version == "1.0"
         assert bb.target["name"] is None
 
-        bb = io.to_blackbird(prog.compile("gaussian"))
+        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
@@ -113,7 +113,7 @@ class TestSFToBlackbirdConversion:
     def test_metadata_run_options(self):
         """Test run options correctly converts"""
         prog = Program(4, name="test_program")
-        bb = io.to_blackbird(prog.compile("gaussian", shots=1024))
+        bb = io.to_blackbird(prog.compile(compiler="gaussian", shots=1024))
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
@@ -213,7 +213,7 @@ class TestSFToBlackbirdConversion:
         expected = {"op": "Pgate", "modes": [0], "args": [0.43], "kwargs": {}}
         assert bb.operations[0] == expected
 
-        bb = io.to_blackbird(prog.compile("gaussian"))
+        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
         assert bb.operations[0]["op"] == "Sgate"
         assert bb.operations[1]["op"] == "Rgate"
 
@@ -527,36 +527,6 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].op.p[1] == np.pi
         assert prog.circuit[0].reg[0].ind == 0
         assert prog.circuit[0].reg[1].ind == 2
-
-    def test_valid_compilation(self):
-        """Test setting compilation target using the target keyword"""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian
-        Pgate(0.54) | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
-
-        assert prog.target == 'gaussian'
-        assert len(prog) == 2
-        assert prog.circuit[0].op.__class__.__name__ == "Sgate"
-        assert prog.circuit[0].reg[0].ind == 0
-        assert prog.circuit[1].op.__class__.__name__ == "Rgate"
-        assert prog.circuit[1].reg[0].ind == 0
-
-    def test_invalid_compilation(self):
-         """Test an invalid compilation target raises error on attempted compilation"""
-         bb_script = """\
-         name test_program
-         version 1.0
-         target gaussian
-         Kgate(0.54) | 0
-         """
-         bb = blackbird.loads(bb_script)
-         with pytest.raises(CircuitError, match="cannot be used with the target"):
-             prog = io.to_program(bb)
 
 
 class DummyResults:

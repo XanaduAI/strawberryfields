@@ -21,7 +21,8 @@ program execution jobs and job results respectively.
 """
 
 from .connection import Connection, RequestFailedError
+from .devicespec import DeviceSpec
 from .job import InvalidJobOperationError, Job, JobStatus
 from .result import Result
 
-__all__ = ["Connection", "Job", "Result"]
+__all__ = ["Connection", "DeviceSpec", "Job", "Result"]

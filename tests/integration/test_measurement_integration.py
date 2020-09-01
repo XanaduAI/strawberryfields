@@ -44,11 +44,14 @@ class TestMeasurement:
     def test_heterodyne(self, setup_eng, tol):
         """Test Fock measurements return expected results"""
         eng, prog = setup_eng(2)
-        a = [0.43 - 0.12j, 0.02 + 0.2j]
+        a0 = 0.44643
+        phi0 = -0.2721457
+        a1 = 0.200998
+        phi1 = 1.47112755
 
         with prog.context as q:
-            ops.Coherent(a[0]) | q[0]
-            ops.Coherent(a[1]) | q[1]
+            ops.Coherent(a0, phi0) | q[0]
+            ops.Coherent(a1, phi1) | q[1]
             ops.MeasureHD | q[0]
             ops.MeasureHD | q[1]
 

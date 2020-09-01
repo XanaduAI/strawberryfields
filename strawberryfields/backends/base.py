@@ -121,8 +121,8 @@ class BaseBackend:
 
     #: str: short name of the backend
     short_name = "base"
-    #: str, None: Short name of the CircuitSpecs class used to validate Programs for this backend. None if no validation is required.
-    circuit_spec = None
+    #: str, None: Short name of the Compiler class used to validate Programs for this backend. None if no validation is required.
+    compiler = None
 
     def __init__(self):
         self._supported = {}
@@ -464,6 +464,8 @@ class BaseBackend:
 class BaseFock(BaseBackend):
     """Abstract base class for backends capable of Fock state manipulation."""
 
+    compiler = "fock"
+
     def __init__(self):
         super().__init__()
         self._supported["fock_basis"] = True
@@ -599,6 +601,8 @@ class BaseFock(BaseBackend):
 
 class BaseGaussian(BaseBackend):
     """Abstract base class for backends that are only capable of Gaussian state manipulation."""
+
+    compiler = "gaussian"
 
     def __init__(self):
         super().__init__()

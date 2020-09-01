@@ -342,43 +342,40 @@ class TestNumberExpectation:
             pytest.skip("Does not support batch mode")
         backend = setup_backend(2)
         state = backend.state()
-        a0 = 0.3 + 0.1 * 1j
+        a0 = 0.2 + 0.1 * 1j
         r0 = 0.2
         phi0 = 0.6
         a1 = 0.1 + 0.1 * 1j
-        r1 = 0.3
-        phi1 = 0.9
+        r1 = 0.1
+        phi1 = 0.4
         backend.prepare_displaced_squeezed_state(np.abs(a0), np.angle(a0), r0, phi0, 0)
         backend.prepare_displaced_squeezed_state(np.abs(a1), np.angle(a1), r1, phi1, 1)
         state = backend.state()
         n0 = np.sinh(r0) ** 2 + np.abs(a0) ** 2
         n1 = np.sinh(r1) ** 2 + np.abs(a1) ** 2
 
-        def analytic_var(a, r, phi):
+        def squared_term(a, r, phi):
             magnitude_squared = np.abs(a) ** 2
-            var_ex = - magnitude_squared + magnitude_squared ** 2 + 2 *\
-                magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
-                np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
-                np.cosh(r)*np.sinh(r) + np.sinh(r)**4 - (magnitude_squared +\
-                        np.conj(np.sinh(r))*np.sinh(r)) ** 2 +\
+            squared_term = - magnitude_squared + magnitude_squared ** 2 + 2 *\
+                magnitude_squared*np.cosh(2*r) - 2 * np.real(np.exp(-1j*phi) *\
+                a ** 2 * np.cosh(r)*np.sinh(r)) + np.sinh(r)**4 +\
                 np.cosh(r)*np.sinh(r)*np.sinh(2*r)
-            return var_ex
-
-        var_tol = 0.01
-        v0 = analytic_var(a0, r0, phi0)
-        v1 = analytic_var(a1, r1, phi1)
+            return squared_term
 
         res = state.number_expectation([0, 1])
+        var = squared_term(a0, r0, phi0) * squared_term(a1, r1, phi1) - n0 ** 2 * n1 ** 2
         assert np.allclose(res[0], n0 * n1, atol=tol, rtol=0)
-        assert np.allclose(res[1], v0 * v1, atol=var_tol, rtol=0)
+        assert np.allclose(res[1], var, atol=tol, rtol=0)
 
         res = state.number_expectation([0])
+        var = squared_term(a0, r0, phi0) - n0 ** 2
         assert np.allclose(res[0], n0, atol=tol, rtol=0)
-        assert np.allclose(res[1], v0, atol=var_tol, rtol=0)
+        assert np.allclose(res[1], var, atol=tol, rtol=0)
 
         res = state.number_expectation([1])
+        var = squared_term(a1, r1, phi1) - n1 ** 2
         assert np.allclose(res[0], n1, atol=tol, rtol=0)
-        assert np.allclose(res[1], v1, atol=var_tol, rtol=0)
+        assert np.allclose(res[1], var, atol=tol, rtol=0)
 
     def test_number_expectation_repeated_modes(self, setup_backend, tol):
         """Tests that the correct exception is raised for repeated modes"""

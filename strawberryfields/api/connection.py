@@ -28,6 +28,7 @@ from strawberryfields.program import Program
 
 from .job import Job, JobStatus
 from .result import Result
+from .devicespec import DeviceSpec
 
 # pylint: disable=bad-continuation,protected-access
 
@@ -134,6 +135,30 @@ class Connection:
             bool
         """
         return self._use_ssl
+
+    def get_device_spec(self, target: str) -> DeviceSpec:
+        """Gets the device specifications for target.
+
+        Args:
+            target (str): the target device
+
+        Returns:
+            strawberryfields.api.DeviceSpec: the created device specification
+        """
+        device_dict = self._get_device_dict(target)
+        return DeviceSpec(target=target, spec=device_dict, connection=self)
+
+    def _get_device_dict(self, target: str) -> dict:
+        """Returns the device specifications as a dictionary"""
+        path = f"/devices/{target}/specifications"
+        response = requests.get(self._url(path), headers=self._headers)
+
+        if response.status_code == 200:
+            self.log.info("The device spec %s has been successfully retrieved.", target)
+            return response.json()
+        raise RequestFailedError(
+            "Failed to get device specifications: {}".format(self._format_error_message(response))
+        )
 
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
         """Creates a job with the given circuit.

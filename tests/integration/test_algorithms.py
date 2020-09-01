@@ -28,11 +28,13 @@ def test_teleportation_fidelity(setup_eng, pure):
     z = 2
     BS = BSgate(np.pi / 4, 0)
     alpha = 0.5 + 0.2j
+    a = 0.538516
+    phi = 0.380506212
 
     with prog.context as q:
         # TODO: at some point, use the blackbird parser to
         # read in the following directly from the examples folder
-        Coherent(alpha) | q[0]
+        Coherent(a, phi) | q[0]
 
         Squeezed(-z) | q[1]
         Squeezed(z) | q[2]
@@ -234,11 +236,12 @@ class TestGaussianCloning:
 
     def test_identical_output(self, setup_eng, tol):
         """Test that all outputs are identical clones"""
-        a = 0.7 + 1.2j
+        a = 1.38924
+        phi = 1.04272253
 
         eng, prog = setup_eng(4)
         with prog.context as q:
-            Coherent(a) | q[0]
+            Coherent(a, phi) | q[0]
             self.gaussian_cloning_circuit(q)
 
         state = eng.run(prog, **{'modes': [0, 3]}).state
@@ -253,11 +256,13 @@ class TestGaussianCloning:
     def test_average_fidelity(self, setup_eng):
         """Test that gaussian cloning clones a Gaussian state with average fidelity 2/3"""
         shots = 500
-        a = 0.7 + 1.2j
+        alpha = 0.7 + 1.2j
+        a = 1.38924
+        phi = 1.04272253
 
         eng, prog = setup_eng(4)
         with prog.context as q:
-            Coherent(a) | q[0]
+            Coherent(a, phi) | q[0]
             self.gaussian_cloning_circuit(q)
 
         f_list = np.empty([shots])
@@ -270,7 +275,7 @@ class TestGaussianCloning:
             a_list[i] = state.displacement()
 
         assert np.allclose(np.mean(f_list), 2.0 / 3.0, atol=0.1, rtol=0)
-        assert np.allclose(np.mean(a_list), a, atol=0.1, rtol=0)
+        assert np.allclose(np.mean(a_list), alpha, atol=0.1, rtol=0)
         assert np.allclose(
             np.cov([a_list.real, a_list.imag]), 0.25 * np.identity(2), atol=0.1, rtol=0
         )
