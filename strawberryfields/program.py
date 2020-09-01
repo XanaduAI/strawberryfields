@@ -572,7 +572,15 @@ class Program:
         if device is not None and device.gate_parameters:
             bb_device = bb.loads(device.layout)
             bb_compiled = sf.io.to_blackbird(compiled)
-            user_parameters = match_template(bb_device, bb_compiled)
+
+            try:
+                user_parameters = match_template(bb_device, bb_compiled)
+            except bb.utils.TemplateError:
+                raise CircuitError(
+                    "Program cannot be used with the compiler '{}' "
+                    "due to incompatible topology.".format(compiler.short_name)
+                )
+
             device.validate_parameters(**user_parameters)
 
         return compiled
