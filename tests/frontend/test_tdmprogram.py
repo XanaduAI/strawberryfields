@@ -382,11 +382,11 @@ def test_tokyo2D():
         ops.Rgate(np.pi/2) | q[0]
         ops.Rgate(np.pi/2) | q[8]
 
-        ops.BSgate(np.pi/4, np.pi) | (q[0], q[2])
-        ops.BSgate(np.pi/4, np.pi) | (q[8], q[9])
-        ops.BSgate(np.pi/4, np.pi) | (q[2], q[8])
-        ops.BSgate(np.pi/4, np.pi) | (q[0],q[1])
-        ops.BSgate(np.pi/4, np.pi) | (q[3],q[9])
+        ops.BSgate(np.pi/4) | (q[0], q[2])
+        ops.BSgate(np.pi/4) | (q[8], q[9])
+        ops.BSgate(np.pi/4) | (q[2], q[8])
+        ops.BSgate(np.pi/4) | (q[0], q[1])
+        ops.BSgate(np.pi/4) | (q[3], q[9])
 
         ops.MeasureHomodyne(p[0]) | q[0]
         ops.MeasureHomodyne(p[1]) | q[1]
@@ -420,7 +420,7 @@ def test_tokyo2D():
     nP1 = []
     nP2 = []
     # nullifiers defined in https://arxiv.org/pdf/1903.03918.pdf, Fig. S5
-    for k in range(0, len(X_A)-delay2-1):
+    for k in range(0, len(X_A)-N-1):
         nullif_X1 = X_A[k] + X_B[k] - np.sqrt(1/2)*(-X_A[k+1] + X_B[k+1] + X_C[k+N] + X_D[k+N])
         nullif_X2 = X_C[k] - X_D[k] - np.sqrt(1/2)*(-X_A[k+1] + X_B[k+1] - X_C[k+N] - X_D[k+N])
         nullif_P1 = P_A[k] + P_B[k] + np.sqrt(1/2)*(-P_A[k+1] + P_B[k+1] + P_C[k+N] + P_D[k+N])
@@ -452,4 +452,4 @@ def test_tokyo2D():
 # test_1Dcluster_cloud()
 # test_millionmodes()
 # test_DTU2D()
-test_tokyo2D()
+# test_tokyo2D()
