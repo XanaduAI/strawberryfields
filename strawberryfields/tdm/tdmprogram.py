@@ -91,12 +91,11 @@ def input_check(args, copies):
 
 
 def _get_mode_order(num_of_values, N):
-    # make a copy and add 0 to front
-    N = [0] + N
+    N = N.copy()
 
     all_modes = []
-    for i in range(len(N)-1):
-        ra = list(range(N[i], N[i] + N[i+1]))
+    for i in range(len(N)):
+        ra = list(range(sum(N[:i]), sum(N[:i+1])))
         all_modes.append(ra * ceil(max(N) / len(ra)))
 
     mode_order = [i for j in zip(*all_modes) for i in j]
