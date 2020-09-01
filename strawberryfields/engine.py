@@ -619,7 +619,7 @@ class RemoteEngine:
 
         device = self.device_spec
 
-        compiler_name = compile_options.get("force_compiler", device.default_compiler)
+        compiler_name = compile_options.get("compiler", device.default_compiler)
         msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
         self.log.info(msg)
 
