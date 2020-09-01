@@ -19,6 +19,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 
 from operator import itemgetter
 import numpy as np
+from math import ceil
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
@@ -89,22 +90,34 @@ def input_check(args, copies):
         raise TypeError("Number of copies must be a positive integer.")
 
 
-def reshape_samples(all_samples, modes):
+def _get_mode_order(num_of_values, N):
+    # make a copy and add 0 to front
+    N = [0] + N
+
+    all_modes = []
+    for i in range(len(N)-1):
+        ra = list(range(N[i], N[i] + N[i+1]))
+        all_modes.append(ra * ceil(max(N) / len(ra)))
+
+    mode_order = [i for j in zip(*all_modes) for i in j]
+    mode_order *= ceil(num_of_values / len(mode_order))
+
+    return mode_order[:num_of_values]
+
+
+def reshape_samples(all_samples, modes, N):
     """Reshapes the samples dict so that they have the expected correct shape"""
-    num_of_samples = len([i for j in all_samples.values() for i in j])
+    num_of_values = len([i for j in all_samples.values() for i in j])
+    mode_order = _get_mode_order(num_of_values, N)
+
+    # go backwards through all_samples and add them into the correct mode
     new_samples = dict()
-    shifted_modes = modes.copy()
-
-    # walk through all_samples and insert each value in the correct spot in new_samples
-    for _ in range(num_of_samples//len(modes)):
-        for i, m in enumerate(modes):
-            if m not in new_samples:
-                new_samples[m] = []
-            new_samples[m].append(all_samples[shifted_modes[i]].pop(0))
-        # shift the modes one step to the left and repeat
-        shifted_modes = [(m+1) % len(all_samples) for m in shifted_modes]
+    for i, m in enumerate(mode_order):
+        idx = modes[i % len(N)]
+        if idx not in new_samples:
+            new_samples[idx] = []
+        new_samples[idx].append(all_samples[m].pop(0))
     return new_samples
-
 
 
 class TDMProgram(sf.Program):
