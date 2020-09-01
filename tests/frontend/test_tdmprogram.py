@@ -223,7 +223,7 @@ def test_millionmodes():
     sq_r = 5
     N = 3 # concurrent modes
 
-    n = 20 # for an n-mode cluster state
+    n = 500 # for an n-mode cluster state
     copies = 1
 
     # first half of cluster state measured in X, second half in P
@@ -234,7 +234,7 @@ def test_millionmodes():
     with prog.context(theta1, theta2, copies=copies, shift='end') as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
-        ops.Rgate(np.pi/2) | q[2]
+        ops.Rgate(np.pi/2) | q[0]
         ops.BSgate(np.pi/4) | (q[0],q[2])
         ops.BSgate(np.pi/4) | (q[0],q[1])
         ops.MeasureHomodyne(p[0]) | q[0]
@@ -348,5 +348,5 @@ def test_DTU2D():
 # test_epr_cloud()
 # test_ghz_cloud()
 # test_1Dcluster_cloud()
-# test_millionmodes()
+test_millionmodes()
 # test_DTU2D()
