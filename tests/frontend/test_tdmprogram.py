@@ -286,11 +286,7 @@ def test_DTU2D():
     '''
     delay1 = 1 # number of timebins in the short delay line
     delay2 = 12 # number of timebins in the long delay line
-    n_concurr = delay2 + delay1 + 1 # concurrent modes
     n = 400 # number of timebins
-
-    # Number of timebins must be a multiple of concurrent modes, otherwise sampli() doesn't work
-    n = n//n_concurr*n_concurr
 
     # first half of cluster state measured in X, second half in P
     theta_A = [0]*int(n/2) + [np.pi/2]*int(n/2) # measurement angles for detector A
@@ -344,9 +340,116 @@ def test_DTU2D():
 
     print('\nElapsed time [s]:', time.time()-start)
 
+def test_tokyo2D():
+    '''
+    Two-dimensional temporal-mode cluster state as demonstrated by Universtiy of Tokyo. See: https://arxiv.org/pdf/1903.03918.pdf
+    '''
+
+    start = time.time()
+
+    # temporal delay in timebins for each spatial mode
+    delayA = 0
+    delayB = 1
+    delayC = 5
+    delayD = 0
+
+    # concurrent modes in each spatial mode
+    concurrA = 1 + delayA
+    concurrB = 1 + delayB
+    concurrC = 1 + delayC
+    concurrD = 1 + delayD
+
+    N = [concurrA,concurrB,concurrC,concurrD]
+
+    sq_r = 5
+
+    # first half of cluster state measured in X, second half in P
+    n = 400 # number of timebins
+    theta_A = [0]*int(n/2) + [np.pi/2]*int(n/2) # measurement angles for detector A
+    theta_B = theta_A # measurement angles for detector B
+    theta_C = theta_A
+    theta_D = theta_A
+
+    # 2D cluster
+    prog = tdmprogram.TDMProgram(N)
+    with prog.context(theta_A, theta_B, theta_C, theta_D, shift='end') as (p, q):
+
+        ops.Sgate(sq_r, 0) | q[0]
+        ops.Sgate(sq_r, 0) | q[2]
+        ops.Sgate(sq_r, 0) | q[8]
+        ops.Sgate(sq_r, 0) | q[9]
+
+        ops.Rgate(np.pi/2) | q[0]
+        ops.Rgate(np.pi/2) | q[8]
+
+        ops.BSgate(np.pi/4, np.pi) | (q[0], q[2])
+        ops.BSgate(np.pi/4, np.pi) | (q[8], q[9])
+        ops.BSgate(np.pi/4, np.pi) | (q[2], q[8])
+        ops.BSgate(np.pi/4, np.pi) | (q[0],q[1])
+        ops.BSgate(np.pi/4, np.pi) | (q[3],q[9])
+
+        ops.MeasureHomodyne(p[0]) | q[0]
+        ops.MeasureHomodyne(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[3]
+        ops.MeasureHomodyne(p[3]) | q[9]
+
+    eng = sf.Engine("gaussian")
+    result = eng.run(prog)
+    samples = result.all_samples
+
+    xA = result.all_samples[0]
+    xB = result.all_samples[1]
+    xC = result.all_samples[3]
+    xD = result.all_samples[9]
+    
+    X_A = xA[:n//2] # X samples from detector A
+    P_A = xA[n//2:] # P samples from detector A
+
+    X_B = xB[:n//2] # X samples from detector B
+    P_B = xB[n//2:] # P samples from detector B
+
+    X_C = xC[:n//2] # X samples from detector C
+    P_C = xC[n//2:] # P samples from detector C
+
+    X_D = xD[:n//2] # X samples from detector D
+    P_D = xD[n//2:] # P samples from detector D
+
+    N=delayC
+    nX1 = []
+    nX2 = []
+    nP1 = []
+    nP2 = []
+    # nullifiers defined in https://arxiv.org/pdf/1903.03918.pdf, Fig. S5
+    for k in range(0, len(X_A)-delay2-1):
+        nullif_X1 = X_A[k] + X_B[k] - np.sqrt(1/2)*(-X_A[k+1] + X_B[k+1] + X_C[k+N] + X_D[k+N])
+        nullif_X2 = X_C[k] - X_D[k] - np.sqrt(1/2)*(-X_A[k+1] + X_B[k+1] - X_C[k+N] - X_D[k+N])
+        nullif_P1 = P_A[k] + P_B[k] + np.sqrt(1/2)*(-P_A[k+1] + P_B[k+1] + P_C[k+N] + P_D[k+N])
+        nullif_P2 = P_C[k] - P_D[k] + np.sqrt(1/2)*(-P_A[k+1] + P_B[k+1] - P_C[k+N] - P_D[k+N])
+        nX1.append(nullif_X1)
+        nX2.append(nullif_X2)
+        nP1.append(nullif_P1)
+        nP2.append(nullif_P2)
+
+    nX1var=np.var(np.array(nX1))
+    nX2var=np.var(np.array(nX2))
+    nP1var=np.var(np.array(nP1))
+    nP2var=np.var(np.array(nP2))
+
+    print('\n')
+    print('nullif_X1 variance:', nX1var)
+    print('nullif_X2 variance:', nX2var)
+    print('nullif_P1 variance:', nP1var)
+    print('nullif_P2 variance:', nP2var)
+
+
+    if 1e-15 < nX1var < 0.5 and 1e-15 < nX2var < 0.5 and 1e-15 < nP1var < 0.5 and 1e-15 < nP2var < 0.5:
+        print('\n########## SUCCESS ###########')
+
+    print('\nElapsed time [s]:', time.time()-start)
 
 # test_epr_cloud()
 # test_ghz_cloud()
 # test_1Dcluster_cloud()
-test_millionmodes()
+# test_millionmodes()
 # test_DTU2D()
+test_tokyo2D()
