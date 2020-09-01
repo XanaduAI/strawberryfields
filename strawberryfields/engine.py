@@ -44,7 +44,7 @@ class BaseEngine(abc.ABC):
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
-    def __init__(self, backend, *, backend_options=None):
+    def __init__(self, backend, backend_options=None):
         if backend_options is None:
             backend_options = {}
 
@@ -268,10 +268,10 @@ class BaseEngine(abc.ABC):
             # bind free parameters to their values
             p.bind_params(args)
 
-            # compile the program for the correct backend
-            target = self.backend.compiler
-            if target is not None:
-                p = p.compile(compiler=target, **compile_options)
+            # if the program hasn't been compiled for this backend, do it now
+            target = self.backend.circuit_spec
+            if target is not None and p.target != target:
+                p = p.compile(target, **compile_options)
             p.lock()
 
             _, self.samples, self.all_samples = self._run_program(p, **kwargs)
@@ -316,6 +316,10 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
+
+    def __init__(self, backend, *, backend_options=None):
+        backend_options = backend_options or {}
+        super().__init__(backend, backend_options)
 
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
@@ -415,8 +419,6 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
-        from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
-
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
@@ -468,10 +470,6 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if isinstance(program, TDMProgram):
-            result._all_samples = reshape_samples(result.all_samples, program.measured_modes, program.N)
-            result._samples = np.array(list(result.all_samples.values()))
-
         modes = temp_run_options["modes"]
 
         if modes is None or modes:
@@ -520,11 +518,19 @@ class RemoteEngine:
     """
 
     POLLING_INTERVAL_SECONDS = 1
+    VALID_TARGETS = ("X8_01", "X12_01", "X12_02")
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
     def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
         self._target = self.DEFAULT_TARGETS.get(target, target)
-        self._spec = None
+
+        if self._target not in self.VALID_TARGETS:
+            raise ValueError(
+                "Invalid engine target: {} (valid targets: {})".format(
+                    target, tuple(self.DEFAULT_TARGETS.keys()) + self.VALID_TARGETS
+                )
+            )
+
         self._connection = connection or Connection()
         self._backend_options = backend_options or {}
         self.log = create_logger(__name__)
@@ -546,13 +552,6 @@ class RemoteEngine:
             strawberryfields.api.Connection
         """
         return self._connection
-
-    @property
-    def device_spec(self):
-        """The device specifications for target device"""
-        if self._spec is None:
-            self._spec = self._connection.get_device_spec(self.target)
-        return self._spec
 
     def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
         """Runs a blocking job.
@@ -614,16 +613,19 @@ class RemoteEngine:
             strawberryfields.api.Job: the created remote job
         """
         # get the specific chip to submit the program to
+        # TODO: this should be provided by the chip API, rather
+        # than built-in to Strawberry Fields.
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
-        device = self.device_spec
-
-        compiler_name = compile_options.get("force_compiler", device.default_compiler)
-        msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
-        self.log.info(msg)
-
-        program = program.compile(device=device, **compile_options)
+        if program.target is None or (program.target.split("_")[0] != self.target.split("_")[0]):
+            # Program is either:
+            #
+            # * uncompiled (program.target is None)
+            # * compiled to a different chip family to the engine target
+            #
+            # In both cases, recompile the program to match the intended target.
+            program = program.compile(self.target, **compile_options)
 
         # update the run options if provided
         run_options = {}

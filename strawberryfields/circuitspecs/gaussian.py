@@ -11,14 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit specifications for general Gaussian simulator backends."""
-from .compiler import Compiler
+"""Circuit specifications for the Gaussian simulator backend."""
+from .circuit_specs import CircuitSpecs
 
 
-class Gaussian(Compiler):
-    """Compiler for general Gaussian backends."""
+class GaussianSpecs(CircuitSpecs):
+    """Circuit specifications for the Gaussian backend."""
 
     short_name = "gaussian"
+    modes = None
+    local = True
+    remote = True
     interactive = True
 
     primitives = {

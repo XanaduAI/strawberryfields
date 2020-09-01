@@ -119,7 +119,7 @@ class TestGaussianBackendDecompositions:
             ops.GraphEmbed(np.identity(3)) | q
 
         assert len(prog) == 1
-        prog = prog.compile(compiler='gaussian')
+        prog = prog.compile('gaussian')
         assert len(prog) == 0
 
     def test_bipartite_graph_embed(self, setup_eng, tol):
@@ -230,7 +230,7 @@ class TestGaussianBackendDecompositions:
             ops.Interferometer(np.identity(3)) | q
 
         assert len(prog) == 1
-        prog = prog.compile(compiler='gaussian')
+        prog = prog.compile('gaussian')
         assert len(prog) == 0
 
 

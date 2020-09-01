@@ -52,25 +52,17 @@ import copy
 import numbers
 import warnings
 
-import blackbird as bb
-from blackbird.utils import match_template
 import networkx as nx
 
-import strawberryfields as sf
-
 import strawberryfields.circuitdrawer as sfcd
-from strawberryfields.compilers import Compiler, compiler_db
+import strawberryfields.circuitspecs as specs
 import strawberryfields.program_utils as pu
-
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
 
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = []
-
-
-ALLOWED_RUN_OPTIONS = ["shots"]
 
 
 class Program:
@@ -142,7 +134,7 @@ class Program:
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
-        #: str, None: for compiled Programs, the short name of the target Compiler template, otherwise None
+        #: str, None: for compiled Programs, the short name of the target CircuitSpecs template, otherwise None
         self._target = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
@@ -154,8 +146,6 @@ class Program:
         directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
         here.
         """
-
-        self.backend_options = {}
 
         # create subsystem references
         # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
@@ -446,22 +436,15 @@ class Program:
             p.source = self.source
         return p
 
-    def compile(self, *, device=None, compiler=None, **kwargs):
-        """Compile the program given a Strawberry Fields photonic compiler, or
-        hardware device specification.
+    def compile(self, target, **kwargs):
+        """Compile the program targeting the given circuit specification.
 
-        The compilation process can involve up to three stages:
+        Validates the program against the given target, making sure all the
+        :doc:`/introduction/ops` used are accepted by the target specification.
 
-        1. **Validation:** Validates properties of the program, including number of modes and
-           allowed operations, making sure all the :doc:`/introduction/ops` used are accepted by the
-           compiler.
-
-        2. **Decomposition:** Once the program has been validated, decomposition are performed,
-           transforming certain gates into sequences of simpler gates.
-
-        3. **General compilation:** Finally, the compiler might specify bespoke compilation logic
-           for transforming the  quantum circuit into an equivalent circuit which can be executed
-           by the target device.
+        Additionally, depending on the target, the compilation may modify the quantum circuit
+        into an equivalent circuit, e.g., by decomposing certain gates into sequences
+        of simpler gates, or optimizing the gate ordering using commutation rules.
 
         **Example:**
 
@@ -469,22 +452,11 @@ class Program:
         compile a circuit consisting of Gaussian operations and Fock measurements
         into canonical Gaussian boson sampling form.
 
-        >>> prog2 = prog.compile(compiler="gbs")
-
-        For a hardware device a :class:`~.DeviceSpec` object, and optionally a specified compile strategy,
-        must be supplied. If no compile strategy is supplied the default compiler from the device
-        specification is used.
-
-        >>> eng = sf.RemoteEngine("X8")
-        >>> device = eng.device_spec
-        >>> prog2 = prog.compile(device=device, compiler="Xcov")
+        >>> prog2 = prog.compile('gbs')
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): device specification object to use for
-                program compilation
-            compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
-                to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DevicSpec`.
+            target (str, ~strawberryfields.circuitspecs.CircuitSpecs): short name of the target
+                circuit specification, or the specification object itself
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
@@ -495,53 +467,28 @@ class Program:
         Returns:
             Program: compiled program
         """
-        # pylint: disable=too-many-branches
-        if device is None and compiler is None:
-            raise ValueError("Either one or both of 'device' and 'compiler' must be specified")
-
-        def _get_compiler(compiler_or_name):
-            if compiler_or_name in compiler_db:
-                return compiler_db[compiler_or_name]()
-
-            if isinstance(compiler_or_name, Compiler):
-                return compiler_or_name
-
-            raise ValueError(f"Unknown compiler '{compiler_or_name}'.")
-
-        if device is not None:
-            target = device.target
-
-            if compiler is None:
-                # get the default compiler from the device spec
-                compiler_name = device.default_compiler
-
-                if compiler_name is not None:
-                    compiler = compiler_db[device.default_compiler]()
-                else:
-                    raise CircuitError(
-                        f"The device '{target}' does not specify a compiler. A compiler "
-                        "must be manually provided when calling Program.compile()."
-                    )
-            else:
-                compiler = _get_compiler(compiler)
-
-            if device.modes is not None:
-                # Check that the number of modes in the program is valid for the given device.
-
-                # Program subsystems may be created and destroyed during execution. The length
-                # of the program registers represents the total number of modes that has ever existed.
-                modes_total = len(self.reg_refs)
-
-                if modes_total > device.modes:
-                    raise CircuitError(
-                        f"This program contains {modes_total} modes, but the device '{target}' "
-                        f"only supports a {device.modes}-mode program."
-                    )
+        if isinstance(target, specs.CircuitSpecs):
+            db = target
+            target = db.short_name
+        elif target in specs.circuit_db:
+            db = specs.circuit_db[target]()
         else:
-            compiler = _get_compiler(compiler)
-            target = compiler.short_name
+            raise ValueError(
+                "Could not find target '{}' in the Strawberry Fields circuit database.".format(
+                    target
+                )
+            )
 
-        seq = compiler.decompose(self.circuit)
+        if db.modes is not None:
+            # subsystems may be created and destroyed, this is total number that has ever existed
+            modes_total = len(self.reg_refs)
+            if modes_total > db.modes:
+                raise CircuitError(
+                    "This program requires {} modes, but the target '{}' "
+                    "only supports a {}-mode program".format(modes_total, target, db.modes)
+                )
+
+        seq = db.decompose(self.circuit)
 
         if kwargs.get("warn_connected", True):
             DAG = pu.list_to_DAG(seq)
@@ -553,27 +500,23 @@ class Program:
         if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
-        seq = compiler.compile(seq, self.register)
+        # does the circuit spec  have its own compilation method?
+        if db.compile is not None:
+            seq = db.compile(seq, self.register)
 
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled._target = target
+        compiled._target = db.short_name
 
-        # Get run options of compiled program.
-        run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
-        compiled.run_options.update(run_options)
+        # get run options of compiled program
+        # for the moment, shots is the only supported run option.
+        if "shots" in kwargs:
+            compiled.run_options["shots"] = kwargs["shots"]
 
-        # set backend options of the program
-        backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
-        compiled.backend_options.update(backend_options)
-
-        # validate gate parameters
-        if device is not None and device.gate_parameters:
-            bb_device = bb.loads(device.layout)
-            bb_compiled = sf.io.to_blackbird(compiled)
-            user_parameters = match_template(bb_device, bb_compiled)
-            device.validate_parameters(**user_parameters)
+        compiled.backend_options = {}
+        if "cutoff_dim" in kwargs:
+            compiled.backend_options["cutoff_dim"] = kwargs["cutoff_dim"]
 
         return compiled
 
@@ -642,7 +585,7 @@ class Program:
         If the program has not been compiled, this will return ``None``.
 
         Returns:
-            str or None: the short name of the target Compiler template if
+            str or None: the short name of the target CircuitSpecs template if
             compiled, otherwise None
         """
         return self._target

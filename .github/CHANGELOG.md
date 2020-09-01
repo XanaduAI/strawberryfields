@@ -50,11 +50,6 @@
   [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
   [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401)
 
-* Adds the `apps.qchem.duschinsky()` function for generation of the
-  Duschinsky rotation matrix and displacement vector which are needed to simulate a vibronic process
-  with Strawberry Fields.
-  [(#434)](https://github.com/XanaduAI/strawberryfields/pull/434)
-
 * Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
   The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
   information for use in a Strawberry Fields `Program`. The `dynamics.sample_coherent()`,
@@ -69,6 +64,7 @@
   [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
   [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
   [(#430)](https://github.com/XanaduAI/strawberryfields/pull/430)
+
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
@@ -123,11 +119,6 @@
   in `thewalrus`. This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high cutoff values.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
   [(#381)](https://github.com/XanaduAI/strawberryfields/pull/381)
-
-* Strawberry Fields can now access the Xanadu Cloud device specifications API.
-  The ``Connection`` class has a new method ``Connection.get_device``,
-  which returns a ``DeviceSpec`` class.
-  [(#429)](https://github.com/XanaduAI/strawberryfields/pull/429)
 
 <h3>Breaking Changes</h3>
 

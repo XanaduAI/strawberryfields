@@ -11,14 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Circuit specifications for general Fock simulator backends."""
-from .compiler import Compiler
+"""Circuit specifications for the TensorFlow simulator backend."""
+from .circuit_specs import CircuitSpecs
 
 
-class Fock(Compiler):
-    """Compiler for general Fock backends."""
+class TFSpecs(CircuitSpecs):
+    """Circuit specifications for the TensorFlow backend."""
 
-    short_name = "fock"
+    short_name = "tf"
+    modes = None
+    local = True
+    remote = False
     interactive = True
 
     primitives = {
@@ -47,10 +50,11 @@ class Fock(Compiler):
         "Rgate",
         "Vgate",
         "Kgate",
-        # two mode gates
-        "BSgate",
+        "Fouriergate",
         "CKgate",
+        # two mode gates
         "S2gate",
+        "BSgate",
     }
 
     decompositions = {

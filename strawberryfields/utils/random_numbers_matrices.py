@@ -115,7 +115,7 @@ def random_interferometer(N, real=False):
     else:
         z = randnc(N, N) / np.sqrt(2.0)
     q, r = sp.linalg.qr(z)
-    d = np.diagonal(r)
+    d = sp.diagonal(r)
     ph = d / np.abs(d)
     U = np.multiply(q, ph, q)
     return U

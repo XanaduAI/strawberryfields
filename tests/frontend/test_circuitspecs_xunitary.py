@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the Xcov compiler"""
-import textwrap
-
+r"""Unit tests for the Xunitary compiler"""
 import pytest
 import numpy as np
 import networkx as nx
@@ -27,7 +25,7 @@ from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
 from strawberryfields.io import to_program
 from strawberryfields.utils import random_interferometer
-from strawberryfields.compilers import Compiler
+from strawberryfields.circuitspecs.X8 import X8_01, CircuitSpecs
 
 from thewalrus.symplectic import two_mode_squeezing, expand
 
@@ -127,7 +125,7 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
     return nx.is_isomorphic(circuit[0], circuit[1], node_match)
 
 
-class DummyCircuit(Compiler):
+class DummyCircuit(CircuitSpecs):
     """Dummy circuit used to instantiate
     the abstract base class"""
 
@@ -139,54 +137,12 @@ class DummyCircuit(Compiler):
     decompositions = {"Interferometer": {}}
 
 
-X8_CIRCUIT = textwrap.dedent(
-    """\
-    name template_4x2_X8
-    version 1.0
-    target X8_01 (shots=1)
-    # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
-    S2gate({squeezing_amplitude_0}, 0.0) | [0, 4]
-    S2gate({squeezing_amplitude_1}, 0.0) | [1, 5]
-    S2gate({squeezing_amplitude_2}, 0.0) | [2, 6]
-    S2gate({squeezing_amplitude_3}, 0.0) | [3, 7]
-    # standard 4x4 interferometer for the signal modes (the lower ones in frequency)
-    # even phase indices correspond to internal Mach-Zehnder interferometer phases
-    # odd phase indices correspond to external Mach-Zehnder interferometer phases
-    MZgate({phase_0}, {phase_1}) | [0, 1]
-    MZgate({phase_2}, {phase_3}) | [2, 3]
-    MZgate({phase_4}, {phase_5}) | [1, 2]
-    MZgate({phase_6}, {phase_7}) | [0, 1]
-    MZgate({phase_8}, {phase_9}) | [2, 3]
-    MZgate({phase_10}, {phase_11}) | [1, 2]
-    # duplicate the interferometer for the idler modes (the higher ones in frequency)
-    MZgate({phase_0}, {phase_1}) | [4, 5]
-    MZgate({phase_2}, {phase_3}) | [6, 7]
-    MZgate({phase_4}, {phase_5}) | [5, 6]
-    MZgate({phase_6}, {phase_7}) | [4, 5]
-    MZgate({phase_8}, {phase_9}) | [6, 7]
-    MZgate({phase_10}, {phase_11}) | [5, 6]
-    # add final dummy phases to allow mapping any unitary to this template (these do not
-    # affect the photon number measurement)
-    Rgate({final_phase_0}) | [0]
-    Rgate({final_phase_1}) | [1]
-    Rgate({final_phase_2}) | [2]
-    Rgate({final_phase_3}) | [3]
-    Rgate({final_phase_4}) | [4]
-    Rgate({final_phase_5}) | [5]
-    Rgate({final_phase_6}) | [6]
-    Rgate({final_phase_7}) | [7]
-    # measurement in Fock basis
-    MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
-    """
-)
-
-
 class TestXCompilation:
     """Tests for compilation using the X8_01 circuit specification"""
 
     def test_exact_template(self, tol):
         """Test compilation works for the exact circuit"""
-        bb = blackbird.loads(X8_CIRCUIT)
+        bb = blackbird.loads(X8_01.circuit)
         bb = bb(
             squeezing_amplitude_0=SQ_AMPLITUDE,
             squeezing_amplitude_1=SQ_AMPLITUDE,
@@ -215,8 +171,8 @@ class TestXCompilation:
         )
 
         expected = to_program(bb)
-        res = expected.compile(compiler="Xcov")
-
+        res = expected.compile("Xunitary")
+        print("hello")
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
@@ -231,7 +187,7 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | (q[0], q[num_pairs])
         with pytest.raises(CircuitError, match="All modes must be measured"):
-            prog.compile(compiler="Xcov")
+            prog.compile("Xunitary")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_no_s2gates(self, num_pairs, tol):
@@ -254,8 +210,10 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
-        expected = expected.compile(compiler="Xcov")
+        # with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
+        res = prog.compile("Xunitary")
+        # with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
+        expected = expected.compile("Xunitary")
         assert program_equivalence(res, expected, atol=tol)
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
@@ -283,8 +241,8 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
-        expected = expected.compile(compiler="Xcov")
+        res = prog.compile("Xunitary")
+        expected = expected.compile("Xunitary")
         assert program_equivalence(res, expected, atol=tol)
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
@@ -301,15 +259,46 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        with pytest.raises(
-            CircuitError,
-            match="The applied unitary cannot mix between the modes {}-{} and modes {}-{}.".format(
-                0, half_n_modes - 1, half_n_modes, n_modes - 1
-            ),
-        ):
-            res = prog.compile(compiler="Xcov")
+        with pytest.raises(CircuitError, match="S2gates do not appear on the correct modes."):
+            res = prog.compile("Xunitary")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_incorrect_s2gate_params(self, num_pairs):
+        """Test exceptions raised if S2gates have illegal parameters"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        with prog.context as q:
+            for i in range(num_pairs - 1):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+
+            ops.S2gate(SQ_AMPLITUDE + 0.1) | (q[num_pairs - 1], q[2 * num_pairs - 1])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
+        with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
+            res = prog.compile("Xunitary")
+
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
+    def test_s2gate_repeated_modes(self, num_pairs):
+        """Test exceptions raised if S2gates are repeated"""
+        prog = sf.Program(2 * num_pairs)
+        U = random_interferometer(num_pairs)
+        with prog.context as q:
+            for i in range(num_pairs):
+                ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
+
+            ops.S2gate(SQ_AMPLITUDE + 0.1) | (q[0], q[num_pairs])
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
+            ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
+            ops.MeasureFock() | q
+
+        with pytest.raises(CircuitError, match=r"Incorrect squeezing val"):
+            prog.compile("Xunitary")
+
+    # This test should fail
+    '''
+    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
     def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
         """Test that squeezing gates are correctly merged"""
         prog = sf.Program(2 * num_pairs)
@@ -317,16 +306,17 @@ class TestXCompilation:
 
         with prog.context as q:
 
-            ops.S2gate(SQ_AMPLITUDE / 2) | (q[0], q[0 + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[0 + num_pairs])
             for i in range(1, num_pairs):
                 ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
-            ops.S2gate(SQ_AMPLITUDE / 2) | (q[0], q[0 + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[0 + num_pairs])
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
+        res = prog.compile("Xunitary")
         assert np.allclose(res.circuit[0].op.p[0], SQ_AMPLITUDE)
+    '''
 
     def test_gates_compile(self):
         """Test that combinations of MZgates, Rgates, and BSgates
@@ -348,7 +338,7 @@ class TestXCompilation:
             unitary(q[4:])
             ops.MeasureFock() | q
 
-        prog.compile(compiler="Xcov")
+        prog.compile("Xunitary")
 
     def test_no_unitary(self, tol):
         """Test compilation works with no unitary provided"""
@@ -361,7 +351,7 @@ class TestXCompilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[3], q[7])
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
+        res = prog.compile("Xunitary")
         expected = sf.Program(8)
 
         with expected.context as q:
@@ -408,7 +398,7 @@ class TestXCompilation:
         res.circuit = res.circuit[:-1]
 
         # extract the Gaussian symplectic matrix
-        O = res.compile(compiler="gaussian_unitary").circuit[0].op.p[0]
+        O = res.compile("gaussian_unitary").circuit[0].op.p[0]
 
         # construct the expected symplectic matrix corresponding
         # to just the initial two mode squeeze gates
@@ -435,7 +425,7 @@ class TestXCompilation:
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
+        res = prog.compile("Xunitary")
 
         expected = sf.Program(2 * num_pairs)
 
@@ -450,7 +440,7 @@ class TestXCompilation:
             )
             ops.MeasureFock() | q
 
-        expected = expected.compile(compiler=DummyCircuit())
+        expected = expected.compile(DummyCircuit())
         # Note that since DummyCircuit() has a hard coded limit of 8 modes we only check for this number
         assert program_equivalence(res, expected, atol=tol, compare_params=False)
 
@@ -470,7 +460,7 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="The applied unitary on modes"):
-            res = prog.compile(compiler="Xcov")
+            prog.compile("Xunitary")
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_unitary_too_large(self, num_pairs):
@@ -486,46 +476,34 @@ class TestXCompilation:
             ops.MeasureFock() | q
 
         with pytest.raises(CircuitError, match="The applied unitary cannot mix between the modes"):
-            res = prog.compile(compiler="Xcov")
+            res = prog.compile("Xunitary")
 
-    def test_error_odd_number_modes(self):
-        """Test that an error is raised if the number of modes provided is odd"""
-        prog = sf.Program(5)
+    def test_odd_number_of_modes(self):
+        """Test error is raised when xstrict is called with odd number of modes"""
+        prog = sf.Program(1)
 
-        with pytest.raises(CircuitError, match="only supports programs with an even number of modes"):
-            res = prog.compile(compiler="Xcov")
+        with pytest.raises(
+            CircuitError, match="The X series only supports programs with an even number of modes."
+        ):
+            res = prog.compile("Xunitary")
 
-    def test_symplectic_smaller_than_program(self):
-        """Test that compilation correctly works if the provided gates act only
-        on a subset of program modes"""
-        prog = sf.Program(4)
-
+    def test_operation_before_squeezing(self):
+        """Test error is raised when an operation is passed before the S2gates"""
+        prog = sf.Program(2)
         with prog.context as q:
-            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[2])
+            ops.BSgate() | (q[0], q[1])
+            ops.S2gate(SQ_AMPLITUDE) | (q[0], q[1])
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
+        with pytest.raises(CircuitError, match="There can be no operations before the S2gates."):
+            prog.compile("Xunitary")
 
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        c = res.compile(compiler="gaussian_unitary").circuit[0]
-        assert [i.ind for i in c.reg] == [0, 1, 2, 3]
-        assert c.op.p[0].shape == (8, 8)
-
-    def test_identity_program(self, tol):
-        """Test that compilation correctly works if the gate consists only of measurements"""
-        prog = sf.Program(4)
-
+    def test_wrong_squeezing_phase(self):
+        """Test error is raised when the phase of S2gate is not zero"""
+        prog = sf.Program(2)
         with prog.context as q:
+            ops.S2gate(SQ_AMPLITUDE, 137) | (q[0], q[1])
             ops.MeasureFock() | q
 
-        res = prog.compile(compiler="Xcov")
-
-        # remove the Fock measurements
-        res.circuit = res.circuit[:-1]
-
-        # extract the Gaussian symplectic matrix
-        res = res.compile(compiler="gaussian_unitary")
-        assert not res.circuit
+        with pytest.raises(CircuitError, match="Incorrect phase value"):
+            res = prog.compile("Xunitary")

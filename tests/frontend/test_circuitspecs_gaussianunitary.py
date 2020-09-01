@@ -60,7 +60,7 @@ def test_gaussian_program(depth, width):
             ops.Interferometer(V) | q
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -83,7 +83,7 @@ def test_symplectic_composition(depth, width):
             S = random_symplectic(width, scale = 0.2)
             Snet = S @ Snet
             ops.GaussianTransform(S) | q
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile("gaussian_unitary")
     assert np.allclose(compiled_circuit.circuit[0].op.p[0], Snet)
 
 
@@ -104,7 +104,7 @@ def test_modes_subset(depth):
             for i, index in enumerate(indices):
                 ops.Sgate(s[i]) | q[index]
             ops.Interferometer(V) | tuple(q[i] for i in indices)
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -141,7 +141,7 @@ def test_non_primitive_gates():
         ops.Fourier | q[0]
         ops.Xgate(0.4) | q[1]
         ops.Zgate(0.5) | q[3]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -165,7 +165,7 @@ def test_displacements_only(depth, width):
             alphas = np.random.rand(width)+1j*np.random.rand(width)
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile("gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 

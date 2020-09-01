@@ -16,7 +16,7 @@ as in the following example:
         BSgate()      | (q[0], q[1])
         MeasureFock() | q[0]
 
-This program uses Fock state preparation (:class:`~.ops.Fock`), beamsplitters (:class:`~.BSgate`),
+This program uses Fock state preparation (:class:`~.Fock`), beamsplitters (:class:`~.BSgate`),
 and a photon number resolving detector (:class:`~.MeasureFock`).
 
 Below is a list of all quantum operations supported by Strawberry Fields.
