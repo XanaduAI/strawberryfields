@@ -415,7 +415,7 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
-        from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
+        from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples # pylint: disable=import-outside-toplevel
 
         args = args or {}
         compile_options = compile_options or {}
