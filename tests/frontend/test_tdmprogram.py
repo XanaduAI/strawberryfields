@@ -50,8 +50,32 @@ def singleloop(r, alpha, phi, theta, copies, shift='end'):
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
     result = eng.run(prog)
-    
+
     return result.samples[0]
+
+def test_number_of_copies_must_be_integer():
+    """Checks that number of copies error is raised correctly"""
+    sq_r = 1.0
+    N = 3
+    c = 4
+    copies = 1/137
+    alpha = [0, np.pi / 4] * c
+    phi = [np.pi / 2, 0] * c
+    theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]
+    with pytest.raises(TypeError, match="Number of copies must be a positive integer"):
+        singleloop(sq_r, alpha, phi, theta, copies)
+
+def test_gates_equal_length():
+    """Checks that equal number of gate parameters error is raised correctly"""
+    sq_r = 1.0
+    N = 3
+    c = 4
+    copies = 10
+    alpha = [0, np.pi / 4] * c
+    phi = [np.pi / 2, 0] * c
+    theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2]
+    with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
+        singleloop(sq_r, alpha, phi, theta, copies)
 
 # The following three functions describe example programs to be run on the above architecture
 #############################################################################################
