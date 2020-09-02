@@ -215,7 +215,7 @@ def test_1Dcluster_cloud():
 ### OTHER EXPERIMENTAL ARCHITECTURES
 ####################################
 
-def test_millionmodes():
+def engtest_millionmodes():
     '''
     One-dimensional temporal-mode cluster state as demonstrated by University of Tokyo. See https://aip.scitation.org/doi/pdf/10.1063/1.4962732
     '''

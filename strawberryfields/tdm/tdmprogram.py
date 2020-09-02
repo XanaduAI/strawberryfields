@@ -62,25 +62,15 @@ def validate_measurements(circuit, shift, N):
     if not spatial_modes:
         raise ValueError("Must be at least one measurement.")
 
-    # if shift == "end" and list(set(measurement_reg)) != list(range(spatial_modes)):
-    #     raise ValueError("Measurements must be on consecutive modes starting from q[0].")
-
-    # if shift == "after" and list(set(measurement_reg)) != [0]:
-    #     raise ValueError("Measurements allowed only on q[0].")
-
-    #####################################################################################
-    ##### THIS CHANGE ACCOUNTS FOR NEW PROPOSAL: ONE BELT PER SPATIAL MODE ##############
-    #####################################################################################
-    # N is now a list with number of qumodes for each spatial mode
     if spatial_modes is not len(N):
-        raise ValueError("Numer of measurements operators must match number of spatial_modes.")
+        raise ValueError("Number of measurements operators must match number of spatial_modes.")
 
     return spatial_modes
 
 
 def input_check(args, copies):
     """Checks the input arguments have consistent dimensions"""
-    # check if all lists of equal length
+    # check if all lists are of equal length
     param_lengths = [len(param) for param in args]
     if len(set(param_lengths)) != 1:
         raise ValueError("Gate-parameter lists must be of equal length.")
@@ -96,7 +86,7 @@ def _get_mode_order(num_of_values, N):
 
     all_modes = []
     for i in range(len(N)):
-        ra = list(range(sum(N[:i]), sum(N[:i+1])))
+        ra = list(range(sum(N[:i]), sum(N[: i + 1])))
         all_modes.append(ra * ceil(max(N) / len(ra)))
 
     mode_order = [i for j in zip(*all_modes) for i in j]
@@ -137,10 +127,7 @@ class TDMProgram(sf.Program):
     """Represents a photonic quantum circuit in the time domain encoding"""
 
     def __init__(self, N, name=None):
-        #####################################################################################
-        ##### THIS CHANGE ACCOUNTS FOR NEW PROPOSAL: ONE BELT PER SPATIAL MODE ##############
-        #####################################################################################
-        # N is now a list with number of qumodes for each spatial mode
+        # N is a list with the number of qumodes for each spatial mode
         if isinstance(N, int):
             self.N = [N]
         else:
@@ -179,40 +166,34 @@ class TDMProgram(sf.Program):
 
         q = self.register
 
-
-        #####################################################################################
-        ##### THIS CHANGE ACCOUNTS FOR NEW PROPOSAL: ONE BELT PER SPATIAL MODE ##############
-        #####################################################################################
-        # N is now a list with number of qumodes for each spatial mode
-
         sm = []
         for i in range(len(self.N)):
             start = sum(self.N[:i])
-            stop = sum(self.N[:i])+self.N[i]
+            stop = sum(self.N[:i]) + self.N[i]
             sm.append(slice(start, stop))
-        ''' ^ list of slice intervals; each slice interval corresponding to one spatial mode
+        # Above we define a list of slice intervals;
+        # each slice interval corresponding to one spatial mode
 
-        For instance, say
-        N = [5,4,9,1],
-        then this corresponds to
-        5 concurrent modes in spatial mode A
-        4 concurrent modes in spatial mode B
-        9 concurrent modes in spatial mode C
-        1 concurrent modes in spatial mode D.
+        # For instance, say
+        # N = [5,4,9,1],
+        # then this corresponds to
+        # 5 concurrent modes in spatial mode A
+        # 4 concurrent modes in spatial mode B
+        # 9 concurrent modes in spatial mode C
+        # 1 concurrent modes in spatial mode D.
 
-        The entries of sm will then be:
-        slice(0, 6, None)   for spatial mode A
-        slice(6, 10, None)  for spatial mode B
-        slice(10, 19, None) for spatial mode C
-        slice(19, 20, None) for spatial mode D.
+        # The entries of sm will then be:
+        # slice(0, 6, None)   for spatial mode A
+        # slice(6, 10, None)  for spatial mode B
+        # slice(10, 19, None) for spatial mode C
+        # slice(19, 20, None) for spatial mode D.
 
-        This helps to define:
-        q[sm[0]] as concurrent modes of spatial mode A
-        q[sm[1]] as concurrent modes of spatial mode B
-        q[sm[2]] as concurrent modes of spatial mode C
-        q[sm[3]] as concurrent modes of spatial mode D.
+        # This helps to define:
+        # q[sm[0]] as concurrent modes of spatial mode A
+        # q[sm[1]] as concurrent modes of spatial mode B
+        # q[sm[2]] as concurrent modes of spatial mode C
+        # q[sm[3]] as concurrent modes of spatial mode D.
 
-        '''
         for cmd in cmds:
             if isinstance(cmd.op, ops.Measurement):
                 self.measured_modes.append(cmd.reg[0].ind)
@@ -225,9 +206,6 @@ class TDMProgram(sf.Program):
                     q = shift_by(q, 1)  # shift after each measurement
 
             if self.shift == "end":
-                #####################################################################################
-                ##### THIS CHANGE ACCOUNTS FOR NEW PROPOSAL: ONE BELT PER SPATIAL MODE ##############
-                #####################################################################################
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
                 for i in range(len(self.N)):
