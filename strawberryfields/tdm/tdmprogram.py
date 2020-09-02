@@ -18,7 +18,6 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
 from operator import itemgetter
-import numpy as np
 from math import ceil
 import strawberryfields as sf
 from strawberryfields import ops
@@ -48,7 +47,7 @@ def get_modes(cmd, q):
     return modes
 
 
-def validate_measurements(circuit, shift, N):
+def validate_measurements(circuit, N):
     """Validate the TDM program measurements are correct"""
     spatial_modes = 0
     measurement_reg = []
@@ -153,7 +152,7 @@ class TDMProgram(sf.Program):
 
     def __exit__(self, ex_type, ex_value, ex_tb):
         super().__exit__(ex_type, ex_value, ex_tb)
-        self.spatial_modes = validate_measurements(self.circuit, self.shift, self.N)
+        self.spatial_modes = validate_measurements(self.circuit, self.N)
         self.construct_circuit()
 
     def construct_circuit(self):
@@ -208,8 +207,9 @@ class TDMProgram(sf.Program):
             if self.shift == "end":
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
-                for i in range(len(self.N)):
-                    q_aux[sm[i]] = shift_by(q_aux[sm[i]], 1)
+                # Here the index used to be i in changed to j, check this is fine.
+                for j in range(len(self.N)):
+                    q_aux[sm[j]] = shift_by(q_aux[sm[j]], 1)
                 q = tuple(q_aux)
 
             elif isinstance(self.shift, int):
