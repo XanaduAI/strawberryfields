@@ -138,7 +138,6 @@ class TDMProgram(sf.Program):
         self.measured_modes = []
         super().__init__(num_subsystems=self.concurr_modes, name=name)
 
-    # pylint: disable=invalid-overriden-method, arguments-differ
     def context(self, *args, copies=1, shift="end"):
         input_check(args, copies)
         self.copies = copies
