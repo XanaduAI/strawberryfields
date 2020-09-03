@@ -138,6 +138,7 @@ class TDMProgram(sf.Program):
         self.measured_modes = []
         super().__init__(num_subsystems=self.concurr_modes, name=name)
 
+    # pylint: disable=arguments-differ, invalid-overridden-method
     def context(self, *args, copies=1, shift="end"):
         input_check(args, copies)
         self.copies = copies
@@ -174,7 +175,7 @@ class TDMProgram(sf.Program):
         # each slice interval corresponding to one spatial mode
 
         # For instance, say
-        # N = [5,4,9,1],
+        # N = [5, 4, 9, 1],
         # then this corresponds to
         # 5 concurrent modes in spatial mode A
         # 4 concurrent modes in spatial mode B
