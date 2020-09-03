@@ -17,7 +17,6 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
-from strawberryfields.tdm.tdmprogram import reshape_samples
 
 # feel free to remove after Fabian's test:
 import time

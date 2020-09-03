@@ -202,9 +202,6 @@ class TDMProgram(sf.Program):
             for cmd in cmds:
                 self.apply_op(cmd, q, i)
 
-                #if self.shift == "after" and isinstance(cmd.op, ops.Measurement):
-                #    q = shift_by(q, 1)  # shift after each measurement
-
             if self.shift == "end":
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
