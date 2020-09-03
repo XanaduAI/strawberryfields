@@ -18,9 +18,6 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 
-# feel free to remove after Fabian's test:
-import time
-
 # make test deterministic
 np.random.seed(42)
 
