@@ -113,6 +113,28 @@ def test_spatial_modes_number_of_measurements_match():
         eng = sf.Engine("gaussian")
         result = eng.run(prog)
 
+def test_shift_by_specified_amount():
+    """Checks that shifting by 1 is equivalent to shift='end' for a program
+    with one spatial mode"""
+    np.random.seed(42)
+    sq_r = 1.0
+    N = 3
+    copies = 1
+    alpha = [0] * 4
+    phi = [0] * 4
+    theta = [0] * 4
+    np.random.seed(42)
+    x = singleloop(sq_r, alpha, phi, theta, copies)
+    np.random.seed(42)
+    y = singleloop(sq_r, alpha, phi, theta, copies, shift=1)
+    assert np.allclose(x, y)
+
+def test_str_tdm_method():
+    """Testing the string method"""
+    prog = tdmprogram.TDMProgram(N=1)
+    assert prog.__str__() == '<TDMProgram: concurrent modes=1, time bins=0, spatial modes=0>'
+
+
 def test_epr():
     """Generates an EPR state and checks that the correct correlations (noise reductions) are observed
     from the samples"""
