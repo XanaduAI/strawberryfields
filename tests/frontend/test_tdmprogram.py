@@ -25,7 +25,7 @@ import time
 np.random.seed(42)
 
 
-def singleloop(r, alpha, phi, theta, copies, shift="end"):
+def singleloop(r, alpha, phi, theta, copies, shift="end", hbar=2):
     """Single delay loop with program.
 
     Args:
@@ -33,7 +33,7 @@ def singleloop(r, alpha, phi, theta, copies, shift="end"):
         alpha (Sequence[float]): beamsplitter angles
         phi (Sequence[float]): rotation angles
         theta (Sequence[float]): homodyne measurement angles
-
+        hbar (float): value in appearing in the commutation relation
     Returns:
         (list): homodyne samples from the single loop simulation
     """
@@ -45,7 +45,7 @@ def singleloop(r, alpha, phi, theta, copies, shift="end"):
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
+    result = eng.run(prog, hbar=hbar)
 
     return result.samples[0]
 
@@ -101,9 +101,7 @@ def test_spatial_modes_number_of_measurements_match():
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
-    with pytest.raises(
-        ValueError, match="Number of measurements operators must match number of spatial_modes."
-    ):
+    with pytest.raises(ValueError, match="Number of measurements operators must match number of spatial_modes."):
         prog = tdmprogram.TDMProgram(N=[3, 3])
         with prog.context(alpha, phi, theta, copies=copies) as (p, q):
             ops.Sgate(sq_r, 0) | q[2]
@@ -112,6 +110,7 @@ def test_spatial_modes_number_of_measurements_match():
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
         result = eng.run(prog)
+
 
 def test_shift_by_specified_amount():
     """Checks that shifting by 1 is equivalent to shift='end' for a program
@@ -129,18 +128,18 @@ def test_shift_by_specified_amount():
     y = singleloop(sq_r, alpha, phi, theta, copies, shift=1)
     assert np.allclose(x, y)
 
+
 def test_str_tdm_method():
     """Testing the string method"""
     prog = tdmprogram.TDMProgram(N=1)
-    assert prog.__str__() == '<TDMProgram: concurrent modes=1, time bins=0, spatial modes=0>'
+    assert prog.__str__() == "<TDMProgram: concurrent modes=1, time bins=0, spatial modes=0>"
 
 
 def test_epr():
     """Generates an EPR state and checks that the correct correlations (noise reductions) are observed
     from the samples"""
-
+    np.random.seed(42)
     sq_r = 1.0
-    N = 3
     c = 4
     copies = 200
 
@@ -183,128 +182,68 @@ def test_epr():
 
 
 def test_ghz():
-    """Generates an GHZ state and checks that the correct correlations (noise reductions) are observed
+    """Generates a GHZ state and checks that the correct correlations (noise reductions) are observed
     from the samples
-    See paragraph above Eq. 5 of this reference
-
-    https://advances.sciencemag.org/content/5/5/eaaw4530
+    See Eq. 5 of https://advances.sciencemag.org/content/5/5/eaaw4530
     """
-
-    sq_r = 2
-    copies = 10
-    vac_modes = 1  # number of vacuum padding modes in the initial setup
-
-    n = 100  # number of modes
-    c = 2  # number of n-mode GHZ states per copy
-
-    alpha = [np.arccos(np.sqrt(1/(n-i+1))) if i !=n+1 else 0 for i in range(n+vac_modes)]
-    alpha[0] = 0.0
-    phi = [0]*(n+vac_modes)
-    phi[0] = np.pi/2
-    # # This will generate c GHZ states per copy. I chose c = 2 because it allows us to make 2 GHZ states per copy: one measured in X and one measured in P.
-    alpha = alpha * c
-    phi = phi * c
-
-    # Measurement of 2 subsequent GHZ states: one for investigation of X-correlations and one for P-correlations
-    theta = [0] * (n + vac_modes) + [np.pi / 2] * (n + vac_modes)
-
-    x = singleloop(sq_r, alpha, phi, theta, copies)
-
-    X = []
-    P = []
-    nXP = []
-    for i in range(0, copies):
-        # This slicing will be a lot simpler once we output the samples ordered by copy.
-        startX = i * (n + vac_modes) * c + vac_modes
-        startP = i * (n + vac_modes) * c + vac_modes + n + vac_modes
-        X_i = x[
-            startX : startX + n
-        ]  # <-- If the GHZ-state generation was successful, all elements in X_i should be the same (up to squeezing, loss and noise).
-        P_i = x[
-            startP : startP + n
-        ]  # <-- If the GHZ-state generation was successful, all elements in P_i should add up to zero (up to squeezing, loss and noise).
-        X.append(X_i)
-        P.append(P_i)
-
-        insepX = np.var(
-            X_i
-        )  # <-- this should be as close as possible to zero, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
-        # ^ Computing the variance here is kind of a cheat. Actually, we would need to build the difference between all possible pairs within X_i which becomes very bulky for large n.
-        print("insepX",insepX)
-        insepP = sum(
-            P_i
-        )  # <-- this should be as close as possible to zero, see https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (5)
-        print("insepP",insepP)
-        nullif = insepX + insepP
-        nXP.append(nullif)
-
-    nXPvar = np.var(np.array(nXP))
-    print("\nNullifier variance:", nXPvar, np.sqrt(0.5)*n*np.exp(-2*sq_r))
-
-
-def test_1Dcluster_cloud():
-    """This example generates a 1D-clusterstate in the 'singleloop' architecture and evaluates the quadrature correlations."""
-
+    # Set up the circuit
+    np.random.seed(42)
+    n = 10
+    vac_modes = 1
+    copies = 1000
     sq_r = 5
-    N = 3
-    copies = 1
+    alpha = [np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n + vac_modes)]
+    alpha[0] = 0.0
+    phi = [0] * (n + vac_modes)
+    phi[0] = np.pi / 2
 
-    n = 100  # for an n-mode cluster state
+    # Measuring X nullifier
+    theta = [0] * (n + vac_modes)
+    samples_X = singleloop(sq_r, alpha, phi, theta, copies)
+    reshaped_samples_X = np.array(samples_X).reshape([copies, n + vac_modes])
 
-    # reference for gate parameters alpha and phi: https://advances.sciencemag.org/content/5/5/eaaw4530, paragraph above Eq (1)
-    alpha = []
-    for i in range(n):
-        if i == 0:
-            T = 1
-        else:
-            T = (np.sqrt(5) - 1) / 2
-        alpha.append(np.arccos(np.sqrt(T)))
+    # We will check that the x of all the modes equal the x of the last one
+    nullifier_X = lambda sample: (sample - sample[-1])[vac_modes:-1]
+    val_nullifier_X = np.var([nullifier_X(x) for x in reshaped_samples_X], axis=0)
+    assert np.allclose(val_nullifier_X, 2 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
 
+    # Measuring P nullifier
+    theta = [np.pi / 2] * (n + vac_modes)
+    samples_P = singleloop(sq_r, alpha, phi, theta, copies)
+
+    # We will check that the sum of all the p is equal to zero
+    reshaped_samples_P = np.array(samples_P).reshape([copies, n + vac_modes])
+    nullifier_P = lambda sample: np.sum(sample[vac_modes:])
+    val_nullifier_P = np.var([nullifier_P(p) for p in reshaped_samples_P], axis=0)
+    assert np.allclose(val_nullifier_P, n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+
+
+def test_one_dimensional_cluster():
+    """Test that the nullifier have the correct value in the experiment described in
+    See Eq. 10 of https://advances.sciencemag.org/content/5/5/eaaw4530
+    """
+    np.random.seed(42)
+    n = 20
+    copies = 1000
+    sq_r = 3
+    alpha_c = np.arccos(np.sqrt((np.sqrt(5) - 1) / 2))
+    alpha = [alpha_c] * n
+    alpha[0] = 0.0
     phi = [np.pi / 2] * n
-
-    # alternating measurement basis because nullifiers are defined by -X_(k-2)+P_(k-1)-X_(k)
-    theta = [0, np.pi / 2] * int(n / 2)
-
-    x = singleloop(sq_r, alpha, phi, theta, copies)
-
-    strip = 4  # first four modes will not satisfy inseparability criteria
-
-    X = x[0 + strip :: 2]
-    P = x[1 + strip :: 2]
-
-    # nullifier_k = -X_(k-2)+P_(k-1)-X_(k)
-    # see: https://advances.sciencemag.org/content/5/5/eaaw4530, Eq (1)
-    nXP = []
-    for i in range(strip, n - strip, 2):
-        # x[i-2] was measured in X basis, see theta
-        # x[i-1] was measured in P basis, see theta
-        # x[i]   was measured in X basis, see theta
-        nullif = (
-            -x[i - 2] + x[i - 1] - x[i]
-        )  # <-- clusterstate generation successful when this close to zero
-        nXP.append(nullif)
-        print(nullif)
-
-    # # this is the same thing, only expressed in terms of X and P
-    # for i in range(2,int((n-strip)/2)):
-    #     nullif = -X[i-1]+P[i-1]-X[i] # <-- clusterstate generation successful when this close to zero
-    #     nXP.append(nullif)
-    #     print(nullif)
-
-    nXPvar = np.var(np.array(nXP))
-    print("\nNullifier variance:", nXPvar)
+    theta = [0, np.pi / 2] * (n // 2)  # Note that we measure x for mode i and the p for mode i+1.
+    reshaped_samples = np.array(singleloop(sq_r, alpha, phi, theta, copies)).reshape(copies, n)
+    nullifier = lambda x: np.array([-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)])[1:]
+    nullifier_samples = np.array([nullifier(y) for y in reshaped_samples])
+    delta = np.var(nullifier_samples, axis=0)
+    assert np.allclose(delta, 3 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
 
 
-####################################
-### OTHER EXPERIMENTAL ARCHITECTURES
-####################################
-
-
-def engtest_millionmodes():
+def test_two_by_n_cluster():
     """
-    One-dimensional temporal-mode cluster state as demonstrated by University of Tokyo. See https://aip.scitation.org/doi/pdf/10.1063/1.4962732
+    One-dimensional temporal-mode cluster state as demonstrated in
+    https://aip.scitation.org/doi/pdf/10.1063/1.4962732
     """
-
+    np.random.seed(42)
     sq_r = 5
     N = 3  # concurrent modes
 
@@ -335,44 +274,28 @@ def engtest_millionmodes():
     X_B = xB[: n // 2]  # X samples from detector B
     P_B = xB[n // 2 :]  # P samples from detector B
 
-    # print('\n',x)
-
     # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
-    nX = []
-    nP = []
-    # print('nullif_X,                  nullif_P')
-    for i in range(len(X_A) - 1):
-        nullif_X = X_A[i] + X_B[i] + X_A[i + 1] - X_B[i + 1]
-        nullif_P = P_A[i] + P_B[i] - P_A[i + 1] + P_B[i + 1]
-        nX.append(nullif_X)
-        nP.append(nullif_P)
-        # print(nullif_X, '     ', nullif_P)
+    ntot = len(X_A) - 1
+    nX = np.array([X_A[i] + X_B[i] + X_A[i + 1] - X_B[i + 1] for i in range(ntot)])
+    nP = np.array([P_A[i] + P_B[i] - P_A[i + 1] + P_B[i + 1] for i in range(ntot)])
 
-    nXvar = np.var(np.array(nX))
-    nPvar = np.var(np.array(nP))
+    nXvar = np.var(nX)
+    nPvar = np.var(nP)
 
-    print("\nnullif_X variance:", nXvar)
-    print("nullif_P variance:", nPvar)
+    assert np.allclose(nXvar, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
+    assert np.allclose(nPvar, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
 
 
-def test_DTU2D():
+def test_two_dimensional_cluster_denmark():
     """
-    Two-dimensional temporal-mode cluster state as demonstrated by Technical University of Denmark. See: https://arxiv.org/pdf/1906.08709
+    Two-dimensional temporal-mode cluster state as demonstrated in https://arxiv.org/pdf/1906.08709
     """
-
-    start = time.time()
-
-    sq_r = 5
-
-    """
-    Settings to generate a cluster state of dimension (delay2 x n). In the DTU-paper https://arxiv.org/pdf/1906.08709 they used:
-    delay2=12
-    n=15000
-    """
+    np.random.seed(42)
+    sq_r = 3
     delay1 = 1  # number of timebins in the short delay line
     delay2 = 12  # number of timebins in the long delay line
     n = 400  # number of timebins
-
+    # Size of cluste is n x delay2
     # first half of cluster state measured in X, second half in P
     theta_A = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta_B = theta_A  # measurement angles for detector B
@@ -402,49 +325,17 @@ def test_DTU2D():
 
     # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
     N = delay2
-    nX = []
-    nP = []
-    # print('\n')
-    # print('nullif_X,                  nullif_P')
-    for k in range(0, len(X_A) - delay2 - 1):
-        nullif_X = (
-            X_A[k]
-            + X_B[k]
-            - X_A[k + 1]
-            - X_B[k + 1]
-            - X_A[k + N]
-            + X_B[k + N]
-            - X_A[k + N + 1]
-            + X_B[k + N + 1]
-        )
-        nullif_P = (
-            P_A[k]
-            + P_B[k]
-            + P_A[k + 1]
-            + P_B[k + 1]
-            - P_A[k + N]
-            + P_B[k + N]
-            + P_A[k + N + 1]
-            - P_B[k + N + 1]
-        )
-        nX.append(nullif_X)
-        nP.append(nullif_P)
-        # print(nullif_X, '     ', nullif_P)
+    ntot = len(X_A) - delay2 - 1
+    nX = np.array([X_A[k] + X_B[k] - X_A[k + 1] - X_B[k + 1] - X_A[k + N] + X_B[k + N] - X_A[k + N + 1] + X_B[k + N + 1] for k in range(ntot)])
+    nP = np.array([P_A[k] + P_B[k] + P_A[k + 1] + P_B[k + 1] - P_A[k + N] + P_B[k + N] + P_A[k + N + 1] - P_B[k + N + 1] for k in range(ntot)])
+    nXvar = np.var(nX)
+    nPvar = np.var(nP)
 
-    nXvar = np.var(np.array(nX))
-    nPvar = np.var(np.array(nP))
-
-    print("\n")
-    print("nullif_X variance:", nXvar)
-    print("nullif_P variance:", nPvar)
-
-    if 1e-15 < nXvar < 0.5 and 1e-15 < nPvar < 0.5:
-        print("\n########## SUCCESS ###########")
-
-    print("\nElapsed time [s]:", time.time() - start)
+    assert np.allclose(nXvar, 8 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nPvar, 8 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
-def test_tokyo2D():
+def test_two_dimensional_cluster_tokyo():
     """
     Two-dimensional temporal-mode cluster state as demonstrated by Universtiy of Tokyo. See: https://arxiv.org/pdf/1903.03918.pdf
     """
@@ -519,54 +410,19 @@ def test_tokyo2D():
     P_D = xD[n // 2 :]  # P samples from detector D
 
     N = delayC
-    nX1 = []
-    nX2 = []
-    nP1 = []
-    nP2 = []
     # nullifiers defined in https://arxiv.org/pdf/1903.03918.pdf, Fig. S5
-    for k in range(0, len(X_A) - N - 1):
-        nullif_X1 = (
-            X_A[k] + X_B[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N])
-        )
-        nullif_X2 = (
-            X_C[k] - X_D[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N])
-        )
-        nullif_P1 = (
-            P_A[k] + P_B[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N])
-        )
-        nullif_P2 = (
-            P_C[k] - P_D[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N])
-        )
-        nX1.append(nullif_X1)
-        nX2.append(nullif_X2)
-        nP1.append(nullif_P1)
-        nP2.append(nullif_P2)
+    ntot = len(X_A) - N - 1
+    nX1 = np.array([X_A[k] + X_B[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N]) for k in range(ntot)])
+    nX2 = np.array([X_C[k] - X_D[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N]) for k in range(ntot)])
+    nP1 = np.array([P_A[k] + P_B[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N]) for k in range(ntot)])
+    nP2 = np.array([P_C[k] - P_D[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N]) for k in range(ntot)])
 
-    nX1var = np.var(np.array(nX1))
-    nX2var = np.var(np.array(nX2))
-    nP1var = np.var(np.array(nP1))
-    nP2var = np.var(np.array(nP2))
+    nX1var = np.var(nX1)
+    nX2var = np.var(nX2)
+    nP1var = np.var(nP1)
+    nP2var = np.var(nP2)
 
-    print("\n")
-    print("nullif_X1 variance:", nX1var)
-    print("nullif_X2 variance:", nX2var)
-    print("nullif_P1 variance:", nP1var)
-    print("nullif_P2 variance:", nP2var)
-
-    if (
-        1e-15 < nX1var < 0.5
-        and 1e-15 < nX2var < 0.5
-        and 1e-15 < nP1var < 0.5
-        and 1e-15 < nP2var < 0.5
-    ):
-        print("\n########## SUCCESS ###########")
-
-    print("\nElapsed time [s]:", time.time() - start)
-
-
-# test_epr()
-test_ghz()
-# test_1Dcluster_cloud()
-# test_millionmodes()
-# test_DTU2D()
-# test_tokyo2D()
+    assert np.allclose(nX1var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nX2var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nP1var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nP2var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
