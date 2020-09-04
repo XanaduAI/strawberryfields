@@ -80,7 +80,7 @@ def input_check(args, copies):
 
 
 def _get_mode_order(num_of_values, N):
-    """Get the order by which the modes where measured"""
+    """Get the order by which the modes were measured"""
     N = N.copy()
 
     all_modes = []
