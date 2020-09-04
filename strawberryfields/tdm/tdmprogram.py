@@ -214,7 +214,7 @@ class TDMProgram(sf.Program):
       program. The sequence corresponding to the gate arguments is repeated ``copies``
       number of times.
 
-    * ``shift="default"`` *(str or int)*: 
+    * ``shift="default"`` *(str or int)*: defines in which way the qumode register is shifted at the end of each time bin. If set to "default", the qumode register is shifted such that each measured qumode reappears as a fresh mode at the beginning of the subsequent time bin. This is equivalent to a measured qumode being removed from the representation (by measurement) and a new one being added (by a light source). If set to an integer value, the register will shift by a step size of this integer at the end of each time bin.
     """
 
     def __init__(self, N, name=None):
