@@ -2,6 +2,8 @@
 
 <h3>New features since last release</h3>
 
+* Adds the time domain module `tdm.tdmprogram` for highly scalable simulation of Gaussian states. [(#440)](https://github.com/XanaduAI/strawberryfields/pull/440)
+
 <h3>Improvements</h3>
 
 <h3>Breaking Changes</h3>
@@ -23,7 +25,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Josh Izaac, Nicolás Quesada
+Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada
 
 # Release 0.15.0 (current release)
 

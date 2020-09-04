@@ -22,7 +22,7 @@ from strawberryfields.tdm import tdmprogram
 np.random.seed(42)
 
 
-def singleloop(r, alpha, phi, theta, copies, shift="end", hbar=2):
+def singleloop(r, alpha, phi, theta, copies, shift="default", hbar=2):
     """Single delay loop with program.
 
     Args:
@@ -82,7 +82,7 @@ def test_at_least_one_measurement():
     phi = [0] * 4
     prog = tdmprogram.TDMProgram(N=3)
     with pytest.raises(ValueError, match="Must be at least one measurement."):
-        with prog.context(alpha, phi, copies=copies, shift="end") as (p, q):
+        with prog.context(alpha, phi, copies=copies, shift="default") as (p, q):
             ops.Sgate(sq_r, 0) | q[2]
             ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]
@@ -98,7 +98,7 @@ def test_spatial_modes_number_of_measurements_match():
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
-    with pytest.raises(ValueError, match="Number of measurements operators must match number of spatial_modes."):
+    with pytest.raises(ValueError, match="Number of measurements operators must match number of spatial modes."):
         prog = tdmprogram.TDMProgram(N=[3, 3])
         with prog.context(alpha, phi, theta, copies=copies) as (p, q):
             ops.Sgate(sq_r, 0) | q[2]
@@ -235,7 +235,7 @@ def test_one_dimensional_cluster():
     assert np.allclose(delta, 3 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
 
 
-def test_two_by_n_cluster():
+def test_one_dimensional_cluster_tokyo():
     """
     One-dimensional temporal-mode cluster state as demonstrated in
     https://aip.scitation.org/doi/pdf/10.1063/1.4962732
@@ -252,7 +252,7 @@ def test_two_by_n_cluster():
     theta2 = theta1  # measurement angles for detector B
 
     prog = tdmprogram.TDMProgram(N=[1, 2])
-    with prog.context(theta1, theta2, copies=copies, shift="end") as (p, q):
+    with prog.context(theta1, theta2, copies=copies, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
         ops.Rgate(np.pi / 2) | q[0]
@@ -299,7 +299,7 @@ def test_two_dimensional_cluster_denmark():
 
     # 2D cluster
     prog = tdmprogram.TDMProgram([1, delay2 + delay1 + 1])
-    with prog.context(theta_A, theta_B, shift="end") as (p, q):
+    with prog.context(theta_A, theta_B, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[delay2 + delay1 + 1]
         ops.Rgate(np.pi / 2) | q[delay2 + delay1 + 1]
@@ -336,9 +336,6 @@ def test_two_dimensional_cluster_tokyo():
     """
     Two-dimensional temporal-mode cluster state as demonstrated by Universtiy of Tokyo. See: https://arxiv.org/pdf/1903.03918.pdf
     """
-
-    start = time.time()
-
     # temporal delay in timebins for each spatial mode
     delayA = 0
     delayB = 1
@@ -364,7 +361,7 @@ def test_two_dimensional_cluster_tokyo():
 
     # 2D cluster
     prog = tdmprogram.TDMProgram(N)
-    with prog.context(theta_A, theta_B, theta_C, theta_D, shift="end") as (p, q):
+    with prog.context(theta_A, theta_B, theta_C, theta_D, shift="default") as (p, q):
 
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]

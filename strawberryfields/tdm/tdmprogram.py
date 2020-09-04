@@ -62,7 +62,7 @@ def validate_measurements(circuit, N):
         raise ValueError("Must be at least one measurement.")
 
     if spatial_modes is not len(N):
-        raise ValueError("Number of measurements operators must match number of spatial_modes.")
+        raise ValueError("Number of measurements operators must match number of spatial modes.")
 
     return spatial_modes
 
@@ -139,7 +139,7 @@ class TDMProgram(sf.Program):
         super().__init__(num_subsystems=self.concurr_modes, name=name)
 
     # pylint: disable=arguments-differ, invalid-overridden-method
-    def context(self, *args, copies=1, shift="end"):
+    def context(self, *args, copies=1, shift="default"):
         input_check(args, copies)
         self.copies = copies
         self.tdm_params = args
@@ -202,7 +202,7 @@ class TDMProgram(sf.Program):
             for cmd in cmds:
                 self.apply_op(cmd, q, i)
 
-            if self.shift == "end":
+            if self.shift == "default":
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
                 # Here the index used to be i in changed to j, check this is fine.
