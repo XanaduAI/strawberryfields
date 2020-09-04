@@ -62,7 +62,7 @@ def validate_measurements(circuit, N):
         raise ValueError("Must be at least one measurement.")
 
     if spatial_modes is not len(N):
-        raise ValueError("Number of measurements operators must match number of spatial modes.")
+        raise ValueError("Number of measurement operators must match number of spatial modes.")
 
     return spatial_modes
 

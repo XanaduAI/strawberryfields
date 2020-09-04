@@ -98,7 +98,7 @@ def test_spatial_modes_number_of_measurements_match():
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
-    with pytest.raises(ValueError, match="Number of measurements operators must match number of spatial modes."):
+    with pytest.raises(ValueError, match="Number of measurement operators must match number of spatial modes."):
         prog = tdmprogram.TDMProgram(N=[3, 3])
         with prog.context(alpha, phi, theta, copies=copies) as (p, q):
             ops.Sgate(sq_r, 0) | q[2]
