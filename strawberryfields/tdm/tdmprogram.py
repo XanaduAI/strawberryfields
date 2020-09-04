@@ -300,7 +300,6 @@ class TDMProgram(sf.Program):
             if self.shift == "default":
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
-                # Here the index used to be i in changed to j, check this is fine.
                 for j in range(len(self.N)):
                     q_aux[sm[j]] = shift_by(q_aux[sm[j]], 1)
                 q = tuple(q_aux)
