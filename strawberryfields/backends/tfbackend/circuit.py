@@ -56,10 +56,10 @@ from . import ops
 
 class Circuit:
     """Base class for representing and operating on a collection of
-         CV quantum optics modes in the Fock basis.
-         The modes are initialized in the (multimode) vacuum state,
-         using the Fock representation with given cutoff_dim.
-         The state of the modes is manipulated by calling the various methods."""
+    CV quantum optics modes in the Fock basis.
+    The modes are initialized in the (multimode) vacuum state,
+    using the Fock representation with given cutoff_dim.
+    The state of the modes is manipulated by calling the various methods."""
 
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, num_modes, cutoff_dim, pure, batch_size):
@@ -183,7 +183,7 @@ class Circuit:
 
     def _check_incompatible_batches(self, *params):
         """Helper function for verifying that all the params from a list have the same batch size. Only does something
-             when the circuit is running in batched mode."""
+        when the circuit is running in batched mode."""
         if self._batched:
             for idx, p in enumerate(params):
                 param_batch_size = p.shape.dims[0].value
@@ -297,7 +297,7 @@ class Circuit:
 
     def prepare_squeezed_state(self, r, theta, mode):
         """
-             Traces out the state in 'mode' and replaces it with a squeezed state defined by r and theta.
+        Traces out the state in 'mode' and replaces it with a squeezed state defined by r and theta.
         """
         if self._valid_modes(mode):
             r = self._maybe_batch(r)
@@ -310,7 +310,7 @@ class Circuit:
 
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         """
-             Traces out the state in 'mode' and replaces it with a displaced squeezed state defined by alpha, r and theta.
+        Traces out the state in 'mode' and replaces it with a displaced squeezed state defined by alpha, r and theta.
         """
         if self._valid_modes(mode):
             r_d = self._maybe_batch(r_d)
@@ -458,7 +458,14 @@ class Circuit:
         phi = self._maybe_batch(phi)
         self._check_incompatible_batches(r, phi)
         new_state = ops.two_mode_squeeze(
-            r, phi, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched,
+            r,
+            phi,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
         )
         self._update_state(new_state)
 

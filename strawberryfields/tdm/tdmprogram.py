@@ -123,7 +123,99 @@ def reshape_samples(all_samples, modes, N):
 
 
 class TDMProgram(sf.Program):
-    """Represents a photonic quantum circuit in the time domain encoding"""
+    r"""Represents a photonic quantum circuit in the time domain encoding.
+
+    The ``TDMProgam`` class provides a context manager for easily defining
+    a single time-bin of the time domain algorithm. As with the standard
+    :class:`~.Program`, Strawberry Fields operations are appended to the
+    time domain program using the Python-embedded Blackbird syntax.
+
+    Once created, time domain programs can be executed on Strawberry Fields'
+    suite of built-in simulators in an efficient manner, or submitted
+    to be executed on compatible hardware.
+
+    Args:
+        N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
+            modes in each time bin. Alternatively, a sequence of integers
+            may be provided, corresponding to
+        name (str): the program name (optional)
+
+    **Example**
+
+    Below, we create a time domain program with 2 concurrent modes:
+
+    >>> import strawberryfields as sf
+    >>> from strawberryfields import ops
+    >>> prog = sf.tdm.TDMProgram(N=2)
+
+    Once created, we can construct the program using the ``prog.context()``
+    context manager.
+
+    >>> with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+    ...     ops.Sgate(0.7, 0) | q[1]
+    ...     ops.BSgate(p[0]) | (q[0], q[1])
+    ...     ops.MeasureHomodyne(p[2]) | q[0]
+
+    If we print out this program, we see that the time domain program
+    has automated the process of repeating the single time-bin sequence
+    constructed above:
+
+    >>> prog.print()
+    Sgate(0.32, 0) | (q[1])
+    BSgate(1, 0) | (q[0], q[1])
+    MeasureHomodyne(3) | (q[0])
+    Sgate(0.32, 0) | (q[0])
+    BSgate(2, 0) | (q[1], q[0])
+    MeasureHomodyne(4) | (q[1])
+    Sgate(0.32, 0) | (q[1])
+    BSgate(1, 0) | (q[0], q[1])
+    MeasureHomodyne(3) | (q[0])
+    Sgate(0.32, 0) | (q[0])
+    BSgate(2, 0) | (q[1], q[0])
+    MeasureHomodyne(4) | (q[1])
+    Sgate(0.32, 0) | (q[1])
+    BSgate(1, 0) | (q[0], q[1])
+    MeasureHomodyne(3) | (q[0])
+    Sgate(0.32, 0) | (q[0])
+    BSgate(2, 0) | (q[1], q[0])
+    MeasureHomodyne(4) | (q[1])
+
+    Note the 'shifting' of the measured registers --- this optimization allows
+    for time domain algorithms to be simulated in memory much more efficiently:
+
+    >>> eng = sf.Engine("gaussian")
+    >>> results = eng.run(prog)
+
+    The engine automatically takes this mode shifting into account; returned samples
+    will always be transformed to match the modes specified during construction:
+
+    >>> print(results.all_samples)
+    {0: [array([1.26208025]), array([1.53910032]), array([-1.29648336]),
+    array([0.75743215]), array([-0.17850101]), array([-1.44751996])]}
+
+    Note that, unlike the standard :class:`~.Program`,
+    the TDM context manager has both required and essential arguments:
+
+    * Positional arguments are used to pass sequences of gate arguments
+      to apply per time-bin. Within the context, these are accessible via the ``p``
+      context variable; ``p[i]`` corresponds to the ``i``-th positional
+      arguments.
+
+      All positional arguments corresponding to sequences of gate arguments
+      **must be the same length**. This length determines how many time-bins
+      are present in the TDM program.
+
+      If the ``p`` variable is not used, the gate argument is assumed to be **constant**
+      across all time-bins.
+
+    * ``copies=1`` *(int)*: the number of times to repeat the time-domain program.
+      For example, if a sequence of 10 gate arguments is provided, and ``copies==15``,
+      then there will be a total of :math:`10\times 15` time bins in the time domain
+      program. The sequence corresponding to the gate arguments is repeated ``copies``
+      number of times.
+
+    * ``shift="default"`` *(str or int)*: 
+    """
 
     def __init__(self, N, name=None):
         # N is a list with the number of qumodes for each spatial mode
@@ -153,8 +245,10 @@ class TDMProgram(sf.Program):
 
     def __exit__(self, ex_type, ex_value, ex_tb):
         super().__exit__(ex_type, ex_value, ex_tb)
-        self.spatial_modes = validate_measurements(self.circuit, self.N)
-        self.construct_circuit()
+
+        if ex_type is None:
+            self.spatial_modes = validate_measurements(self.circuit, self.N)
+            self.construct_circuit()
 
     def construct_circuit(self):
         """Construct program with the register shift"""
@@ -171,6 +265,7 @@ class TDMProgram(sf.Program):
             start = sum(self.N[:i])
             stop = sum(self.N[:i]) + self.N[i]
             sm.append(slice(start, stop))
+
         # Above we define a list of slice intervals;
         # each slice interval corresponding to one spatial mode
 

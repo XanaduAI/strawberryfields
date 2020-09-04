@@ -55,7 +55,7 @@ class FockBackend(BaseFock):
     Indices for the same mode appear consecutively. Hence, for a mixed state, the first two indices
     are for the first mode, the second are for the second mode, etc.
 
-    .. 
+    ..
         .. currentmodule:: strawberryfields.backends.fockbackend
         .. autosummary::
             :toctree:
