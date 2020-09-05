@@ -80,8 +80,9 @@ quickstart guides
 exploring our many `tutorials <https://strawberryfields.ai/photonics/demonstrations.html>`__ and
 `applications <https://strawberryfields.ai/photonics/applications.html>`__.
 
+.. raw:: html
 
-<img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/update-hardware-access-links/_static/readme_panel1.png" width="900px">
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/update-hardware-access-links/doc/_static/readme_panel1.png" width="900px">
 
 Finally, read more about using Strawberry Fields with `photonic hardware
 <https://strawberryfields.ai/photonics/hardware/index.html>`__, including code demonstrations
