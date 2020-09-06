@@ -28,7 +28,7 @@
     :target: https://pypi.org/project/StrawberryFields
 
 `Strawberry Fields <https://strawberryfields.readthedocs.io>`_ is a full-stack Python library for designing,
-simulating, and optimizing continuous variable quantum
+simulating, and optimizing continuous-variable quantum
 optical circuits.
 
 
