@@ -97,7 +97,7 @@ they can contribute to Strawberry Fields.
 Contributing to Strawberry Fields
 =================================
 
-We welcome contributions - simply fork the Strawberry Fields repository, and then make a
+We welcome contributions—simply fork the Strawberry Fields repository, and then make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.  All contributors to Strawberry Fields will be listed as authors on the releases.
 
 We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects or applications built on Strawberry Fields.
