@@ -50,16 +50,16 @@ def _node_coords(g: nx.Graph, l: dict) -> Tuple:
 def _edge_coords(g: nx.Graph, l: dict) -> dict:
     """Converts coordinates for the graph edges for plotting purposes.
 
-        Args:
-            g (nx.Graph): input graph
-            l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
-                generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
-                reference/drawing.html#module-networkx.drawing.layout>`__
+    Args:
+        g (nx.Graph): input graph
+        l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
+            generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
+            reference/drawing.html#module-networkx.drawing.layout>`__
 
-        Returns:
-             dict[str, list]: lists of x and y coordinates for the beginning and end of each edge.
-             ``None`` is placed as a separator between pairs of nodes/edges.
-        """
+    Returns:
+         dict[str, list]: lists of x and y coordinates for the beginning and end of each edge.
+         ``None`` is placed as a separator between pairs of nodes/edges.
+    """
     e_x = []
     e_y = []
 

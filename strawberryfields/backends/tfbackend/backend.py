@@ -36,8 +36,7 @@ class TFBackend(BaseFock):
     short_name = "tf"
 
     def __init__(self):
-        """Initialize a TFBackend object.
-        """
+        """Initialize a TFBackend object."""
         super().__init__()
         self._supported["mixed_states"] = True
         self._supported["batched"] = True
