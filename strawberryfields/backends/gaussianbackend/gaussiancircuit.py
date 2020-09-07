@@ -21,7 +21,7 @@ from ..shared_ops import changebasis
 
 
 class GaussianModes:
-    """ Base class for representing and operating on a collection of
+    """Base class for representing and operating on a collection of
     continuous variable modes in the symplectic basis as encoded in a
     covariance matrix and a mean vector.
     The modes are initialized in the (multimode) vacuum state,
@@ -299,8 +299,7 @@ class GaussianModes:
         return r
 
     def scovmat(self):
-        """Constructs and returns the symmetric ordered covariance matrix as defined in [1]
-        """
+        """Constructs and returns the symmetric ordered covariance matrix as defined in [1]"""
         rotmat = changebasis(self.nlen)
         return np.dot(np.dot(rotmat, self.scovmatxp()), np.transpose(rotmat))
 
@@ -374,17 +373,20 @@ class GaussianModes:
         rows = np.reshape(modes, [-1, 1])
         cols = np.reshape(modes, [1, -1])
 
-        sigmaq = np.concatenate(
-            (
-                np.concatenate(
-                    (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
+        sigmaq = (
+            np.concatenate(
+                (
+                    np.concatenate(
+                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
+                    ),
+                    np.concatenate(
+                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
+                    ),
                 ),
-                np.concatenate(
-                    (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
-                ),
-            ),
-            axis=0,
-        ) + np.identity(2 * len(modes))
+                axis=0,
+            )
+            + np.identity(2 * len(modes))
+        )
         return sigmaq
 
     def fidelity_coherent(self, alpha, modes=None):
@@ -412,13 +414,16 @@ class GaussianModes:
     def Amat(self):
         """ Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
-        sigmaq = np.concatenate(
-            (
-                np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
-                np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
-            ),
-            axis=0,
-        ) + np.identity(2 * self.nlen)
+        sigmaq = (
+            np.concatenate(
+                (
+                    np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
+                    np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
+                ),
+                axis=0,
+            )
+            + np.identity(2 * self.nlen)
+        )
         return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
@@ -439,9 +444,9 @@ class GaussianModes:
         self.mean[k] = sqrtT * self.mean[k]
 
     def thermal_loss(self, T, nbar, k):
-        r""" Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
+        r"""Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
         unlike the loss channel, here the ancilliary mode that goes into the second arm of the
-        beam splitter is prepared in a thermal state with mean photon number nth """
+        beam splitter is prepared in a thermal state with mean photon number nth"""
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
@@ -459,7 +464,7 @@ class GaussianModes:
         return np.abs(fid - 1) <= tol
 
     def measure_dyne(self, covmat, indices, shots=1):
-        """ Performs the general-dyne measurement specified in covmat, the indices should correspond
+        """Performs the general-dyne measurement specified in covmat, the indices should correspond
         with the ordering of the covmat of the measurement
         covmat specifies a gaussian effect via its covariance matrix. For more information see
         Quantum Continuous Variables: A Primer of Theoretical Methods
@@ -490,7 +495,7 @@ class GaussianModes:
         return vm
 
     def homodyne(self, n, shots=1, eps=0.0002):
-        """ Performs a homodyne measurement by calling measure dyne an giving it the
+        """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
         covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
         res = self.measure_dyne(covmat, [n], shots=shots)

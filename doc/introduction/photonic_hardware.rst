@@ -9,8 +9,8 @@ to be executed on photonic hardware using the Xanadu cloud platform.
     An authentication token is required to access the Xanadu cloud platform. In the
     following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
 
-    If you do not have an authentication token, you can request hardware access via email
-    at sf@xanadu.ai.
+    If you do not have an authentication token, you can request hardware access `via the sign up
+    form on the Xanadu website <https://xanadu.ai/request-access>`__.
 
 Configuring your account
 ------------------------

@@ -848,7 +848,10 @@ class BaseFockState(BaseState):
 
         # determine modes with quadratic expectation values
         nonzero = np.concatenate(
-            [np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes),]
+            [
+                np.mod(A.nonzero()[0], self._modes),
+                np.mod(linear_coeff.nonzero()[0], self._modes),
+            ]
         )
         ex_modes = list(set(nonzero))
         num_modes = len(ex_modes)
@@ -1081,7 +1084,7 @@ class BaseGaussianState(BaseState):
         return self._cov
 
     def reduced_gaussian(self, modes):
-        r""" Returns the vector of means and the covariance matrix of the specified modes.
+        r"""Returns the vector of means and the covariance matrix of the specified modes.
 
         Args:
             modes (int of Sequence[int]): indices of the requested modes
