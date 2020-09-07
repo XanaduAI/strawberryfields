@@ -316,7 +316,7 @@ def phase(theta, trunc):
 # pylint: disable=unused-argument
 @functools.lru_cache()
 def beamsplitter(theta, phi, trunc):
-    r""" The beamsplitter :math:`B(\theta, \phi)`.
+    r"""The beamsplitter :math:`B(\theta, \phi)`.
 
     Uses the `beamsplitter operation from The Walrus`_ to calculate the beamsplitter.
 

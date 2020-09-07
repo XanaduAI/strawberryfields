@@ -69,8 +69,7 @@ class GaussianBackend(BaseGaussian):
     circuit_spec = "gaussian"
 
     def __init__(self):
-        """Initialize the backend.
-        """
+        """Initialize the backend."""
         super().__init__()
         self._supported["mixed_states"] = True
         self._init_modes = None
