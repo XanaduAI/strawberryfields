@@ -39,19 +39,19 @@ Features
 
     <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/StateLearning.gif" width="300px"  align="right">
 
-* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware.
+* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware
   <https://strawberryfields.ai/photonics/hardware/index.html>`__
 
 * `High-level functions <https://strawberryfields.ai/photonics/applications.html>`__ for **solving
-  practical problems** including **graph and network optimization**, **machine learning** and
+  practical problems** including **graph and network optimization**, **machine learning**, and
   **chemistry**
 
-* Includes a suite of world-class simulators—based on cutting edge algorithms—to compile and
-  simulate photonic algorithms.
+* Includes a suite of world-class simulators—based on cutting-edge algorithms—to compile and
+  simulate photonic algorithms
 
 * `Train and optimize
   <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
-  your quantum programs with our end-to-end differentiable TensorFlow backend.
+  your quantum programs with our end-to-end differentiable TensorFlow backend
 
 * Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows
   anyone to run a quantum computing simulation via **drag and drop**
@@ -74,7 +74,7 @@ To see Strawberry Fields in action immediately, try out our `Strawberry Fields I
 <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates,
 and watch your simulation run in real time right in your web browser.
 
-For getting started with writing your own Strawberry Fields code, begin with our `photonic circuit
+To get started with writing your own Strawberry Fields code, begin with our `photonic circuit
 quickstart guides
 <https://strawberryfields.readthedocs.io/en/stable/introduction/introduction.html>`__, before
 exploring our many `tutorials <https://strawberryfields.ai/photonics/demonstrations.html>`__ and

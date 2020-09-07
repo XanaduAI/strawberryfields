@@ -96,25 +96,25 @@ Features
     :target: javascript:void(0);
 
 
-* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware.
+* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware
   <https://strawberryfields.ai/photonics/hardware/index.html>`__
 
 ..
 
 * `High-level functions <https://strawberryfields.ai/photonics/applications.html>`__ for **solving
-  practical problems** including **graph and network optimization**, **machine learning** and
+  practical problems** including **graph and network optimization**, **machine learning**, and
   **chemistry**
 
 ..
 
 * Includes a suite of world-class simulators—based on cutting edge algorithms—to compile and
-  simulate photonic algorithms.
+  simulate photonic algorithms
 
 ..
 
 * `Train and optimize
   <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
-  your quantum programs with our end-to-end differentiable TensorFlow backend.
+  your quantum programs with our end-to-end differentiable TensorFlow backend
 
 ..
 
@@ -193,4 +193,3 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/sf_program_utils
    code/sf_parameters
    code/sf_utils
-
