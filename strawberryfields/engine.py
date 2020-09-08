@@ -627,26 +627,25 @@ class RemoteEngine:
             # user
 
             if (
-                (program.compile_info[0].target != device.target
-                or program.compile_info[0]._spec != device._spec)
-
+                program.compile_info[0].target != device.target
+                or program.compile_info[0]._spec != device._spec
             ):
                 # program was compiled for a different device
                 raise ValueError(
                     "Cannot use program compiled with "
                     f"{program._compile_info[0].target} for target {self.target}. "
-                    "Pass the \"recompile=True\" keyword argument "
+                    'Pass the "recompile=True" keyword argument '
                     f"to compile with {compiler_name}."
                 )
 
-            elif program.compile_info[1] != compiler_name:
+            if program.compile_info[1] != compiler_name:
                 # program was compiled for the device, but using a different compiler
 
                 if not recompile:
                     raise ValueError(
                         "Cannot use program compiled with "
                         f"{program._compile_info[1]} compiler. "
-                        "Pass the \"recompile=True\" keyword argument "
+                        'Pass the "recompile=True" keyword argument '
                         f"to compile with {compiler_name}."
                     )
 
