@@ -644,7 +644,16 @@ class RemoteEngine:
         elif program.compile_info[1] != compiler_name:
             # program was compiled for the device, but using a different compiler
 
-            if compile_options is None or not compile_options:
+            if not recompile:
+                raise ValueError(
+                    "Cannot use program compiled with "
+                    f"{program._compile_info[1]} compiler."
+                    'Set the "recompile" entry in the '
+                    "compile_options dictionary to true to compile with "
+                    f"{compiler_name}."
+                )
+
+            if not compile_options:
                 msg = (
                     f"No compile options specified, compiling program for "
                     f"device {device.target} using compiler Xstrict."
