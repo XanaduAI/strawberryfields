@@ -666,8 +666,7 @@ class RemoteEngine:
             program = program.compile(device=device, **compile_options)
 
         else:
-            # either recompilation was not specified or there were no
-            # compile_options, validating program
+            # validating program
             msg = (
                 f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
                 f"Validating program against the Xstrict compiler."
