@@ -117,11 +117,11 @@ def _get_mode_order(num_of_values, N):
 
 
 def reshape_samples(all_samples, modes, N):
-    """Reshapes the samples dict so that they have the expected correct shape
+    """Reshapes the samples dict so that they have the expected correct shape.
 
-    Reshapes the samples dict so that they the measured modes are the ones
-    defined to be measured in the circuit instead of being spread over a larger
-    number of modes due to the mode-shifting occuring in TDMProgram.
+    Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are the ones
+    defined to be measured in the circuit, instead of being spread over a larger
+    number of modes due to the mode-shifting occurring in :class:`~.TDMProgram`.
 
     Args:
         all_samples (dict[int, list]): the raw measured samples
