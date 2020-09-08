@@ -307,8 +307,7 @@ class TestRemoteEngineIntegration:
         # Turning recompilation on
         program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
         assert isinstance(program, self.MockProgram)
-        assert caplog.records[-1].message == ("Program previously compiled for X8_01 "
-        f"using []. Validating program against the Xstrict compiler.")
+        assert caplog.records[-1].message == ("Recompiling program for device X8_01 using compiler Xunitary.")
 
     def test_different_compiler_recompile_with_options(self, prog, monkeypatch, caplog):
         """Test that recompilation happens in a default way if program was
@@ -339,7 +338,7 @@ class TestRemoteEngineIntegration:
         # Turning recompilation on
         program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
         assert isinstance(program, self.MockProgram)
-        assert caplog.records[-1].message == ("Compiling program for device X8_01 "
+        assert caplog.records[-1].message == ("Recompiling program for device X8_01 "
         f"using the specified compiler options: {compile_options}.")
 
     def test_different_compiler_no_recompile_error(self, prog, monkeypatch, caplog):
@@ -420,5 +419,5 @@ class TestRemoteEngineIntegration:
         program = engine.run_async(prog, shots=10, compile_options=compile_options)
 
         # No recompilation, original Program
-        assert caplog.records[-1].message == (f"No compilation, compiled program is valid and compatible with device "\
-                       f"X8_01 and compiler {compiler}.")
+        assert caplog.records[-1].message == (f"Program previously compiled for {device.target} using {prog.compile_info[1]}. "
+                                              f"Validating program against the Xstrict compiler.")
