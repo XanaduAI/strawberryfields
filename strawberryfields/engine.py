@@ -634,7 +634,7 @@ class RemoteEngine:
                     f"{program._compile_info[0].target} for target "
                     f'{self.target}. Set the "recompile" entry in the '
                     "compile_options dictionary to true to compile with "
-                    "{compiler_name}."
+                    f"{compiler_name}."
                 )
 
             msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
