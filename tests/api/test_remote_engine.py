@@ -256,8 +256,9 @@ class TestRemoteEngineIntegration:
             program = engine.run_async(prog, shots=10)
 
     def test_recompile_different_device(self, prog, monkeypatch, caplog):
-        """Tests that no error is raised if the program was compiled for
-        another device, but recompilation was requested."""
+        """Tests that no error is raised when recompilation was specified and
+        first the program was compiled using a devicespec that is different to
+        the default devicespec used for running a program."""
         caplog.set_level(logging.INFO)
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = []
