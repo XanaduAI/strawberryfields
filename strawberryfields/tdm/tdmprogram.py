@@ -154,7 +154,7 @@ class TDMProgram(sf.Program):
     >>> with prog.context([1, 2], [3, 4], copies=3) as (p, q):
     ...     ops.Sgate(0.7, 0) | q[1]
     ...     ops.BSgate(p[0]) | (q[0], q[1])
-    ...     ops.MeasureHomodyne(p[2]) | q[0]
+    ...     ops.MeasureHomodyne(p[1]) | q[0]
 
     If we print out this program, we see that the time domain program
     has automated the process of repeating the single time-bin sequence
@@ -214,7 +214,12 @@ class TDMProgram(sf.Program):
       program. The sequence corresponding to the gate arguments is repeated ``copies``
       number of times.
 
-    * ``shift="default"`` *(str or int)*: defines in which way the qumode register is shifted at the end of each time bin. If set to "default", the qumode register is shifted such that each measured qumode reappears as a fresh mode at the beginning of the subsequent time bin. This is equivalent to a measured qumode being removed from the representation (by measurement) and a new one being added (by a light source). If set to an integer value, the register will shift by a step size of this integer at the end of each time bin.
+    * ``shift="default"`` *(str or int)*: Defines how the qumode register is shifted at the end of
+      each time bin. If set to ``"default"``, the qumode register is shifted such that each measured
+      qumode reappears as a fresh mode at the beginning of the subsequent time bin. This is
+      equivalent to a measured qumode being removed from the representation (by measurement) and a
+      new one being added (by a light source). If set to an integer value, the register will shift
+      by a step size of this integer at the end of each time bin.
     """
 
     def __init__(self, N, name=None):
