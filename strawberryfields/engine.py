@@ -656,7 +656,7 @@ class RemoteEngine:
                 # User has explicitly provided compile_options to the engine
                 msg = (
                     f"Compiling program for device {device.target}"
-                    f"using the specified compiler options."
+                    f"using the specified compiler options: {compile_options}."
                 )
                 self.log.info(msg)
 
