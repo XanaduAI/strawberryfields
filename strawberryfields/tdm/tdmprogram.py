@@ -103,8 +103,6 @@ def input_check(args, copies):
 
 def _get_mode_order(num_of_values, N):
     """Get the order by which the modes were measured"""
-    N = N.copy()
-
     all_modes = []
     for i in range(len(N)):
         ra = list(range(sum(N[:i]), sum(N[: i + 1])))
