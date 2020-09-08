@@ -37,7 +37,15 @@ def shift_by(l, n):
 
 
 def get_modes(cmd, q):
-    """Returns the registers from q required by a command"""
+    """Returns the registers from q required by a command.
+
+    Args:
+        cmd (.Command): a Strawberryfields command
+        q (.RegRef): a register object
+
+    Return:
+        modes (tuple[int]): sequence of mode labels
+    """
     reg_getter = itemgetter(*[r.ind for r in cmd.reg])
     modes = reg_getter(q)
 
@@ -48,7 +56,15 @@ def get_modes(cmd, q):
 
 
 def validate_measurements(circuit, N):
-    """Validate the TDM program measurements are correct"""
+    """Validate the TDM program measurements are correct.
+
+    Args:
+        circuit (list): a list containing commands or measurements specifying a circuit
+        N (list): list giving the number of concurrent modes per band
+
+    Return:
+        spatial_modes (int): number of spatial modes
+    """
     spatial_modes = 0
     measurement_reg = []
 
@@ -68,7 +84,13 @@ def validate_measurements(circuit, N):
 
 
 def input_check(args, copies):
-    """Checks the input arguments have consistent dimensions"""
+    """Checks the input arguments have consistent dimensions.
+
+    Args:
+        args (Sequence[Sequence]): sequence of sequences specifying the value of the parameters
+        copies (int): number of times the circuit should be run
+
+    """
     # check if all lists are of equal length
     param_lengths = [len(param) for param in args]
     if len(set(param_lengths)) != 1:
