@@ -646,8 +646,8 @@ class RemoteEngine:
 
             if compile_options is None or not compile_options:
                 msg = (
-                    f"No compile options specified, compiling program for "
-                    f"device {device.target} using compiler Xstrict."
+                    f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
+                    f"Validating program against the Xstrict compiler."
                 )
                 self.log.info(msg)
 
