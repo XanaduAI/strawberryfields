@@ -155,7 +155,8 @@ class TDMProgram(sf.Program):
     Args:
         N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
             modes in each time bin. Alternatively, a sequence of integers
-            may be provided, corresponding to the number of concurrent modes in the possibly multiple bands in the circuit.
+            may be provided, corresponding to the number of concurrent modes in
+            the possibly multiple bands in the circuit.
         name (str): the program name (optional)
 
     **Example**
@@ -164,7 +165,7 @@ class TDMProgram(sf.Program):
 
     >>> import strawberryfields as sf
     >>> from strawberryfields import ops
-    >>> prog = sf.tdm.TDMProgram(N=2)
+    >>> prog = sf.TDMProgram(N=2)
 
     Once created, we can construct the program using the ``prog.context()``
     context manager.

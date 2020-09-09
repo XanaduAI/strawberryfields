@@ -6,3 +6,4 @@ sf.tdm
 .. automodapi:: strawberryfields.tdm
     :no-heading:
     :include-all-objects:
+    :skip: TDMProgram
