@@ -155,7 +155,7 @@ class TDMProgram(sf.Program):
     Args:
         N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
             modes in each time bin. Alternatively, a sequence of integers
-            may be provided, corresponding to
+            may be provided, corresponding to the number of concurrent modes in the possibly multiple bands in the circuit.
         name (str): the program name (optional)
 
     **Example**
