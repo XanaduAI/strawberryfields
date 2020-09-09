@@ -66,12 +66,10 @@ def validate_measurements(circuit, N):
         spatial_modes (int): number of spatial modes
     """
     spatial_modes = 0
-    measurement_reg = []
 
     for cmd in circuit:
         if isinstance(cmd.op, ops.Measurement):
             modes = [r.ind for r in cmd.reg]
-            measurement_reg.extend(modes)
             spatial_modes += len(modes)
 
     if not spatial_modes:
