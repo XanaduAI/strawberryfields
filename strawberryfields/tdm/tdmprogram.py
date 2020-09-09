@@ -124,7 +124,7 @@ def reshape_samples(all_samples, modes, N):
     Args:
         all_samples (dict[int, list]): the raw measured samples
         modes (Sequence[int]): the modes that are measured in the circuit
-        N (Sequence[int]): the number of used modes per belt/spatial modes
+        N (Sequence[int]): the number of concurrent modes per belt/spatial modes
 
     Returns:
         new_samples (dict[int, list]): the re-shaped samples
