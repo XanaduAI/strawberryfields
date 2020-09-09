@@ -638,17 +638,6 @@ class RemoteEngine:
                     f"to compile with {compiler_name}."
                 )
 
-            if program.compile_info[1] != compiler_name:
-                # program was compiled for the device, but using a different compiler
-
-                if not recompile:
-                    raise ValueError(
-                        "Cannot use program compiled with "
-                        f"{program._compile_info[1]} compiler. "
-                        'Pass the "recompile=True" keyword argument '
-                        f"to compile with {compiler_name}."
-                    )
-
         if not program_is_compiled:
             # program is not compiled
             msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
