@@ -267,7 +267,6 @@ class TestRemoteEngineIntegration:
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
 
-        # This will be popped
         compile_options = {"compiler": compiler}
 
         engine = sf.RemoteEngine("X8")
