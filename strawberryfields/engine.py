@@ -591,7 +591,7 @@ class RemoteEngine:
             self._connection.cancel_job(job.id)
             raise KeyboardInterrupt("The job has been cancelled.")
 
-    def run_async(self, program: Program, *, compile_options=None, **kwargs) -> Job:
+    def run_async(self, program: Program, *, compile_options=None, recompile=False, **kwargs) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
@@ -600,19 +600,18 @@ class RemoteEngine:
         Args:
             program (strawberryfields.Program): the quantum circuit
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
-            recompile (bool): Specifies if ``program`` should be recompiled
-                using ``compile_options``, or if not provided, the default compilation options.
 
         Returns:
             strawberryfields.api.Job: the created remote job
         """
         # get the specific chip to submit the program to
         compile_options = compile_options or {}
-        recompile = kwargs.pop("recompile", False)
         kwargs.update(self._backend_options)
 
         device = self.device_spec
