@@ -591,7 +591,9 @@ class RemoteEngine:
             self._connection.cancel_job(job.id)
             raise KeyboardInterrupt("The job has been cancelled.")
 
-    def run_async(self, program: Program, *, compile_options=None, recompile=False, **kwargs) -> Job:
+    def run_async(
+        self, program: Program, *, compile_options=None, recompile=False, **kwargs
+    ) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
