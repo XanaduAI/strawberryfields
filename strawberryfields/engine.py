@@ -604,8 +604,8 @@ class RemoteEngine:
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
-            recompile (bool): specifies if ``program`` should be recompiled
-                using the default compilation options
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Returns:
             strawberryfields.api.Job: the created remote job
