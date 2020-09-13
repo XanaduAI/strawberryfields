@@ -21,7 +21,7 @@
 
 <h3>Documentation</h3>
 
-* Updates the `README.rst` and hardware access links.
+* Updates the `README.rst` file and hardware access links.
   [(#448)](https://github.com/XanaduAI/strawberryfields/pull/448)
 
 <h3>Contributors</h3>
