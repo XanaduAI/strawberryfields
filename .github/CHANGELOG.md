@@ -1,6 +1,4 @@
-# Release 0.16.0 (development release)
-
-<h3>New features since last release</h3>
+# Release 0.15.1 (current release)
 
 <h3>Improvements</h3>
 
@@ -23,13 +21,16 @@
 
 <h3>Documentation</h3>
 
+* Updates the `README.rst` and hardware access links.
+  [(#448)](https://github.com/XanaduAI/strawberryfields/pull/448)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Josh Izaac, Nicolás Quesada, Antal Száva
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal Száva
 
-# Release 0.15.0 (current release)
+# Release 0.15.0
 
 <h3>New features since last release</h3>
 
