@@ -102,7 +102,9 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
 
 Job objects have the following properties and methods:
 
-:html:`<div class="summary-table">`
+.. raw:: html
+
+    <div class="summary-table">
 
 .. currentmodule:: strawberryfields.api.job.Job
 
@@ -113,7 +115,9 @@ Job objects have the following properties and methods:
     refresh
     cancel
 
-:html:`</div>`
+.. raw:: html
+
+    </div>
 
 Alternatively, if you have your quantum program available as a Blackbird script,
 you can submit the Blackbird script file to be executed remotely using

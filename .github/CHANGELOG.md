@@ -2,6 +2,30 @@
 
 <h3>New features since last release</h3>
 
+* Adds the ability to construct time domain multiplexing algorithms via the new
+  `sf.TDMProgram` class, for highly scalable simulation of Gaussian states.
+  [(#440)](https://github.com/XanaduAI/strawberryfields/pull/440)
+
+  For example, creating and simulating a time domain program with 2 concurrent modes:
+
+  ```pycon
+  >>> import strawberryfields as sf
+  >>> from strawberryfields import ops
+  >>> prog = sf.TDMProgram(N=2)
+  >>> with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+  ...     ops.Sgate(0.7, 0) | q[1]
+  ...     ops.BSgate(p[0]) | (q[0], q[1])
+  ...     ops.MeasureHomodyne(p[1]) | q[0]
+  >>> eng = sf.Engine("gaussian")
+  >>> results = eng.run(prog)
+  >>> print(results.all_samples)
+  {0: [array([1.26208025]), array([1.53910032]), array([-1.29648336]),
+  array([0.75743215]), array([-0.17850101]), array([-1.44751996])]}
+  ```
+
+  For more details, see the [code
+  documentation](https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.TDMProgram.html).
+
 <h3>Improvements</h3>
 
 <h3>Breaking Changes</h3>
@@ -14,6 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada
 
 # Release 0.15.1 (current release)
 
@@ -45,7 +70,7 @@ This release contains contributions from (in alphabetical order):
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal Száva
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal 
 
 # Release 0.15.0
 
