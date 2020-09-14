@@ -548,7 +548,9 @@ class RemoteEngine:
             self._spec = self._connection.get_device_spec(self.target)
         return self._spec
 
-    def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
+    def run(
+        self, program: Program, *, compile_options=None, recompile=False, **kwargs
+    ) -> Optional[Result]:
         """Runs a blocking job.
 
         In the blocking mode, the engine blocks until the job is completed, failed, or
@@ -560,6 +562,8 @@ class RemoteEngine:
         Args:
             program (strawberryfields.Program): the quantum circuit
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
@@ -569,7 +573,9 @@ class RemoteEngine:
             [strawberryfields.api.Result, None]: the job result if successful, and
             ``None`` otherwise
         """
-        job = self.run_async(program, compile_options=compile_options, **kwargs)
+        job = self.run_async(
+            program, compile_options=compile_options, recompile=recompile, **kwargs
+        )
         try:
             while True:
                 job.refresh()

@@ -255,7 +255,7 @@ class TestRemoteEngineIntegration:
         assert isinstance(program, self.MockProgram)
         assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xunitary."
 
-    def test_recompilation(self, prog, monkeypatch, caplog):
+    def test_recompilation_run_async(self, prog, monkeypatch, caplog):
         """Test that recompilation happens when the recompile keyword argument
         was set to True."""
         compiler = "Xunitary"
@@ -314,6 +314,48 @@ class TestRemoteEngineIntegration:
         program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
         assert isinstance(program, self.MockProgram)
         assert caplog.records[-1].message == "Recompiling program for device X8_01 using compiler Xunitary."
+
+    def test_recompilation_run(self, prog, monkeypatch, caplog):
+        """Test that recompilation happens when the recompile keyword argument
+        was set to True and engine.run was called."""
+        compiler = "Xunitary"
+
+        caplog.set_level(logging.INFO)
+        test_device_dict = mock_device_dict.copy()
+        test_device_dict["compiler"] = compiler
+
+        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: MockJob(program))
+        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+
+        class MockJob:
+            """Mock job that acts like a job, but also stores a program."""
+
+            def __init__(self, prog):
+
+                # Store the program as result
+                self.result = prog
+                self.status = "complete"
+                self.id = 0
+
+            def refresh(self):
+                pass
+
+        compile_options = {"compiler": compiler}
+
+        engine = sf.RemoteEngine("X8")
+
+        device = engine.device_spec
+
+        # Setting compile_info
+        prog._compile_info = (device, device.compiler)
+
+        program = engine.run(prog, shots=10, compile_options=compile_options, recompile=True)
+
+        # No recompilation, original Program
+        assert caplog.records[-1].message == ("The remote job 0 has been completed.")
+        assert caplog.records[-2].message == (f"Recompiling program for device "
+                f"{device.target} using the specified compiler options: "
+                                    f"{compile_options}.")
 
     def test_validation(self, prog, monkeypatch, caplog):
         """Test that validation happens (no recompilation) when the target
