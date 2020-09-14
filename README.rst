@@ -83,7 +83,7 @@ exploring our many `tutorials <https://strawberryfields.ai/photonics/demonstrati
 .. raw:: html
 
     <a href="https://strawberryfields.ai/photonics/demonstrations.html">
-    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/update-hardware-access-links/doc/_static/readme_panel1.png" width="900px">
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/readme_panel1.png" width="900px">
     </a>
 
 Finally, read more about using Strawberry Fields with `photonic hardware
