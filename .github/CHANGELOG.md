@@ -30,6 +30,26 @@
 
 <h3>Breaking Changes</h3>
 
+<h3>Bug fixes</h3>
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada
+
+# Release 0.15.1 (current release)
+
+<h3>Improvements</h3>
+
+* Adds the ability to bypass recompilation of programs if they have been
+  compiled already to the target device.
+  [(#447)](https://github.com/XanaduAI/strawberryfields/pull/447)
+
+<h3>Breaking Changes</h3>
+
 * Changes the default compiler for devices that don't specify a default from `"Xcov"` to `"Xunitary"`.
   This compiler is slightly more strict and only compiles the unitary, not the initial squeezers,
   however avoids any unintentional permutations.
@@ -43,13 +63,16 @@
 
 <h3>Documentation</h3>
 
+* Updates the `README.rst` file and hardware access links.
+  [(#448)](https://github.com/XanaduAI/strawberryfields/pull/448)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal 
 
-# Release 0.15.0 (current release)
+# Release 0.15.0
 
 <h3>New features since last release</h3>
 
