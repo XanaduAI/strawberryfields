@@ -64,6 +64,7 @@ from scipy.constants import c, h, k
 import numpy as np
 
 import strawberryfields as sf
+from strawberryfields.utils import operation
 
 
 def gbs_params(
@@ -136,6 +137,48 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
         return np.dot(samples[: len(samples) // 2], wp) - np.dot(samples[len(samples) // 2 :], w)
 
     return [np.dot(s[: len(s) // 2], wp) - np.dot(s[len(s) // 2 :], w) for s in samples]
+
+
+def VibronicTransition(modes: int):
+    r"""Generates a custom ``sf`` operation for applying the Doktorov operator
+    :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
+    given state. The custom operation returned by this function can be used as part of a
+    Strawberry Fields :class:`~.Program` just like any other operation from the :mod:`~.ops` module.
+    Its arguments are:
+    U1 (array): unitary matrix for the first interferometer
+    r (array): squeezing parameters
+    U2 (array): unitary matrix for the second interferometer
+    alpha (array): displacement parameters
+    **Example usage:**
+    >>> modes = 2
+    >>> transform =  VibronicTransition(modes)
+    >>> p = sf.Program(modes)
+    >>> with p.context as q:
+    >>>     transform(U1, r, U2, alpha) | q
+    Args:
+        modes (int): number of modes
+    Returns:
+        an ``sf`` operation for enacting the vibronic transition
+    Return type:
+        op
+    """
+    # pylint: disable=expression-not-assigned
+    @operation(modes)
+    def op(U1, r, U2, alpha, q):
+
+        n_modes = len(alpha)
+
+        sf.ops.Interferometer(U1) | q[:n_modes]
+
+        for i in range(n_modes):
+            sf.ops.Sgate(r[i]) | q[i]
+
+        sf.ops.Interferometer(U2) | q[:n_modes]
+
+        for i in range(n_modes):
+            sf.ops.Dgate(np.abs(alpha[i]), np.angle(alpha[i])) | q[i]
+
+    return op
 
 
 def sample(
