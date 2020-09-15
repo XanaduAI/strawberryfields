@@ -250,15 +250,9 @@ def sample(
             for i in range(n_modes):
                 sf.ops.S2gate(t[i]) | (q[i], q[i + n_modes])
 
-        sf.ops.Interferometer(U1) | q[:n_modes]
+        op = VibronicTransition(len(q))
 
-        for i in range(n_modes):
-            sf.ops.Sgate(r[i]) | q[i]
-
-        sf.ops.Interferometer(U2) | q[:n_modes]
-
-        for i in range(n_modes):
-            sf.ops.Dgate(np.abs(alpha[i]), np.angle(alpha[i])) | q[i]
+        op(U1, r, U2, alpha) | q
 
         if loss:
             for _q in q:
