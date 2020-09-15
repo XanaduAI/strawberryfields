@@ -61,9 +61,8 @@ most frequently sampled energies correspond to peaks of the vibronic spectrum. T
 import warnings
 from typing import Tuple, Union
 
-from scipy.constants import c, h, k
-
 import numpy as np
+from scipy.constants import c, h, k
 
 import strawberryfields as sf
 from strawberryfields.utils import operation
