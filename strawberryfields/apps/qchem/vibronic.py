@@ -143,13 +143,16 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
 def VibronicTransition(modes: int):
     r"""Generates a custom ``sf`` operation for applying the Doktorov operator
     :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
-    given state. The custom operation returned by this function can be used as part of a
+    given state.
+
+    The custom operation returned by this function can be used as part of a
     Strawberry Fields :class:`~.Program` just like any other operation from the :mod:`~.ops` module.
     Its arguments are:
-    U1 (array): unitary matrix for the first interferometer
-    r (array): squeezing parameters
-    U2 (array): unitary matrix for the second interferometer
-    alpha (array): displacement parameters
+
+    - U1 (array): unitary matrix for the first interferometer
+    - r (array): squeezing parameters
+    - U2 (array): unitary matrix for the second interferometer
+    - alpha (array): displacement parameters
 
     **Example usage:**
 
