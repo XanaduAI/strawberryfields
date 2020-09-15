@@ -48,7 +48,9 @@ function :func:`gbs_params` transforms molecular parameters, namely vibrational 
 displacement vector and Duschinsky matrix, to the required GBS parameters. Additionally, this
 function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
 are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
-The :func:`sample` function then takes the computed GBS parameters and generates samples.
+The :func:`sample` function then takes the computed GBS parameters and generates samples. The
+function :func:`~.VibronicTransition` returns a custom ``sf`` operation that is used in the
+:func:`sample` function to apply the Doktorov operator on the initial state.
 
 Energies from samples
 ---------------------
@@ -149,14 +151,18 @@ def VibronicTransition(modes: int):
     r (array): squeezing parameters
     U2 (array): unitary matrix for the second interferometer
     alpha (array): displacement parameters
+
     **Example usage:**
+
     >>> modes = 2
     >>> transform =  VibronicTransition(modes)
     >>> p = sf.Program(modes)
     >>> with p.context as q:
     >>>     transform(U1, r, U2, alpha) | q
+
     Args:
         modes (int): number of modes
+
     Returns:
         an ``sf`` operation for enacting the vibronic transition
     Return type:
