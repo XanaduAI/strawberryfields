@@ -201,7 +201,11 @@ def sample_fock(
         for i in range(modes):
             sf.ops.Fock(input_state[i]) | q[i]
 
-        op(t, Ul, w) | q
+        sf.ops.Interferometer(Ul.T) | q
+
+        op(t, w) | q
+
+        sf.ops.Interferometer(Ul) | q
 
         if loss:
             for _q in q:
@@ -313,7 +317,11 @@ def sample_tmsv(
         for i in range(N):
             sf.ops.S2gate(r[i][0], r[i][1]) | (q[i], q[i + N])
 
-        op(t, Ul, w) | q[:N]
+        sf.ops.Interferometer(Ul.T) | q[:N]
+
+        op(t, w) | q[:N]
+
+        sf.ops.Interferometer(Ul) | q[:N]
 
         if loss:
             for _q in q:
@@ -387,7 +395,11 @@ def sample_coherent(
         for i in range(modes):
             sf.ops.Dgate(alpha[i][0], alpha[i][1]) | q[i]
 
-        op(t, Ul, w) | q
+        sf.ops.Interferometer(Ul.T) | q
+
+        op(t, w) | q
+
+        sf.ops.Interferometer(Ul) | q
 
         if loss:
             for _q in q:
