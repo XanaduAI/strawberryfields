@@ -70,7 +70,7 @@ Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal 
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal Száva
 
 # Release 0.15.0
 
