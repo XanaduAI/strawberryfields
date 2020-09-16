@@ -114,11 +114,11 @@ c2 = [alpha2, t2, U2, w2, ns2]
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
 def test_evolution(time, unitary, frequency, prob):
-    """Test if the function ``strawberryfields.apps.qchem.dynamics.evolution`` gives the correct
+    """Test if the function ``strawberryfields.apps.qchem.dynamics.TimeEvolution`` gives the correct
     probabilities of all possible Fock basis states when used in a circuit"""
 
     modes = len(unitary)
-    op = dynamics.evolution(modes)
+    op = dynamics.TimeEvolution(modes)
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 4})
     gbs = sf.Program(modes)
@@ -127,7 +127,11 @@ def test_evolution(time, unitary, frequency, prob):
 
         sf.ops.Fock(2) | q[0]
 
-        op(time, unitary, frequency) | q
+        sf.ops.Interferometer(unitary.T) | q
+
+        op(time, frequency) | q
+
+        sf.ops.Interferometer(unitary) | q
 
         p = eng.run(gbs).state.all_fock_probs()
 
