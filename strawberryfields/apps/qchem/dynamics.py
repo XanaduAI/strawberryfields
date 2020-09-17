@@ -92,31 +92,27 @@ import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
-def TimeEvolution(modes: int):
+def TimeEvolution(t: float, w: np.ndarray):
     r"""Generates a custom ``sf`` operation for performing the transformation
-    :math:`U(t) = e^{-i\hat{H}t/\hbar}` on a given state.
+    :math:`e^{-i\hat{H}t/\hbar}` on a given state.
 
     The custom operation returned by this function can be used as part of a Strawberry Fields
-    :class:`~.Program` just like any other operation from the :mod:`~.ops` module. Its arguments
-    are:
-
-    - t (float): time in femtoseconds
-    - w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
-      compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
+    :class:`~.Program` just like any other operation from the :mod:`~.ops` module.
 
     **Example usage:**
 
     >>> modes = 2
-    >>> transform =  TimeEvolution(modes)
     >>> p = sf.Program(modes)
     >>> with p.context as q:
     >>>     sf.ops.Fock(1) | q[0]
     >>>     sf.ops.Interferometer(Ul.T) | q
-    >>>     transform(t, w) | q
+    >>>     TimeEvolution(t, w) | q
     >>>     sf.ops.Interferometer(Ul) | q
 
     Args:
-        modes (int): number of modes
+        t (float): time in femtoseconds
+        w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
+    compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
 
     Returns:
         an ``sf`` operation for enacting the dynamics transformation
@@ -124,15 +120,17 @@ def TimeEvolution(modes: int):
         op
     """
     # pylint: disable=expression-not-assigned
-    @operation(modes)
-    def op(t, w, q):
+    n_modes = len(w)
+
+    @operation(n_modes)
+    def op(q):
 
         theta = -w * 100.0 * c * 1.0e-15 * t * (2.0 * pi)
 
-        for i in range(modes):
+        for i in range(n_modes):
             sf.ops.Rgate(theta[i]) | q[i]
 
-    return op
+    return op()
 
 
 def sample_fock(
@@ -189,7 +187,7 @@ def sample_fock(
         raise ValueError("Number of photons in each input state mode must be smaller than cutoff")
 
     modes = len(Ul)
-    op = TimeEvolution(modes)
+
     s = []
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
@@ -204,7 +202,7 @@ def sample_fock(
 
         sf.ops.Interferometer(Ul.T) | q
 
-        op(t, w) | q
+        TimeEvolution(t, w) | q
 
         sf.ops.Interferometer(Ul) | q
 
@@ -307,7 +305,6 @@ def sample_tmsv(
         )
 
     N = len(Ul)
-    op = TimeEvolution(N)
 
     eng = sf.LocalEngine(backend="gaussian")
     prog = sf.Program(2 * N)
@@ -320,7 +317,7 @@ def sample_tmsv(
 
         sf.ops.Interferometer(Ul.T) | q[:N]
 
-        op(t, w) | q[:N]
+        TimeEvolution(t, w) | q[:N]
 
         sf.ops.Interferometer(Ul) | q[:N]
 
@@ -384,7 +381,6 @@ def sample_coherent(
         )
 
     modes = len(Ul)
-    op = TimeEvolution(modes)
 
     eng = sf.LocalEngine(backend="gaussian")
 
@@ -398,7 +394,7 @@ def sample_coherent(
 
         sf.ops.Interferometer(Ul.T) | q
 
-        op(t, w) | q
+        TimeEvolution(t, w) | q
 
         sf.ops.Interferometer(Ul) | q
 

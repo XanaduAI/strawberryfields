@@ -118,7 +118,6 @@ def test_evolution(time, unitary, frequency, prob):
     probabilities of all possible Fock basis states when used in a circuit"""
 
     modes = len(unitary)
-    op = dynamics.TimeEvolution(modes)
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 4})
     gbs = sf.Program(modes)
@@ -129,7 +128,7 @@ def test_evolution(time, unitary, frequency, prob):
 
         sf.ops.Interferometer(unitary.T) | q
 
-        op(time, frequency) | q
+        dynamics.TimeEvolution(time, frequency) | q
 
         sf.ops.Interferometer(unitary) | q
 
