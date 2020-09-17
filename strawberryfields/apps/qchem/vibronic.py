@@ -48,9 +48,10 @@ function :func:`gbs_params` transforms molecular parameters, namely vibrational 
 displacement vector and Duschinsky matrix, to the required GBS parameters. Additionally, this
 function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
 are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
-The :func:`sample` function then takes the computed GBS parameters and generates samples. The
-function :func:`~.VibronicTransition` returns a custom ``sf`` operation that is used in the
-:func:`sample` function to apply the Doktorov operator on the initial state.
+The :func:`sample` function then takes the computed GBS parameters and generates samples.
+The :func:`~.VibronicTransition` function returns a custom ``sf`` operation for application of the
+Doktorov operator within the conventional :class:`~.Program` interface, allowing for greater freedom
+on the choice of input state and any subsequent quantum operations.
 
 Energies from samples
 ---------------------
@@ -176,12 +177,12 @@ def VibronicTransition(modes: int):
 
         n_modes = len(alpha)
 
-        sf.ops.Interferometer(U1) | q[:n_modes]
+        sf.ops.Interferometer(U1) | q
 
         for i in range(n_modes):
             sf.ops.Sgate(r[i]) | q[i]
 
-        sf.ops.Interferometer(U2) | q[:n_modes]
+        sf.ops.Interferometer(U2) | q
 
         for i in range(n_modes):
             sf.ops.Dgate(np.abs(alpha[i]), np.angle(alpha[i])) | q[i]
@@ -244,6 +245,8 @@ def sample(
 
     n_modes = len(t)
 
+    op = VibronicTransition(n_modes)
+
     eng = sf.LocalEngine(backend="gaussian")
 
     if np.any(t != 0):
@@ -258,9 +261,7 @@ def sample(
             for i in range(n_modes):
                 sf.ops.S2gate(t[i]) | (q[i], q[i + n_modes])
 
-        op = VibronicTransition(len(q))
-
-        op(U1, r, U2, alpha) | q
+        op(U1, r, U2, alpha) | q[:n_modes]
 
         if loss:
             for _q in q:
