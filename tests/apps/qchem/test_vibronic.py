@@ -265,13 +265,11 @@ class TestOperation:
 
         eng = sf.LocalEngine(backend="gaussian")
 
-        gbs = sf.Program(len(alpha))
+        gbs = sf.Program(len(U1))
 
         with gbs.context as q:
 
-            op = vibronic.VibronicTransition(len(q))
-
-            op(U1, r, U2, alpha) | q
+            vibronic.VibronicTransition(U1, r, U2, alpha) | q
 
             p = eng.run(gbs).state.all_fock_probs(cutoff=4)
 
