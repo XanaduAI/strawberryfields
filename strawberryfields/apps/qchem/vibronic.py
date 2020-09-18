@@ -142,7 +142,7 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
 
 
 def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.ndarray):
-    r"""Generates a custom ``sf`` operation for applying the Doktorov operator
+    r"""An ``sf`` operation for applying the Doktorov operator
     :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
     given state.
 
