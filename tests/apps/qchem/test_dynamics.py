@@ -120,9 +120,9 @@ def test_evolution(time, unitary, frequency, prob):
     modes = len(unitary)
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 4})
-    gbs = sf.Program(modes)
+    prog = sf.Program(modes)
 
-    with gbs.context as q:
+    with prog.context as q:
 
         sf.ops.Fock(2) | q[0]
 
@@ -132,9 +132,27 @@ def test_evolution(time, unitary, frequency, prob):
 
         sf.ops.Interferometer(unitary) | q
 
-        p = eng.run(gbs).state.all_fock_probs()
+        p = eng.run(prog).state.all_fock_probs()
 
     assert np.allclose(p, prob)
+
+
+@pytest.mark.parametrize("time, frequency", [(t2, w2)])
+def test_evolution_order(time, frequency):
+    """Test if function ``strawberryfields.apps.qchem.dynamics.TimeEvolution``correctly applies the
+    operations"""
+
+    modes = len(frequency)
+
+    prog = sf.Program(modes)
+
+    with prog.context as q:
+
+        dynamics.TimeEvolution(time, frequency) | q
+
+    assert isinstance(prog.circuit[0].op, sf.ops.Rgate)
+    assert isinstance(prog.circuit[1].op, sf.ops.Rgate)
+    assert isinstance(prog.circuit[2].op, sf.ops.Rgate)
 
 
 @pytest.mark.parametrize("d", [d1, d2])
