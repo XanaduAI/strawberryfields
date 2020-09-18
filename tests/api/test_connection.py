@@ -297,9 +297,11 @@ class TestConnection:
         # A successful cancellation does not raise an exception
         connection.cancel_job("123")
 
-        # A successful cancellation does not raise an exception
+        # Job cancellation is first pending
         server.request_dict["123"] == JobStatus.CANCEL_PENDING.value
         sleep(0.2)
+
+        # Job cancellation is successful
         server.request_dict["123"] == JobStatus.CANCELLED.value
 
     def test_cancel_job_error(self, connection, monkeypatch):
