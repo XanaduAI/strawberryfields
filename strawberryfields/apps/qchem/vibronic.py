@@ -145,10 +145,6 @@ def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.
     r"""An ``sf`` operation for applying the Doktorov operator
     :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
     given state.
-
-    The custom operation returned by this function can be used as part of a
-    Strawberry Fields :class:`~.Program` just like any other operation from the :mod:`~.ops` module.
-
     **Example usage:**
 
     >>> modes = 2
