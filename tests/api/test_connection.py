@@ -15,6 +15,7 @@
 Unit tests for strawberryfields.api.connection
 """
 from datetime import datetime
+from time import sleep
 import io
 import os
 
@@ -67,6 +68,25 @@ class MockResponse:
     def content(self):
         """Mocks the ``requests.Response.content`` property."""
         return self.binary_body
+
+class MockCancelerServer:
+    """A mock platform server that first process a cancel request (status is
+    cancel pending) and then cancels it (status is cancelled)."""
+
+    def __init__(self):
+        self.request_dict = {} # keys are ids
+        self.status_code = None
+
+    def patch(self, path, **kwargs):
+        job_id = path.split("/")[-1]
+        if kwargs.get("json") == {"status": "cancelled"}:
+            self.request_dict[job_id] = JobStatus.CANCEL_PENDING.value
+            sleep(0.1)
+            self.request_dict[job_id] = JobStatus.CANCELLED.value
+            return MockResponse(204)
+
+        # Some wrong status code
+        return MockResponse(400)
 
 
 class TestConnection:
@@ -259,6 +279,28 @@ class TestConnection:
 
         # A successful cancellation does not raise an exception
         connection.cancel_job("123")
+
+    def test_cancel_pending_job(self, connection, monkeypatch):
+        """Tests a job cancellation first is pending and then is successful by
+        using a mock server."""
+        # A custom `mock_return` that checks for expected arguments
+        def _mock_return(return_value):
+            def function(*args, **kwargs):
+                assert kwargs.get("json") == {"status": "cancelled"}
+                return return_value
+
+            return function
+
+        server = MockCancelerServer()
+        monkeypatch.setattr(requests, "patch", server.patch)
+
+        # A successful cancellation does not raise an exception
+        connection.cancel_job("123")
+
+        # A successful cancellation does not raise an exception
+        server.request_dict["123"] == JobStatus.CANCEL_PENDING.value
+        sleep(0.2)
+        server.request_dict["123"] == JobStatus.CANCELLED.value
 
     def test_cancel_job_error(self, connection, monkeypatch):
         """Tests a failed job cancellation request."""
