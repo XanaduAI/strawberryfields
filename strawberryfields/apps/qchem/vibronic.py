@@ -49,9 +49,9 @@ displacement vector and Duschinsky matrix, to the required GBS parameters. Addit
 function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
 are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
 The :func:`sample` function then takes the computed GBS parameters and generates samples.
-The :func:`~.VibronicTransition` function returns a custom ``sf`` operation for application of the
-Doktorov operator within the conventional :class:`~.Program` interface, allowing for greater freedom
-on the choice of input state and any subsequent quantum operations.
+The :func:`~.VibronicTransition` function is an ``sf`` operation that can be used within the
+conventional :class:`~.Program` interface for application of the Doktorov operator, allowing for
+greater freedom on the choice of input state and any subsequent quantum operations.
 
 Energies from samples
 ---------------------
