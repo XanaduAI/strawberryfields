@@ -69,25 +69,6 @@ class MockResponse:
         """Mocks the ``requests.Response.content`` property."""
         return self.binary_body
 
-class MockCancelerServer:
-    """A mock platform server that first process a cancel request (status is
-    cancel pending) and then cancels it (status is cancelled)."""
-
-    def __init__(self):
-        self.request_dict = {} # keys are ids
-        self.status_code = None
-
-    def patch(self, path, **kwargs):
-        job_id = path.split("/")[-1]
-        if kwargs.get("json") == {"status": "cancelled"}:
-            self.request_dict[job_id] = JobStatus.CANCEL_PENDING.value
-            sleep(0.1)
-            self.request_dict[job_id] = JobStatus.CANCELLED.value
-            return MockResponse(204)
-
-        # Some wrong status code
-        return MockResponse(400)
-
 
 class TestConnection:
     """Tests for the ``Connection`` class."""
