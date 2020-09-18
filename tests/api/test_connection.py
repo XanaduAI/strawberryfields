@@ -15,7 +15,6 @@
 Unit tests for strawberryfields.api.connection
 """
 from datetime import datetime
-from time import sleep
 import io
 import os
 
