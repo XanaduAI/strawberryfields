@@ -257,7 +257,7 @@ class TestOperation:
     p1 = [U1, r, U2, alpha, prob]
 
     @pytest.mark.parametrize("params", [p1])
-    def test_operation(self, params):
+    def test_op_prob(self, params):
         """Test if the function ``strawberryfields.apps.qchem.vibronic.VibronicTransition`` gives
         the correct probabilities of all possible Fock basis states when used in a circuit"""
 
@@ -274,3 +274,23 @@ class TestOperation:
             p = eng.run(gbs).state.all_fock_probs(cutoff=4)
 
         assert np.allclose(p, prob)
+
+    @pytest.mark.parametrize("params", [p1])
+    def test_op_order(self, params):
+        """Test if function ``strawberryfields.apps.qchem.vibronic.VibronicTransition``correctly
+        applies the operations"""
+
+        U1, r, U2, alpha, prob = params
+
+        gbs = sf.Program(len(U1))
+
+        with gbs.context as q:
+
+            vibronic.VibronicTransition(U1, r, U2, alpha) | q
+
+        assert isinstance(gbs.circuit[0].op, sf.ops.Interferometer)
+        assert isinstance(gbs.circuit[1].op, sf.ops.Sgate)
+        assert isinstance(gbs.circuit[2].op, sf.ops.Sgate)
+        assert isinstance(gbs.circuit[3].op, sf.ops.Interferometer)
+        assert isinstance(gbs.circuit[4].op, sf.ops.Dgate)
+        assert isinstance(gbs.circuit[5].op, sf.ops.Dgate)
