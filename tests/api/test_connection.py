@@ -280,30 +280,6 @@ class TestConnection:
         # A successful cancellation does not raise an exception
         connection.cancel_job("123")
 
-    def test_cancel_pending_job(self, connection, monkeypatch):
-        """Tests a job cancellation first is pending and then is successful by
-        using a mock server."""
-        # A custom `mock_return` that checks for expected arguments
-        def _mock_return(return_value):
-            def function(*args, **kwargs):
-                assert kwargs.get("json") == {"status": "cancelled"}
-                return return_value
-
-            return function
-
-        server = MockCancelerServer()
-        monkeypatch.setattr(requests, "patch", server.patch)
-
-        # A successful cancellation does not raise an exception
-        connection.cancel_job("123")
-
-        # Job cancellation is first pending
-        server.request_dict["123"] == JobStatus.CANCEL_PENDING.value
-        sleep(0.2)
-
-        # Job cancellation is successful
-        server.request_dict["123"] == JobStatus.CANCELLED.value
-
     def test_cancel_job_error(self, connection, monkeypatch):
         """Tests a failed job cancellation request."""
         monkeypatch.setattr(requests, "patch", mock_return(MockResponse(404, {})))
