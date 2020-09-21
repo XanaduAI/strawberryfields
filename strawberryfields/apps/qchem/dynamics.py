@@ -112,7 +112,7 @@ def TimeEvolution(t: float, w: np.ndarray):
     Args:
         t (float): time in femtoseconds
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
-    compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
+            compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
 
     Returns:
         an ``sf`` operation for enacting the dynamics transformation
