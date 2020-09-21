@@ -64,7 +64,7 @@ device has the following form:
 
 This module contains functions for implementing this algorithm.
 
-- The function :func:`~.TimeEvolution` returns a custom ``sf`` operation that contains the required
+- The function :func:`~.TimeEvolution` is an ``sf`` operation that contains the required
   rotation operations explained in step 3 of the algorithm.
 
 - The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
