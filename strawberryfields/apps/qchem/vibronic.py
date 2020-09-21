@@ -157,11 +157,6 @@ def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.
         r (array): squeezing parameters
         U2 (array): unitary matrix for the second interferometer
         alpha (array): displacement parameters
-
-    Returns:
-        an ``sf`` operation for enacting the vibronic transition
-    Return type:
-        op
     """
     # pylint: disable=expression-not-assigned
     n_modes = len(U1)
