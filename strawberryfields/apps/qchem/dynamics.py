@@ -97,7 +97,7 @@ def TimeEvolution(t: float, w: np.ndarray):
     :math:`e^{-i\hat{H}t/\hbar}` on a given state.
 
     This operation can be used as part of a Strawberry Fields :class:`~.Program` just like any
-    :class:`~.Program` just like any other operation from the :mod:`~.ops` module.
+    other operation from the :mod:`~.ops` module.
 
     **Example usage:**
 
