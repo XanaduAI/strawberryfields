@@ -96,7 +96,7 @@ def TimeEvolution(t: float, w: np.ndarray):
     r"""Generates a custom ``sf`` operation for performing the transformation
     :math:`e^{-i\hat{H}t/\hbar}` on a given state.
 
-    The custom operation returned by this function can be used as part of a Strawberry Fields
+    This operation can be used as part of a Strawberry Fields :class:`~.Program` just like any
     :class:`~.Program` just like any other operation from the :mod:`~.ops` module.
 
     **Example usage:**
