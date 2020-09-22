@@ -64,7 +64,7 @@ device has the following form:
 
 This module contains functions for implementing this algorithm.
 
-- The function :func:`~.TimeEvolution` is an ``sf`` operation that contains the required
+- The function :func:`~.TimeEvolution` is an operation that contains the required
   rotation operations explained in step 3 of the algorithm.
 
 - The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
@@ -93,7 +93,7 @@ from strawberryfields.utils import operation
 
 
 def TimeEvolution(w: np.ndarray, t: float):
-    r"""An ``sf`` operation for performing the transformation
+    r"""An operation for performing the transformation
     :math:`e^{-i\hat{H}t/\hbar}` on a given state.
 
     This operation can be used as part of a Strawberry Fields :class:`~.Program` just like any
