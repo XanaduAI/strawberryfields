@@ -145,6 +145,10 @@ def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.
     r"""An operation for applying the Doktorov operator
     :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
     given state.
+
+    The Doktorov operator describes the transformation between the initial and the final vibronic
+    states of a molecule when it undergoes a vibronic transition.
+
     **Example usage:**
 
     >>> modes = 2
