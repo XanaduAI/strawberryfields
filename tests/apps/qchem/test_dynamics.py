@@ -128,7 +128,7 @@ def test_evolution(time, unitary, frequency, prob):
 
         sf.ops.Interferometer(unitary.T) | q
 
-        dynamics.TimeEvolution(time, frequency) | q
+        dynamics.TimeEvolution(frequency, time) | q
 
         sf.ops.Interferometer(unitary) | q
 
@@ -148,7 +148,7 @@ def test_evolution_order(time, frequency):
 
     with prog.context as q:
 
-        dynamics.TimeEvolution(time, frequency) | q
+        dynamics.TimeEvolution(frequency, time) | q
 
     assert isinstance(prog.circuit[0].op, sf.ops.Rgate)
     assert isinstance(prog.circuit[1].op, sf.ops.Rgate)

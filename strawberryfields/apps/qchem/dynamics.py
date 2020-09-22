@@ -92,7 +92,7 @@ import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
-def TimeEvolution(t: float, w: np.ndarray):
+def TimeEvolution(w: np.ndarray, t: float):
     r"""An ``sf`` operation for performing the transformation
     :math:`e^{-i\hat{H}t/\hbar}` on a given state.
 
@@ -106,13 +106,13 @@ def TimeEvolution(t: float, w: np.ndarray):
     >>> with p.context as q:
     >>>     sf.ops.Fock(1) | q[0]
     >>>     sf.ops.Interferometer(Ul.T) | q
-    >>>     TimeEvolution(t, w) | q
+    >>>     TimeEvolution(w, t) | q
     >>>     sf.ops.Interferometer(Ul) | q
 
     Args:
-        t (float): time in femtoseconds
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
             compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
+        t (float): time in femtoseconds
     """
     # pylint: disable=expression-not-assigned
     n_modes = len(w)
@@ -197,7 +197,7 @@ def sample_fock(
 
         sf.ops.Interferometer(Ul.T) | q
 
-        TimeEvolution(t, w) | q
+        TimeEvolution(w, t) | q
 
         sf.ops.Interferometer(Ul) | q
 
@@ -312,7 +312,7 @@ def sample_tmsv(
 
         sf.ops.Interferometer(Ul.T) | q[:N]
 
-        TimeEvolution(t, w) | q[:N]
+        TimeEvolution(w, t) | q[:N]
 
         sf.ops.Interferometer(Ul) | q[:N]
 
@@ -389,7 +389,7 @@ def sample_coherent(
 
         sf.ops.Interferometer(Ul.T) | q
 
-        TimeEvolution(t, w) | q
+        TimeEvolution(w, t) | q
 
         sf.ops.Interferometer(Ul) | q
 
