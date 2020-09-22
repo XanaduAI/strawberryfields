@@ -49,7 +49,7 @@ displacement vector and Duschinsky matrix, to the required GBS parameters. Addit
 function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
 are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
 The :func:`sample` function then takes the computed GBS parameters and generates samples.
-The :func:`~.VibronicTransition` function is an ``sf`` operation that can be used within the
+The :func:`~.VibronicTransition` function is an operation that can be used within the
 conventional :class:`~.Program` interface for application of the Doktorov operator, allowing for
 greater freedom on the choice of input state and any subsequent quantum operations.
 
@@ -142,7 +142,7 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
 
 
 def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.ndarray):
-    r"""An ``sf`` operation for applying the Doktorov operator
+    r"""An operation for applying the Doktorov operator
     :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
     given state.
     **Example usage:**
