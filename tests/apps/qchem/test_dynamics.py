@@ -195,7 +195,7 @@ class TestSampleFock:
         mode is not smaller than cutoff."""
         with pytest.raises(
             ValueError,
-            match="Number of photons in each input state mode must be smaller than cutoff",
+            match="Number of photons in each input mode must be smaller than cutoff",
         ):
             in_state, t, U, w, ns, cf = d
             dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, 3)
