@@ -14,12 +14,16 @@
 r"""
 Tests for strawberryfields.apps.qchem.utils
 """
+import os
+
 import numpy as np
 import pytest
 
 from strawberryfields.apps.qchem import utils
 
 pytestmark = pytest.mark.apps
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 Li_1 = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
 Lf_1 = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
@@ -131,8 +135,8 @@ class TestReadGAMESS:
         ]
     )
 
-    p1 = ["./BH_frq.out", r1, m1, w1, l1]
-    p2 = ["./lih_hessian_ccsd.out", r2, m2, w2, l2]
+    p1 = ["BH_frq.out", r1, m1, w1, l1]
+    p2 = ["lih_hessian_ccsd.out", r2, m2, w2, l2]
 
     @pytest.mark.parametrize("params", [p1, p2])
     def test_parameters(self, params):
@@ -140,7 +144,7 @@ class TestReadGAMESS:
 
         file, ri, mi, wi, li = params
 
-        r, m, w, l = utils.read_gamess(file)
+        r, m, w, l = utils.read_gamess(os.path.join(dir_path, file))
 
         assert np.allclose(r, ri)
         assert np.allclose(m, mi)
