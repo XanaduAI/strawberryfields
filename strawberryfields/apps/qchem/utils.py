@@ -96,3 +96,61 @@ def duschinsky(
     delta = np.array(d @ l0_inv)
 
     return U, delta
+
+
+def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    r"""Reads the atomic coordinates, atomic masses, vibrational frequencies, and normal modes of a
+    molecule from the output file of a vibrational frequency calculation performed with the GAMESS
+    quantum chemistry package.
+
+    **Example usage:**
+
+    >>> r, m, w, l = read_gamess('../H2O_frq.out')
+    >>> r
+    array([-1.35e-08, -5.91e-02, 0.00e+00,
+            7.60e-01,  5.29e-01, 0.00e+00,
+           -7.60e-01,  5.29e-01, 0.00e+00])
+
+    Args:
+        file: name and the path of the output file
+
+    Returns:
+        r (array): atomic coordinates
+        m (array): atomic masses
+        w (array): normal mode frequencies
+        l (array): normal modes
+    """
+    with open(file, "r") as f:
+
+        r = []
+        m = []
+        w = []
+        l = []
+
+        for line in f:
+
+            if "INPUT CARD> $data" in line or "INPUT CARD> $DATA" in line:
+                line = [next(f) for i in range(3)][-1]
+                while "end" not in line:
+                    r.append(np.array(line.rstrip().split()[-3:], float))
+                    line = next(f).rstrip()
+
+            if "ATOMIC WEIGHTS" in line:
+                next(f)
+                for i in range(len(r)):
+                    m.append(np.array(next(f).rstrip().split()[-1:], float))
+
+            if "FREQUENCY" in line:
+                line = line.rstrip().split()
+                n_mode = len(line) - 1
+                w.append(np.array(line[-n_mode:], float))
+
+                while f.readline() is not "\n":
+                    pass
+
+                d = []
+                for i in range(len(r) * 3):
+                    d.append(f.readline().rstrip().split()[-n_mode:])
+                l.append(np.array(d, float).T)
+
+    return np.concatenate(r), np.concatenate(m), np.concatenate(w), np.concatenate(l)
