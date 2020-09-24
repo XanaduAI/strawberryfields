@@ -143,7 +143,7 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
                 n_mode = len(line) - 1
                 w.append(np.array(line[-n_mode:], float))
 
-                while f.readline() is not "\n":
+                while f.readline() != "\n":
                     pass
 
                 d = []
