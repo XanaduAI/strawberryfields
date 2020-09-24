@@ -147,7 +147,7 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
                     pass
 
                 d = []
-                for i in range(len(r) * 3):
+                for _ in range(len(r) * 3):
                     d.append(f.readline().rstrip().split()[-n_mode:])
                 l.append(np.array(d, float).T)
 
