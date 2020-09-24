@@ -127,23 +127,48 @@ Individual test modules are run by invoking pytest directly from the command lin
 
 .. note:: **Adding tests to Strawberry Fields**
 
-    The ``tests`` folder is organised into four subfolders: ``backend`` for tests that
-    only import a Strawberry Fields backend, ``frontend`` for tests that import the Strawberry
-    Fields UI but do not make use of a backend, ``integration`` for tests that test
-    integration of the frontend and backends, and ``apps`` for tests of the applications layer.
+    The ``tests`` folder is organised into several subfolders:
 
-    When writing new tests, make sure to mark what components it tests. For a backend test,
-    you can use the ``backends`` mark, which accepts the names of the backends:
+    - ``backend`` for tests that only import a Strawberry Fields backend,
+    - ``frontend`` for tests that import the Strawberry Fields UI but do not make use of a backend,
+    - ``integration`` for tests that test integration of the frontend and backends,
+    - ``apps`` for tests of the applications layer
+
+    When writing new tests, make sure to mark what components it tests.
+
+    Certain tests that are related to a specific backend, e.g. test cases for
+    its operations or the states returned by a backend. For a backend test, you
+    can use the ``backends`` mark, which accepts the names of the backends:
 
     .. code-block:: python
 
         pytest.mark.backends("fock", "gaussian")
 
-    For a frontend-only test, you can use the frontend mark:
+    So a specific test case could be decorated as follows:
+
+    .. code-block:: python
+
+        @pytest.mark.backends("fock", "gaussian")
+        def test_fock_and_gaussian_feature():
+
+    Adding tests for an engine, operations, parameters and other parts of the
+    user interface can be added as part of the frontend tests. For a
+    frontend-only test, you can use the frontend mark:
 
     .. code-block:: python
 
         pytest.mark.frontend
+
+    Marks are useful also when running tests and selecting only certain tests
+    to be run. They can be specified by using the ``-m`` option for ``pytest``.
+    The following command can be used for example, to run tests related to the
+    ``"Fock"`` backend:
+
+    .. code-block:: python
+
+        pytest -m fock
+
+
 
 Test coverage
 ^^^^^^^^^^^^^
