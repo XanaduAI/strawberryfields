@@ -135,7 +135,7 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
             if "ATOMIC WEIGHTS" in line:
                 next(f)
-                for i in range(len(r)):
+                for _ in range(len(r)):
                     m.append(np.array(next(f).rstrip().split()[-1:], float))
 
             if "FREQUENCY" in line:
