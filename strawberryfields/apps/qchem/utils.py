@@ -129,7 +129,7 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
             if "INPUT CARD> $data" in line or "INPUT CARD> $DATA" in line:
                 line = [next(f) for i in range(3)][-1]
-                while "end" not in line:
+                while "end" not in line and "END" not in line:
                     r.append(np.array(line.rstrip().split()[-3:], float))
                     line = next(f).rstrip()
 

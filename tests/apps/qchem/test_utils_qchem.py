@@ -117,17 +117,32 @@ class TestReadGAMESS:
         ]
     )
 
-    p1 = [r1, m1, w1, l1]
+    r2 = np.array([0.0, 0.0, -0.77087574, 0.0, -0.0, 0.77087574])
+    m2 = np.array([7.016, 1.00782])
+    w2 = np.array([2.2290e01, 2.2290e01, 1.1100e00, 1.1100e00, 1.1100e00, 1.6899e03])
+    l2 = np.array(
+        [
+            [-9.313476e-2, -9.744043e-2, -1.100000e-7, 6.429051e-1, 6.726266e-1, -1.100000e-7],
+            [-9.744023e-2, 9.313474e-2, 8.000000e-8, 6.726268e-1, -6.429052e-1, 8.000000e-8],
+            [4.876110e-3, 7.181940e-3, 3.529211e-1, 4.917520e-3, 7.243290e-3, 3.529206e-1],
+            [3.207159e-1, -1.466350e-1, -1.450200e-3, 3.234367e-1, -1.478789e-1, -1.450200e-3],
+            [1.465611e-1, 3.206387e-1, -8.568300e-3, 1.478046e-1, 3.233594e-1, -8.568290e-3],
+            [-0.000000e0, -0.000000e0, -1.338001e-1, 0.000000e0, 0.000000e0, 9.314543e-1],
+        ]
+    )
 
-    @pytest.mark.parametrize("params", [p1])
+    p1 = ["./BH_frq.out", r1, m1, w1, l1]
+    p2 = ["./lih_hessian_ccsd.out", r2, m2, w2, l2]
+
+    @pytest.mark.parametrize("params", [p1, p2])
     def test_parameters(self, params):
         """Test if function outputs the correct parameters."""
 
-        r1, m1, w1, l1 = params
+        file, ri, mi, wi, li = params
 
-        r, m, w, l = utils.read_gamess("./BH_frq.out")
+        r, m, w, l = utils.read_gamess(file)
 
-        assert np.allclose(r, r1)
-        assert np.allclose(m, m1)
-        assert np.allclose(w, w1)
-        assert np.allclose(l, l1)
+        assert np.allclose(r, ri)
+        assert np.allclose(m, mi)
+        assert np.allclose(w, wi)
+        assert np.allclose(l, li)
