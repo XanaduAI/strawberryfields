@@ -98,3 +98,78 @@ class TestDuschinsky:
 
         assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[0], U)
         assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[1], delta)
+
+
+class TestReadGAMESS:
+    """Tests for the function ``strawberryfields.apps.qchem.utils.read_gamess``"""
+
+    r1 = np.array([0.0, 0.0, 0.0, 1.2536039, 0.0, 0.0])
+    m1 = np.array([11.00931, 1.00782])
+    w1 = np.array([19.74, 19.73, 0.0, 0.0, 0.0, 2320.32])
+    l1 = np.array(
+        [
+            [
+                -0.0000000e00,
+                -7.5322000e-04,
+                -8.7276210e-02,
+                0.0000000e00,
+                8.2280900e-03,
+                9.5339055e-01,
+            ],
+            [
+                -0.0000000e00,
+                -8.7276210e-02,
+                7.5322000e-04,
+                0.0000000e00,
+                9.5339055e-01,
+                -8.2280900e-03,
+            ],
+            [
+                2.8846925e-01,
+                -2.0000000e-08,
+                2.0000000e-08,
+                2.8846925e-01,
+                -2.0000000e-08,
+                2.0000000e-08,
+            ],
+            [
+                2.0000000e-08,
+                2.8846925e-01,
+                -2.0000000e-08,
+                2.0000000e-08,
+                2.8846925e-01,
+                -2.0000000e-08,
+            ],
+            [
+                -2.0000000e-08,
+                2.0000000e-08,
+                2.8846925e-01,
+                -2.0000000e-08,
+                2.0000000e-08,
+                2.8846925e-01,
+            ],
+            [
+                -8.7279460e-02,
+                0.0000000e00,
+                0.0000000e00,
+                9.5342606e-01,
+                -0.0000000e00,
+                -0.0000000e00,
+            ],
+        ]
+    )
+
+    p1 = [r1, m1, w1, l1]
+
+    @pytest.mark.parametrize("params", [p1])
+    def test_parameters(self, params):
+        """Test if function outputs the correct parameters."""
+
+        r1, m1, w1, l1 = params
+
+        r, m, w, l = utils.read_gamess("./BH_frq.out")
+
+        assert np.allclose(r, r1)
+        assert np.allclose(m, m1)
+        assert np.allclose(w, w1)
+        assert np.allclose(l, l1)

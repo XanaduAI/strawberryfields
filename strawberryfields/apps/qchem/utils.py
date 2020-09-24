@@ -105,14 +105,12 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
     **Example usage:**
 
-    >>> r, m, w, l = read_gamess('../H2O_frq.out')
+    >>> r, m, w, l = read_gamess('../BH_frq.out')
     >>> r
-    array([-1.35e-08, -5.91e-02, 0.00e+00,
-            7.60e-01,  5.29e-01, 0.00e+00,
-           -7.60e-01,  5.29e-01, 0.00e+00])
+    array([0.000000, 0.000000, 0.000000, 1.253604, 0.000000, 0.000000]
 
     Args:
-        file: name and the path of the output file
+        file: name and the path of the GAMESS output file
 
     Returns:
         r (array): atomic coordinates
