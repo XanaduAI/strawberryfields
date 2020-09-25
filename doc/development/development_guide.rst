@@ -159,8 +159,23 @@ Individual test modules are run by invoking pytest directly from the command lin
 
         pytest.mark.frontend
 
-    Marks are useful also when running tests and selecting only certain tests
-    to be run. They can be specified by using the ``-m`` option for ``pytest``.
+.. note:: **Running Strawberry Fields tests**
+
+    The entire test suite can be run by running ``pytest`` from the
+    ``strawberryfields/tests`` folder. Alternatively, the path to the test
+    suite can be passed as the argument to the ``pytest`` command.
+
+    When running tests, it's useful to examine a single failing test. The
+    following command stops at the first failing test:
+
+    .. code-block:: python
+
+        pytest -x
+
+    Marks mentioned in the previous section are useful also when running tests
+    and selecting only certain tests to be run. They can be specified by using
+    the ``-m`` option for ``pytest``.
+
     The following command can be used for example, to run tests related to the
     ``"Fock"`` backend:
 
@@ -168,6 +183,9 @@ Individual test modules are run by invoking pytest directly from the command lin
 
         pytest -m fock
 
+    For further useful options (e.g. ``-k``, ``-s``, ``--tb=short``, etc.)
+    refer to the ``pytest --help`` command line usage description or the
+    ``pytest`` online documentation.
 
 
 Test coverage
@@ -182,6 +200,21 @@ Test coverage can be checked by running
 The output of the above command will show the coverage percentage of each
 file, as well as the line numbers of any lines missing test coverage.
 
+To obtain coverage, the ``pytest-cov`` plugin is needed.
+
+The coverage of a specific file can also be checked by generating a report:
+
+.. code-block:: python
+
+    pytest tests/backend/test_states.py --cov --cov-report=term-missing
+
+The previously mentioned ``pytest`` options can be combined with the
+coverage options. As an example, with the following command we can get the
+report of a specific file while also filtering out certain tests:
+
+.. code-block:: python
+
+    pytest tests/backend/test_states.py --cov --cov-report=term-missing -k 'not TestBaseGaussianMethods'
 
 Documentation
 -------------
