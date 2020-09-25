@@ -39,6 +39,7 @@ class JobStatus(enum.Enum):
     OPEN = "open"
     QUEUED = "queued"
     CANCELLED = "cancelled"
+    CANCEL_PENDING = "cancel_pending"
     COMPLETED = "complete"
     FAILED = "failed"
 
