@@ -155,12 +155,12 @@ for accessing the results of your program execution:
   .. code-block:: python
 
       >>> print(result.state)
-      <FockState: num_modes=3, cutoff=15, pure=False, hbar=2.0>
+      <FockState: num_modes=3, cutoff=5, pure=True, hbar=2.0>
       >>> state = result.state
       >>> state.trace()    # trace of the quantum state
-      0.999998
+      0.9999999999999999
       >>> state.dm().shape # density matrix
-      [5, 5, 5]
+      (5, 5, 5, 5, 5, 5)
 
 * :attr:`.Result.samples`: Measurement samples from any measurements performed.
 
