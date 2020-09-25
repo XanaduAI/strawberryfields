@@ -159,18 +159,9 @@ Individual test modules are run by invoking pytest directly from the command lin
 
         pytest.mark.frontend
 
-.. note:: **Running Strawberry Fields tests**
+.. note:: **Run options for Strawberry Fields tests**
 
-    The entire test suite can be run by running ``pytest`` from the
-    ``strawberryfields/tests`` folder. Alternatively, the path to the test
-    suite can be passed as the argument to the ``pytest`` command.
-
-    When running tests, it's useful to examine a single failing test. The
-    following command stops at the first failing test:
-
-    .. code-block:: python
-
-        pytest -x
+    Several run options can be helpful for testing Strawberry Fields.
 
     Marks mentioned in the previous section are useful also when running tests
     and selecting only certain tests to be run. They can be specified by using
@@ -182,6 +173,13 @@ Individual test modules are run by invoking pytest directly from the command lin
     .. code-block:: python
 
         pytest -m fock
+
+    When running tests, it can also be useful to examine a single failing test.
+    The following command stops at the first failing test:
+
+    .. code-block:: python
+
+        pytest -x
 
     For further useful options (e.g. ``-k``, ``-s``, ``--tb=short``, etc.)
     refer to the ``pytest --help`` command line usage description or the
