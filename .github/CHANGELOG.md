@@ -34,11 +34,14 @@
 
 <h3>Documentation</h3>
 
+ * Adds further testing and coverage descriptions.
+  [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada
+Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada, Antal Száva
 
 # Release 0.15.1 (current release)
 
