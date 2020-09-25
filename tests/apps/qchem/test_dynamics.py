@@ -114,24 +114,45 @@ c2 = [alpha2, t2, U2, w2, ns2]
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
 def test_evolution(time, unitary, frequency, prob):
-    """Test if the function ``strawberryfields.apps.qchem.dynamics.evolution`` gives the correct
+    """Test if the function ``strawberryfields.apps.qchem.dynamics.TimeEvolution`` gives the correct
     probabilities of all possible Fock basis states when used in a circuit"""
 
     modes = len(unitary)
-    op = dynamics.evolution(modes)
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 4})
-    gbs = sf.Program(modes)
+    prog = sf.Program(modes)
 
-    with gbs.context as q:
+    with prog.context as q:
 
         sf.ops.Fock(2) | q[0]
 
-        op(time, unitary, frequency) | q
+        sf.ops.Interferometer(unitary.T) | q
 
-        p = eng.run(gbs).state.all_fock_probs()
+        dynamics.TimeEvolution(frequency, time) | q
+
+        sf.ops.Interferometer(unitary) | q
+
+        p = eng.run(prog).state.all_fock_probs()
 
     assert np.allclose(p, prob)
+
+
+@pytest.mark.parametrize("time, frequency", [(t2, w2)])
+def test_evolution_order(time, frequency):
+    """Test if function ``strawberryfields.apps.qchem.dynamics.TimeEvolution``correctly applies the
+    operations"""
+
+    modes = len(frequency)
+
+    prog = sf.Program(modes)
+
+    with prog.context as q:
+
+        dynamics.TimeEvolution(frequency, time) | q
+
+    assert isinstance(prog.circuit[0].op, sf.ops.Rgate)
+    assert isinstance(prog.circuit[1].op, sf.ops.Rgate)
+    assert isinstance(prog.circuit[2].op, sf.ops.Rgate)
 
 
 @pytest.mark.parametrize("d", [d1, d2])
@@ -174,7 +195,7 @@ class TestSampleFock:
         mode is not smaller than cutoff."""
         with pytest.raises(
             ValueError,
-            match="Number of photons in each input state mode must be smaller than cutoff",
+            match="Number of photons in each input mode must be smaller than cutoff",
         ):
             in_state, t, U, w, ns, cf = d
             dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, 3)
