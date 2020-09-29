@@ -179,4 +179,9 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     if not w:
         raise ValueError("No vibrational frequencies found in the output file")
 
-    return np.concatenate(r).reshape(len(r),3), np.concatenate(m), np.concatenate(w), np.concatenate(l)
+    return (
+        np.concatenate(r).reshape(len(r), 3),
+        np.concatenate(m),
+        np.concatenate(w),
+        np.concatenate(l),
+    )
