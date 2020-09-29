@@ -107,7 +107,7 @@ class TestDuschinsky:
 class TestReadGAMESS:
     """Tests for the function ``strawberryfields.apps.qchem.utils.read_gamess``"""
 
-    r1 = np.array([0.0, 0.0, 0.0, 1.2536039, 0.0, 0.0])
+    r1 = np.array([[0.0, 0.0, 0.0], [1.2536039, 0.0, 0.0]])
     m1 = np.array([11.00931, 1.00782])
     w1 = np.array([19.74, 19.73, 0.0, 0.0, 0.0, 2320.32])
     l1 = np.array(
@@ -121,7 +121,7 @@ class TestReadGAMESS:
         ]
     )
 
-    r2 = np.array([0.0, 0.0, -0.77087574, 0.0, -0.0, 0.77087574])
+    r2 = np.array([[0.0, 0.0, -0.77087574], [0.0, -0.0, 0.77087574]])
     m2 = np.array([7.016, 1.00782])
     w2 = np.array([2.2290e01, 2.2290e01, 1.1100e00, 1.1100e00, 1.1100e00, 1.6899e03])
     l2 = np.array(
@@ -150,3 +150,18 @@ class TestReadGAMESS:
         assert np.allclose(m, mi)
         assert np.allclose(w, wi)
         assert np.allclose(l, li)
+
+    def test_no_coordinates(self):
+        """Test if function raises a ``ValueError`` when the atomic coordinates array is empty."""
+        with pytest.raises(ValueError, match="No atomic coordinates found in the output file"):
+            utils.read_gamess(os.path.join(dir_path, "gamess_dummy_r.out"))
+
+    def test_no_masses(self):
+        """Test if function raises a ``ValueError`` when the atomic masses array is empty."""
+        with pytest.raises(ValueError, match="No atomic masses found in the output file"):
+            utils.read_gamess(os.path.join(dir_path, "gamess_dummy_m.out"))
+
+    def test_no_frequencies(self):
+        """Test if function raises a ``ValueError`` when the frequencies array is empty."""
+        with pytest.raises(ValueError, match="No vibrational frequencies found in the output file"):
+            utils.read_gamess(os.path.join(dir_path, "gamess_dummy_w.out"))
