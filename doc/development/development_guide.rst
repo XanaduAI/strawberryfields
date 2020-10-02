@@ -214,11 +214,10 @@ The coverage of a specific file can also be checked by generating a report:
 
 .. code-block:: python
 
-    pytest tests/backend/test_states.py --cov --cov-report=term-missing
+    pytest tests/backend/test_states.py --cov=strawberryfields/location/to/module --cov-report=term-missing
 
-Passing the ``--cov`` option will generate a coverage report for all modules of
-Strawberry Fields. To get the coverage of a module in specific, its path can be
-passed with ``--cov`` (see next example).
+Here the coverage report will be created relative to the module specified by
+the path passed to the ``--cov=`` option.
 
 The previously mentioned ``pytest`` options can be combined with the coverage
 options. As an example, the ``-k`` option allows you to pass a boolean string
@@ -228,10 +227,10 @@ filtering out certain tests:
 
 .. code-block:: python
 
-    pytest tests/backend/test_states.py --cov=strawberryfields/location/to/module --cov-report=term-missing -k 'not TestBaseGaussianMethods'
+    pytest tests/backend/test_states.py --cov --cov-report=term-missing -k 'not TestBaseGaussianMethods'
 
-Here the coverage report will be created relative to the modules specified by
-the path passed to the ``--cov=`` option.
+Passing the ``--cov`` option without any modules specified will generate a
+coverage report for all modules of Strawberry Fields.
 
 Documentation
 -------------
