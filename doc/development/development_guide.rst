@@ -206,9 +206,11 @@ The coverage of a specific file can also be checked by generating a report:
 
     pytest tests/backend/test_states.py --cov --cov-report=term-missing
 
-The previously mentioned ``pytest`` options can be combined with the
-coverage options. As an example, with the following command we can get the
-report of a specific file while also filtering out certain tests:
+The previously mentioned ``pytest`` options can be combined with the coverage
+options. As an example, the ``-k`` option allows you to pass a boolean string
+using file names, test class/test function names, and marks. Using this option
+with the following command we can get the report of a specific file while also
+filtering out certain tests:
 
 .. code-block:: python
 
