@@ -216,6 +216,10 @@ The coverage of a specific file can also be checked by generating a report:
 
     pytest tests/backend/test_states.py --cov --cov-report=term-missing
 
+Passing the ``--cov`` option will generate a coverage report for all modules of
+Strawberry Fields. To get the coverage of a module in specific, its path can be
+passed with ``--cov`` (see next example).
+
 The previously mentioned ``pytest`` options can be combined with the coverage
 options. As an example, the ``-k`` option allows you to pass a boolean string
 using file names, test class/test function names, and marks. Using ``-k`` in
