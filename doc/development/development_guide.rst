@@ -133,6 +133,7 @@ Individual test modules are run by invoking pytest directly from the command lin
     - ``frontend`` for tests that import the Strawberry Fields UI but do not make use of a backend,
     - ``integration`` for tests that test integration of the frontend and backends,
     - ``apps`` for tests of the applications layer
+    - ``api`` for tests that only import and use the strawberryfields.api package
 
     When writing new tests, make sure to mark what components it tests.
 
