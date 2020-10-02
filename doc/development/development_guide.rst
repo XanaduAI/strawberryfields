@@ -135,7 +135,7 @@ Individual test modules are run by invoking pytest directly from the command lin
     - ``apps`` for tests of the applications layer
     - ``api`` for tests that only import and use the strawberryfields.api package
 
-    When writing new tests, make sure to mark what components it tests.
+    When writing new tests, make sure to mark what components they test.
 
     Certain tests that are related to a specific backend, e.g. test cases for
     its operations or the states returned by a backend. For a backend test, you
@@ -145,7 +145,8 @@ Individual test modules are run by invoking pytest directly from the command lin
 
         pytest.mark.backends("fock", "gaussian")
 
-    So a specific test case could be decorated as follows:
+    For specific test cases, the decorator can be used to mark only classes and
+    test functions:
 
     .. code-block:: python
 
@@ -159,6 +160,14 @@ Individual test modules are run by invoking pytest directly from the command lin
     .. code-block:: python
 
         pytest.mark.frontend
+
+    This could then be used on the module level to mark not just a single test
+    case, but the entire test file as a frontend test:
+
+    .. code-block:: python
+
+        mark = pytest.mark.frontend
+
 
 .. note:: **Run options for Strawberry Fields tests**
 
@@ -209,13 +218,16 @@ The coverage of a specific file can also be checked by generating a report:
 
 The previously mentioned ``pytest`` options can be combined with the coverage
 options. As an example, the ``-k`` option allows you to pass a boolean string
-using file names, test class/test function names, and marks. Using this option
-with the following command we can get the report of a specific file while also
+using file names, test class/test function names, and marks. Using ``-k`` in
+the following command we can get the report of a specific file while also
 filtering out certain tests:
 
 .. code-block:: python
 
-    pytest tests/backend/test_states.py --cov --cov-report=term-missing -k 'not TestBaseGaussianMethods'
+    pytest tests/backend/test_states.py --cov=strawberryfields/location/to/module --cov-report=term-missing -k 'not TestBaseGaussianMethods'
+
+Here the coverage report will be created relative to the modules specified by
+the path passed to the ``--cov=`` option.
 
 Documentation
 -------------
