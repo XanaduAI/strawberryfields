@@ -180,7 +180,7 @@ Individual test modules are run by invoking pytest directly from the command lin
     The following command can be used for example, to run tests related to the
     ``"Fock"`` backend:
 
-    .. code-block:: python
+    .. code-block:: console
 
         pytest -m fock
 
