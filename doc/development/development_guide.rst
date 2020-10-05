@@ -187,7 +187,7 @@ Individual test modules are run by invoking pytest directly from the command lin
     When running tests, it can also be useful to examine a single failing test.
     The following command stops at the first failing test:
 
-    .. code-block:: python
+    .. code-block:: console
 
         pytest -x
 
