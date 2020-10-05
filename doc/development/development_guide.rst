@@ -225,7 +225,7 @@ using file names, test class/test function names, and marks. Using ``-k`` in
 the following command we can get the report of a specific file while also
 filtering out certain tests:
 
-.. code-block:: python
+.. code-block:: console
 
     pytest tests/backend/test_states.py --cov --cov-report=term-missing -k 'not TestBaseGaussianMethods'
 
