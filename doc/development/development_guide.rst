@@ -212,7 +212,7 @@ To obtain coverage, the ``pytest-cov`` plugin is needed.
 
 The coverage of a specific file can also be checked by generating a report:
 
-.. code-block:: python
+.. code-block:: console
 
     pytest tests/backend/test_states.py --cov=strawberryfields/location/to/module --cov-report=term-missing
 
