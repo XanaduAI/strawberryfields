@@ -395,6 +395,13 @@ class Water(SampleDataset):
         modes = 3
     """
 
+    def _data_filename(self) -> str:
+        """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
+
+        For ``_data_filename = "example"``, the corresponding samples should be stored as
+        ``./sample_data/example.npz``."""
+        pass
+
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
 
     def __init__(self, t):
@@ -440,6 +447,13 @@ class Pyrrole(SampleDataset):
         n_samples = 10000
         modes = 24
     """
+
+    def _data_filename(self) -> str:
+        """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
+
+        For ``_data_filename = "example"``, the corresponding samples should be stored as
+        ``./sample_data/example.npz``."""
+        pass
 
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
 
