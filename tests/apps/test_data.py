@@ -362,6 +362,11 @@ class TestWaterDatasets:
         """Test if sample has correct shape"""
         assert np.shape(dataset[:]) == (5000, dataset.modes)
 
+    def test_dataset_water(self, datasets):
+        """Test if function raises a ``ValueError`` when an incorrect temperature is given"""
+        with pytest.raises(ValueError, match="The selected time is not correct"):
+            datasets(t=7)
+
 
 @pytest.mark.parametrize("datasets", PYRROLE_DATASETS_LIST)
 class TestPyrroleDatasets:
@@ -420,3 +425,8 @@ class TestPyrroleDatasets:
     def test_samplep_dims(self, dataset):
         """Test if sample has correct shape"""
         assert np.shape(dataset[:]) == (1000, dataset.modes)
+
+    def test_dataset_pyrrole(self, datasets):
+        """Test if function raises a ``ValueError`` when an incorrect temperature is given"""
+        with pytest.raises(ValueError, match="The selected time is not correct"):
+            datasets(t=96)

@@ -394,12 +394,13 @@ class Water(SampleDataset):
         n_samples = 135000
         modes = 3
     """
+
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
 
-    # pylint: disable=W0231
+    # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
-            raise ValueError("Must choose a valid time")
+            raise ValueError("The selected time is not correct")
         index = self.times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
@@ -440,12 +441,13 @@ class Pyrrole(SampleDataset):
         n_samples = 10000
         modes = 24
     """
+
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
 
-    # pylint: disable=W0231
+    # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
-            raise ValueError("Must choose a valid time")
+            raise ValueError("The selected time is not correct")
         index = self.times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
