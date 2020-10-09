@@ -395,7 +395,7 @@ class Water(SampleDataset):
         modes = 3
     """
 
-    def _data_filename(self) -> str:
+    def _filename(self) -> str:
         """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
 
         For ``_data_filename = "example"``, the corresponding samples should be stored as
@@ -448,7 +448,7 @@ class Pyrrole(SampleDataset):
         modes = 24
     """
 
-    def _data_filename(self) -> str:
+    def _filename(self) -> str:
         """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
 
         For ``_data_filename = "example"``, the corresponding samples should be stored as
