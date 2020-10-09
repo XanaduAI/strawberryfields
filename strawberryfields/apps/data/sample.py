@@ -374,7 +374,7 @@ class Formic(MoleculeDataset):
     T = 0
 
 
-class Water(SampleDataset):
+class Water(SampleDataset, ABC):
     """water parameters.
 
     The molecular parameters are obtained from Ref. :cite:`sparrow2018simulating`.
@@ -394,14 +394,6 @@ class Water(SampleDataset):
         n_samples = 135000
         modes = 3
     """
-
-    def _filename(self) -> str:
-        """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
-
-        For ``_data_filename = "example"``, the corresponding samples should be stored as
-        ``./sample_data/example.npz``."""
-        pass
-
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
 
     def __init__(self, t):
@@ -427,7 +419,7 @@ class Water(SampleDataset):
         return list(self.times_to_indices.keys())
 
 
-class Pyrrole(SampleDataset):
+class Pyrrole(SampleDataset, ABC):
     """pyrrole parameters.
 
     The molecular parameters are obtained from Ref. :cite:`jahangiri2020quantum`.
@@ -447,14 +439,6 @@ class Pyrrole(SampleDataset):
         n_samples = 10000
         modes = 24
     """
-
-    def _filename(self) -> str:
-        """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
-
-        For ``_data_filename = "example"``, the corresponding samples should be stored as
-        ``./sample_data/example.npz``."""
-        pass
-
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
 
     def __init__(self, t):
