@@ -368,7 +368,7 @@ class TestWaterDatasets:
         assert np.allclose(t, np.linspace(0, 270, 28))
 
     def test_dataset_water(self, datasets):
-        """Test if function raises a ``ValueError`` when an incorrect temperature is given"""
+        """Test if function raises a ``ValueError`` when an incorrect time is given"""
         with pytest.raises(ValueError, match="The selected time is not correct"):
             datasets(t=7)
 
@@ -437,6 +437,6 @@ class TestPyrroleDatasets:
         assert np.allclose(t, np.linspace(0, 1000, 11))
 
     def test_dataset_pyrrole(self, datasets):
-        """Test if function raises a ``ValueError`` when an incorrect temperature is given"""
+        """Test if function raises a ``ValueError`` when an incorrect time is given"""
         with pytest.raises(ValueError, match="The selected time is not correct"):
             datasets(t=96)
