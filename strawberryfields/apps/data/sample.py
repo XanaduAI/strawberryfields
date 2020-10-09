@@ -398,6 +398,7 @@ class Water(SampleDataset):
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
 
     def __init__(self, t):
+        super().__init__()
         if t not in self.times_to_indices:
             raise ValueError("Must choose a valid time")
         index = self.times_to_indices[t]
@@ -444,6 +445,7 @@ class Pyrrole(SampleDataset):
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
 
     def __init__(self, t):
+        super().__init__()
         if t not in self.times_to_indices:
             raise ValueError("Must choose a valid time")
         index = self.times_to_indices[t]
