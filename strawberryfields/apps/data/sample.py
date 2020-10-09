@@ -374,7 +374,7 @@ class Formic(MoleculeDataset):
     T = 0
 
 
-class Water(SampleDataset, ABC):
+class Water(SampleDataset):
     """water parameters.
 
     The molecular parameters are obtained from Ref. :cite:`sparrow2018simulating`.
@@ -396,6 +396,7 @@ class Water(SampleDataset, ABC):
     """
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
 
+    # pylint: disable=W0231
     def __init__(self, t):
         if t not in self.times_to_indices:
             raise ValueError("Must choose a valid time")
@@ -419,7 +420,7 @@ class Water(SampleDataset, ABC):
         return list(self.times_to_indices.keys())
 
 
-class Pyrrole(SampleDataset, ABC):
+class Pyrrole(SampleDataset):
     """pyrrole parameters.
 
     The molecular parameters are obtained from Ref. :cite:`jahangiri2020quantum`.
@@ -441,6 +442,7 @@ class Pyrrole(SampleDataset, ABC):
     """
     times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
 
+    # pylint: disable=W0231
     def __init__(self, t):
         if t not in self.times_to_indices:
             raise ValueError("Must choose a valid time")
