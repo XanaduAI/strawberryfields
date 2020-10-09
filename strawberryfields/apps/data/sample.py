@@ -416,6 +416,7 @@ class Water(SampleDataset):
     _data_filename = "water"
 
     def available_times(self):
+        """Returns the times for which pre-generated samples are available."""
         return list(self.times_to_indices.keys())
 
 
@@ -467,6 +468,7 @@ class Pyrrole(SampleDataset):
     _data_filename = "pyrrole"
 
     def available_times(self):
+        """Returns the times for which pre-generated samples are available."""
         return list(self.times_to_indices.keys())
 
     n_mean = 0.12599583333333333
