@@ -30,6 +30,8 @@ The following datasets of GBS samples are available:
         Mutag2
         Mutag3
         Formic
+        Water
+        Pyrrole
 
 .. seealso::
 
@@ -76,6 +78,8 @@ from strawberryfields.apps.data.sample import (
     Mutag2,
     Mutag3,
     Formic,
+    Water,
+    Pyrrole,
 )
 from strawberryfields.apps.data.feature import (
     MUTAG,

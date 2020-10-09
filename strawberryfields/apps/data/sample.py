@@ -372,3 +372,103 @@ class Formic(MoleculeDataset):
     n_mean = 1.56
     threshold = False
     T = 0
+
+
+class Water(SampleDataset):
+    """water parameters.
+
+    The molecular parameters are obtained from Ref. :cite:`sparrow2018simulating`.
+
+    **Molecule:**
+
+    .. |water| image:: ../../../_static/water.png
+        :align: middle
+        :width: 200px
+        :target: javascript:void(0);
+
+    |water|
+
+    Attributes:
+        n_mean = 0.3333333333333333
+        threshold = False
+        n_samples = 135000
+        modes = 3
+    """
+
+    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
+
+    def __init__(self, t):
+        if t not in self.times_to_indices:
+            raise ValueError("Must choose a valid time")
+        index = self.times_to_indices[t]
+
+        all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
+
+        self.data = all_data[index]
+        self.data = scipy.sparse.csr_matrix(self.data)
+        self.n_samples, self.modes = self.data.shape
+
+    w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
+    U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
+
+    n_mean = 0.3333333333333333
+    threshold = False
+    _data_filename = "water"
+
+    def available_times(self):
+        return list(self.times_to_indices.keys())
+
+
+class Pyrrole(SampleDataset):
+    """pyrrole parameters.
+
+    The molecular parameters are obtained from Ref. :cite:`jahangiri2020quantum`.
+
+    **Molecule:**
+
+    .. |pyrrole| image:: ../../../_static/pyrrole.png
+        :align: middle
+        :width: 350px
+        :target: javascript:void(0);
+
+    |pyrrole|
+
+    Attributes:
+        n_mean = 0.12599583333333333
+        threshold = False
+        n_samples = 10000
+        modes = 24
+    """
+
+    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
+
+    def __init__(self, t):
+        if t not in self.times_to_indices:
+            raise ValueError("Must choose a valid time")
+        index = self.times_to_indices[t]
+
+        all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
+
+        self.data = all_data[index]
+        self.data = scipy.sparse.csr_matrix(self.data)
+        self.n_samples, self.modes = self.data.shape
+
+    ri = scipy.sparse.load_npz(DATA_PATH + "pyrrole_ri.npz").toarray()[0]
+    rf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_rf.npz").toarray()[0]
+    wi = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wi.npz").toarray()[0]
+    wf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wf.npz").toarray()[0]
+    Li = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Li.npz").toarray()
+    Lf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Lf.npz").toarray()
+    m = scipy.sparse.load_npz(DATA_PATH + "pyrrole_m.npz").toarray()[0]
+    U = scipy.sparse.load_npz(DATA_PATH + "pyrrole_U.npz").toarray()
+
+    n_mean = 0.12599583333333333
+    threshold = False
+    _data_filename = "pyrrole"
+
+    def available_times(self):
+        return list(self.times_to_indices.keys())
+
+    n_mean = 0.12599583333333333
+    threshold = False
+    _data_filename = "pyrrole"
