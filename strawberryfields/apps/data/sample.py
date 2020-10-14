@@ -375,7 +375,7 @@ class Formic(MoleculeDataset):
 
 
 class Water(SampleDataset):
-    """water parameters.
+    """Vibrational dynamics of the water molecule.
 
     The molecular parameters are obtained from Ref. :cite:`sparrow2018simulating`.
 
@@ -389,7 +389,7 @@ class Water(SampleDataset):
     |water|
 
     Attributes:
-        n_mean = 0.3333333333333333
+        n_mean = 1/3
         threshold = False
         n_samples = 135000
         modes = 3
@@ -400,7 +400,8 @@ class Water(SampleDataset):
     # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
-            raise ValueError("The selected time is not correct")
+            raise ValueError("The selected time is not correct. Available times are 0, 10, 20, "
+                             "..., 270")
         index = self.times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
@@ -412,7 +413,7 @@ class Water(SampleDataset):
     w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
     U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
 
-    n_mean = 0.3333333333333333
+    n_mean = 1/3
     threshold = False
     _data_filename = "water"
 
@@ -422,7 +423,7 @@ class Water(SampleDataset):
 
 
 class Pyrrole(SampleDataset):
-    """pyrrole parameters.
+    """Vibrational dynamics of the pyrrole molecule.
 
     The molecular parameters are obtained from Ref. :cite:`jahangiri2020quantum`.
 
@@ -436,7 +437,7 @@ class Pyrrole(SampleDataset):
     |pyrrole|
 
     Attributes:
-        n_mean = 0.12599583333333333
+        n_mean = 0.12599583
         threshold = False
         n_samples = 10000
         modes = 24
@@ -447,7 +448,8 @@ class Pyrrole(SampleDataset):
     # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
-            raise ValueError("The selected time is not correct")
+            raise ValueError("The selected time is not correct. Available times are 0, 100, 200, "
+                             "..., 1000")
         index = self.times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
