@@ -400,8 +400,9 @@ class Water(SampleDataset):
     # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
-            raise ValueError("The selected time is not correct. Available times are 0, 10, 20, "
-                             "..., 270")
+            raise ValueError(
+                "The selected time is not correct. Available times are 0, 10, 20, " "..., 270"
+            )
         index = self.times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
@@ -413,7 +414,7 @@ class Water(SampleDataset):
     w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
     U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
 
-    n_mean = 1/3
+    n_mean = 1 / 3
     threshold = False
     _data_filename = "water"
 
@@ -448,8 +449,9 @@ class Pyrrole(SampleDataset):
     # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
-            raise ValueError("The selected time is not correct. Available times are 0, 100, 200, "
-                             "..., 1000")
+            raise ValueError(
+                "The selected time is not correct. Available times are 0, 100, 200, " "..., 1000"
+            )
         index = self.times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
@@ -467,7 +469,7 @@ class Pyrrole(SampleDataset):
     m = scipy.sparse.load_npz(DATA_PATH + "pyrrole_m.npz").toarray()[0]
     U = scipy.sparse.load_npz(DATA_PATH + "pyrrole_U.npz").toarray()
 
-    n_mean = 0.12599583333333333
+    n_mean = 0.12599583
     threshold = False
     _data_filename = "pyrrole"
 
@@ -475,6 +477,6 @@ class Pyrrole(SampleDataset):
         """Returns the times for which pre-generated samples are available."""
         return list(self.times_to_indices.keys())
 
-    n_mean = 0.12599583333333333
+    n_mean = 0.12599583
     threshold = False
     _data_filename = "pyrrole"
