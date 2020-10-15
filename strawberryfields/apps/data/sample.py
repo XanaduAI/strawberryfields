@@ -388,6 +388,9 @@ class Water(SampleDataset):
 
     |water|
 
+    Args:
+        t (float): time of evolution in femtoseconds
+
     Attributes:
         n_mean = 1/3
         threshold = False
