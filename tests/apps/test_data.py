@@ -358,16 +358,16 @@ class TestWaterDatasets:
         U = dataset.U
         assert np.allclose(np.eye(U.shape[0]), U.conj().T @ U)
 
-    @pytest.mark.parametrize("times", datasets.available_times)
-    def test_sample_dims(self, times):
+    def test_sample_dims(self, datasets):
         """Test if sample has correct shape"""
-        dataset = datatests(times)
-        assert np.shape(dataset[:]) == (5000, dataset.modes)
+        for t in datasets.available_times:
+            dataset = datasets(t)
+            assert np.shape(dataset[:]) == (5000, dataset.modes)
 
     def test_times_water(self, dataset):
         """Test if available times are correct"""
-        t = dataset.available_times()
-        assert np.allclose(t, np.linspace(0, 270, 28))
+        t = dataset.available_times
+        assert np.allclose(t, np.linspace(0, 260, 27))
 
     def test_dataset_water(self, datasets):
         """Test if function raises a ``ValueError`` when an incorrect time is given"""
@@ -429,16 +429,16 @@ class TestPyrroleDatasets:
         U = dataset.U
         assert np.allclose(np.eye(U.shape[0]), U.conj().T @ U)
 
-    @pytest.mark.parametrize("times", datasets.available_times)
-    def test_samplep_dims(self, times):
+    def test_sample_dims(self, datasets):
         """Test if sample has correct shape"""
-        dataset = datatests(times)
-        assert np.shape(dataset[:]) == (dataset.n_samples, dataset.modes)
+        for t in datasets.available_times:
+            dataset = datasets(t)
+            assert np.shape(dataset[:]) == (dataset.n_samples, dataset.modes)
 
     def test_times_pyrrole(self, dataset):
         """Test if available times are correct"""
-        t = dataset.available_times()
-        assert np.allclose(t, np.linspace(0, 1000, 11))
+        t = dataset.available_times
+        assert np.allclose(t, np.linspace(0, 900, 10))
 
     def test_dataset_pyrrole(self, datasets):
         """Test if function raises a ``ValueError`` when an incorrect time is given"""
