@@ -404,7 +404,7 @@ class Water(SampleDataset):
     def __init__(self, t):
         if t not in self.times_to_indices:
             raise ValueError(
-                "The selected time is not correct. Available times are 0, 10, 20, " "..., 270"
+                "The selected time is not correct. Available times are 0, 10, 20, ..., 270"
             )
         index = self.times_to_indices[t]
 
@@ -414,16 +414,14 @@ class Water(SampleDataset):
         self.data = scipy.sparse.csr_matrix(self.data)
         self.n_samples, self.modes = self.data.shape
 
-    w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
-    U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
+        self.w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
+        self.U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
 
     n_mean = 1 / 3
     threshold = False
     _data_filename = "water"
 
-    def available_times(self):
-        """Returns the times for which pre-generated samples are available."""
-        return list(self.times_to_indices.keys())
+    available_times = list(times_to_indices.keys())
 
 
 class Pyrrole(SampleDataset):
@@ -440,6 +438,9 @@ class Pyrrole(SampleDataset):
 
     |pyrrole|
 
+    Args:
+        t (float): time of evolution in femtoseconds
+
     Attributes:
         n_mean = 0.12599583
         threshold = False
@@ -453,7 +454,7 @@ class Pyrrole(SampleDataset):
     def __init__(self, t):
         if t not in self.times_to_indices:
             raise ValueError(
-                "The selected time is not correct. Available times are 0, 100, 200, " "..., 1000"
+                "The selected time is not correct. Available times are 0, 100, 200, ..., 1000"
             )
         index = self.times_to_indices[t]
 
@@ -463,23 +464,17 @@ class Pyrrole(SampleDataset):
         self.data = scipy.sparse.csr_matrix(self.data)
         self.n_samples, self.modes = self.data.shape
 
-    ri = scipy.sparse.load_npz(DATA_PATH + "pyrrole_ri.npz").toarray()[0]
-    rf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_rf.npz").toarray()[0]
-    wi = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wi.npz").toarray()[0]
-    wf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wf.npz").toarray()[0]
-    Li = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Li.npz").toarray()
-    Lf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Lf.npz").toarray()
-    m = scipy.sparse.load_npz(DATA_PATH + "pyrrole_m.npz").toarray()[0]
-    U = scipy.sparse.load_npz(DATA_PATH + "pyrrole_U.npz").toarray()
+        self.ri = scipy.sparse.load_npz(DATA_PATH + "pyrrole_ri.npz").toarray()[0]
+        self.rf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_rf.npz").toarray()[0]
+        self.wi = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wi.npz").toarray()[0]
+        self.wf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wf.npz").toarray()[0]
+        self.Li = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Li.npz").toarray()
+        self.Lf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Lf.npz").toarray()
+        self.m = scipy.sparse.load_npz(DATA_PATH + "pyrrole_m.npz").toarray()[0]
+        self.U = scipy.sparse.load_npz(DATA_PATH + "pyrrole_U.npz").toarray()
 
     n_mean = 0.12599583
     threshold = False
     _data_filename = "pyrrole"
 
-    def available_times(self):
-        """Returns the times for which pre-generated samples are available."""
-        return list(self.times_to_indices.keys())
-
-    n_mean = 0.12599583
-    threshold = False
-    _data_filename = "pyrrole"
+    available_times = list(times_to_indices.keys())
