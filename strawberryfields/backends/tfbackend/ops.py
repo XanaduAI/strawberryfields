@@ -1092,9 +1092,11 @@ def reduced_density_matrix(system, mode, state_is_pure, batched=False):
     else:
         batch_offset = 0
     num_modes = (num_indices - batch_offset) // 2  # always mixed
+    removed_cnt = 0
     for m in range(num_modes):
         if m != mode:
-            reduced_state = partial_trace(reduced_state, m, False, batched)
+            reduced_state = partial_trace(reduced_state, m - removed_cnt, False, batched)
+            removed_cnt += 1
     return reduced_state
 
 
