@@ -1077,11 +1077,14 @@ def partial_trace(system, mode, state_is_pure, batched=False):
     return reduced_state
 
 
-def reduced_density_matrix(system, mode, state_is_pure, batched=False):
+def reduced_density_matrix(system, modes, state_is_pure, batched=False):
     """
-    Trace out all subsystems except 'mode' from 'system'.
+    Trace out all subsystems except the ones in the 'modes' from 'system'. 'modes' can be either an int or a list.
     This operation always returns a mixed state, since we do not know in advance if a mode is entangled with others.
     """
+    if isinstance(modes, int):
+        modes = [modes]
+
     if state_is_pure:
         reduced_state = mixed(system, batched)
     else:
@@ -1093,7 +1096,7 @@ def reduced_density_matrix(system, mode, state_is_pure, batched=False):
         batch_offset = 0
     num_modes = (num_indices - batch_offset) // 2  # always mixed
     for m in range(num_modes):
-        if m != mode:
+        if m not in modes:
             reduced_state = partial_trace(reduced_state, m, False, batched)
     return reduced_state
 
