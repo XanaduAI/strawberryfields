@@ -429,8 +429,10 @@ class TestPyrroleDatasets:
         U = dataset.U
         assert np.allclose(np.eye(U.shape[0]), U.conj().T @ U)
 
-    def test_samplep_dims(self, dataset):
+    @pytest.mark.parametrize("times", datasets.available_times)
+    def test_samplep_dims(self, times):
         """Test if sample has correct shape"""
+        dataset = datatests(times)
         assert np.shape(dataset[:]) == (dataset.n_samples, dataset.modes)
 
     def test_times_pyrrole(self, dataset):

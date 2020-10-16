@@ -394,19 +394,19 @@ class Water(SampleDataset):
     Attributes:
         n_mean = 1/3
         threshold = False
-        n_samples = 135000 (5000 samples for each of 27 available times)
+        n_samples = 135000, 5000 samples for each of 27 available times
         modes = 3
     """
 
-    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 260, 27))}
+    _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 260, 27))}
 
     # pylint: disable=super-init-not-called
     def __init__(self, t):
-        if t not in self.times_to_indices:
+        if t not in self._times_to_indices:
             raise ValueError(
                 "The selected time is not correct. Available times are 0, 10, 20, ..., 260"
             )
-        index = self.times_to_indices[t]
+        index = self._times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
 
@@ -421,7 +421,7 @@ class Water(SampleDataset):
     threshold = False
     _data_filename = "water"
 
-    available_times = list(times_to_indices.keys())
+    available_times = list(_times_to_indices.keys())
 
 
 class Pyrrole(SampleDataset):
@@ -444,19 +444,19 @@ class Pyrrole(SampleDataset):
     Attributes:
         n_mean = 0.12599583
         threshold = False
-        n_samples = 10000 (1000 samples for each of 10 available times)
+        n_samples = 10000, 1000 samples for each of 10 available times
         modes = 24
     """
 
-    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
+    _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
 
     # pylint: disable=super-init-not-called
     def __init__(self, t):
-        if t not in self.times_to_indices:
+        if t not in self._times_to_indices:
             raise ValueError(
                 "The selected time is not correct. Available times are 0, 100, 200, ..., 900"
             )
-        index = self.times_to_indices[t]
+        index = self._times_to_indices[t]
 
         all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
 
@@ -477,4 +477,4 @@ class Pyrrole(SampleDataset):
     threshold = False
     _data_filename = "pyrrole"
 
-    available_times = list(times_to_indices.keys())
+    available_times = list(_times_to_indices.keys())
