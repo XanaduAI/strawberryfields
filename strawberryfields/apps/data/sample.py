@@ -451,6 +451,8 @@ class Pyrrole(SampleDataset):
     _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
 
     # pylint: disable=super-init-not-called
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, t):
         if t not in self._times_to_indices:
             raise ValueError(
