@@ -415,6 +415,9 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
+        # pylint: disable=import-outside-toplevel
+        from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
+
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
@@ -465,6 +468,12 @@ class LocalEngine(BaseEngine):
         result = super()._run(
             program, args=args, compile_options=compile_options, **eng_run_options
         )
+
+        if isinstance(program, TDMProgram):
+            result._all_samples = reshape_samples(
+                result.all_samples, program.measured_modes, program.N
+            )
+            result._samples = np.array(list(result.all_samples.values()))
 
         modes = temp_run_options["modes"]
 
@@ -548,7 +557,9 @@ class RemoteEngine:
             self._spec = self._connection.get_device_spec(self.target)
         return self._spec
 
-    def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
+    def run(
+        self, program: Program, *, compile_options=None, recompile=False, **kwargs
+    ) -> Optional[Result]:
         """Runs a blocking job.
 
         In the blocking mode, the engine blocks until the job is completed, failed, or
@@ -559,6 +570,9 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
@@ -568,7 +582,9 @@ class RemoteEngine:
             [strawberryfields.api.Result, None]: the job result if successful, and
             ``None`` otherwise
         """
-        job = self.run_async(program, compile_options=compile_options, **kwargs)
+        job = self.run_async(
+            program, compile_options=compile_options, recompile=recompile, **kwargs
+        )
         try:
             while True:
                 job.refresh()
@@ -590,7 +606,9 @@ class RemoteEngine:
             self._connection.cancel_job(job.id)
             raise KeyboardInterrupt("The job has been cancelled.")
 
-    def run_async(self, program: Program, *, compile_options=None, **kwargs) -> Job:
+    def run_async(
+        self, program: Program, *, compile_options=None, recompile=False, **kwargs
+    ) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
@@ -599,6 +617,8 @@ class RemoteEngine:
         Args:
             program (strawberryfields.Program): the quantum circuit
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
@@ -613,11 +633,51 @@ class RemoteEngine:
 
         device = self.device_spec
 
-        compiler_name = compile_options.get("force_compiler", device.default_compiler)
-        msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
-        self.log.info(msg)
+        compiler_name = compile_options.get("compiler", device.default_compiler)
 
-        program = program.compile(device=device, **compile_options)
+        program_is_compiled = program.compile_info is not None
+
+        if program_is_compiled and not recompile:
+            # error handling for program compilation:
+            # program was compiled but recompilation was not allowed by the
+            # user
+
+            if (
+                program.compile_info[0].target != device.target
+                or program.compile_info[0]._spec != device._spec
+            ):
+                # program was compiled for a different device
+                raise ValueError(
+                    "Cannot use program compiled with "
+                    f"{program._compile_info[0].target} for target {self.target}. "
+                    'Pass the "recompile=True" keyword argument '
+                    f"to compile with {compiler_name}."
+                )
+
+        if not program_is_compiled:
+            # program is not compiled
+            msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
+            self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
+
+        elif recompile:
+            # recompiling program
+            if compile_options:
+                msg = f"Recompiling program for device {device.target} using the specified compiler options: {compile_options}."
+            else:
+                msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
+
+            self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
+
+        else:
+            # validating program
+            msg = (
+                f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
+                f"Validating program against the Xstrict compiler."
+            )
+            self.log.info(msg)
+            program = program.compile(device=device, compiler="Xstrict")
 
         # update the run options if provided
         run_options = {}

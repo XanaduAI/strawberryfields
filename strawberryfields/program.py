@@ -144,6 +144,9 @@ class Program:
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target Compiler template, otherwise None
         self._target = None
+        #: tuple, None: for compiled Programs, the device spec and the short
+        # name of Compiler that was used, otherwise None
+        self._compile_info = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
         #: dict[str, Parameter]: free circuit parameters owned by this Program
@@ -559,6 +562,7 @@ class Program:
         compiled = self._linked_copy()
         compiled.circuit = seq
         compiled._target = target
+        compiled._compile_info = (device, compiler.short_name)
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -572,7 +576,15 @@ class Program:
         if device is not None and device.gate_parameters:
             bb_device = bb.loads(device.layout)
             bb_compiled = sf.io.to_blackbird(compiled)
-            user_parameters = match_template(bb_device, bb_compiled)
+
+            try:
+                user_parameters = match_template(bb_device, bb_compiled)
+            except bb.utils.TemplateError:
+                raise CircuitError(
+                    "Program cannot be used with the compiler '{}' "
+                    "due to incompatible topology.".format(compiler.short_name)
+                )
+
             device.validate_parameters(**user_parameters)
 
         return compiled
@@ -646,6 +658,19 @@ class Program:
             compiled, otherwise None
         """
         return self._target
+
+    @property
+    def compile_info(self):
+        """The device specification and the compiler that was used during
+        compilation.
+
+        If the program has not been compiled, this will return ``None``.
+
+        Returns:
+            tuple or None: device specification and the short name of the
+            Compiler that was used if compiled, otherwise None
+        """
+        return self._compile_info
 
     def params(self, *args):
         """Create and access free circuit parameters.

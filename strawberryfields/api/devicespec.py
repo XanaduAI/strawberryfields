@@ -72,9 +72,9 @@ class DeviceSpec:
         if self.compiler:
             return self.compiler[0]
 
-        # For now, use Xcov compiler by default for devices
+        # For now, use Xunitary compiler by default for devices
         # if the default compiler is not specified.
-        return "Xcov"
+        return "Xunitary"
 
     @property
     def gate_parameters(self):
@@ -151,6 +151,7 @@ class DeviceSpec:
         # evaluate the blackbird template
         bb = bb(**parameters)
         prog = sf.io.to_program(bb)
+        prog._compile_info = (self, self.default_compiler)
         return prog
 
     def refresh(self):
