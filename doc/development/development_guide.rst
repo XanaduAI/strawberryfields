@@ -42,39 +42,20 @@ importing StrawberryFields in Python.
 TensorFlow support
 ------------------
 
-To use Strawberry Fields with TensorFlow, version 1.3 of
-TensorFlow is required. This can be installed alongside Strawberry Fields
+To use Strawberry Fields with TensorFlow, version 2.0 of
+TensorFlow (or higher) is required. This can be installed alongside Strawberry Fields
 as follows:
 
 .. code-block:: console
 
-    pip install strawberryfields tensorflow==1.3
+    pip install strawberryfields tensorflow
 
 Or, to install Strawberry Fields and TensorFlow with GPU and CUDA support:
 
 .. code-block:: console
 
-    pip install strawberryfields tensorflow-gpu==1.3
+    pip install strawberryfields tensorflow-gpu
 
-Note that TensorFlow version 1.3 is only supported on Python versions
-less than 3.7. You can use the following command to check your
-Python version:
-
-.. code-block:: console
-
-    python --version
-
-If the above prints out 3.7, and you still want to use TensorFlow, you will need
-to install Python 3.6. The recommended method is to install
-`Anaconda for Python 3 <https://www.anaconda.com/download/>`_.
-
-Once installed, you can then create a Python 3.6 Conda environment:
-
-.. code-block:: console
-
-    conda create --name sf_tensorflow_env python=3.6
-    conda activate sf_tensorflow_env
-    pip install strawberryfields tensorflow==1.3
 
 Software tests
 --------------
