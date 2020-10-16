@@ -448,6 +448,7 @@ class Pyrrole(SampleDataset):
         n_samples = 10000, 1000 samples for each of 10 available times
         modes = 24
     """
+
     # pylint: disable=too-many-instance-attributes
     _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
 
