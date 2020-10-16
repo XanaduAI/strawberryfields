@@ -394,17 +394,17 @@ class Water(SampleDataset):
     Attributes:
         n_mean = 1/3
         threshold = False
-        n_samples = 135000
+        n_samples = 135000 (5000 samples for each of 27 available times)
         modes = 3
     """
 
-    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 270, 28))}
+    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 260, 27))}
 
     # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
             raise ValueError(
-                "The selected time is not correct. Available times are 0, 10, 20, ..., 270"
+                "The selected time is not correct. Available times are 0, 10, 20, ..., 260"
             )
         index = self.times_to_indices[t]
 
@@ -425,7 +425,7 @@ class Water(SampleDataset):
 
 
 class Pyrrole(SampleDataset):
-    """Vibrational dynamics of the pyrrole molecule.
+    """Vibrational dynamics of the `pyrrole <https://en.wikipedia.org/wiki/Pyrrole>`__ molecule.
 
     The molecular parameters are obtained from Ref. :cite:`jahangiri2020quantum`.
 
@@ -444,17 +444,17 @@ class Pyrrole(SampleDataset):
     Attributes:
         n_mean = 0.12599583
         threshold = False
-        n_samples = 10000
+        n_samples = 10000 (1000 samples for each of 10 available times)
         modes = 24
     """
 
-    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 1000, 11))}
+    times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
 
     # pylint: disable=super-init-not-called
     def __init__(self, t):
         if t not in self.times_to_indices:
             raise ValueError(
-                "The selected time is not correct. Available times are 0, 100, 200, ..., 1000"
+                "The selected time is not correct. Available times are 0, 100, 200, ..., 900"
             )
         index = self.times_to_indices[t]
 

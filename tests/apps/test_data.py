@@ -429,7 +429,7 @@ class TestPyrroleDatasets:
 
     def test_samplep_dims(self, dataset):
         """Test if sample has correct shape"""
-        assert np.shape(dataset[:]) == (1000, dataset.modes)
+        assert np.shape(dataset[:]) == (dataset.n_samples, dataset.modes)
 
     def test_times_pyrrole(self, dataset):
         """Test if available times are correct"""
