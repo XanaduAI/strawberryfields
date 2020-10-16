@@ -424,6 +424,7 @@ class Water(SampleDataset):
     available_times = list(_times_to_indices.keys())
 
 
+# pylint: disable=too-many-instance-attributes
 class Pyrrole(SampleDataset):
     """Vibrational dynamics of the `pyrrole <https://en.wikipedia.org/wiki/Pyrrole>`__ molecule.
 
@@ -451,8 +452,6 @@ class Pyrrole(SampleDataset):
     _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
 
     # pylint: disable=super-init-not-called
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(self, t):
         if t not in self._times_to_indices:
             raise ValueError(
