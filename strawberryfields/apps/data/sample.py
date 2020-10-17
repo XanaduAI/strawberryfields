@@ -372,3 +372,111 @@ class Formic(MoleculeDataset):
     n_mean = 1.56
     threshold = False
     T = 0
+
+
+class Water(SampleDataset):
+    """Vibrational dynamics of the water molecule.
+
+    The molecular parameters are obtained from Ref. :cite:`sparrow2018simulating`.
+
+    **Molecule:**
+
+    .. |water| image:: ../../../_static/water.png
+        :align: middle
+        :width: 200px
+        :target: javascript:void(0);
+
+    |water|
+
+    Args:
+        t (float): time of evolution in femtoseconds
+
+    Attributes:
+        n_mean = 1/3
+        threshold = False
+        n_samples = 135000, 5000 samples for each of 27 available times
+        modes = 3
+    """
+
+    _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 260, 27))}
+
+    # pylint: disable=super-init-not-called
+    def __init__(self, t):
+        if t not in self._times_to_indices:
+            raise ValueError(
+                "The selected time is not correct. Available times are 0, 10, 20, ..., 260"
+            )
+        index = self._times_to_indices[t]
+
+        all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
+
+        self.data = all_data[index]
+        self.data = scipy.sparse.csr_matrix(self.data)
+        self.n_samples, self.modes = self.data.shape
+
+        self.w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
+        self.U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
+
+    n_mean = 1 / 3
+    threshold = False
+    _data_filename = "water"
+
+    available_times = list(_times_to_indices.keys())
+
+
+# pylint: disable=too-many-instance-attributes
+class Pyrrole(SampleDataset):
+    """Vibrational dynamics of the `pyrrole <https://en.wikipedia.org/wiki/Pyrrole>`__ molecule.
+
+    The molecular parameters are obtained from Ref. :cite:`jahangiri2020quantum`.
+
+    **Molecule:**
+
+    .. |pyrrole| image:: ../../../_static/pyrrole.png
+        :align: middle
+        :width: 350px
+        :target: javascript:void(0);
+
+    |pyrrole|
+
+    Args:
+        t (float): time of evolution in femtoseconds
+
+    Attributes:
+        n_mean = 0.12599583
+        threshold = False
+        n_samples = 10000, 1000 samples for each of 10 available times
+        modes = 24
+    """
+
+    # pylint: disable=too-many-instance-attributes
+    _times_to_indices = {t: i for i, t in enumerate(np.linspace(0, 900, 10))}
+
+    # pylint: disable=super-init-not-called
+    def __init__(self, t):
+        if t not in self._times_to_indices:
+            raise ValueError(
+                "The selected time is not correct. Available times are 0, 100, 200, ..., 900"
+            )
+        index = self._times_to_indices[t]
+
+        all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
+
+        self.data = all_data[index]
+        self.data = scipy.sparse.csr_matrix(self.data)
+        self.n_samples, self.modes = self.data.shape
+
+        self.ri = scipy.sparse.load_npz(DATA_PATH + "pyrrole_ri.npz").toarray()[0]
+        self.rf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_rf.npz").toarray()[0]
+        self.wi = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wi.npz").toarray()[0]
+        self.wf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wf.npz").toarray()[0]
+        self.Li = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Li.npz").toarray()
+        self.Lf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Lf.npz").toarray()
+        self.m = scipy.sparse.load_npz(DATA_PATH + "pyrrole_m.npz").toarray()[0]
+        self.U = scipy.sparse.load_npz(DATA_PATH + "pyrrole_U.npz").toarray()
+
+    n_mean = 0.12599583
+    threshold = False
+    _data_filename = "pyrrole"
+
+    available_times = list(_times_to_indices.keys())
