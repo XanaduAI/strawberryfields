@@ -18,7 +18,7 @@ import pytest
 import numpy as np
 import tensorflow as tf
 
-from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
+from strawberryfields.backends.tfbackend.ops import reduced_density_matrix, mixed
 
 @pytest.mark.backends("tf", "fock")
 class TestTFOps:
@@ -52,3 +52,24 @@ class TestTFOps:
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("modes", [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]])
+    def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, tol):
+        """Test the reduced_density_matrix returns the correct reduced density matrices
+        when tracing out more than one mode."""
+        zero_photon_state = np.zeros([cutoff])
+        zero_photon_state[0] = 1.
+        one_photon_state = np.zeros([cutoff])
+        one_photon_state[1] = 1.
+
+        # create a single-photon state in the second mode
+        state = np.outer(zero_photon_state, one_photon_state)
+        state = np.multiply.outer(state, zero_photon_state)
+        state_dm = mixed(state)
+        state_dm = tf.constant(state_dm)
+
+        reduced_dm = reduced_density_matrix(state_dm, modes, state_is_pure=False)
+
+        alpha_str = np.array(["ab", "cd", "ef"])
+        expected = np.einsum(f"abcdef->{''.join(alpha_str[modes])}", state_dm)
+
+        assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
