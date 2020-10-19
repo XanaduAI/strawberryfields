@@ -54,7 +54,7 @@ class TestTFOps:
 
     @pytest.mark.parametrize("modes", [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]])
     def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, tol):
-        """Test the reduced_density_matrix returns the correct reduced density matrices."""
+        """Test that reduced_density_matrix returns the correct reduced density matrices."""
         state = np.zeros([cutoff, cutoff, cutoff])
         state[0, 0, 0] = 1 / np.sqrt(2)
         state[1, 1, 1] = 1 / np.sqrt(2)
