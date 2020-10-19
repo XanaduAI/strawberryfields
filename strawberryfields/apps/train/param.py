@@ -22,8 +22,8 @@ import thewalrus.samples
 from thewalrus._hafnian import reduction
 from thewalrus._torontonian import tor
 from thewalrus.quantum import Qmat
-from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
+from thewalrus.quantum import adj_scaling as rescale
+from thewalrus.quantum import adj_scaling_torontonian as rescale_tor
 from thewalrus.quantum import photon_number_mean_vector, pure_state_amplitude
 
 import strawberryfields as sf
