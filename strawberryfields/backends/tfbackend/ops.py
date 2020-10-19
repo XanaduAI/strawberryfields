@@ -1079,7 +1079,7 @@ def partial_trace(system, mode, state_is_pure, batched=False):
 
 def reduced_density_matrix(system, modes, state_is_pure, batched=False):
     """
-    Trace out all subsystems except the ones in the 'modes' from 'system'. 'modes' can be either an int or a list.
+    Trace out all subsystems except those specified in ``modes`` from ``system``. ``modes`` can be either an int or a list.
     This operation always returns a mixed state, since we do not know in advance if a mode is entangled with others.
     """
     if isinstance(modes, int):
