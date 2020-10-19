@@ -16,11 +16,11 @@ r""" Tests for the file tfbackend/ops.py"""
 import pytest
 
 import numpy as np
-import tensorflow as tf
+tf = pytest.importorskip("tensorflow", minversion="2.0")
 
 from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
 
-@pytest.mark.backends("tf", "fock")
+@pytest.mark.backends("tf")
 class TestTFOps:
     """Testing for tfbackend/ops.py"""
 
@@ -51,4 +51,3 @@ class TestTFOps:
         expected = tf.constant(expected)
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
-
