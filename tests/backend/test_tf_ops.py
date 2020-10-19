@@ -16,9 +16,9 @@ r""" Tests for the file tfbackend/ops.py"""
 import pytest
 
 import numpy as np
-from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
-
 tf = pytest.importorskip("tensorflow", minversion="2.0")
+
+from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
 
 @pytest.mark.backends("tf")
 class TestTFOps:
