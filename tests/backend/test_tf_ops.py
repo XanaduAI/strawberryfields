@@ -16,11 +16,11 @@ r""" Tests for the file tfbackend/ops.py"""
 import pytest
 
 import numpy as np
-tf = pytest.importorskip("tensorflow", minversion="2.0")
+import tensorflow as tf
 
-from strawberryfields.backends.tfbackend.ops import reduced_density_matrix, mixed
+from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
 
-@pytest.mark.backends("tf")
+@pytest.mark.backends("tf", "fock")
 class TestTFOps:
     """Testing for tfbackend/ops.py"""
 
@@ -56,21 +56,19 @@ class TestTFOps:
     def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, tol):
         """Test the reduced_density_matrix returns the correct reduced density matrices
         when tracing out more than one mode."""
-        zero_photon_state = np.zeros([cutoff])
-        zero_photon_state[0] = 1.
-        one_photon_state = np.zeros([cutoff])
-        one_photon_state[1] = 1.
+        state = np.zeros([cutoff, cutoff, cutoff])
+        state[0, 0, 0] = 1 / np.sqrt(2)
+        state[1, 1, 1] = 1 / np.sqrt(2)
+        state = np.multiply.outer(state, state.conj())
 
-        # create a single-photon state in the second mode
-        state = np.outer(zero_photon_state, one_photon_state)
-        state = np.multiply.outer(state, zero_photon_state)
-        state_dm = mixed(state)
-        state_dm = tf.constant(state_dm)
+        # transpose the state due to different conventions
+        state = state.transpose([0, 3, 1, 4, 2, 5])
 
-        reduced_dm = reduced_density_matrix(state_dm, modes, state_is_pure=False)
+        reduced_dm = reduced_density_matrix(state, modes, state_is_pure=False)
 
         alpha_str = np.array(["ab", "cd", "ef"])
-        expected = np.einsum(f"abcdef->{''.join(alpha_str[modes])}", state_dm)
+        betha_str = np.array(["aa", "bb", "cc"])
+        betha_str[modes] = alpha_str[modes]
+        expected = np.einsum(f"{''.join(betha_str)}->{''.join(alpha_str[modes])}", state)
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
-
