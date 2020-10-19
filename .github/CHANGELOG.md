@@ -32,6 +32,10 @@
 
 <h3>Bug fixes</h3>
 
+* Fixes a bug where the function `reduced_dm` in `backends/tfbackend/states.py` gives the
+  wrong output when passing it several modes.
+  [(#471)](https://github.com/XanaduAI/strawberryfields/pull/471)
+
 * Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the 
   wrong subsystems to be traced out.
   [(#467)](https://github.com/XanaduAI/strawberryfields/issues/467)

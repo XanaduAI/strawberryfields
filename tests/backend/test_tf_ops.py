@@ -51,3 +51,28 @@ class TestTFOps:
         expected = tf.constant(expected)
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("modes,einstr", [
+        ([0], "abccee->ab"),
+        ([1], "aacdee->cd"),
+        ([2], "aaccef->ef"),
+        ([0, 1], "abcdee->abcd"),
+        ([0, 2], "abccef->abef"),
+        ([1, 2], "aacdef->cdef"),
+        ([0, 1, 2], "abcdef->abcdef")
+    ])
+    def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, einstr, tol):
+        """Test that reduced_density_matrix returns the correct reduced density matrices."""
+        state = np.zeros([cutoff, cutoff, cutoff])
+        state[0, 0, 0] = 1 / np.sqrt(2)
+        state[1, 1, 1] = 1 / np.sqrt(2)
+        state = np.multiply.outer(state, state.conj())
+
+        # transpose the state due to different conventions
+        state = state.transpose([0, 3, 1, 4, 2, 5])
+        state = tf.constant(state)
+
+        reduced_dm = reduced_density_matrix(state, modes, state_is_pure=False)
+        expected = tf.constant(np.einsum(einstr, state))
+
+        assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)

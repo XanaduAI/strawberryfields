@@ -327,8 +327,7 @@ class FockStateTF(BaseFockState):
             )
 
         reduced = self.dm(**kwargs)
-        for m in modes:
-            reduced = reduced_density_matrix(reduced, m, False, batched=self.batched)
+        reduced = reduced_density_matrix(reduced, modes, False, batched=self.batched)
 
         s = tf.identity(reduced, name="reduced_density_matrix")
         return s
