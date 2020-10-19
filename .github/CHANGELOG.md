@@ -34,6 +34,7 @@
 
 * Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the 
   wrong subsystems to be traced out.
+  [(#467)](https://github.com/XanaduAI/strawberryfields/issues/467)
   [(#470)](https://github.com/XanaduAI/strawberryfields/pull/470)
 
 <h3>Documentation</h3>
