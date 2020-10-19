@@ -32,16 +32,20 @@
 
 <h3>Bug fixes</h3>
 
+* Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the 
+  wrong subsystems to be traced out.
+  [(#470)](https://github.com/XanaduAI/strawberryfields/pull/470)
+
 <h3>Documentation</h3>
 
  * Adds further testing and coverage descriptions.
-  [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
+   [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada, Antal Száva
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Fabian Laudenbach, Nicolás Quesada, Antal Száva
 
 # Release 0.15.1 (current release)
 
