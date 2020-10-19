@@ -16,9 +16,9 @@ r""" Tests for the file tfbackend/ops.py"""
 import pytest
 
 import numpy as np
-import tensorflow as tf
-
 from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
+
+tf = pytest.importorskip("tensorflow", minversion="2.0")
 
 @pytest.mark.backends("tf")
 class TestTFOps:
@@ -52,8 +52,16 @@ class TestTFOps:
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("modes", [[0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]])
-    def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, tol):
+    @pytest.mark.parametrize("modes,einstr", [
+        ([0], "abccee->ab"),
+        ([1], "aacdee->cd"),
+        ([2], "aaccef->ef"),
+        ([0, 1], "abcdee->abcd"),
+        ([0, 2], "abccef->abef"),
+        ([1, 2], "aacdef->cdef"),
+        ([0, 1, 2], "abcdef->abcdef")
+    ])
+    def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, einstr, tol):
         """Test that reduced_density_matrix returns the correct reduced density matrices."""
         state = np.zeros([cutoff, cutoff, cutoff])
         state[0, 0, 0] = 1 / np.sqrt(2)
@@ -65,11 +73,6 @@ class TestTFOps:
         state = tf.constant(state)
 
         reduced_dm = reduced_density_matrix(state, modes, state_is_pure=False)
-
-        alpha_str = np.array(["ab", "cd", "ef"])
-        betha_str = np.array(["aa", "bb", "cc"])
-        betha_str[modes] = alpha_str[modes]
-        expected = np.einsum(f"{''.join(betha_str)}->{''.join(alpha_str[modes])}", state)
-        expected = tf.constant(expected)
+        expected = tf.constant(np.einsum(einstr, state))
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
