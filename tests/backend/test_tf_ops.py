@@ -63,6 +63,7 @@ class TestTFOps:
 
         # transpose the state due to different conventions
         state = state.transpose([0, 3, 1, 4, 2, 5])
+        state = tf.constant(state)
 
         reduced_dm = reduced_density_matrix(state, modes, state_is_pure=False)
 
@@ -70,5 +71,6 @@ class TestTFOps:
         betha_str = np.array(["aa", "bb", "cc"])
         betha_str[modes] = alpha_str[modes]
         expected = np.einsum(f"{''.join(betha_str)}->{''.join(alpha_str[modes])}", state)
+        expected = tf.constant(expected)
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
