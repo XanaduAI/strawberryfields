@@ -32,6 +32,9 @@
 
 <h3>Bug fixes</h3>
 
+* Fixes a bug where `reduced_dm` gives the wrong output when passing it several modes.
+  [(#471)](https://github.com/XanaduAI/strawberryfields/pull/471)
+
 <h3>Documentation</h3>
 
  * Adds further testing and coverage descriptions.
