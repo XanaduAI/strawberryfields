@@ -20,7 +20,7 @@ import tensorflow as tf
 
 from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
 
-@pytest.mark.backends("tf", "fock")
+@pytest.mark.backends("tf")
 class TestTFOps:
     """Testing for tfbackend/ops.py"""
 
