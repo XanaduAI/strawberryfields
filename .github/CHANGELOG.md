@@ -32,16 +32,25 @@
 
 <h3>Bug fixes</h3>
 
+* Fixes a bug where the function `reduced_dm` in `backends/tfbackend/states.py` gives the
+  wrong output when passing it several modes.
+  [(#471)](https://github.com/XanaduAI/strawberryfields/pull/471)
+
+* Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the 
+  wrong subsystems to be traced out.
+  [(#467)](https://github.com/XanaduAI/strawberryfields/issues/467)
+  [(#470)](https://github.com/XanaduAI/strawberryfields/pull/470)
+
 <h3>Documentation</h3>
 
  * Adds further testing and coverage descriptions.
-  [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
+   [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolás Quesada, Antal Száva
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Fabian Laudenbach, Nicolás Quesada, Antal Száva
 
 # Release 0.15.1 (current release)
 
