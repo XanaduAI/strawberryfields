@@ -62,7 +62,6 @@ from strawberryfields.backends.shared_ops import (
     generate_bs_factors,
     load_bs_factors,
     save_bs_factors,
-    squeeze_parity,
 )
 
 def_type = tf.complex64  # NOTE: what if a user wants higher accuracy?
@@ -86,24 +85,27 @@ def mixed(pure_state, batched=False):
     # todo: In the fock backend mixing is done by ops.mix(), maybe the functions should be named identically?
     if not batched:
         pure_state = tf.expand_dims(pure_state, 0)  # add in fake batch dimension
+
     batch_offset = 1
     num_modes = len(pure_state.shape) - batch_offset
     max_num = (max_num_indices - batch_offset) // 2
+
     if num_modes > max_num:
         raise ValueError(
             "Converting state from pure to mixed currently only supported for {} modes.".format(
                 max_num
             )
         )
-    else:
-        # eqn: 'abc...xyz,ABC...XYZ->aAbBcC...xXyYzZ' (lowercase belonging to 'bra' side, uppercase belonging to 'ket' side)
-        batch_index = indices[:batch_offset]
-        bra_indices = indices[batch_offset : batch_offset + num_modes]
-        ket_indices = indices[batch_offset + num_modes : batch_offset + 2 * num_modes]
-        eqn_lhs = batch_index + bra_indices + "," + batch_index + ket_indices
-        eqn_rhs = "".join(bdx + kdx for bdx, kdx in zip(bra_indices, ket_indices))
-        eqn = eqn_lhs + "->" + batch_index + eqn_rhs
-        mixed_state = tf.einsum(eqn, pure_state, tf.math.conj(pure_state))
+
+    # eqn: 'abc...xyz,ABC...XYZ->aAbBcC...xXyYzZ' (lowercase belonging to 'bra' side, uppercase belonging to 'ket' side)
+    batch_index = indices[:batch_offset]
+    bra_indices = indices[batch_offset : batch_offset + num_modes]
+    ket_indices = indices[batch_offset + num_modes : batch_offset + 2 * num_modes]
+    eqn_lhs = batch_index + bra_indices + "," + batch_index + ket_indices
+    eqn_rhs = "".join(bdx + kdx for bdx, kdx in zip(bra_indices, ket_indices))
+    eqn = eqn_lhs + "->" + batch_index + eqn_rhs
+    mixed_state = tf.einsum(eqn, pure_state, tf.math.conj(pure_state))
+
     if not batched:
         mixed_state = tf.squeeze(mixed_state, 0)  # drop fake batch dimension
     return mixed_state
@@ -415,7 +417,7 @@ def fock_state(n, cutoff, pure=True, batched=False):
         raise ValueError("'n' is expected to be either an int or a numpy array")
     if batched:
         batch_size = n.shape[0]
-        idxs = [(b, f) for (b, f) in zip(range(batch_size), n)]
+        idxs = list(zip(range(batch_size), n))
         values = [1.0] * batch_size
         shape = [batch_size, cutoff]
     else:
@@ -537,45 +539,45 @@ def single_mode_gate(matrix, mode, in_modes, pure=True, batched=False):
         )
     if mode < 0 or mode >= num_modes:
         raise ValueError("'mode' argument is not compatible with number of in_modes")
+
+    other_modes_indices = indices[
+        batch_offset + 2 * mode_size : batch_offset + (1 + num_modes) * mode_size
+    ]
+    if pure:
+        eqn_lhs = "{},{}{}{}{}".format(
+            batch_index + left_gate_str,
+            batch_index,
+            other_modes_indices[: mode * mode_size],
+            left_gate_str[1],
+            other_modes_indices[mode * mode_size :],
+        )
+        eqn_rhs = "".join(
+            [
+                batch_index,
+                other_modes_indices[: mode * mode_size],
+                left_gate_str[0],
+                other_modes_indices[mode * mode_size :],
+            ]
+        )
     else:
-        other_modes_indices = indices[
-            batch_offset + 2 * mode_size : batch_offset + (1 + num_modes) * mode_size
-        ]
-        if pure:
-            eqn_lhs = "{},{}{}{}{}".format(
-                batch_index + left_gate_str,
+        eqn_lhs = "{},{}{}{}{}{},{}".format(
+            batch_index + left_gate_str,
+            batch_index,
+            other_modes_indices[: mode * mode_size],
+            left_gate_str[1],
+            right_gate_str[0],
+            other_modes_indices[mode * mode_size :],
+            batch_index + right_gate_str,
+        )
+        eqn_rhs = "".join(
+            [
                 batch_index,
                 other_modes_indices[: mode * mode_size],
-                left_gate_str[1],
+                left_gate_str[0],
+                right_gate_str[1],
                 other_modes_indices[mode * mode_size :],
-            )
-            eqn_rhs = "".join(
-                [
-                    batch_index,
-                    other_modes_indices[: mode * mode_size],
-                    left_gate_str[0],
-                    other_modes_indices[mode * mode_size :],
-                ]
-            )
-        else:
-            eqn_lhs = "{},{}{}{}{}{},{}".format(
-                batch_index + left_gate_str,
-                batch_index,
-                other_modes_indices[: mode * mode_size],
-                left_gate_str[1],
-                right_gate_str[0],
-                other_modes_indices[mode * mode_size :],
-                batch_index + right_gate_str,
-            )
-            eqn_rhs = "".join(
-                [
-                    batch_index,
-                    other_modes_indices[: mode * mode_size],
-                    left_gate_str[0],
-                    right_gate_str[1],
-                    other_modes_indices[mode * mode_size :],
-                ]
-            )
+            ]
+        )
 
     eqn = eqn_lhs + "->" + eqn_rhs
     einsum_inputs = [matrix, in_modes]
@@ -614,71 +616,68 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
         raise NotImplementedError(
             "The max number of supported modes for this operation is currently {}".format(max_len)
         )
+
+    min_mode = min(mode1, mode2)
+    max_mode = max(mode1, mode2)
+    if min_mode < 0 or max_mode >= num_modes or mode1 == mode2:
+        raise ValueError("One or more mode numbers are incompatible")
+
+    other_modes_indices = indices[
+        batch_offset + 4 * mode_size : batch_offset + 4 * mode_size + mode_size * (num_modes - 2)
+    ]
+    # build equation
+    if mode1 == min_mode:
+        lhs_min_mode_indices = left_gate_str[1]
+        lhs_max_mode_indices = left_gate_str[3]
+        rhs_min_mode_indices = left_gate_str[0]
+        rhs_max_mode_indices = left_gate_str[2]
     else:
-        min_mode = min(mode1, mode2)
-        max_mode = max(mode1, mode2)
-        if min_mode < 0 or max_mode >= num_modes or mode1 == mode2:
-            raise ValueError("One or more mode numbers are incompatible")
+        lhs_min_mode_indices = left_gate_str[3]
+        lhs_max_mode_indices = left_gate_str[1]
+        rhs_min_mode_indices = left_gate_str[2]
+        rhs_max_mode_indices = left_gate_str[0]
+    if not pure:
+        if mode1 == min_mode:
+            lhs_min_mode_indices += right_gate_str[0]
+            lhs_max_mode_indices += right_gate_str[2]
+            rhs_min_mode_indices += right_gate_str[1]
+            rhs_max_mode_indices += right_gate_str[3]
         else:
-            other_modes_indices = indices[
-                batch_offset
-                + 4 * mode_size : batch_offset
-                + 4 * mode_size
-                + mode_size * (num_modes - 2)
-            ]
-            # build equation
-            if mode1 == min_mode:
-                lhs_min_mode_indices = left_gate_str[1]
-                lhs_max_mode_indices = left_gate_str[3]
-                rhs_min_mode_indices = left_gate_str[0]
-                rhs_max_mode_indices = left_gate_str[2]
-            else:
-                lhs_min_mode_indices = left_gate_str[3]
-                lhs_max_mode_indices = left_gate_str[1]
-                rhs_min_mode_indices = left_gate_str[2]
-                rhs_max_mode_indices = left_gate_str[0]
-            if not pure:
-                if mode1 == min_mode:
-                    lhs_min_mode_indices += right_gate_str[0]
-                    lhs_max_mode_indices += right_gate_str[2]
-                    rhs_min_mode_indices += right_gate_str[1]
-                    rhs_max_mode_indices += right_gate_str[3]
-                else:
-                    lhs_min_mode_indices += right_gate_str[2]
-                    lhs_max_mode_indices += right_gate_str[0]
-                    rhs_min_mode_indices += right_gate_str[3]
-                    rhs_max_mode_indices += right_gate_str[1]
-            eqn_lhs = "{},{}{}{}{}{}{}".format(
-                batch_index + left_gate_str,
-                batch_index,
-                other_modes_indices[: min_mode * mode_size],
-                lhs_min_mode_indices,
-                other_modes_indices[min_mode * mode_size : (max_mode - 1) * mode_size],
-                lhs_max_mode_indices,
-                other_modes_indices[(max_mode - 1) * mode_size :],
-            )
-            if not pure:
-                eqn_lhs += "," + batch_index + right_gate_str
-            eqn_rhs = "".join(
-                [
-                    batch_index,
-                    other_modes_indices[: min_mode * mode_size],
-                    rhs_min_mode_indices,
-                    other_modes_indices[min_mode * mode_size : (max_mode - 1) * mode_size],
-                    rhs_max_mode_indices,
-                    other_modes_indices[(max_mode - 1) * mode_size :],
-                ]
-            )
-            eqn = eqn_lhs + "->" + eqn_rhs
-            einsum_inputs = [matrix, in_modes]
-            if not pure:
-                if batched:
-                    transpose_list = [0, 2, 1, 4, 3]
-                else:
-                    transpose_list = [1, 0, 3, 2]
-                einsum_inputs.append(tf.math.conj(tf.transpose(matrix, transpose_list)))
-            output = tf.einsum(eqn, *einsum_inputs)
-            return output
+            lhs_min_mode_indices += right_gate_str[2]
+            lhs_max_mode_indices += right_gate_str[0]
+            rhs_min_mode_indices += right_gate_str[3]
+            rhs_max_mode_indices += right_gate_str[1]
+    eqn_lhs = "{},{}{}{}{}{}{}".format(
+        batch_index + left_gate_str,
+        batch_index,
+        other_modes_indices[: min_mode * mode_size],
+        lhs_min_mode_indices,
+        other_modes_indices[min_mode * mode_size : (max_mode - 1) * mode_size],
+        lhs_max_mode_indices,
+        other_modes_indices[(max_mode - 1) * mode_size :],
+    )
+    if not pure:
+        eqn_lhs += "," + batch_index + right_gate_str
+    eqn_rhs = "".join(
+        [
+            batch_index,
+            other_modes_indices[: min_mode * mode_size],
+            rhs_min_mode_indices,
+            other_modes_indices[min_mode * mode_size : (max_mode - 1) * mode_size],
+            rhs_max_mode_indices,
+            other_modes_indices[(max_mode - 1) * mode_size :],
+        ]
+    )
+    eqn = eqn_lhs + "->" + eqn_rhs
+    einsum_inputs = [matrix, in_modes]
+    if not pure:
+        if batched:
+            transpose_list = [0, 2, 1, 4, 3]
+        else:
+            transpose_list = [1, 0, 3, 2]
+        einsum_inputs.append(tf.math.conj(tf.transpose(matrix, transpose_list)))
+    output = tf.einsum(eqn, *einsum_inputs)
+    return output
 
 
 def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
@@ -702,37 +701,34 @@ def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
         raise NotImplementedError(
             "The max number of supported modes for this operation is currently {}".format(max_len)
         )
-    else:
-        if pure:
-            in_modes = mixed(in_modes, batched)
 
-        # create equation
-        batch_index = indices[:batch_offset]
-        superop_indices = indices[batch_offset : batch_offset + 4]
-        state_indices = indices[batch_offset + 4 : batch_offset + 4 + 2 * num_modes]
-        left_unchanged_indices = state_indices[: 2 * mode]
-        right_unchanged_indices = state_indices[2 * mode : 2 * (num_modes - 1)]
-        eqn_lhs = ",".join(
-            [
-                batch_index + superop_indices,
-                batch_index
-                + left_unchanged_indices
-                + superop_indices[1:3]
-                + right_unchanged_indices,
-            ]
-        )
-        eqn_rhs = "".join(
-            [
-                batch_index,
-                left_unchanged_indices
-                + superop_indices[0]
-                + superop_indices[3]
-                + right_unchanged_indices,
-            ]
-        )
-        eqn = "->".join([eqn_lhs, eqn_rhs])
-        new_state = tf.einsum(eqn, superop, in_modes)
-        return new_state
+    if pure:
+        in_modes = mixed(in_modes, batched)
+
+    # create equation
+    batch_index = indices[:batch_offset]
+    superop_indices = indices[batch_offset : batch_offset + 4]
+    state_indices = indices[batch_offset + 4 : batch_offset + 4 + 2 * num_modes]
+    left_unchanged_indices = state_indices[: 2 * mode]
+    right_unchanged_indices = state_indices[2 * mode : 2 * (num_modes - 1)]
+    eqn_lhs = ",".join(
+        [
+            batch_index + superop_indices,
+            batch_index + left_unchanged_indices + superop_indices[1:3] + right_unchanged_indices,
+        ]
+    )
+    eqn_rhs = "".join(
+        [
+            batch_index,
+            left_unchanged_indices
+            + superop_indices[0]
+            + superop_indices[3]
+            + right_unchanged_indices,
+        ]
+    )
+    eqn = "->".join([eqn_lhs, eqn_rhs])
+    new_state = tf.einsum(eqn, superop, in_modes)
+    return new_state
 
 
 ###################################################################
@@ -1066,7 +1062,7 @@ def partial_trace(system, mode, state_is_pure, batched=False):
     # tensorflow trace implementation
     # requires subsystem to be traced out to be at end
     # i.e., ab...klmnop...yz goes to ab...klop...yzmn
-    indices_list = [m for m in range(batch_offset + 2 * num_modes)]
+    indices_list = list(range(batch_offset + 2 * num_modes))
     dim_list = (
         indices_list[: batch_offset + 2 * mode]
         + indices_list[batch_offset + 2 * (mode + 1) :]
@@ -1077,11 +1073,14 @@ def partial_trace(system, mode, state_is_pure, batched=False):
     return reduced_state
 
 
-def reduced_density_matrix(system, mode, state_is_pure, batched=False):
+def reduced_density_matrix(system, modes, state_is_pure, batched=False):
     """
-    Trace out all subsystems except 'mode' from 'system'.
+    Trace out all subsystems except those specified in ``modes`` from ``system``. ``modes`` can be either an int or a list.
     This operation always returns a mixed state, since we do not know in advance if a mode is entangled with others.
     """
+    if isinstance(modes, int):
+        modes = [modes]
+
     if state_is_pure:
         reduced_state = mixed(system, batched)
     else:
@@ -1092,9 +1091,11 @@ def reduced_density_matrix(system, mode, state_is_pure, batched=False):
     else:
         batch_offset = 0
     num_modes = (num_indices - batch_offset) // 2  # always mixed
+    removed_cnt = 0
     for m in range(num_modes):
-        if m != mode:
-            reduced_state = partial_trace(reduced_state, m, False, batched)
+        if m not in modes:
+            reduced_state = partial_trace(reduced_state, m - removed_cnt, False, batched)
+            removed_cnt += 1
     return reduced_state
 
 
