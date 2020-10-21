@@ -20,8 +20,8 @@ import itertools
 import numpy as np
 import pytest
 import thewalrus
-from thewalrus.quantum import find_scaling_adjacency_matrix as rescale
-from thewalrus.quantum import find_scaling_adjacency_matrix_torontonian as rescale_tor
+from thewalrus.quantum import adj_scaling as rescale
+from thewalrus.quantum import adj_scaling_torontonian as rescale_tor
 
 from strawberryfields.apps import train
 from strawberryfields.apps.train.embed import Exp
