@@ -416,7 +416,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     BS[m, n] = 1.0j / np.sqrt(2)
     BS[n, m] = 1.0j / np.sqrt(2)
     BS[n, n] = 1.0 / np.sqrt(2)
-    return BS @ Rinternal @ BS @ Rexternal
+    return np.real_if_close(BS @ Rinternal @ BS @ Rexternal)
 
 
 def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):

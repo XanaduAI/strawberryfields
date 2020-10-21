@@ -89,6 +89,8 @@ been generated for formic acid at zero temperature. The GBS samples can be used 
 
 .. autosummary::
     Formic
+    Water
+    Pyrrole
 
 Dataset
 -------

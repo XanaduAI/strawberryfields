@@ -1,4 +1,4 @@
-# Release 0.16.0 (development release)
+# Release 0.16.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -26,33 +26,78 @@
   For more details, see the [code
   documentation](https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.TDMProgram.html).
 
+* Adds the function VibronicTransition to the `apps.qchem.vibronic` module. This function generates a
+  custom Strawberry Fields operation for applying the Doktorov operator on a given state.
+  [(#451)](https://github.com/XanaduAI/strawberryfields/pull/451)
+
+  ```pycon
+  >>> from strawberryfields.apps.qchem.vibronic import VibronicTransition
+  >>> modes = 2
+  >>> p = sf.Program(modes)
+  >>> with p.context as q:
+  ...     VibronicTransition(U1, r, U2, alpha) | q
+  ```
+
+* Adds the `TimeEvolution` function to the `apps.qchem.dynamics` module. This function
+  generates a custom sf operation for applying a time evolution operator on a given state.
+  [(#455)](https://github.com/XanaduAI/strawberryfields/pull/455)
+
+  ```pycon
+  >>> modes = 2
+  >>> p = sf.Program(modes)
+  >>> with p.context as q:
+  ...     sf.ops.Fock(1) | q[0]
+  ...     sf.ops.Interferometer(Ul.T) | q
+  ...     TimeEvolution(w, t) | q
+  ...     sf.ops.Interferometer(Ul) | q
+  ```
+
+  where `w` is the normal mode frequencies, and `t` the time in femtoseconds.
+
+* Molecular data and pre-generated samples for water and pyrrole have been added to the data module
+  of the Applications layer of Strawberry Fields. For more details, please see the [data module
+  documentation](https://strawberryfields.readthedocs.io/en/stable/introduction/data.html#molecules)
+  [(#463)](https://github.com/XanaduAI/strawberryfields/pull/463)
+
 <h3>Improvements</h3>
+
+* When jobs submitted to the Xanadu Quantum Cloud are cancelled, they will now display a
+  `cancel_pending` JobStatus until the cancellation is confirmed.
+  [(#456)](https://github.com/XanaduAI/strawberryfields/pull/456)
 
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
 
-* Fixes a bug where the function `reduced_dm` in `backends/tfbackend/states.py` gives the
+* Fixed a bug where the function `reduced_dm` in `backends/tfbackend/states.py` gives the
   wrong output when passing it several modes.
   [(#471)](https://github.com/XanaduAI/strawberryfields/pull/471)
 
-* Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the 
+* Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the
   wrong subsystems to be traced out.
   [(#467)](https://github.com/XanaduAI/strawberryfields/issues/467)
   [(#470)](https://github.com/XanaduAI/strawberryfields/pull/470)
 
+* Fixed a bug where decompositions to Mach-Zehnder interferometers would return
+  incorrect results on NumPy 1.19.
+
 <h3>Documentation</h3>
 
- * Adds further testing and coverage descriptions.
-   [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
+* Adds further testing and coverage descriptions to the developer documentation.
+  This includes details regarding the Strawberry Fields test structure and test decorators.
+  [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
+
+* Updates the minimum required version of TensorFlow in the development guide.
+  [(#468)](https://github.com/XanaduAI/strawberryfields/pull/468)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Nathan Killoran, Fabian Laudenbach, Nicolás Quesada, Antal Száva
+Juan Miguel Arrazola, Tom Bromley, Theodor Isacsson, Josh Izaac, Soran Jahangiri, Nathan Killoran,
+Fabian Laudenbach, Nicolás Quesada, Antal Száva, ‪Ilan Tzitrin.
 
-# Release 0.15.1 (current release)
+# Release 0.15.1
 
 <h3>Improvements</h3>
 
