@@ -39,6 +39,7 @@ For :ref:`dense subgraph <apps-subgraph-tutorial>` and
 .. autosummary::
     Planted
     TaceAs
+    PHat
 
 For :ref:`graph similarity <apps-sim-tutorial>`, we provide:
 
