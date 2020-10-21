@@ -80,6 +80,7 @@
 
 * Fixed a bug where decompositions to Mach-Zehnder interferometers would return
   incorrect results on NumPy 1.19.
+  [(#473)](https://github.com/XanaduAI/strawberryfields/pull/473)
 
 <h3>Documentation</h3>
 
