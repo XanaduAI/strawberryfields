@@ -13,5 +13,5 @@ sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2
 tensorflow-tensorboard==0.1.8
-tensorflow==2.0.1
+tensorflow==2.0.3
 toml

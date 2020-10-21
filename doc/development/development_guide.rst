@@ -42,39 +42,20 @@ importing StrawberryFields in Python.
 TensorFlow support
 ------------------
 
-To use Strawberry Fields with TensorFlow, version 1.3 of
-TensorFlow is required. This can be installed alongside Strawberry Fields
+To use Strawberry Fields with TensorFlow, version 2.0 of
+TensorFlow (or higher) is required. This can be installed alongside Strawberry Fields
 as follows:
 
 .. code-block:: console
 
-    pip install strawberryfields tensorflow==1.3
+    pip install strawberryfields tensorflow
 
 Or, to install Strawberry Fields and TensorFlow with GPU and CUDA support:
 
 .. code-block:: console
 
-    pip install strawberryfields tensorflow-gpu==1.3
+    pip install strawberryfields tensorflow-gpu
 
-Note that TensorFlow version 1.3 is only supported on Python versions
-less than 3.7. You can use the following command to check your
-Python version:
-
-.. code-block:: console
-
-    python --version
-
-If the above prints out 3.7, and you still want to use TensorFlow, you will need
-to install Python 3.6. The recommended method is to install
-`Anaconda for Python 3 <https://www.anaconda.com/download/>`_.
-
-Once installed, you can then create a Python 3.6 Conda environment:
-
-.. code-block:: console
-
-    conda create --name sf_tensorflow_env python=3.6
-    conda activate sf_tensorflow_env
-    pip install strawberryfields tensorflow==1.3
 
 Software tests
 --------------
@@ -127,23 +108,74 @@ Individual test modules are run by invoking pytest directly from the command lin
 
 .. note:: **Adding tests to Strawberry Fields**
 
-    The ``tests`` folder is organised into four subfolders: ``backend`` for tests that
-    only import a Strawberry Fields backend, ``frontend`` for tests that import the Strawberry
-    Fields UI but do not make use of a backend, ``integration`` for tests that test
-    integration of the frontend and backends, and ``apps`` for tests of the applications layer.
+    The ``tests`` folder is organised into several subfolders:
 
-    When writing new tests, make sure to mark what components it tests. For a backend test,
-    you can use the ``backends`` mark, which accepts the names of the backends:
+    - ``backend`` for tests that only import a Strawberry Fields backend,
+    - ``frontend`` for tests that import the Strawberry Fields UI but do not make use of a backend,
+    - ``integration`` for tests that verify integration of the frontend and backends,
+    - ``apps`` for tests of the applications layer
+    - ``api`` for tests that only import and use the strawberryfields.api package
+
+    When writing new tests, make sure to mark what components they test.
+
+    Certain tests that are related to a specific backend, e.g. test cases for
+    its operations or the states returned by a backend. For a backend test, you
+    can use the ``backends`` mark, which accepts the names of the backends:
 
     .. code-block:: python
 
         pytest.mark.backends("fock", "gaussian")
 
-    For a frontend-only test, you can use the frontend mark:
+    For specific test cases, the decorator can be used to mark only classes and
+    test functions:
+
+    .. code-block:: python
+
+        @pytest.mark.backends("fock", "gaussian")
+        def test_fock_and_gaussian_feature():
+
+    Adding tests for an engine, operations, parameters and other parts of the
+    user interface can be added as part of the frontend tests. For a
+    frontend-only test, you can use the frontend mark:
 
     .. code-block:: python
 
         pytest.mark.frontend
+
+    This could then be used on the module level to mark not just a single test
+    case, but the entire test file as a frontend test:
+
+    .. code-block:: python
+
+        mark = pytest.mark.frontend
+
+
+.. note:: **Run options for Strawberry Fields tests**
+
+    Several run options can be helpful for testing Strawberry Fields.
+
+    Marks mentioned in the previous section are useful also when running tests
+    and selecting only certain tests to be run. They can be specified by using
+    the ``-m`` option for ``pytest``.
+
+    The following command can be used for example, to run tests related to the
+    ``"Fock"`` backend:
+
+    .. code-block:: console
+
+        pytest -m fock
+
+    When running tests, it can also be useful to examine a single failing test.
+    The following command stops at the first failing test:
+
+    .. code-block:: console
+
+        pytest -x
+
+    For further useful options (e.g. ``-k``, ``-s``, ``--tb=short``, etc.)
+    refer to the ``pytest --help`` command line usage description or the
+    ``pytest`` online documentation.
+
 
 Test coverage
 ^^^^^^^^^^^^^
@@ -157,6 +189,29 @@ Test coverage can be checked by running
 The output of the above command will show the coverage percentage of each
 file, as well as the line numbers of any lines missing test coverage.
 
+To obtain coverage, the ``pytest-cov`` plugin is needed.
+
+The coverage of a specific file can also be checked by generating a report:
+
+.. code-block:: console
+
+    pytest tests/backend/test_states.py --cov=strawberryfields/location/to/module --cov-report=term-missing
+
+Here the coverage report will be created relative to the module specified by
+the path passed to the ``--cov=`` option.
+
+The previously mentioned ``pytest`` options can be combined with the coverage
+options. As an example, the ``-k`` option allows you to pass a boolean string
+using file names, test class/test function names, and marks. Using ``-k`` in
+the following command we can get the report of a specific file while also
+filtering out certain tests:
+
+.. code-block:: console
+
+    pytest tests/backend/test_states.py --cov --cov-report=term-missing -k 'not TestBaseGaussianMethods'
+
+Passing the ``--cov`` option without any modules specified will generate a
+coverage report for all modules of Strawberry Fields.
 
 Documentation
 -------------

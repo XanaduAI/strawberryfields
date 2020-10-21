@@ -95,7 +95,7 @@ class FockStateTF(BaseFockState):
         if len(n) != self.num_modes:
             raise ValueError("List length should be equal to number of modes")
 
-        elif max(n) >= self.cutoff_dim:
+        if max(n) >= self.cutoff_dim:
             raise ValueError("Can't get distribution beyond truncation level")
 
         state = self.data
@@ -288,7 +288,7 @@ class FockStateTF(BaseFockState):
 
         return v
 
-    def is_vacuum(self, tol=0.0, **kwargs):
+    def is_vacuum(self, tol=0.0, **kwargs):  # pylint:disable=unused-argument
         r"""
         Computes a boolean which indicates whether the state is the vacuum state. May be numerical or symbolic.
 
@@ -327,8 +327,7 @@ class FockStateTF(BaseFockState):
             )
 
         reduced = self.dm(**kwargs)
-        for m in modes:
-            reduced = reduced_density_matrix(reduced, m, False, batched=self.batched)
+        reduced = reduced_density_matrix(reduced, modes, False, batched=self.batched)
 
         s = tf.identity(reduced, name="reduced_density_matrix")
         return s
@@ -547,11 +546,11 @@ class FockStateTF(BaseFockState):
 
         if not self.batched:
             return super().poly_quad_expectation(A, d, k, phi, **kwargs)
-        else:
-            raise NotImplementedError(
-                "Calculation of multi-mode quadratic expectation values is currently "
-                "only supported when batched=False."
-            )
+
+        raise NotImplementedError(
+            "Calculation of multi-mode quadratic expectation values is currently "
+            "only supported when batched=False."
+        )
 
     @property
     def batched(self):
