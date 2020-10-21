@@ -154,7 +154,7 @@ def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.
     >>> modes = 2
     >>> p = sf.Program(modes)
     >>> with p.context as q:
-    >>>     VibronicTransition(U1, r, U2, alpha) | q
+    ...     VibronicTransition(U1, r, U2, alpha) | q
 
     Args:
         U1 (array): unitary matrix for the first interferometer
