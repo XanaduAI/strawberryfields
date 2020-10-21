@@ -23,13 +23,14 @@ The following submodules are available:
     dynamics
     vibronic
 
-An additional utility function is also available:
+Additional utility functions are also available:
 
 .. autosummary::
     :toctree: api
 
     duschinsky
+    read_gamess
 """
 import strawberryfields.apps.qchem.dynamics
 import strawberryfields.apps.qchem.vibronic
-from strawberryfields.apps.qchem.utils import duschinsky
+from strawberryfields.apps.qchem.utils import duschinsky, read_gamess
