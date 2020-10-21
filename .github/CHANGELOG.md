@@ -90,7 +90,7 @@
 
 <h3>Improvements</h3>
 
-* When jobs submitted to the Xanadu Quantum Cloud are cancelled, they will now display a
+* When jobs submitted to the Xanadu Quantum Cloud are canceled, they will now display a
   `cancel_pending` JobStatus until the cancellation is confirmed.
   [(#456)](https://github.com/XanaduAI/strawberryfields/pull/456)
 
