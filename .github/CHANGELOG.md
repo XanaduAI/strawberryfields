@@ -26,7 +26,7 @@
   For more details, see the [code
   documentation](https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.TDMProgram.html).
 
-* Adds the function VibronicTransition to the `apps.qchem.vibronic` module. This function generates a
+* Adds the function `VibronicTransition` to the `apps.qchem.vibronic` module. This function generates a
   custom Strawberry Fields operation for applying the Doktorov operator on a given state.
   [(#451)](https://github.com/XanaduAI/strawberryfields/pull/451)
 
@@ -39,7 +39,7 @@
   ```
 
 * Adds the `TimeEvolution` function to the `apps.qchem.dynamics` module. This function
-  generates a custom sf operation for applying a time evolution operator on a given state.
+  generates a custom Strawberry Fields operation for applying a time evolution operator on a given state.
   [(#455)](https://github.com/XanaduAI/strawberryfields/pull/455)
 
   ```pycon
