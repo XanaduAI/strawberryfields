@@ -306,6 +306,11 @@ circuits, see the following tutorials.
     :description: :doc:`demos/run_tutorial_machine_learning`
     :figure: /_static/TF.png
 
+.. customgalleryitem::
+    :tooltip: Simulate massive time-domain quantum systems
+    :description: :doc:`demos/run_time_domain`
+    :figure: /_static/oneloop.svg
+
 .. raw:: html
 
         <div style='clear:both'></div>

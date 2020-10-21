@@ -1,0 +1,17 @@
+ INPUT CARD> $contrl scftyp=rhf dfttyp=pbe0 runtyp=hessian ispher=1 nosym=1 $end            
+ INPUT CARD> $system mwords=100 $end                                                        
+ INPUT CARD> $scf dirscf=.true. $end                                                        
+ INPUT CARD> $cphf cphf=ao $end                                                             
+ INPUT CARD> $basis gbasis=accd $end                                                        
+ INPUT CARD> $guess guess=huckel $end                                                       
+ INPUT CARD> $data                                                                          
+ INPUT CARD>title                                                                           
+ INPUT CARD>C1                                                                              
+ INPUT CARD> B           5.0   0.0000000000   0.0000000000   0.0000000000                   
+ INPUT CARD> H           1.0   1.2536039000   0.0000000000   0.0000000000                   
+ INPUT CARD> $end
+
+          ATOMIC WEIGHTS (AMU)
+
+    1     B                11.00931
+    2     H                 1.00782

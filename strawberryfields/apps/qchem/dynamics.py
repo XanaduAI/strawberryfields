@@ -63,24 +63,6 @@ device has the following form:
    (or modes) is computed for time :math:`t`.
 
 This module contains functions for implementing this algorithm.
-
-- The function :func:`~.TimeEvolution` is an operation that contains the required
-  rotation operations explained in step 3 of the algorithm.
-
-- The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
-  in molecules with a Fock input state.
-
-- The function :func:`~.sample_coherent` generates samples for simulating vibrational quantum
-  dynamics in molecules with a coherent input state.
-
-- The function :func:`~.sample_tmsv` generates samples for simulating vibrational quantum dynamics
-  in molecules with a two-mode squeezed vacuum input state.
-
-- The function :func:`~.prob` estimates the probability of observing a desired excitation in the
-  generated samples.
-
-- The function :func:`~.marginals` generates single-mode marginal distributions from the
-  displacement vector and covariance matrix of a Gaussian state.
 """
 import warnings
 
@@ -105,10 +87,10 @@ def TimeEvolution(w: np.ndarray, t: float):
     >>> modes = 2
     >>> p = sf.Program(modes)
     >>> with p.context as q:
-    >>>     sf.ops.Fock(1) | q[0]
-    >>>     sf.ops.Interferometer(Ul.T) | q
-    >>>     TimeEvolution(w, t) | q
-    >>>     sf.ops.Interferometer(Ul) | q
+    ...     sf.ops.Fock(1) | q[0]
+    ...     sf.ops.Interferometer(Ul.T) | q
+    ...     TimeEvolution(w, t) | q
+    ...     sf.ops.Interferometer(Ul) | q
 
     Args:
         w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
@@ -145,7 +127,7 @@ def sample_fock(
     >>> input_state = [0, 2]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])
+    ...                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> cutoff = 5
@@ -271,7 +253,7 @@ def sample_tmsv(
     >>> r = [[0.2, 0.1], [0.8, 0.2]]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])
+    ...                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> sample_tmsv(r, t, Ul, w, n_samples)
@@ -346,7 +328,7 @@ def sample_coherent(
     >>> alpha = [[0.3, 0.5], [1.4, 0.1]]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])
+    ...                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> sample_coherent(alpha, t, Ul, w, n_samples)
@@ -415,13 +397,13 @@ def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> n
     **Example usage:**
 
     >>> mu = np.array([0.00000000, 2.82842712, 0.00000000,
-    >>>                0.00000000, 0.00000000, 0.00000000])
+    ...                0.00000000, 0.00000000, 0.00000000])
     >>> V = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    >>>               [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-    >>>               [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-    >>>               [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-    >>>               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-    >>>               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
+    ...               [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+    ...               [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+    ...               [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+    ...               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+    ...               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
     >>> n_max = 10
     >>> marginals(mu, V, n_max)
     array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
