@@ -59,6 +59,35 @@
   documentation](https://strawberryfields.readthedocs.io/en/stable/introduction/data.html#molecules)
   [(#463)](https://github.com/XanaduAI/strawberryfields/pull/463)
 
+* Adds the function `read_gamess` to the qchem module to extract the atomic coordinates, atomic
+  masses, vibrational frequencies, and normal modes of a molecule from the output file of a
+  vibrational frequency calculation performed with the GAMESS quantum chemistry package.
+  [(#460)](https://github.com/XanaduAI/strawberryfields/pull/460)
+
+  ```pycon
+  >>> r, m, w, l = read_gamess('../BH_data.out')
+  >>> r # atomic coordinates
+  array([[0.0000000, 0.0000000, 0.0000000],
+         [1.2536039, 0.0000000, 0.0000000]])
+  >>> m # atomic masses
+  array([11.00931,  1.00782])
+  >>> w # vibrational frequencies
+  array([19.74, 19.73, 0.00, 0.00, 0.00, 2320.32])
+  >>> l # normal modes
+  array([[-0.0000000e+00, -7.5322000e-04, -8.7276210e-02,  0.0000000e+00,
+       8.2280900e-03,  9.5339055e-01],
+     [-0.0000000e+00, -8.7276210e-02,  7.5322000e-04,  0.0000000e+00,
+       9.5339055e-01, -8.2280900e-03],
+     [ 2.8846925e-01, -2.0000000e-08,  2.0000000e-08,  2.8846925e-01,
+      -2.0000000e-08,  2.0000000e-08],
+     [ 2.0000000e-08,  2.8846925e-01, -2.0000000e-08,  2.0000000e-08,
+       2.8846925e-01, -2.0000000e-08],
+     [-2.0000000e-08,  2.0000000e-08,  2.8846925e-01, -2.0000000e-08,
+       2.0000000e-08,  2.8846925e-01],
+     [-8.7279460e-02,  0.0000000e+00,  0.0000000e+00,  9.5342606e-01,
+      -0.0000000e+00, -0.0000000e+00]])
+  ```
+
 <h3>Improvements</h3>
 
 * When jobs submitted to the Xanadu Quantum Cloud are cancelled, they will now display a
