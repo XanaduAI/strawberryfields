@@ -94,8 +94,6 @@
   `cancel_pending` JobStatus until the cancellation is confirmed.
   [(#456)](https://github.com/XanaduAI/strawberryfields/pull/456)
 
-<h3>Breaking Changes</h3>
-
 <h3>Bug fixes</h3>
 
 * Fixed a bug where the function `reduced_dm` in `backends/tfbackend/states.py` gives the
@@ -110,6 +108,10 @@
 * Fixed a bug where decompositions to Mach-Zehnder interferometers would return
   incorrect results on NumPy 1.19.
   [(#473)](https://github.com/XanaduAI/strawberryfields/pull/473)
+
+* The Walrus version 0.14 introduced modified function names. Affected functions have been updated
+  in Strawberry Fields to avoid deprecation warnings.
+  [(#472)](https://github.com/XanaduAI/strawberryfields/pull/472)
 
 <h3>Documentation</h3>
 
