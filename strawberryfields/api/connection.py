@@ -22,7 +22,7 @@ import numpy as np
 import requests
 
 from strawberryfields.configuration import load_config
-from strawberryfields.io import to_blackbird
+from strawberryfields.io_utils import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
 

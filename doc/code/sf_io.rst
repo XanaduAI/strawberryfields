@@ -1,7 +1,7 @@
 sf.io
 =====
 
-.. currentmodule:: strawberryfields.io
+.. currentmodule:: strawberryfields.io_utils
 
 .. warning::
 
@@ -11,6 +11,6 @@ sf.io
     See the :func:`.save` and :func:`.load` functions for saving/loading Strawberry Fields
     quantum programs.
 
-.. automodapi:: strawberryfields.io
+.. automodapi:: strawberryfields.io_utils
     :no-heading:
     :include-all-objects:

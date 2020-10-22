@@ -22,7 +22,7 @@ import sys
 from strawberryfields.api import Connection
 from strawberryfields.configuration import ConfigurationError, create_config, store_account
 from strawberryfields.engine import RemoteEngine
-from strawberryfields.io import load
+from strawberryfields.io_utils import load
 
 
 def main():
