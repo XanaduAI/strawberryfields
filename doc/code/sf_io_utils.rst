@@ -1,5 +1,5 @@
-sf.io
-=====
+sf.io_utils
+===========
 
 .. currentmodule:: strawberryfields.io_utils
 
