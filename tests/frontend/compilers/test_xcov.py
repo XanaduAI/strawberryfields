@@ -25,7 +25,7 @@ import strawberryfields.ops as ops
 
 from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import CircuitError, list_to_DAG
-from strawberryfields.io_utils_utils import to_program
+from strawberryfields.io_utils import to_program
 from strawberryfields.utils import random_interferometer
 from strawberryfields.compilers import Compiler
 
