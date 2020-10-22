@@ -19,7 +19,7 @@ import blackbird
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields import io
+from strawberryfields import io_utils
 from strawberryfields.program import Program, CircuitError
 from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, par_funcs as pf
 
@@ -92,19 +92,19 @@ MeasureHomodyne(select=0.32, phi=0.43) | 2
 
 
 class TestSFToBlackbirdConversion:
-    """Tests for the io.to_blackbird utility function"""
+    """Tests for the io_utils.to_blackbird utility function"""
 
     def test_metadata(self):
         """Test metadata correctly converts"""
         # create a test program
         prog = Program(4, name="test_program")
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
         assert bb.target["name"] is None
 
-        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
+        bb = io_utils.to_blackbird(prog.compile(compiler="gaussian"))
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
@@ -113,7 +113,7 @@ class TestSFToBlackbirdConversion:
     def test_metadata_run_options(self):
         """Test run options correctly converts"""
         prog = Program(4, name="test_program")
-        bb = io.to_blackbird(prog.compile(compiler="gaussian", shots=1024))
+        bb = io_utils.to_blackbird(prog.compile(compiler="gaussian", shots=1024))
 
         assert bb.name == "test_program"
         assert bb.version == "1.0"
@@ -128,7 +128,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.Vac | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {"op": "Vacuum", "modes": [0], "args": [], "kwargs": {}}
 
         assert bb.operations[0] == expected
@@ -141,7 +141,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.Sgate(0.54, 0.324) | q[1]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {"op": "Sgate", "modes": [1], "args": [0.54, 0.324], "kwargs": {}}
 
         assert bb.operations[0] == expected
@@ -154,7 +154,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.Dgate(np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)) | q[1]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         # Note: due to how SF stores quantum commands with the Parameter class,
         # all kwargs get converted to positional args internally.
         expected = {
@@ -173,7 +173,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.BSgate(0.54, -0.324) | (q[3], q[0])
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {
             "op": "BSgate",
             "modes": [3, 0],
@@ -191,7 +191,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.Interferometer(U) | q
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {
             "op": "Interferometer",
             "modes": [0, 1, 2, 3],
@@ -209,11 +209,11 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.Pgate(0.43) | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {"op": "Pgate", "modes": [0], "args": [0.43], "kwargs": {}}
         assert bb.operations[0] == expected
 
-        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
+        bb = io_utils.to_blackbird(prog.compile(compiler="gaussian"))
         assert bb.operations[0]["op"] == "Sgate"
         assert bb.operations[1]["op"] == "Rgate"
 
@@ -225,7 +225,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.MeasureFock() | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {"op": "MeasureFock", "modes": [0], "args": [], "kwargs": {}}
 
         assert bb.operations[0] == expected
@@ -238,7 +238,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.MeasureFock(select=2) | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {
             "op": "MeasureFock",
             "modes": [0],
@@ -256,7 +256,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.MeasureFock(dark_counts=2) | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {
             "op": "MeasureFock",
             "modes": [0],
@@ -274,7 +274,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.MeasureHomodyne(0.43) | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {
             "op": "MeasureHomodyne",
             "modes": [0],
@@ -292,7 +292,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.MeasureHomodyne(0.43, select=0.543) | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {
             "op": "MeasureHomodyne",
             "modes": [0],
@@ -308,7 +308,7 @@ class TestSFToBlackbirdConversion:
         with prog.context as q:
             ops.MeasureHomodyne(phi=0.43, select=0.543) | q[0]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         assert bb.operations[0] == expected
 
     def test_measured_par_str(self):
@@ -319,7 +319,7 @@ class TestSFToBlackbirdConversion:
             ops.MeasureX | q[0]
             ops.Zgate(2 * pf.sin(q[0].par)) | q[1]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         expected = {"op": "Zgate", "modes": [1], "args": ["2*sin(q0)"], "kwargs": {}}
         assert bb.operations[-1] == expected
 
@@ -331,13 +331,13 @@ class TestSFToBlackbirdConversion:
             ops.Sgate(r) | q[0]
             ops.Zgate(3 * pf.log(-alpha)) | q[1]
 
-        bb = io.to_blackbird(prog)
+        bb = io_utils.to_blackbird(prog)
         assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ['{r}', 0.0], "kwargs": {}}
         assert bb.operations[1] == {"op": "Zgate", "modes": [1], "args": ['3*log(-{alpha})'], "kwargs": {}}
 
 
 class TestBlackbirdToSFConversion:
-    """Tests for the io.to_program utility function"""
+    """Tests for the io_utils.to_program utility function"""
 
     def test_empty_program(self):
         """Test empty program raises error"""
@@ -350,7 +350,7 @@ class TestBlackbirdToSFConversion:
         bb = blackbird.loads(bb_script)
 
         with pytest.raises(ValueError, match="contains no quantum operations"):
-            io.to_program(bb)
+            io_utils.to_program(bb)
 
     def test_gate_not_defined(self):
         """Test unknown gate raises error"""
@@ -365,7 +365,7 @@ class TestBlackbirdToSFConversion:
         bb = blackbird.loads(bb_script)
 
         with pytest.raises(NameError, match="operation np not defined"):
-            io.to_program(bb)
+            io_utils.to_program(bb)
 
     def test_metadata(self):
         """Test metadata converts"""
@@ -377,7 +377,7 @@ class TestBlackbirdToSFConversion:
         """
 
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert prog.name == bb.name
         assert prog.name == 'test_program'
@@ -392,7 +392,7 @@ class TestBlackbirdToSFConversion:
         """
 
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Vacuum"
@@ -408,7 +408,7 @@ class TestBlackbirdToSFConversion:
         """
 
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
@@ -427,7 +427,7 @@ class TestBlackbirdToSFConversion:
         """
 
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "Dgate"
@@ -447,7 +447,7 @@ class TestBlackbirdToSFConversion:
         Rgate(2*q0) | 2
         """
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert len(prog) == 3
 
@@ -477,7 +477,7 @@ class TestBlackbirdToSFConversion:
         Rgate({foo_bar2}) | 0        # positional arg, atomic
         """
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert prog.free_params.keys() == set(['foo_bar1', 'foo_bar2', 'ALPHA'])
         assert len(prog) == 4
@@ -519,7 +519,7 @@ class TestBlackbirdToSFConversion:
         """
 
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert len(prog) == 1
         assert prog.circuit[0].op.__class__.__name__ == "BSgate"
@@ -556,7 +556,7 @@ class TestEngineIntegration:
         MeasureX | 0
         """
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert prog.run_options == {"shots": 100}
 
@@ -577,7 +577,7 @@ class TestEngineIntegration:
         MeasureX | 0
         """
         bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
+        prog = io_utils.to_program(bb)
 
         assert prog.run_options == {"shots": 100}
 
@@ -598,7 +598,7 @@ class TestEngineIntegration:
         MeasureX | 0
         """
         bb = blackbird.loads(bb_script)
-        prog1 = io.to_program(bb)
+        prog1 = io_utils.to_program(bb)
 
         bb_script = """\
         name test_program
@@ -608,7 +608,7 @@ class TestEngineIntegration:
         MeasureX | 0
         """
         bb = blackbird.loads(bb_script)
-        prog2 = io.to_program(bb)
+        prog2 = io_utils.to_program(bb)
 
         assert prog1.run_options == {"shots": 100}
         assert prog2.run_options == {"shots": 1024}
@@ -721,4 +721,4 @@ class TestLoad:
 
     def test_loads(self, prog):
         """Test loading a program from a string"""
-        self.assert_programs_equal(io.loads(test_prog_not_compiled), prog)
+        self.assert_programs_equal(io_utils.loads(test_prog_not_compiled), prog)
