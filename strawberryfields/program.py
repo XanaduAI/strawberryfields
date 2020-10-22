@@ -575,7 +575,7 @@ class Program:
         # validate gate parameters
         if device is not None and device.gate_parameters:
             bb_device = bb.loads(device.layout)
-            bb_compiled = sf.io.to_blackbird(compiled)
+            bb_compiled = sf.io_utils.to_blackbird(compiled)
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
