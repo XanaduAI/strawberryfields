@@ -275,6 +275,8 @@ class TDMProgram(sf.Program):
         self.total_timebins = 0
         self.spatial_modes = 0
         self.measured_modes = []
+        self.rolled_circuit = None
+        self.unrolled_circuit = None
 
     # pylint: disable=arguments-differ, invalid-overridden-method
     def context(self, *args, copies=1, shift="default"):
@@ -297,10 +299,13 @@ class TDMProgram(sf.Program):
             self.timebins = len(self.tdm_params[0])
             self.total_timebins = self.timebins * self.copies
             #self.construct_circuit()
+            self.rolled_circuit = self.circuit.copy()
+
 
     def unroll(self):
         """Construct program with the register shift"""
-        cmds = self.circuit.copy()
+        if self.unrolled_circuit is not None:
+            return self.unrolled_circuit
         self.circuit = []
 
         q = self.register
@@ -334,12 +339,12 @@ class TDMProgram(sf.Program):
         # q[sm[2]] as concurrent modes of spatial mode C
         # q[sm[3]] as concurrent modes of spatial mode D.
 
-        for cmd in cmds:
+        for cmd in self.rolled_circuit:
             if isinstance(cmd.op, ops.Measurement):
                 self.measured_modes.append(cmd.reg[0].ind)
 
         for i in range(self.total_timebins):
-            for cmd in cmds:
+            for cmd in self.rolled_circuit:
                 self.apply_op(cmd, q, i)
 
             if self.shift == "default":
