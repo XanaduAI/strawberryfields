@@ -43,7 +43,7 @@ def to_blackbird(prog, version="1.0"):
 
     if prog.type == "tdm":
         bb._type["name"] = "tdm"
-        bb._type["options"].update({"temporal_modes": prog.timebins})
+        bb._type["options"].update({"temporal_modes": prog.timebins, "copies": prog.copies})
 
     # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
