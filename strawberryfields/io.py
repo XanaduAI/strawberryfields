@@ -41,6 +41,10 @@ def to_blackbird(prog, version="1.0"):
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
 
+    if prog.type == "tdm":
+        bb._type["name"] = "tdm"
+        bb._type["options"].update({"temporal_modes": prog.timebins})
+
     # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
         # set the target

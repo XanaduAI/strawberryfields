@@ -268,10 +268,12 @@ class TDMProgram(sf.Program):
             self.N = N
         self.concurr_modes = sum(self.N)
 
+        super().__init__(num_subsystems=self.concurr_modes, name=name)
+
+        self.type = "tdm"
         self.total_timebins = 0
         self.spatial_modes = 0
         self.measured_modes = []
-        super().__init__(num_subsystems=self.concurr_modes, name=name)
 
     # pylint: disable=arguments-differ, invalid-overridden-method
     def context(self, *args, copies=1, shift="default"):
@@ -359,6 +361,14 @@ class TDMProgram(sf.Program):
             params[0] = self.tdm_params[arg_index][t % self.timebins]
 
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
+
+    def assert_number_of_modes(self, device):
+        """Check that the number of modes in the program is valid for the given device."""
+        if device.timebins > device.modes["max"]["temporal"]:
+            raise CircuitError(
+                f"This program contains {device.timebins} temporal modes, but the device '{device.target}' "
+                f"only supports up to {device.modes['max']['temporal']} modes."
+            )
 
     def __str__(self):
         s = (
