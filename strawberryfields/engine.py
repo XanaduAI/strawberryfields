@@ -477,7 +477,7 @@ class LocalEngine(BaseEngine):
                 result.all_samples, program.measured_modes, program.N
             )
             result._samples = np.array(list(result.all_samples.values()))
-
+            program.roll()
         modes = temp_run_options["modes"]
 
         if modes is None or modes:

@@ -301,11 +301,15 @@ class TDMProgram(sf.Program):
             #self.construct_circuit()
             self.rolled_circuit = self.circuit.copy()
 
+    def roll(self):
+        """Represent the in a compressed way using without rolling the for loops"""
+        self.circuit = self.rolled_circuit
 
     def unroll(self):
         """Construct program with the register shift"""
         if self.unrolled_circuit is not None:
-            return self.unrolled_circuit
+            self.circuit = self.unrolled_circuit
+            return
         self.circuit = []
 
         q = self.register
