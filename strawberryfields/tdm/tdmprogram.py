@@ -22,6 +22,7 @@ from math import ceil
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
+from strawberryfields.program_utils import CircuitError
 
 
 def shift_by(l, n):
