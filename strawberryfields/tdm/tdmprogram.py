@@ -298,7 +298,6 @@ class TDMProgram(sf.Program):
             self.spatial_modes = validate_measurements(self.circuit, self.N)
             self.timebins = len(self.tdm_params[0])
             self.total_timebins = self.timebins * self.copies
-            # self.construct_circuit()
             self.rolled_circuit = self.circuit.copy()
 
     def roll(self):
