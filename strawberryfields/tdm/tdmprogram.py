@@ -294,15 +294,14 @@ class TDMProgram(sf.Program):
 
         if ex_type is None:
             self.spatial_modes = validate_measurements(self.circuit, self.N)
-            self.construct_circuit()
+            self.timebins = len(self.tdm_params[0])
+            self.total_timebins = self.timebins * self.copies
+            #self.construct_circuit()
 
-    def construct_circuit(self):
+    def unroll(self):
         """Construct program with the register shift"""
         cmds = self.circuit.copy()
         self.circuit = []
-
-        self.timebins = len(self.tdm_params[0])
-        self.total_timebins = self.timebins * self.copies
 
         q = self.register
 

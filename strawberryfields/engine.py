@@ -418,6 +418,9 @@ class LocalEngine(BaseEngine):
         # pylint: disable=import-outside-toplevel
         from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
 
+        if isinstance(program, TDMProgram):
+            program.unroll()
+
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
