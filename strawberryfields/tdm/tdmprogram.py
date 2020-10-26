@@ -381,7 +381,8 @@ class TDMProgram(sf.Program):
             elif isinstance(self.shift, int):
                 q = shift_by(q, self.shift)  # shift at end of each time bin
 
-        self.unrolled_circuit = self.circuit
+        self.unrolled_circuit = self.circuit.copy()
+
         return self
 
     def apply_op(self, cmd, q, t):
