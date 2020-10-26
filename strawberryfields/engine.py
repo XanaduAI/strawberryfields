@@ -415,6 +415,9 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
+        # pylint: disable=import-outside-toplevel
+        from strawberryfields.tdm.tdmprogram import reshape_samples
+
         if program.type == "tdm":
             program.unroll()
 
@@ -469,7 +472,7 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if isinstance(program, TDMProgram):
+        if program.type == "tdm":
             result._all_samples = reshape_samples(
                 result.all_samples, program.measured_modes, program.N
             )
