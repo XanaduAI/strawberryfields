@@ -101,10 +101,12 @@ class DeviceSpec:
     def fill_template(self, program):
         """Fill template with parameter values from a program"""
         if program.target:
-            if program.type == "tdm":
-                self._spec["layout"].format(target=program.target, tm=program.timebins)
+            if program.type == "tdm" and program.timebins:
+                self._spec["layout"] = self._spec["layout"].format(target=program.target, tm=program.timebins)
             else:
-                self._spec["layout"].format(target=program.target)
+                # self._spec["layout"] = self._spec["layout"].format(target=program.target)
+                # TODO: update when `self._spec["layout"]` is returned as an unformatted string
+                pass
 
     def validate_parameters(self, **parameters):
         """Validate gate parameters against the device spec.
