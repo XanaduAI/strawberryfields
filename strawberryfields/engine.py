@@ -419,6 +419,7 @@ class LocalEngine(BaseEngine):
         from strawberryfields.tdm.tdmprogram import reshape_samples
 
         if not isinstance(program, collections.abc.Sequence) and prog.type == "tdm":
+            # At this time we do not support lists of tdm programs
             program.unroll()
 
         args = args or {}
@@ -472,7 +473,8 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if program.type == "tdm":
+        if not isinstance(program, collections.abc.Sequence) and prog.type == "tdm":
+            # At this time we do not support lists of tdm programs
             result._all_samples = reshape_samples(
                 result.all_samples, program.measured_modes, program.N
             )
