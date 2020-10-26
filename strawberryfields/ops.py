@@ -1763,6 +1763,9 @@ class MZgate(Gate):
     Args:
         phi_in (float): internal phase
         phi_ex (float): external phase
+    .. details::
+    This gate becomes the identity for phi_in = np.pi and phi_ex=0 and becomes the Paulix X matrix for \phi_in = 0 and \phi_ex=0
+
     """
     ns = 2
 
