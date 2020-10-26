@@ -418,7 +418,7 @@ class LocalEngine(BaseEngine):
         # pylint: disable=import-outside-toplevel
         from strawberryfields.tdm.tdmprogram import reshape_samples
 
-        if not isinstance(program, collections.abc.Sequence) and prog.type == "tdm":
+        if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
             # At this time we do not support lists of tdm programs
             program.unroll()
 
@@ -473,7 +473,7 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if not isinstance(program, collections.abc.Sequence) and prog.type == "tdm":
+        if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
             # At this time we do not support lists of tdm programs
             result._all_samples = reshape_samples(
                 result.all_samples, program.measured_modes, program.N
