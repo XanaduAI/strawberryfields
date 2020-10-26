@@ -176,27 +176,42 @@ class TDMProgram(sf.Program):
     ...     ops.BSgate(p[0]) | (q[0], q[1])
     ...     ops.MeasureHomodyne(p[1]) | q[0]
 
-    If we print out this program, we see that the time domain program
-    has automated the process of repeating the single time-bin sequence
-    constructed above:
+    Printing out this program:
 
     >>> prog.print()
-    Sgate(0.32, 0) | (q[1])
+    Sgate(0.7, 0) | (q[1])
+    BSgate({p0}, 0) | (q[0], q[1])
+    MeasureHomodyne({p1}) | (q[0])
+
+    Note that ``p0`` and ``p1`` are symbolic gate parameters; to access the numeric values,
+    we must use the ``prog.parameters`` attribute:
+
+    >>> prog.parameters
+    {'p0': [1, 2], 'p1': [3, 4]}
+
+    When we simulate a time-domain program, it is first unrolled by the engine; unrolling involves
+    explicitly repeating the single time-bin sequence constructed above, and *shifting* the
+    simulated registers. This is performed automatically by the local engine, however, we can
+    visualize the unrolling manually via the
+    :meth:`~.unroll` method.
+
+    >>> prog.unroll().print()
+    Sgate(0.7, 0) | (q[1])
     BSgate(1, 0) | (q[0], q[1])
     MeasureHomodyne(3) | (q[0])
-    Sgate(0.32, 0) | (q[0])
+    Sgate(0.7, 0) | (q[0])
     BSgate(2, 0) | (q[1], q[0])
     MeasureHomodyne(4) | (q[1])
-    Sgate(0.32, 0) | (q[1])
+    Sgate(0.7, 0) | (q[1])
     BSgate(1, 0) | (q[0], q[1])
     MeasureHomodyne(3) | (q[0])
-    Sgate(0.32, 0) | (q[0])
+    Sgate(0.7, 0) | (q[0])
     BSgate(2, 0) | (q[1], q[0])
     MeasureHomodyne(4) | (q[1])
-    Sgate(0.32, 0) | (q[1])
+    Sgate(0.7, 0) | (q[1])
     BSgate(1, 0) | (q[0], q[1])
     MeasureHomodyne(3) | (q[0])
-    Sgate(0.32, 0) | (q[0])
+    Sgate(0.7, 0) | (q[0])
     BSgate(2, 0) | (q[1], q[0])
     MeasureHomodyne(4) | (q[1])
 
@@ -300,15 +315,21 @@ class TDMProgram(sf.Program):
             self.total_timebins = self.timebins * self.copies
             self.rolled_circuit = self.circuit.copy()
 
+    @property
+    def parameters(self):
+        return dict(zip([i.name for i in self.loop_vars], self.tdm_params))
+
     def roll(self):
         """Represent the in a compressed way using without rolling the for loops"""
         self.circuit = self.rolled_circuit
+        return self
 
     def unroll(self):
         """Construct program with the register shift"""
         if self.unrolled_circuit is not None:
             self.circuit = self.unrolled_circuit
-            return
+            return self
+
         self.circuit = []
 
         q = self.register
@@ -359,6 +380,9 @@ class TDMProgram(sf.Program):
 
             elif isinstance(self.shift, int):
                 q = shift_by(q, self.shift)  # shift at end of each time bin
+
+        self.unrolled_circuit = self.circuit
+        return self
 
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
