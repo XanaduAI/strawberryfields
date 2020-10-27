@@ -53,7 +53,7 @@ class Connection:
 
     >>> connection = Connection(token="abc")
     >>> success = connection.ping()  # `True` if successful, `False` if the connection fails
-    >>> job = connection.create_job("chip_name", program, shots=123)
+    >>> job = connection.create_job("chip_name", program, run_options={"shots":123})
     >>> job
     <Job: id=d177cbf5-1816-4779-802f-cef2c117dc1a, ...>
     >>> job.status
