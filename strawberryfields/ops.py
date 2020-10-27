@@ -1765,7 +1765,8 @@ class MZgate(Gate):
         phi_ex (float): external phase
 
 
-    This gate becomes the identity for phi_in = np.pi and phi_ex=0 and permutes the modes for phi_in = 0 and phi_ex=0.
+    This gate becomes the identity for ``phi_in=np.pi`` and ``phi_ex=0``, and permutes the modes
+    for ``phi_in=0`` and ``phi_ex=0``.
 
     """
     ns = 2
