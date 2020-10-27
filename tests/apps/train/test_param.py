@@ -23,6 +23,7 @@ import thewalrus
 from thewalrus.quantum import adj_scaling as rescale
 from thewalrus.quantum import adj_scaling_torontonian as rescale_tor
 
+import strawberryfields as sf
 from strawberryfields.apps import train
 from strawberryfields.apps.train.embed import Exp
 
@@ -94,8 +95,9 @@ def test_prob_photon_sample():
     assert np.allclose(p_two_clicks - p_two_clicks[0], np.zeros(len(p_two_clicks)))
 
 
-def test_A_to_cov():
+def test_A_to_cov(monkeypatch):
     """Test if A_to_cov returns the correct covariance matrix for a simple fixed example"""
+    monkeypatch.setattr(sf, "hbar", 2.0)
     x = np.sqrt(0.5)
     A = np.array([[0, x], [x, 0]])
     cov = train.param.A_to_cov(A)
