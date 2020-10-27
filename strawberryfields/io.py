@@ -26,7 +26,6 @@ import strawberryfields.parameters as sfpar
 from . import ops
 
 
-
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["to_blackbird", "to_program", "loads"]
 
@@ -86,24 +85,28 @@ def to_blackbird(prog, version="1.0"):
         # if program type is "tdm" then add the looped-over arrays to the blackbird program
         if prog.type == "tdm":
             for p in prog.loop_vars:
-                for i, ar in enumerate(op['args']):
+                for i, ar in enumerate(op["args"]):
                     if str(p) == str(ar):
-                        op['args'][i] = p.name
-                for k, v in op['kwargs'].items():
+                        op["args"][i] = p.name
+                for k, v in op["kwargs"].items():
                     if str(p) == str(v):
-                        op['kwargs'][k] = p.name
+                        op["kwargs"][k] = p.name
 
         bb._operations.append(op)
 
     # add the specific "tdm" metadata to the Blackbird program
     if prog.type == "tdm":
         bb._type["name"] = "tdm"
-        bb._type["options"].update({
-            "temporal_modes": prog.timebins,
-            "copies": prog.copies,
-            })
+        bb._type["options"].update(
+            {
+                "temporal_modes": prog.timebins,
+                "copies": prog.copies,
+            }
+        )
 
-        bb._var.update({f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)})
+        bb._var.update(
+            {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}
+        )
 
     return bb
 

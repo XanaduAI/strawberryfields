@@ -102,7 +102,9 @@ class DeviceSpec:
         """Fill template with parameter values from a program"""
         if program.target:
             if program.type == "tdm" and program.timebins:
-                self._spec["layout"] = self._spec["layout"].format(target=program.target, tm=program.timebins)
+                self._spec["layout"] = self._spec["layout"].format(
+                    target=program.target, tm=program.timebins
+                )
             else:
                 # self._spec["layout"] = self._spec["layout"].format(target=program.target)
                 # TODO: update when `self._spec["layout"]` is returned as an unformatted string
