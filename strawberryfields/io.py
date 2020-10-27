@@ -18,8 +18,9 @@ Fields :class:`~.Program` objects from/to Blackbird scripts.
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
 
-import blackbird
+import numpy as np
 
+import blackbird
 import strawberryfields.program as sfp
 import strawberryfields.parameters as sfpar
 from . import ops
@@ -40,10 +41,6 @@ def to_blackbird(prog, version="1.0"):
         blackbird.BlackbirdProgram:
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
-
-    if prog.type == "tdm":
-        bb._type["name"] = "tdm"
-        bb._type["options"].update({"temporal_modes": prog.timebins, "copies": prog.copies})
 
     # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
@@ -85,7 +82,31 @@ def to_blackbird(prog, version="1.0"):
                     a = str(a)
                 op["args"].append(a)
 
+        # if program type is "tdm" then add the looped-over arrays to the blackbird program
+        if prog.type == "tdm":
+            for p in prog.loop_vars:
+                for i, ar in enumerate(op["args"]):
+                    if str(p) == str(ar):
+                        op["args"][i] = p.name
+                for k, v in op["kwargs"].items():
+                    if str(p) == str(v):
+                        op["kwargs"][k] = p.name
+
         bb._operations.append(op)
+
+    # add the specific "tdm" metadata to the Blackbird program
+    if prog.type == "tdm":
+        bb._type["name"] = "tdm"
+        bb._type["options"].update(
+            {
+                "temporal_modes": prog.timebins,
+                "copies": prog.copies,
+            }
+        )
+
+        bb._var.update(
+            {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}
+        )
 
     return bb
 

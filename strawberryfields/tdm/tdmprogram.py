@@ -287,6 +287,7 @@ class TDMProgram(sf.Program):
         super().__init__(num_subsystems=self.concurr_modes, name=name)
 
         self.type = "tdm"
+        self.timebins = 0
         self.total_timebins = 0
         self.spatial_modes = 0
         self.measured_modes = []
