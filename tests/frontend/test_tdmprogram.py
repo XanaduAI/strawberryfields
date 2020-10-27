@@ -23,6 +23,7 @@ pytestmark = pytest.mark.frontend
 # make test deterministic
 np.random.seed(42)
 
+HBAR = 137
 
 def singleloop(r, alpha, phi, theta, copies, shift="default", hbar=2):
     """Single delay loop with program.
@@ -44,7 +45,7 @@ def singleloop(r, alpha, phi, theta, copies, shift="default", hbar=2):
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog, hbar=hbar)
+    result = eng.run(prog, hbar=HBAR)
 
     return result.samples[0]
 
