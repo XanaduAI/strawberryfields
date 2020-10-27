@@ -17,11 +17,11 @@ matrix:
     - env: BATCHED=1 OPTIONS="tf and mixed"
 install:
   - pip install -r requirements.txt
-  - pip install wheel codecov pytest pytest-cov pytest-mock --upgrade
+  - pip install wheel codecov pytest pytest-cov pytest-randomly pytest-mock --upgrade
   - python3 setup.py bdist_wheel
   - pip install dist/StrawberryFields*.whl
 script:
-  - python3 -m pytest tests --cov=strawberryfields -p no:warnings --tb=native -m "$OPTIONS"
+  - python3 -m pytest tests --cov=strawberryfields -p no:warnings --randomly-seed=42 --tb=native -m "$OPTIONS"
 after_success:
   - codecov
 notifications:
