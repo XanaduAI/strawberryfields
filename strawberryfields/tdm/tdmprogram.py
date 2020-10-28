@@ -406,12 +406,12 @@ class TDMProgram(sf.Program):
         if self.concurr_modes > device.modes["concurrent"]:
             raise CircuitError(
                 f"This program contains {self.concurr_modes} temporal modes, but the device '{device.target}' "
-                f"only supports {device.modes["concurrent"]} modes."
+                f"only supports {device.modes['concurrent']} modes."
             )
         if self.spatial_modes > device.modes["spatial"]:
             raise CircuitError(
                 f"This program contains {self.spatial_modes} spatial modes, but the device '{device.target}' "
-                f"only supports {device.modes["spatial"]} modes."
+                f"only supports {device.modes['spatial']} modes."
             )
 
     def __str__(self):
