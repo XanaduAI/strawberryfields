@@ -24,7 +24,6 @@ pytestmark = pytest.mark.frontend
 np.random.seed(42)
 
 
-
 def singleloop(r, alpha, phi, theta, copies, shift="default"):
     """Single delay loop with program.
 
