@@ -23,9 +23,8 @@ pytestmark = pytest.mark.frontend
 # make test deterministic
 np.random.seed(42)
 
-HBAR = 137
 
-def singleloop(r, alpha, phi, theta, copies, shift="default", hbar=2):
+def singleloop(r, alpha, phi, theta, copies, shift="default"):
     """Single delay loop with program.
 
     Args:
@@ -37,7 +36,7 @@ def singleloop(r, alpha, phi, theta, copies, shift="default", hbar=2):
     Returns:
         (list): homodyne samples from the single loop simulation
     """
-
+    sf.hbar = 2.0
     prog = tdmprogram.TDMProgram(N=2)
     with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
         ops.Sgate(r, 0) | q[1]
@@ -45,7 +44,7 @@ def singleloop(r, alpha, phi, theta, copies, shift="default", hbar=2):
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog, hbar=HBAR)
+    result = eng.run(prog)
 
     return result.samples[0]
 
