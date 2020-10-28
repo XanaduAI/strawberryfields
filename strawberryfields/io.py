@@ -106,7 +106,6 @@ def to_blackbird(prog, version="1.0"):
             {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}
         )
 
-
     return bb
 
 
