@@ -139,21 +139,21 @@ def test_epr():
     from the samples"""
     np.random.seed(42)
     sq_r = 1.0
-    c = 4
-    copies = 2000
+    c = 2
+    copies = 200
 
     # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
     alpha = [np.pi / 4, 0] * c
     phi = [0, np.pi / 2] * c
 
-    # Measurement of 4 subsequent EPR states in XX, XP, PX, PP to investigate nearest-neighbour correlations in all basis permutations
-    theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]  #
+    # Measurement of 2 subsequent EPR states in XX, PP to investigate nearest-neighbour correlations in all basis permutations
+    theta = [0, 0] + [np.pi / 2, np.pi / 2]  #
     x = singleloop(sq_r, alpha, phi, theta, copies)
 
     X0 = x[0::8]
     X1 = x[1::8]
-    P2 = x[6::8]
-    P3 = x[7::8]
+    P2 = x[2::8]
+    P3 = x[3::8]
     rtol = 5 / np.sqrt(copies)
     minusstdX1X0 = (X1 - X0).var()
     plusstdX1X0 = (X1 + X0).var()
