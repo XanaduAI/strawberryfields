@@ -23,7 +23,8 @@ pytestmark = pytest.mark.frontend
 # make test deterministic
 np.random.seed(42)
 
-sf.hbar = 2.0
+local_hbar = sf.hbar
+val = 2/local_hbar
 
 def singleloop(r, alpha, phi, theta, copies, shift="default"):
     """Single delay loop with program.
@@ -163,21 +164,21 @@ def test_epr():
     minusstdX1X0 = (X1 - X0).std() / np.sqrt(2)
     plusstdX1X0 = (X1 + X0).std() / np.sqrt(2)
     squeezed_std = np.exp(-sq_r)
-    assert np.allclose(minusstdX1X0, squeezed_std, atol=atol)
-    assert np.allclose(plusstdX1X0, 1 / squeezed_std, atol=atol)
+    assert np.allclose(minusstdX1X0, val*squeezed_std, atol=atol)
+    assert np.allclose(plusstdX1X0, val / squeezed_std, atol=atol)
     minusstdP2P3 = (P2 - P3).std() / np.sqrt(2)
     plusstdP2P3 = (P2 + P3).std() / np.sqrt(2)
-    assert np.allclose(minusstdP2P3, 1 / squeezed_std, atol=atol)
-    assert np.allclose(plusstdP2P3, squeezed_std, atol=atol)
+    assert np.allclose(minusstdP2P3, val / squeezed_std, atol=atol)
+    assert np.allclose(plusstdP2P3, val*squeezed_std, atol=atol)
     minusstdP0X2 = (P0 - X2).std()
     plusstdP0X2 = (P0 + X2).std()
     expected = 2 * np.sinh(sq_r) ** 2
-    assert np.allclose(minusstdP0X2, expected, atol=atol)
-    assert np.allclose(plusstdP0X2, expected, atol=atol)
+    assert np.allclose(minusstdP0X2, val*expected, atol=atol)
+    assert np.allclose(plusstdP0X2, val*expected, atol=atol)
     minusstdX3P1 = (X3 - P1).std()
     plusstdX3P1 = (X3 + P1).std()
-    assert np.allclose(minusstdX3P1, expected, atol=atol)
-    assert np.allclose(plusstdX3P1, expected, atol=atol)
+    assert np.allclose(minusstdX3P1, val*expected, atol=atol)
+    assert np.allclose(plusstdX3P1, val*expected, atol=atol)
 
 
 def test_ghz():
@@ -204,7 +205,7 @@ def test_ghz():
     # We will check that the x of all the modes equal the x of the last one
     nullifier_X = lambda sample: (sample - sample[-1])[vac_modes:-1]
     val_nullifier_X = np.var([nullifier_X(x) for x in reshaped_samples_X], axis=0)
-    assert np.allclose(val_nullifier_X, 2 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+    assert np.allclose(val_nullifier_X, 2 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
 
     # Measuring P nullifier
     theta = [np.pi / 2] * (n + vac_modes)
@@ -214,7 +215,7 @@ def test_ghz():
     reshaped_samples_P = np.array(samples_P).reshape([copies, n + vac_modes])
     nullifier_P = lambda sample: np.sum(sample[vac_modes:])
     val_nullifier_P = np.var([nullifier_P(p) for p in reshaped_samples_P], axis=0)
-    assert np.allclose(val_nullifier_P, n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+    assert np.allclose(val_nullifier_P, n * val* np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
 
 
 def test_one_dimensional_cluster():
@@ -234,7 +235,7 @@ def test_one_dimensional_cluster():
     nullifier = lambda x: np.array([-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)])[1:]
     nullifier_samples = np.array([nullifier(y) for y in reshaped_samples])
     delta = np.var(nullifier_samples, axis=0)
-    assert np.allclose(delta, 3 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+    assert np.allclose(delta, 3 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
 
 
 def test_one_dimensional_cluster_tokyo():
@@ -281,8 +282,8 @@ def test_one_dimensional_cluster_tokyo():
     nXvar = np.var(nX)
     nPvar = np.var(nP)
 
-    assert np.allclose(nXvar, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
-    assert np.allclose(nPvar, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
+    assert np.allclose(nXvar, 4 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
+    assert np.allclose(nPvar, 4 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
 
 
 def test_two_dimensional_cluster_denmark():
@@ -330,8 +331,8 @@ def test_two_dimensional_cluster_denmark():
     nXvar = np.var(nX)
     nPvar = np.var(nP)
 
-    assert np.allclose(nXvar, 8 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nPvar, 8 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nXvar, 8 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nPvar, 8 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
 def test_two_dimensional_cluster_tokyo():
@@ -418,7 +419,7 @@ def test_two_dimensional_cluster_tokyo():
     nP1var = np.var(nP1)
     nP2var = np.var(nP2)
 
-    assert np.allclose(nX1var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nX2var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nP1var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nP2var, 4 * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nX1var, 4 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nX2var, 4 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nP1var, 4 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+    assert np.allclose(nP2var, 4 * val * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
