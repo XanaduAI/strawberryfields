@@ -84,19 +84,15 @@ def to_blackbird(prog, version="1.0"):
 
         # if program type is "tdm" then add the looped-over arrays to the blackbird program
         if prog.type == "tdm":
-            array_name = {"BSgate": "BS", "Rgate": "R", "MeasureHomodyne": "M"}
-            for j, p in enumerate(prog.loop_vars):
+            for p in prog.loop_vars:
                 for i, ar in enumerate(op["args"]):
                     if str(p) == str(ar):
-                        bb._var.update({array_name[op["op"]]: [prog.tdm_params[j]]})
-                        op["args"][i] = array_name[op["op"]]
+                        op["args"][i] = p.name
                 for k, v in op["kwargs"].items():
                     if str(p) == str(v):
-                        bb._var.update({array_name[op["op"]]: [prog.tdm_params[j]]})
-                        op["kwargs"][k] = array_name[op["op"]]
+                        op["kwargs"][k] = p.name
 
         bb._operations.append(op)
-
     # add the specific "tdm" metadata to the Blackbird program
     if prog.type == "tdm":
         bb._type["name"] = "tdm"
@@ -106,6 +102,10 @@ def to_blackbird(prog, version="1.0"):
                 "copies": prog.copies,
             }
         )
+        bb._var.update(
+            {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}
+        )
+
 
     return bb
 
