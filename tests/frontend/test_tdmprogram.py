@@ -25,6 +25,7 @@ np.random.seed(42)
 
 local_hbar = sf.hbar
 val = 2 / local_hbar
+sval = np.sqrt(val)
 
 
 def singleloop(r, alpha, phi, theta, copies, shift="default"):
