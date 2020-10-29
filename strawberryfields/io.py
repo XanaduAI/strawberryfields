@@ -179,9 +179,9 @@ def _convert_tdm(bb):
 
     prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
 
-    args = [bb._var[f"p{i}"] for i in range(max(bb.modes) + 1)]
+    args = [bb._var[f"p{i}"].flatten() for i in range(max(bb.modes) + 1)]
     # append the quantum operations
-    with prog.context([*args], copies=bb.programtype["options"]["copies"]) as (p, q):
+    with prog.context(*args, copies=bb.programtype["options"]["copies"]) as (p, q):
         for op in bb.operations:
             # check if operation name is in the list of
             # defined StrawberryFields operations.
@@ -228,6 +228,7 @@ def _convert_tdm(bb):
         prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
 
     return prog
+
 
 def save(f, prog):
     """Saves a quantum program to a Blackbird .xbb file.

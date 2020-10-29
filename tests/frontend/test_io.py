@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""Unit tests for the IO module"""
 import pytest
+import textwrap
 
 import numpy as np
 import blackbird
@@ -21,6 +22,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
 from strawberryfields.program import Program, CircuitError
+from strawberryfields.tdm.tdmprogram import TDMProgram
 from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, par_funcs as pf
 
 
@@ -335,6 +337,27 @@ class TestSFToBlackbirdConversion:
         assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ['{r}', 0.0], "kwargs": {}}
         assert bb.operations[1] == {"op": "Zgate", "modes": [1], "args": ['3*log(-{alpha})'], "kwargs": {}}
 
+    def test_tdm_program(self):
+        prog = TDMProgram(2)
+
+        with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+            ops.Sgate(0.7, 0) | q[1]
+            ops.BSgate(p[0]) | (q[0], q[1])
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        bb = io.to_blackbird(prog)
+
+        assert bb.operations[0] == {'kwargs': {}, 'args': [0.7, 0], 'op': 'Sgate', 'modes': [1]}
+        assert bb.operations[1] == {'kwargs': {}, 'args': ['p0', 0.0], 'op': 'BSgate', 'modes': [0, 1]}
+        assert bb.operations[2] == {'kwargs': {'phi': 'p1'}, 'args': [], 'op': 'MeasureHomodyne', 'modes': [0]}
+
+        assert bb.programtype == {'name': 'tdm', 'options': {'temporal_modes': 2, 'copies': 3}}
+        assert list(bb._var.keys()) == ["p0", "p1"]
+        assert np.all(bb._var["p0"] == np.array([[1, 2]]))
+        assert np.all(bb._var["p1"] == np.array([[3, 4]]))
+        assert bb.modes == [0, 1]
+
+
 
 class TestBlackbirdToSFConversion:
     """Tests for the io.to_program utility function"""
@@ -527,6 +550,52 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].op.p[1] == np.pi
         assert prog.circuit[0].reg[0].ind == 0
         assert prog.circuit[0].reg[1].ind == 2
+
+    def test_tdm_program(self):
+        """Test convering a tdm bb_script to a TDMProgram"""
+
+        bb_script = textwrap.dedent("""\
+        name None
+        version 1.0
+        type tdm (temporal_modes=2, copies=3)
+
+        int array p0 =
+            1, 2
+        int array p1 =
+            3, 4
+
+        Sgate(0.7, 0) | 1
+        BSgate(p0, 0.0) | [0, 1]
+        MeasureHomodyne(phi=p1) | 0
+        """)
+
+        bb = blackbird.loads(bb_script)
+        prog = io.to_program(bb)
+
+        assert len(prog) == 3
+        assert prog.type == "tdm"
+        assert prog.circuit[0].op.__class__.__name__ == "Sgate"
+        assert prog.circuit[0].op.p[0] == 0.7
+        assert prog.circuit[0].op.p[1] == 0
+        assert prog.circuit[0].reg[0].ind == 1
+
+        assert prog.circuit[1].op.__class__.__name__ == "BSgate"
+        assert prog.circuit[1].op.p[0] == FreeParameter("p0")
+        assert prog.circuit[1].op.p[1] == 0.0
+        assert prog.circuit[1].reg[0].ind == 0
+        assert prog.circuit[1].reg[1].ind == 1
+
+        assert prog.circuit[2].op.__class__.__name__ == "MeasureHomodyne"
+        assert prog.circuit[2].op.p[0] == FreeParameter("p1")
+        assert prog.circuit[2].reg[0].ind == 0
+
+        assert prog.concurr_modes == 2
+        assert prog.timebins == 2
+        assert prog.copies == 3
+        assert prog.spatial_modes == 1
+        assert prog.free_params == {'p0': FreeParameter("p0"), 'p1': FreeParameter("p1")}
+        assert all(prog.tdm_params[0] == np.array([1, 2]))
+        assert all(prog.tdm_params[1] == np.array([3, 4]))
 
 
 class DummyResults:

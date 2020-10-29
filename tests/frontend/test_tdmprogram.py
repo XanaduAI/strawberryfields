@@ -406,3 +406,49 @@ def test_two_dimensional_cluster_tokyo():
     assert np.allclose(nX2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
     assert np.allclose(nP1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
     assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+
+@pytest.mark.parametrize(
+    "temporal_modes,concurrent_modes,spatial_modes,match", [
+        (200, 2, 1, "contains 200 temporal modes"),
+        (50, 42, 1, "contains 42 concurrent modes"),
+        (50, 2, 2, "contains 2 spatial modes"),
+    ]
+)
+def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes, match):
+    """Test that an exception is raised if the compiler
+    is called with a device spec with an incorrect number of modes"""
+
+    class DummyCircuit(sf.compilers.compiler.Compiler):
+        """A circuit with 2 modes"""
+        interactive = True
+        primitives = {'S2gate', 'Interferometer'}
+        decompositions = set()
+
+    device_dict = {
+        "modes": {
+            "concurrent": 2,
+            "spatial": 1,
+            "temporal": {
+                "max": 100
+            }
+        },
+        "layout": None,
+        "gate_parameters": None,
+        "compiler": [None]
+    }
+    spec = sf.api.DeviceSpec(target=None, connection=None, spec=device_dict)
+
+    # sum of N must always be equal to number of concurrent modes, split up over
+    # number of measurments/spatial modes
+    N = np.array([concurrent_modes]*spatial_modes) // spatial_modes
+    prog = tdmprogram.TDMProgram(N)
+
+    params = np.ones(temporal_modes)
+    with prog.context(params, params, copies=3) as (p, q):
+        ops.Sgate(0.7, 0) | q[1]
+        ops.BSgate(p[0]) | (q[0], q[1])
+        for i in range(spatial_modes):
+            ops.MeasureHomodyne(p[1]) | q[i]
+
+    with pytest.raises(sf.program_utils.CircuitError, match=match):
+        new_prog = prog.compile(device=spec, compiler=DummyCircuit())
