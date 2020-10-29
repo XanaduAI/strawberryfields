@@ -595,18 +595,7 @@ class RemoteEngine:
                 job.refresh()
                 if job.status == "complete":
                     self.log.info("The remote job %s has been completed.", job.id)
-
-                    result = job.result
-                    if program.type == "tdm":
-                        # pylint: disable=import-outside-toplevel
-                        from strawberryfields.tdm.tdmprogram import reshape_samples
-
-                        result._all_samples = reshape_samples(
-                            result.all_samples, program.measured_modes, program.N
-                        )
-                        result._samples = np.array(list(result.all_samples.values()))
-
-                    return result
+                    return job.result
 
                 if job.status == "failed":
                     message = (
