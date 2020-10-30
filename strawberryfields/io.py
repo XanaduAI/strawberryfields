@@ -83,7 +83,10 @@ def to_blackbird(prog, version="1.0"):
                     a = str(a)
                 op["args"].append(a)
 
-        # if program type is "tdm" then add the looped-over arrays to the blackbird program
+        # If program type is "tdm" then add the looped-over arrays to the
+        # blackbird program. `prog.loop_vars` are symbolic parameters (e.g.
+        # `{p0}`), which should be replaced with `p.name` (e.g. `p0`) inside the
+        # Blackbird operation (keyword) arguments.
         if prog.type == "tdm":
             for p in prog.loop_vars:
                 for i, ar in enumerate(op["args"]):
@@ -126,7 +129,7 @@ def to_program(bb):
         raise ValueError("Blackbird program contains no quantum operations!")
 
     if bb.programtype["name"] == "tdm":
-        return _convert_tdm(bb)
+        return _to_tdm_program(bb)
 
     prog = sfp.Program(max(bb.modes) + 1, name=bb.name)
 
@@ -173,13 +176,20 @@ def to_program(bb):
     return prog
 
 
-def _convert_tdm(bb):
+def _to_tdm_program(bb):
     # pylint: disable=import-outside-toplevel
     from strawberryfields.tdm.tdmprogram import TDMProgram
 
     prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
 
-    args = [bb._var[f"p{i}"].flatten() for i in range(max(bb.modes) + 1)]
+    # retrieve all the free parameters in the Blackbird program (e.g. "p0", "p1"
+    # etc.) and add their corresponding values to args
+    args = []
+    for k in bb._var.keys():
+        if k[0] == "p" and k[1:].isdigit():
+            v = bb._var[k].flatten()
+            args.append(v)
+
     # append the quantum operations
     with prog.context(*args, copies=bb.programtype["options"]["copies"]) as (p, q):
         for op in bb.operations:

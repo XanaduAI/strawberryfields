@@ -340,21 +340,24 @@ class TestSFToBlackbirdConversion:
     def test_tdm_program(self):
         prog = TDMProgram(2)
 
-        with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+        with prog.context([1, 2], [3, 4], [5, 6], copies=3) as (p, q):
             ops.Sgate(0.7, 0) | q[1]
             ops.BSgate(p[0]) | (q[0], q[1])
-            ops.MeasureHomodyne(p[1]) | q[0]
+            ops.Rgate(p[1]) | q[1]
+            ops.MeasureHomodyne(p[2]) | q[0]
 
         bb = io.to_blackbird(prog)
 
         assert bb.operations[0] == {'kwargs': {}, 'args': [0.7, 0], 'op': 'Sgate', 'modes': [1]}
         assert bb.operations[1] == {'kwargs': {}, 'args': ['p0', 0.0], 'op': 'BSgate', 'modes': [0, 1]}
-        assert bb.operations[2] == {'kwargs': {'phi': 'p1'}, 'args': [], 'op': 'MeasureHomodyne', 'modes': [0]}
+        assert bb.operations[2] == {'kwargs': {}, 'args': ['p1'], 'op': 'Rgate', 'modes': [1]}
+        assert bb.operations[3] == {'kwargs': {'phi': 'p2'}, 'args': [], 'op': 'MeasureHomodyne', 'modes': [0]}
 
         assert bb.programtype == {'name': 'tdm', 'options': {'temporal_modes': 2, 'copies': 3}}
-        assert list(bb._var.keys()) == ["p0", "p1"]
+        assert list(bb._var.keys()) == ["p0", "p1", "p2"]
         assert np.all(bb._var["p0"] == np.array([[1, 2]]))
         assert np.all(bb._var["p1"] == np.array([[3, 4]]))
+        assert np.all(bb._var["p2"] == np.array([[5, 6]]))
         assert bb.modes == [0, 1]
 
 
@@ -557,22 +560,25 @@ class TestBlackbirdToSFConversion:
         bb_script = textwrap.dedent("""\
         name None
         version 1.0
-        type tdm (temporal_modes=2, copies=3)
+        type tdm (temporal_modes=3, copies=3)
 
         int array p0 =
             1, 2
         int array p1 =
             3, 4
+        int array p2 =
+            5, 6
 
         Sgate(0.7, 0) | 1
         BSgate(p0, 0.0) | [0, 1]
-        MeasureHomodyne(phi=p1) | 0
+        Rgate(p1) | 1
+        MeasureHomodyne(phi=p2) | 0
         """)
 
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
-        assert len(prog) == 3
+        assert len(prog) == 4
         assert prog.type == "tdm"
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.7
@@ -585,18 +591,59 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[1].reg[0].ind == 0
         assert prog.circuit[1].reg[1].ind == 1
 
-        assert prog.circuit[2].op.__class__.__name__ == "MeasureHomodyne"
+        assert prog.circuit[2].op.__class__.__name__ == "Rgate"
         assert prog.circuit[2].op.p[0] == FreeParameter("p1")
-        assert prog.circuit[2].reg[0].ind == 0
+        assert prog.circuit[2].reg[0].ind == 1
+
+        assert prog.circuit[3].op.__class__.__name__ == "MeasureHomodyne"
+        assert prog.circuit[3].op.p[0] == FreeParameter("p2")
+        assert prog.circuit[3].reg[0].ind == 0
 
         assert prog.concurr_modes == 2
         assert prog.timebins == 2
         assert prog.copies == 3
         assert prog.spatial_modes == 1
-        assert prog.free_params == {'p0': FreeParameter("p0"), 'p1': FreeParameter("p1")}
+        assert prog.free_params == {
+            'p0': FreeParameter("p0"),
+            'p1': FreeParameter("p1"),
+            'p2': FreeParameter("p2")
+        }
         assert all(prog.tdm_params[0] == np.array([1, 2]))
         assert all(prog.tdm_params[1] == np.array([3, 4]))
+        assert all(prog.tdm_params[2] == np.array([5, 6]))
 
+    def test_empty_tdm_program(self):
+        """Test empty tdm program raises error"""
+
+        bb_script = """\
+        name test_program
+        version 1.0
+        type tdm (temporal_modes= 12, copies=42)
+        """
+
+        bb = blackbird.loads(bb_script)
+
+        with pytest.raises(ValueError, match="contains no quantum operations"):
+            io.to_program(bb)
+
+    def test_gate_not_defined_tdm(self):
+        """Test unknown gate raises error for tdm program"""
+
+        bb_script = textwrap.dedent("""\
+        name test_program
+        version 1.0
+        type tdm (temporal_modes= 12, copies=42)
+
+        int array p42 =
+            1, 3, 5
+
+        np | [0, 1]
+        """)
+
+        bb = blackbird.loads(bb_script)
+
+        with pytest.raises(NameError, match="operation np not defined"):
+            io.to_program(bb)
 
 class DummyResults:
     """Dummy results object"""
