@@ -637,8 +637,8 @@ class RemoteEngine:
         kwargs.update(self._backend_options)
 
         device = self.device_spec
-        if program.target and program.type == "tdm":
-            device.fill_template(program)
+        if program.type == "tdm":
+            device.fill_template(program, device.target)
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
