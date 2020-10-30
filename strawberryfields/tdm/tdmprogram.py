@@ -382,6 +382,7 @@ class TDMProgram(sf.Program):
             elif isinstance(self.shift, int):
                 q = shift_by(q, self.shift)  # shift at end of each time bin
 
+        # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
         self.unrolled_circuit = self.circuit.copy()
 
         return self
