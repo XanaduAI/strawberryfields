@@ -552,7 +552,7 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].reg[1].ind == 2
 
     def test_tdm_program(self):
-        """Test convering a tdm bb_script to a TDMProgram"""
+        """Test converting a tdm bb_script to a TDMProgram"""
 
         bb_script = textwrap.dedent("""\
         name None

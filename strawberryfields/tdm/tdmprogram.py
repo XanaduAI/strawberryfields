@@ -321,7 +321,7 @@ class TDMProgram(sf.Program):
         return dict(zip([i.name for i in self.loop_vars], self.tdm_params))
 
     def roll(self):
-        """Represent the in a compressed way using without rolling the for loops"""
+        """Represent the program in a compressed way without rolling the for loops"""
         self.circuit = self.rolled_circuit
         return self
 
