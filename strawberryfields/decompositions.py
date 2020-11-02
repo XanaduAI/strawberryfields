@@ -20,7 +20,7 @@ from itertools import groupby
 
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
-from thewalrus.quantum import find_scaling_adjacency_matrix
+from thewalrus.quantum import adj_scaling
 
 from .backends.shared_ops import sympmat, changebasis
 
@@ -182,7 +182,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
     if make_traceless:
         A = A - np.trace(A) * np.identity(n) / n
 
-    scale = find_scaling_adjacency_matrix(A, n * mean_photon_per_mode)
+    scale = adj_scaling(A, n * mean_photon_per_mode)
     A = scale * A
     s, U = takagi(A, tol=atol)
     vals = -np.arctanh(s)
@@ -216,7 +216,7 @@ def bipartite_graph_embed(A, mean_photon_per_mode=1.0, rtol=1e-05, atol=1e-08):
         raise ValueError("The matrix is not square.")
 
     B = np.block([[0 * A, A], [A.T, 0 * A]])
-    scale = find_scaling_adjacency_matrix(B, 2 * n * mean_photon_per_mode)
+    scale = adj_scaling(B, 2 * n * mean_photon_per_mode)
     A = scale * A
 
     if np.allclose(A, A.T, rtol=rtol, atol=atol):
@@ -416,7 +416,7 @@ def mach_zehnder(m, n, internal_phase, external_phase, nmax):
     BS[m, n] = 1.0j / np.sqrt(2)
     BS[n, m] = 1.0j / np.sqrt(2)
     BS[n, n] = 1.0 / np.sqrt(2)
-    return BS @ Rinternal @ BS @ Rexternal
+    return np.round(BS @ Rinternal @ BS @ Rexternal, 14)
 
 
 def mach_zehnder_inv(m, n, phi_int, phi_ext, nmax):

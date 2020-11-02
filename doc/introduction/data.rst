@@ -39,6 +39,7 @@ For :ref:`dense subgraph <apps-subgraph-tutorial>` and
 .. autosummary::
     Planted
     TaceAs
+    PHat
 
 For :ref:`graph similarity <apps-sim-tutorial>`, we provide:
 
@@ -80,6 +81,13 @@ For :ref:`graph similarity <apps-sim-tutorial>`, we provide:
     Mutag2
     Mutag3
 
+Additionally, pre-calculated feature vectors of the following graph datasets are provided:
+
+.. autosummary::
+    MUTAG
+    QM9Exact
+    QM9MC
+
 Molecules
 ---------
 
@@ -89,6 +97,8 @@ been generated for formic acid at zero temperature. The GBS samples can be used 
 
 .. autosummary::
     Formic
+    Water
+    Pyrrole
 
 Dataset
 -------

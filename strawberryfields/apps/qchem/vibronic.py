@@ -49,6 +49,9 @@ displacement vector and Duschinsky matrix, to the required GBS parameters. Addit
 function computes two-mode squeezing parameters :math:`t`, from the molecule's temperature, which
 are required by the GBS algorithm to compute vibronic spectra for molecules at finite temperature.
 The :func:`sample` function then takes the computed GBS parameters and generates samples.
+The :func:`~.VibronicTransition` function is an operation that can be used within the
+conventional :class:`~.Program` interface for application of the Doktorov operator, allowing for
+greater freedom on the choice of input state and any subsequent quantum operations.
 
 Energies from samples
 ---------------------
@@ -59,11 +62,11 @@ most frequently sampled energies correspond to peaks of the vibronic spectrum. T
 import warnings
 from typing import Tuple, Union
 
+import numpy as np
 from scipy.constants import c, h, k
 
-import numpy as np
-
 import strawberryfields as sf
+from strawberryfields.utils import operation
 
 
 def gbs_params(
@@ -138,6 +141,46 @@ def energies(samples: list, w: np.ndarray, wp: np.ndarray) -> Union[list, float]
     return [np.dot(s[: len(s) // 2], wp) - np.dot(s[len(s) // 2 :], w) for s in samples]
 
 
+def VibronicTransition(U1: np.ndarray, r: np.ndarray, U2: np.ndarray, alpha: np.ndarray):
+    r"""An operation for applying the Doktorov operator
+    :math:`\hat{U}_{\text{Dok}} = \hat{D}({\alpha}) \hat{R}(U_2) \hat{S}({r}) \hat{R}(U_1)` on a
+    given state.
+
+    The Doktorov operator describes the transformation between the initial and the final vibronic
+    states of a molecule when it undergoes a vibronic transition.
+
+    **Example usage:**
+
+    >>> modes = 2
+    >>> p = sf.Program(modes)
+    >>> with p.context as q:
+    ...     VibronicTransition(U1, r, U2, alpha) | q
+
+    Args:
+        U1 (array): unitary matrix for the first interferometer
+        r (array): squeezing parameters
+        U2 (array): unitary matrix for the second interferometer
+        alpha (array): displacement parameters
+    """
+    # pylint: disable=expression-not-assigned
+    n_modes = len(U1)
+
+    @operation(n_modes)
+    def op(q):
+
+        sf.ops.Interferometer(U1) | q
+
+        for i in range(n_modes):
+            sf.ops.Sgate(r[i]) | q[i]
+
+        sf.ops.Interferometer(U2) | q
+
+        for i in range(n_modes):
+            sf.ops.Dgate(np.abs(alpha[i]), np.angle(alpha[i])) | q[i]
+
+    return op()
+
+
 def sample(
     t: np.ndarray,
     U1: np.ndarray,
@@ -207,15 +250,7 @@ def sample(
             for i in range(n_modes):
                 sf.ops.S2gate(t[i]) | (q[i], q[i + n_modes])
 
-        sf.ops.Interferometer(U1) | q[:n_modes]
-
-        for i in range(n_modes):
-            sf.ops.Sgate(r[i]) | q[i]
-
-        sf.ops.Interferometer(U2) | q[:n_modes]
-
-        for i in range(n_modes):
-            sf.ops.Dgate(np.abs(alpha[i]), np.angle(alpha[i])) | q[i]
+        VibronicTransition(U1, r, U2, alpha) | q[:n_modes]
 
         if loss:
             for _q in q:

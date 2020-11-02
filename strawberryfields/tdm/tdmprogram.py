@@ -239,6 +239,25 @@ class TDMProgram(sf.Program):
       equivalent to a measured qumode being removed from the representation (by measurement) and a
       new one being added (by a light source). If set to an integer value, the register will shift
       by a step size of this integer at the end of each time bin.
+
+    .. raw:: html
+
+        <a class="meth-details-header collapse-header" data-toggle="collapse" href="#tutorials" aria-expanded="false" aria-controls="tutorials">
+         <h2 style="font-size: 24px;">
+            <i class="fas fa-angle-down rotate" style="float: right;"></i> Related tutorials
+         </h2>
+        </a>
+        <div class="collapse" id="tutorials">
+
+    .. customgalleryitem::
+        :tooltip: Simulate massive time-domain quantum systems
+        :description: :doc:`demos/run_time_domain`
+        :figure: /_static/oneloop.svg
+
+    .. raw:: html
+
+        <div style='clear:both'></div>
+        </div>
     """
 
     def __init__(self, N, name=None):

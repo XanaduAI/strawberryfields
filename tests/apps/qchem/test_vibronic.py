@@ -16,13 +16,13 @@ Tests for strawberryfields.apps.qchem.vibronic
 """
 # pylint: disable=protected-access,no-self-use,unused-argument,redefined-outer-name
 from unittest import mock
+
 import numpy as np
 import pytest
-
 from scipy.constants import c, h, k
 
-from strawberryfields.apps.qchem import vibronic
 import strawberryfields as sf
+from strawberryfields.apps.qchem import vibronic
 
 pytestmark = pytest.mark.apps
 
@@ -232,3 +232,65 @@ def test_sample_integration(p, integration_sample_number):
     assert dims == (integration_sample_number, len(alpha) * 2)
     assert samples.dtype == "int"
     assert (samples >= 0).all()
+
+
+class TestOperation:
+    """Tests for the function ``strawberryfields.apps.qchem.vibronic.VibronicTransition``"""
+
+    U1 = np.array([[-0.17905859, 0.98383841], [0.98383841, 0.17905859]])
+
+    r = np.array([0.00387885, -0.20415111])
+
+    U2 = np.array([[-0.33417234, 0.94251199], [0.94251199, 0.33417234]])
+
+    alpha = np.array([0.38558533, 2.99728422])
+
+    prob = np.array(
+        [
+            [1.49817854e-04, 1.27328834e-03, 5.43505231e-03, 1.55353201e-02],
+            [2.26762512e-06, 2.68454082e-05, 1.52080070e-04, 5.56423985e-04],
+            [2.80701727e-06, 2.52203270e-05, 1.14702166e-04, 3.51760396e-04],
+            [1.14518212e-07, 1.37859685e-06, 7.96673530e-06, 2.98259165e-05],
+        ]
+    )
+
+    p1 = [U1, r, U2, alpha, prob]
+
+    @pytest.mark.parametrize("params", [p1])
+    def test_op_prob(self, params):
+        """Test if the function ``strawberryfields.apps.qchem.vibronic.VibronicTransition`` gives
+        the correct probabilities of all possible Fock basis states when used in a circuit"""
+
+        U1, r, U2, alpha, prob = params
+
+        eng = sf.LocalEngine(backend="gaussian")
+
+        gbs = sf.Program(len(U1))
+
+        with gbs.context as q:
+
+            vibronic.VibronicTransition(U1, r, U2, alpha) | q
+
+            p = eng.run(gbs).state.all_fock_probs(cutoff=4)
+
+        assert np.allclose(p, prob)
+
+    @pytest.mark.parametrize("params", [p1])
+    def test_op_order(self, params):
+        """Test if function ``strawberryfields.apps.qchem.vibronic.VibronicTransition``correctly
+        applies the operations"""
+
+        U1, r, U2, alpha, prob = params
+
+        gbs = sf.Program(len(U1))
+
+        with gbs.context as q:
+
+            vibronic.VibronicTransition(U1, r, U2, alpha) | q
+
+        assert isinstance(gbs.circuit[0].op, sf.ops.Interferometer)
+        assert isinstance(gbs.circuit[1].op, sf.ops.Sgate)
+        assert isinstance(gbs.circuit[2].op, sf.ops.Sgate)
+        assert isinstance(gbs.circuit[3].op, sf.ops.Interferometer)
+        assert isinstance(gbs.circuit[4].op, sf.ops.Dgate)
+        assert isinstance(gbs.circuit[5].op, sf.ops.Dgate)

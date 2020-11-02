@@ -198,7 +198,7 @@ class TestConfigure:
             args.local = True
 
             cli.configure(args)
-            EXPECTED_KWARGS["location"] = "local"
+            m.setitem(EXPECTED_KWARGS, "location", "local")
 
             assert mock_store_account.kwargs == EXPECTED_KWARGS
 

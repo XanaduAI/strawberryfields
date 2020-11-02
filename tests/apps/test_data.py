@@ -35,6 +35,10 @@ GRAPH_DATASETS_LIST = [
 
 MOLECULE_DATASETS_LIST = [data.sample.Formic]
 
+WATER_DATASETS_LIST = [data.sample.Water]
+
+PYRROLE_DATASETS_LIST = [data.sample.Pyrrole]
+
 SAMPLE_DATASETS_LIST = GRAPH_DATASETS_LIST + MOLECULE_DATASETS_LIST
 
 FEATURE_DATASETS_LIST = [data.feature.QM9Exact, data.feature.QM9MC, data.feature.MUTAG]
@@ -328,3 +332,115 @@ class TestFeatureDatasets:
         assert m == dataset_patched.n_features
         assert p == len(dataset_patched.adjs)
         assert q == len(dataset_patched.unit_data)
+
+
+@pytest.mark.parametrize("datasets", WATER_DATASETS_LIST)
+class TestWaterDatasets:
+    """Tests for the ``Water`` class"""
+
+    @pytest.fixture
+    def dataset(self, datasets):
+        """Fixture for loading each of the datasets in ``WATER_DATASETS_LIST``"""
+        yield datasets(t=0)
+
+    def test_w_dims(self, dataset):
+        """Test if w has correct shape"""
+        w = dataset.w
+        assert w.shape == (dataset.modes,)
+
+    def test_u_dims(self, dataset):
+        """Test if U has correct shape"""
+        U = dataset.U
+        assert U.shape == (dataset.modes, dataset.modes)
+
+    def test_u_unitary(self, dataset):
+        """Test if U is unitary"""
+        U = dataset.U
+        assert np.allclose(np.eye(U.shape[0]), U.conj().T @ U)
+
+    def test_sample_dims(self, datasets):
+        """Test if sample has correct shape"""
+        for t in datasets.available_times:
+            dataset = datasets(t)
+            assert np.shape(dataset[:]) == (5000, dataset.modes)
+
+    def test_times_water(self, dataset):
+        """Test if available times are correct"""
+        t = dataset.available_times
+        assert np.allclose(t, np.linspace(0, 260, 27))
+
+    def test_dataset_water(self, datasets):
+        """Test if function raises a ``ValueError`` when an incorrect time is given"""
+        with pytest.raises(ValueError, match="The selected time is not correct"):
+            datasets(t=7)
+
+
+@pytest.mark.parametrize("datasets", PYRROLE_DATASETS_LIST)
+class TestPyrroleDatasets:
+    """Tests for the ``Pyrrole`` class"""
+
+    @pytest.fixture
+    def dataset(self, datasets):
+        """Fixture for loading each of the datasets in ``Pyrrole_DATASETS_LIST``"""
+        yield datasets(t=0)
+
+    def test_ri_dims(self, dataset):
+        """Test if ri has correct shape"""
+        ri = dataset.ri
+        assert ri.shape == (30,)
+
+    def test_rf_dims(self, dataset):
+        """Test if rf has correct shape"""
+        rf = dataset.rf
+        assert rf.shape == (30,)
+
+    def test_wi_dims(self, dataset):
+        """Test if wi has correct shape"""
+        wi = dataset.wi
+        assert wi.shape == (dataset.modes,)
+
+    def test_wf_dims(self, dataset):
+        """Test if wf has correct shape"""
+        wf = dataset.wf
+        assert wf.shape == (dataset.modes,)
+
+    def test_m_dims(self, dataset):
+        """Test if m has correct shape"""
+        m = dataset.m
+        assert m.shape == (30,)
+
+    def test_Li_dims(self, dataset):
+        """Test if Li has correct shape"""
+        Li = dataset.Li
+        assert Li.shape == (30, dataset.modes)
+
+    def test_Lf_dims(self, dataset):
+        """Test if Lf has correct shape"""
+        Lf = dataset.Lf
+        assert Lf.shape == (30, dataset.modes)
+
+    def test_up_dims(self, dataset):
+        """Test if U has correct shape"""
+        U = dataset.U
+        assert U.shape == (dataset.modes, dataset.modes)
+
+    def test_up_unitary(self, dataset):
+        """Test if U is unitary"""
+        U = dataset.U
+        assert np.allclose(np.eye(U.shape[0]), U.conj().T @ U)
+
+    def test_sample_dims(self, datasets):
+        """Test if sample has correct shape"""
+        for t in datasets.available_times:
+            dataset = datasets(t)
+            assert np.shape(dataset[:]) == (dataset.n_samples, dataset.modes)
+
+    def test_times_pyrrole(self, dataset):
+        """Test if available times are correct"""
+        t = dataset.available_times
+        assert np.allclose(t, np.linspace(0, 900, 10))
+
+    def test_dataset_pyrrole(self, datasets):
+        """Test if function raises a ``ValueError`` when an incorrect time is given"""
+        with pytest.raises(ValueError, match="The selected time is not correct"):
+            datasets(t=96)

@@ -77,6 +77,20 @@ function, gradients can be computed efficiently, leading to fast training.
 
     Stochastic
     KL
+
+Related tutorials
+^^^^^^^^^^^^^^^^^
+
+.. customgalleryitem::
+    :tooltip: Training GBS
+    :description: :doc:`apps/run_tutorial_training`
+    :figure: /_static/circulant.png
+
+.. raw:: html
+
+    <div style='clear:both'></div>
+    <br>
+
 """
 from strawberryfields.apps.train.cost import KL, Stochastic
 from strawberryfields.apps.train.embed import Exp, ExpFeatures
