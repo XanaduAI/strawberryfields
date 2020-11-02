@@ -304,7 +304,7 @@ class TDMProgram(sf.Program):
         return self
 
     def compile(self, *, device=None, compiler=None, **kwargs):
-        """Compile the program given a Strawberry Fields photonic compiler, or
+        """Compile the program given a Strawberry Fields photonic a
         hardware device specification.
 
         Args:
@@ -323,6 +323,7 @@ class TDMProgram(sf.Program):
         Returns:
             Program: compiled program
         """
+        print(self.copies)
 
     def __enter__(self):
         super().__enter__()
