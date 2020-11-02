@@ -303,6 +303,27 @@ class TDMProgram(sf.Program):
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
         return self
 
+    def compile(self, *, device=None, compiler=None, **kwargs):
+        """Compile the program given a Strawberry Fields photonic compiler, or
+        hardware device specification.
+
+        Args:
+            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+                program compilation
+            compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
+                to use. If a device is specified, this overrides the compile strategy specified by
+                the hardware :class:`~.DevicSpec`.
+
+        Keyword Args:
+            optimize (bool): If True, try to optimize the program by merging and canceling gates.
+                The default is False.
+            warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
+                connected. The default is True.
+
+        Returns:
+            Program: compiled program
+        """
+
     def __enter__(self):
         super().__enter__()
         return self.loop_vars, self.register
@@ -382,7 +403,6 @@ class TDMProgram(sf.Program):
             elif isinstance(self.shift, int):
                 q = shift_by(q, self.shift)  # shift at end of each time bin
 
-        # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
         self.unrolled_circuit = self.circuit.copy()
 
         return self
@@ -399,20 +419,10 @@ class TDMProgram(sf.Program):
 
     def assert_number_of_modes(self, device):
         """Check that the number of modes in the program is valid for the given device."""
-        if self.timebins > device.modes["temporal"]["max"]:
+        if device.timebins > device.modes["max"]["temporal"]:
             raise CircuitError(
-                f"This program contains {self.timebins} temporal modes, but the device '{device.target}' "
-                f"only supports up to {device.modes['temporal']['max']} modes."
-            )
-        if self.concurr_modes > device.modes["concurrent"]:
-            raise CircuitError(
-                f"This program contains {self.concurr_modes} concurrent modes, but the device '{device.target}' "
-                f"only supports {device.modes['concurrent']} modes."
-            )
-        if self.spatial_modes > device.modes["spatial"]:
-            raise CircuitError(
-                f"This program contains {self.spatial_modes} spatial modes, but the device '{device.target}' "
-                f"only supports {device.modes['spatial']} modes."
+                f"This program contains {device.timebins} temporal modes, but the device '{device.target}' "
+                f"only supports up to {device.modes['max']['temporal']} modes."
             )
 
     def __str__(self):
