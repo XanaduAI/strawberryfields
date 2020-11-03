@@ -323,7 +323,91 @@ class TDMProgram(sf.Program):
         Returns:
             Program: compiled program
         """
-        print(self.copies)
+
+        import blackbird as bb
+
+        device_layout = bb.loads(device.layout)
+        # First check: the gates are in the correct order
+        program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
+        device_gates = [op["op"] for op in device_layout.operations]
+        if device_gates != program_gates:
+            raise CircuitError(
+                "Program cannot be used with the device '{}' "
+                "due to incompatible topology.".format(device.target)
+            )
+        # Second check: the gates act in the correct modes
+        program_modes = [[r.ind for r in cmd.reg] for cmd in self.rolled_circuit]
+        device_modes = [op["modes"] for op in device_layout.operations]
+        if program_modes != device_modes:
+            raise CircuitError(
+                "Program cannot be used with the device '{}' "
+                "due to incompatible mode ordering.".format(device.target)
+            )
+        # Third check: the parameters of the gates are valid
+        gate_params_ranges = device.gate_parameters
+        # We will loop over the different operations in the device specification
+        for i, operation in enumerate(device_layout.operations):
+            # We obtain the name of the parameter(s)
+            param_names = operation["args"]
+            len_params_program = len(self.rolled_circuit[i].op.p)
+            len_params_device = len(param_names)
+            # Check if the gate has multiple parameters that all but the first one  are zero
+            if len_params_device < len_params_program:
+                for j in range(1, len_params_program):
+                    assert self.rolled_circuit[i].op.p[j] == 0
+            # Now we will check explicitly if the parameters in the program match
+            counter = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
+            for k, param_name in enumerate(param_names):
+                # Obtain the relelvant parameter range from the device
+                param_range = device.gate_parameters[param_name]
+                # Obtain the value of the corresponding parameter in the program
+                # If it is a numerical value check directly
+                program_param = self.rolled_circuit[i].op.p[k]
+                if type(program_param) == float:
+                    if not program_param in param_range:
+                        raise CircuitError(
+                            "Program cannot be used with the device '{}' "
+                            "due to incompatible parameter.".format(device.target)
+                        )
+                # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
+                else:
+                    local_p_vals = self.tdm_params[counter]
+                    for x in local_p_vals:
+                        if not x in param_range:
+                            raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to incompatible parameter.".format(device.target)
+                            )
+                    counter += 1
+
+            # print(len(param_names))
+            # print(len(self.rolled_circuit[i].op.p))
+            # print(self.rolled_circuit[i].op.p)
+            # for param_name in param_names:
+            #    param_range = device.gate_parameters[param_name]
+            # print(param_range)
+        # print(self.tdm_params)
+        # for op in device_layout.operations:
+        #    print(op)
+        # print(gate_params)
+        # Note that at this point tdm allows BS on 1,0 but not on 0,1
+
+        """
+        print("list of allowed gates")
+        print(list_of_gates)
+        gate_params = device.gate_parameters
+        print("ranges of allowed parameters")
+        print(gate_params)
+        print("gates passed")
+        self.roll()
+        print("rolled\n",self.rolled_circuit)
+        gate_names =  [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
+        print(gate_names)
+        print("Do gates match?", gate_names == list_of_gates)
+        commands = [([r.ind for r in cmd.reg], cmd.op.p[0], type(cmd.op.p[0]), cmd.op.__class__.__name__) for cmd in self.rolled_circuit]
+        for x in commands:
+            print(x)
+        """
 
     def __enter__(self):
         super().__enter__()
@@ -343,7 +427,7 @@ class TDMProgram(sf.Program):
         return dict(zip([i.name for i in self.loop_vars], self.tdm_params))
 
     def roll(self):
-        """Represent the in a compressed way using without rolling the for loops"""
+        """Represent the circuit in a compressed way without rolling the for loops"""
         self.circuit = self.rolled_circuit
         return self
 

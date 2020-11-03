@@ -452,3 +452,89 @@ def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes,
 
     with pytest.raises(sf.program_utils.CircuitError, match=match):
         new_prog = prog.compile(device=spec, compiler=DummyCircuit())
+
+## Test for the compilation
+
+import blackbird as bb
+
+
+
+tm = 4
+device_spec = {'layout': 'name template_tdm\nversion 1.0\ntarget tdm (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n', 'modes': {'concurrent': 2, 'spatial': 1, 'temporal': {'max': 100}}, 'compiler': ['tdm'], 'gate_parameters': {'p0': [0.5643], 'p1': [0, [0, 6.283185307179586]], 'p2': [0, [0, 3.141592653589793], 3.141592653589793], 'p3': [0, [0, 6.283185307179586]]}}
+device_spec['layout'] = device_spec['layout'].format(tm = tm)
+
+from strawberryfields.api.devicespec import DeviceSpec
+device = DeviceSpec("tdm", device_spec, connection=None)
+
+def test_tdm_wrong_layout():
+    sq_r = 0.5643
+    c = 2
+    copies = 100
+    alpha = [np.pi / 4, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0] + [np.pi / 2, np.pi / 2]
+    shift = "default"
+    prog = tdmprogram.TDMProgram(N=2)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Dgate(sq_r) | q[1]
+        ops.BSgate(p[0]) | (q[1], q[0])
+        ops.Rgate(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible topology."):
+        prog.compile(device=device)
+
+def test_tdm_wrong_modes():
+    sq_r = 0.5643
+    c = 2
+    copies = 100
+    alpha = [np.pi / 4, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0] + [np.pi / 2, np.pi / 2]
+    shift = "default"
+    prog = tdmprogram.TDMProgram(N=2)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Sgate(sq_r) | q[1]
+        ops.BSgate(p[0]) | (q[0], q[1])
+        ops.Rgate(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible mode ordering."):
+        prog.compile(device=device)
+
+def test_tdm_wrong_parameters_explicit():
+    sq_r = 2
+    c = 2
+    copies = 100
+    alpha = [np.pi / 4, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0] + [np.pi / 2, np.pi / 2]
+    shift = "default"
+    prog = tdmprogram.TDMProgram(N=2)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Sgate(sq_r) | q[1]
+        ops.BSgate(p[0]) | (q[1], q[0])
+        ops.Rgate(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        prog.compile(device=device)
+
+
+def test_tdm_wrong_parameters_symbolic():
+    sq_r = 0.5643
+    c = 2
+    copies = 100
+    alpha = [137, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0] + [np.pi / 2, np.pi / 2]
+    shift = "default"
+    prog = tdmprogram.TDMProgram(N=2)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Sgate(sq_r) | q[1]
+        ops.BSgate(p[0]) | (q[1], q[0])
+        ops.Rgate(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        prog.compile(device=device)
