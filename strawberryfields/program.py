@@ -528,7 +528,7 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-            if device.modes is not None and target != "simulon":
+            if device.modes is not None and isinstance(device.modes, int):
                 # Check that the number of modes in the program is valid for the given device.
 
                 # Program subsystems may be created and destroyed during execution. The length
