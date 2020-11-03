@@ -859,6 +859,25 @@ class Catstate(Preparation):
         backend.prepare_ket_state(ket, *reg)
 
 
+class GKPstate(Preparation):
+    r"""Prepare a mode in a GKP state.
+
+    .. warning::
+        GKP states are **non-Gaussian**, and thus can
+        only be used in the Fock or Bosonic backends, *not* the Gaussian backend.
+
+    Args:
+        epsilon (float): the peak variance
+        model (str): the noise model
+    """
+
+    def __init__(self, epsilon=0.1):
+        return
+
+    def _apply(self, reg, backend, **kwargs):
+        return
+
+
 class Ket(Preparation):
     r"""Prepare mode(s) using the given ket vector(s) in the Fock basis.
 
