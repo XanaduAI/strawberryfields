@@ -528,7 +528,7 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-            # TODO: add validation for modes defined with dictionaries
+            # TODO: add validation for device specs that provide a dictionary for `device.modes`.
             if device.modes is not None and isinstance(device.modes, int):
                 # Check that the number of modes in the program is valid for the given device.
 
