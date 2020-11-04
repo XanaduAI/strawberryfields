@@ -99,7 +99,9 @@ def test_spatial_modes_number_of_measurements_match():
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
-    with pytest.raises(ValueError, match="Number of measurement operators must match number of spatial modes."):
+    with pytest.raises(
+        ValueError, match="Number of measurement operators must match number of spatial modes."
+    ):
         prog = tdmprogram.TDMProgram(N=[3, 3])
         with prog.context(alpha, phi, theta, copies=copies) as (p, q):
             ops.Sgate(sq_r, 0) | q[2]
@@ -156,7 +158,7 @@ def test_epr():
     rtol = 5 / np.sqrt(copies)
     minusstdX1X0 = (X1 - X0).var()
     plusstdX1X0 = (X1 + X0).var()
-    squeezed_std = np.exp(- 2 * sq_r)
+    squeezed_std = np.exp(-2 * sq_r)
     expected_minus = sf.hbar * squeezed_std
     expected_plus = sf.hbar / squeezed_std
     assert np.allclose(minusstdX1X0, expected_minus, rtol=rtol)
@@ -166,6 +168,7 @@ def test_epr():
     plusstdP2P3 = (P2 + P3).var()
     assert np.allclose(minusstdP2P3, expected_plus, rtol=rtol)
     assert np.allclose(plusstdP2P3, expected_minus, rtol=rtol)
+
 
 def test_ghz():
     """Generates a GHZ state and checks that the correct correlations (noise reductions) are observed
@@ -201,7 +204,9 @@ def test_ghz():
     reshaped_samples_P = np.array(samples_P).reshape([copies, n + vac_modes])
     nullifier_P = lambda sample: np.sum(sample[vac_modes:])
     val_nullifier_P = np.var([nullifier_P(p) for p in reshaped_samples_P], axis=0)
-    assert np.allclose(val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+    assert np.allclose(
+        val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies)
+    )
 
 
 def test_one_dimensional_cluster():
@@ -218,7 +223,9 @@ def test_one_dimensional_cluster():
     phi = [np.pi / 2] * n
     theta = [0, np.pi / 2] * (n // 2)  # Note that we measure x for mode i and the p for mode i+1.
     reshaped_samples = np.array(singleloop(sq_r, alpha, phi, theta, copies)).reshape(copies, n)
-    nullifier = lambda x: np.array([-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)])[1:]
+    nullifier = lambda x: np.array([-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)])[
+        1:
+    ]
     nullifier_samples = np.array([nullifier(y) for y in reshaped_samples])
     delta = np.var(nullifier_samples, axis=0)
     assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
@@ -310,8 +317,32 @@ def test_two_dimensional_cluster_denmark():
     # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
     N = delay2
     ntot = len(X_A) - delay2 - 1
-    nX = np.array([X_A[k] + X_B[k] - X_A[k + 1] - X_B[k + 1] - X_A[k + N] + X_B[k + N] - X_A[k + N + 1] + X_B[k + N + 1] for k in range(ntot)])
-    nP = np.array([P_A[k] + P_B[k] + P_A[k + 1] + P_B[k + 1] - P_A[k + N] + P_B[k + N] + P_A[k + N + 1] - P_B[k + N + 1] for k in range(ntot)])
+    nX = np.array(
+        [
+            X_A[k]
+            + X_B[k]
+            - X_A[k + 1]
+            - X_B[k + 1]
+            - X_A[k + N]
+            + X_B[k + N]
+            - X_A[k + N + 1]
+            + X_B[k + N + 1]
+            for k in range(ntot)
+        ]
+    )
+    nP = np.array(
+        [
+            P_A[k]
+            + P_B[k]
+            + P_A[k + 1]
+            + P_B[k + 1]
+            - P_A[k + N]
+            + P_B[k + N]
+            + P_A[k + N + 1]
+            - P_B[k + N + 1]
+            for k in range(ntot)
+        ]
+    )
     nXvar = np.var(nX)
     nPvar = np.var(nP)
 
@@ -392,10 +423,30 @@ def test_two_dimensional_cluster_tokyo():
     N = delayC
     # nullifiers defined in https://arxiv.org/pdf/1903.03918.pdf, Fig. S5
     ntot = len(X_A) - N - 1
-    nX1 = np.array([X_A[k] + X_B[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N]) for k in range(ntot)])
-    nX2 = np.array([X_C[k] - X_D[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N]) for k in range(ntot)])
-    nP1 = np.array([P_A[k] + P_B[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N]) for k in range(ntot)])
-    nP2 = np.array([P_C[k] - P_D[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N]) for k in range(ntot)])
+    nX1 = np.array(
+        [
+            X_A[k] + X_B[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N])
+            for k in range(ntot)
+        ]
+    )
+    nX2 = np.array(
+        [
+            X_C[k] - X_D[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N])
+            for k in range(ntot)
+        ]
+    )
+    nP1 = np.array(
+        [
+            P_A[k] + P_B[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N])
+            for k in range(ntot)
+        ]
+    )
+    nP2 = np.array(
+        [
+            P_C[k] - P_D[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N])
+            for k in range(ntot)
+        ]
+    )
 
     nX1var = np.var(nX1)
     nX2var = np.var(nX2)
@@ -407,12 +458,14 @@ def test_two_dimensional_cluster_tokyo():
     assert np.allclose(nP1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
     assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
+
 @pytest.mark.parametrize(
-    "temporal_modes,concurrent_modes,spatial_modes,match", [
+    "temporal_modes,concurrent_modes,spatial_modes,match",
+    [
         (200, 2, 1, "contains 200 temporal modes"),
         (50, 42, 1, "contains 42 concurrent modes"),
         (50, 2, 2, "contains 2 spatial modes"),
-    ]
+    ],
 )
 def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes, match):
     """Test that an exception is raised if the compiler
@@ -420,27 +473,22 @@ def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes,
 
     class DummyCompiler(sf.compilers.compiler.Compiler):
         """A compiler with 2 gates"""
+
         interactive = True
-        primitives = {'S2gate', 'Interferometer'}
+        primitives = {"S2gate", "Interferometer"}
         decompositions = set()
 
     device_dict = {
-        "modes": {
-            "concurrent": 2,
-            "spatial": 1,
-            "temporal": {
-                "max": 100
-            }
-        },
+        "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
         "layout": None,
         "gate_parameters": None,
-        "compiler": [None]
+        "compiler": [None],
     }
     spec = sf.api.DeviceSpec(target=None, connection=None, spec=device_dict)
 
     # sum of N must always be equal to number of concurrent modes, split up over
     # number of measurments/spatial modes
-    N = np.array([concurrent_modes]*spatial_modes) // spatial_modes
+    N = np.array([concurrent_modes] * spatial_modes) // spatial_modes
     prog = tdmprogram.TDMProgram(N)
 
     params = np.ones(temporal_modes)
@@ -453,11 +501,10 @@ def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes,
     with pytest.raises(sf.program_utils.CircuitError, match=match):
         new_prog = prog.compile(device=spec, compiler=DummyCircuit())
 
+
 ## Test for the compilation
 
 import blackbird as bb
-
-
 
 
 ############################################################################
@@ -469,11 +516,23 @@ import blackbird as bb
 ############################################################################
 
 tm = 4
-device_spec = {'layout': 'name template_tdm\nversion 1.0\ntarget tdm (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n', 'modes': {'concurrent': 2, 'spatial': 1, 'temporal': {'max': 100}}, 'compiler': ['tdm'], 'gate_parameters': {'p0': [0.5643], 'p1': [0, [0, 6.283185307179586]], 'p2': [0, [0, 3.141592653589793], 3.141592653589793], 'p3': [0, [0, 6.283185307179586]]}}
-device_spec['layout'] = device_spec['layout'].format(tm = tm)
+device_spec = {
+    "layout": "name template_tdm\nversion 1.0\ntarget tdm (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
+    "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
+    "compiler": ["tdm"],
+    "gate_parameters": {
+        "p0": [0.5643],
+        "p1": [0, [0, 6.283185307179586]],
+        "p2": [0, [0, 3.141592653589793], 3.141592653589793],
+        "p3": [0, [0, 6.283185307179586]],
+    },
+}
+device_spec["layout"] = device_spec["layout"].format(tm=tm)
 
 from strawberryfields.api.devicespec import DeviceSpec
+
 device = DeviceSpec("tdm", device_spec, connection=None)
+
 
 def test_tdm_wrong_layout():
     """Test the correct error is raised when the tdm circuit gates don't match the device spec"""
@@ -494,6 +553,7 @@ def test_tdm_wrong_layout():
     with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible topology."):
         prog.compile(device=device)
 
+
 def test_tdm_wrong_modes():
     """Test the correct error is raised when the tdm circuit registers don't match the device spec"""
     sq_r = 0.5643
@@ -512,6 +572,7 @@ def test_tdm_wrong_modes():
     eng = sf.Engine("gaussian")
     with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible mode ordering."):
         prog.compile(device=device)
+
 
 def test_tdm_wrong_parameters_explicit():
     """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
@@ -552,6 +613,7 @@ def test_tdm_wrong_parameter_second_argument():
     with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
         prog.compile(device=device)
 
+
 def test_tdm_wrong_parameters_symbolic():
     """Test the correct error is raised when the tdm circuit symbolic parameters are not within the allowed ranges"""
     sq_r = 0.5643
@@ -588,5 +650,7 @@ def test_tdm_not_enough_temporal_modes():
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    with pytest.raises(sf.program_utils.CircuitError, match="due to not having enough temporal modes."):
+    with pytest.raises(
+        sf.program_utils.CircuitError, match="due to not having enough temporal modes."
+    ):
         prog.compile(device=device)
