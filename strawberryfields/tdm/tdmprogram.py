@@ -25,6 +25,7 @@ from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
 
+
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 
@@ -353,8 +354,8 @@ class TDMProgram(sf.Program):
                 for j in range(1, len_params_program):
                     if self.rolled_circuit[i].op.p[j] != 0:
                         raise CircuitError(
-                                "Program cannot be used with the device '{}' "
-                                "due to incompatible parameter.".format(device.target)
+                            "Program cannot be used with the device '{}' "
+                            "due to incompatible parameter.".format(device.target)
                         )
             # Now we will check explicitly if the parameters in the program match
             counter = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
@@ -366,12 +367,12 @@ class TDMProgram(sf.Program):
                 if sf.parameters.par_is_symbolic(program_param):
                     # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                     local_p_vals = self.tdm_params[counter]
-                    print(len(local_p_vals), device.modes['temporal']['max'])
-                    if len(local_p_vals) > device.modes['temporal']['max']:
+                    print(len(local_p_vals), device.modes["temporal"]["max"])
+                    if len(local_p_vals) > device.modes["temporal"]["max"]:
                         raise CircuitError(
-                                "Program cannot be used with the device '{}' "
-                                "due to not having enough temporal modes.".format(device.target)
-                            )
+                            "Program cannot be used with the device '{}' "
+                            "due to not having enough temporal modes.".format(device.target)
+                        )
 
                     for x in local_p_vals:
                         if not x in param_range:
