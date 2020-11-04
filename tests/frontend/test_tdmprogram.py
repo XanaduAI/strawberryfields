@@ -418,8 +418,8 @@ def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes,
     """Test that an exception is raised if the compiler
     is called with a device spec with an incorrect number of modes"""
 
-    class DummyCircuit(sf.compilers.compiler.Compiler):
-        """A circuit with 2 modes"""
+    class DummyCompiler(sf.compilers.compiler.Compiler):
+        """A compiler with 2 gates"""
         interactive = True
         primitives = {'S2gate', 'Interferometer'}
         decompositions = set()

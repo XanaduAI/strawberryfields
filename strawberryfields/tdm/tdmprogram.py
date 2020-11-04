@@ -427,7 +427,7 @@ class TDMProgram(sf.Program):
         return dict(zip([i.name for i in self.loop_vars], self.tdm_params))
 
     def roll(self):
-        """Represent the circuit in a compressed way without rolling the for loops"""
+        """Represent the program in a compressed way without rolling the for loops"""
         self.circuit = self.rolled_circuit
         return self
 
@@ -503,8 +503,17 @@ class TDMProgram(sf.Program):
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
 
     def assert_number_of_modes(self, device):
-        """Check that the number of modes in the program is valid for the given device."""
-        if device.timebins > device.modes["max"]["temporal"]:
+        if self.timebins > device.modes["temporal"]["max"]:
+            raise CircuitError(
+                f"This program contains {self.timebins} temporal modes, but the device '{device.target}' "
+                f"only supports up to {device.modes['temporal']['max']} modes."
+            )
+        if self.concurr_modes > device.modes["concurrent"]:
+            raise CircuitError(
+                f"This program contains {self.concurr_modes} concurrent modes, but the device '{device.target}' "
+                f"only supports {device.modes['concurrent']} modes."
+            )
+        if self.spatial_modes > device.modes["spatial"]:
             raise CircuitError(
                 f"This program contains {device.timebins} temporal modes, but the device '{device.target}' "
                 f"only supports up to {device.modes['max']['temporal']} modes."
