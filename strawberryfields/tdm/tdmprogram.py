@@ -19,11 +19,11 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 
 from operator import itemgetter
 from math import ceil
+import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
-
 
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
@@ -304,8 +304,8 @@ class TDMProgram(sf.Program):
         return self
 
     def compile(self, *, device=None, compiler=None, **kwargs):
-        """Compile the program given a Strawberry Fields photonic a
-        hardware device specification.
+        """Compile the program given a Strawberry Fields photonic hardware device specification.
+        At this stage the compilation is simply a check that the program matches the device.
 
         Args:
             device (~strawberryfields.api.DeviceSpec): device specification object to use for
@@ -323,9 +323,6 @@ class TDMProgram(sf.Program):
         Returns:
             Program: compiled program
         """
-
-        import blackbird as bb
-
         device_layout = bb.loads(device.layout)
         # First check: the gates are in the correct order
         program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
@@ -351,27 +348,31 @@ class TDMProgram(sf.Program):
             param_names = operation["args"]
             len_params_program = len(self.rolled_circuit[i].op.p)
             len_params_device = len(param_names)
-            # Check if the gate has multiple parameters that all but the first one  are zero
+            # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) beign different Sgate(r)
             if len_params_device < len_params_program:
                 for j in range(1, len_params_program):
-                    assert self.rolled_circuit[i].op.p[j] == 0
+                    if self.rolled_circuit[i].op.p[j] != 0:
+                        raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to incompatible parameter.".format(device.target)
+                        )
             # Now we will check explicitly if the parameters in the program match
             counter = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
             for k, param_name in enumerate(param_names):
                 # Obtain the relelvant parameter range from the device
                 param_range = device.gate_parameters[param_name]
                 # Obtain the value of the corresponding parameter in the program
-                # If it is a numerical value check directly
                 program_param = self.rolled_circuit[i].op.p[k]
-                if type(program_param) == float:
-                    if not program_param in param_range:
-                        raise CircuitError(
-                            "Program cannot be used with the device '{}' "
-                            "due to incompatible parameter.".format(device.target)
-                        )
-                # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
-                else:
+                if sf.parameters.par_is_symbolic(program_param):
+                    # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                     local_p_vals = self.tdm_params[counter]
+                    print(len(local_p_vals), device.modes['temporal']['max'])
+                    if len(local_p_vals) > device.modes['temporal']['max']:
+                        raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to not having enough temporal modes.".format(device.target)
+                            )
+
                     for x in local_p_vals:
                         if not x in param_range:
                             raise CircuitError(
@@ -379,35 +380,13 @@ class TDMProgram(sf.Program):
                                 "due to incompatible parameter.".format(device.target)
                             )
                     counter += 1
-
-            # print(len(param_names))
-            # print(len(self.rolled_circuit[i].op.p))
-            # print(self.rolled_circuit[i].op.p)
-            # for param_name in param_names:
-            #    param_range = device.gate_parameters[param_name]
-            # print(param_range)
-        # print(self.tdm_params)
-        # for op in device_layout.operations:
-        #    print(op)
-        # print(gate_params)
-        # Note that at this point tdm allows BS on 1,0 but not on 0,1
-
-        """
-        print("list of allowed gates")
-        print(list_of_gates)
-        gate_params = device.gate_parameters
-        print("ranges of allowed parameters")
-        print(gate_params)
-        print("gates passed")
-        self.roll()
-        print("rolled\n",self.rolled_circuit)
-        gate_names =  [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
-        print(gate_names)
-        print("Do gates match?", gate_names == list_of_gates)
-        commands = [([r.ind for r in cmd.reg], cmd.op.p[0], type(cmd.op.p[0]), cmd.op.__class__.__name__) for cmd in self.rolled_circuit]
-        for x in commands:
-            print(x)
-        """
+                else:
+                    # If it is a numerical value check directly
+                    if not program_param in param_range:
+                        raise CircuitError(
+                            "Program cannot be used with the device '{}' "
+                            "due to incompatible parameter.".format(device.target)
+                        )
 
     def __enter__(self):
         super().__enter__()

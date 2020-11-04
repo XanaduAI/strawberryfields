@@ -461,9 +461,9 @@ import blackbird as bb
 
 
 ############################################################################
-# For the test below to work the BB cript had to be changes
+# For the test below to work, the BB cript had to be changed
 # so that the squezing parameter is a dummy symbolic variable called p0
-# and now the names inside the BB script match the names in the
+# and now the names insides the BB script match the names in the
 # dictionary giving the allowed ranges for the variables
 # in the DeviceSpec object
 ############################################################################
@@ -476,9 +476,10 @@ from strawberryfields.api.devicespec import DeviceSpec
 device = DeviceSpec("tdm", device_spec, connection=None)
 
 def test_tdm_wrong_layout():
+    """Test the correct error is raised when the tdm circuit gates don't match the device spec"""
     sq_r = 0.5643
     c = 2
-    copies = 100
+    copies = 10
     alpha = [np.pi / 4, 0] * c
     phi = [0, np.pi / 2] * c
     theta = [0, 0] + [np.pi / 2, np.pi / 2]
@@ -494,9 +495,10 @@ def test_tdm_wrong_layout():
         prog.compile(device=device)
 
 def test_tdm_wrong_modes():
+    """Test the correct error is raised when the tdm circuit registers don't match the device spec"""
     sq_r = 0.5643
     c = 2
-    copies = 100
+    copies = 10
     alpha = [np.pi / 4, 0] * c
     phi = [0, np.pi / 2] * c
     theta = [0, 0] + [np.pi / 2, np.pi / 2]
@@ -512,9 +514,10 @@ def test_tdm_wrong_modes():
         prog.compile(device=device)
 
 def test_tdm_wrong_parameters_explicit():
+    """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
     sq_r = 2
     c = 2
-    copies = 100
+    copies = 10
     alpha = [np.pi / 4, 0] * c
     phi = [0, np.pi / 2] * c
     theta = [0, 0] + [np.pi / 2, np.pi / 2]
@@ -530,10 +533,30 @@ def test_tdm_wrong_parameters_explicit():
         prog.compile(device=device)
 
 
-def test_tdm_wrong_parameters_symbolic():
+def test_tdm_wrong_parameter_second_argument():
+    """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
     sq_r = 0.5643
     c = 2
-    copies = 100
+    copies = 10
+    alpha = [np.pi / 4, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0] + [np.pi / 2, np.pi / 2]
+    shift = "default"
+    prog = tdmprogram.TDMProgram(N=2)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Sgate(sq_r, 0.4) | q[1]
+        ops.BSgate(p[0]) | (q[1], q[0])
+        ops.Rgate(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        prog.compile(device=device)
+
+def test_tdm_wrong_parameters_symbolic():
+    """Test the correct error is raised when the tdm circuit symbolic parameters are not within the allowed ranges"""
+    sq_r = 0.5643
+    c = 2
+    copies = 200
     alpha = [137, 0] * c
     phi = [0, np.pi / 2] * c
     theta = [0, 0] + [np.pi / 2, np.pi / 2]
@@ -546,4 +569,24 @@ def test_tdm_wrong_parameters_symbolic():
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
     with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        prog.compile(device=device)
+
+
+def test_tdm_not_enough_temporal_modes():
+    """Test the correct error is raised when the tdm circuit has way too many temporal modes"""
+    sq_r = 0.5643
+    c = 100
+    copies = 1
+    alpha = [0.5, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0] * c
+    shift = "default"
+    prog = tdmprogram.TDMProgram(N=2)
+    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+        ops.Sgate(sq_r) | q[1]
+        ops.BSgate(p[0]) | (q[1], q[0])
+        ops.Rgate(p[1]) | q[1]
+        ops.MeasureHomodyne(p[2]) | q[0]
+    eng = sf.Engine("gaussian")
+    with pytest.raises(sf.program_utils.CircuitError, match="due to not having enough temporal modes."):
         prog.compile(device=device)
