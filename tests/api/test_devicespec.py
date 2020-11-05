@@ -57,16 +57,18 @@ mock_layout_tdm = textwrap.dedent(
     type tdm (temporal_modes={tm}, copies=1)
 
     float array p0[1, {tm}] =
-        {{bs_array}}
+        {{rs_array}}
     float array p1[1, {tm}] =
-        {{r_array}}
+        {{bs_array}}
     float array p2[1, {tm}] =
+        {{r_array}}
+    float array p3[1, {tm}] =
         {{m_array}}
 
-    Sgate(1, 0) | 1
-    BSgate(p0) | (1, 0)
-    Rgate(p1) | 1
-    MeasureHomodyne(p2) | 0
+    Sgate(p0) | 1
+    BSgate(p1) | (1, 0)
+    Rgate(p2) | 1
+    MeasureHomodyne(p3) | 0
     """
 )
 
@@ -175,15 +177,17 @@ class TestDeviceSpec:
             type tdm (temporal_modes=2, copies=1)
 
             float array p0[1, 2] =
-                {bs_array}
+                {rs_array}
             float array p1[1, 2] =
-                {r_array}
+                {bs_array}
             float array p2[1, 2] =
+                {r_array}
+            float array p3[1, 2] =
                 {m_array}
 
-            Sgate(1, 0) | 1
-            BSgate(p0) | (1, 0)
-            Rgate(p1) | 1
-            MeasureHomodyne(p2) | 0
+            Sgate(p0) | 1
+            BSgate(p1) | (1, 0)
+            Rgate(p2) | 1
+            MeasureHomodyne(p3) | 0
             """
         )
