@@ -515,9 +515,10 @@ import blackbird as bb
 # in the DeviceSpec object
 ############################################################################
 
+target = "tdm"
 tm = 4
 device_spec = {
-    "layout": "name template_tdm\nversion 1.0\ntarget tdm (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
+    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
     "compiler": ["tdm"],
     "gate_parameters": {
@@ -527,7 +528,7 @@ device_spec = {
         "p3": [0, [0, 6.283185307179586]],
     },
 }
-device_spec["layout"] = device_spec["layout"].format(tm=tm)
+device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
 
 from strawberryfields.api.devicespec import DeviceSpec
 

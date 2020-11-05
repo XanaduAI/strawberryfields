@@ -332,7 +332,7 @@ class TDMProgram(sf.Program):
                 "The gates or the order of gates used in the Program is incompatible with the device '{}' ".format(device.target)
             )
 
-        # Second check: the gates act in the correct modes
+        # Second check: the gates act on the correct modes
         program_modes = [[r.ind for r in cmd.reg] for cmd in self.rolled_circuit]
         device_modes = [op["modes"] for op in device_layout.operations]
         if program_modes != device_modes:
@@ -350,7 +350,7 @@ class TDMProgram(sf.Program):
             param_names = operation["args"]
             len_params_program = len(self.rolled_circuit[i].op.p)
             len_params_device = len(param_names)
-            # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) beign different Sgate(r)
+            # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) being different Sgate(r)
 
             if len_params_device < len_params_program:
                 for j in range(1, len_params_program):
