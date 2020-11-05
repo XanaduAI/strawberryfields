@@ -348,12 +348,14 @@ class TDMProgram(sf.Program):
         # Third check: the parameters of the gates are valid
         gate_params_ranges = device.gate_parameters
         # We will loop over the different operations in the device specification
+
         for i, operation in enumerate(device_layout.operations):
             # We obtain the name of the parameter(s)
             param_names = operation["args"]
             len_params_program = len(self.rolled_circuit[i].op.p)
             len_params_device = len(param_names)
             # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) beign different Sgate(r)
+
             if len_params_device < len_params_program:
                 for j in range(1, len_params_program):
                     if self.rolled_circuit[i].op.p[j] != 0:
@@ -363,15 +365,18 @@ class TDMProgram(sf.Program):
                         )
             # Now we will check explicitly if the parameters in the program match
             counter = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
+
             for k, param_name in enumerate(param_names):
                 # Obtain the relevant parameter range from the device
                 param_range = device.gate_parameters[param_name]
                 # Obtain the value of the corresponding parameter in the program
                 program_param = self.rolled_circuit[i].op.p[k]
+
                 if sf.parameters.par_is_symbolic(program_param):
                     # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                     self.assert_number_of_modes(device)
                     local_p_vals = self.tdm_params[counter]
+
                     for x in local_p_vals:
                         if not x in param_range:
                             raise CircuitError(
@@ -380,6 +385,7 @@ class TDMProgram(sf.Program):
                                 "while its valid range is '{}'".format(device.target, x, param_range)
                             )
                     counter += 1
+
                 else:
                     # If it is a numerical value check directly
                     if not program_param in param_range:
