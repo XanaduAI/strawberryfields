@@ -313,7 +313,7 @@ class TDMProgram(sf.Program):
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DevicSpec`.
+                the hardware :class:`~.DeviceSpec`.
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
@@ -360,14 +360,13 @@ class TDMProgram(sf.Program):
             # Now we will check explicitly if the parameters in the program match
             counter = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
             for k, param_name in enumerate(param_names):
-                # Obtain the relelvant parameter range from the device
+                # Obtain the relevant parameter range from the device
                 param_range = device.gate_parameters[param_name]
                 # Obtain the value of the corresponding parameter in the program
                 program_param = self.rolled_circuit[i].op.p[k]
                 if sf.parameters.par_is_symbolic(program_param):
                     # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                     local_p_vals = self.tdm_params[counter]
-                    print(len(local_p_vals), device.modes["temporal"]["max"])
                     if len(local_p_vals) > device.modes["temporal"]["max"]:
                         raise CircuitError(
                             "Program cannot be used with the device '{}' "
