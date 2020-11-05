@@ -329,8 +329,7 @@ class TDMProgram(sf.Program):
         device_gates = [op["op"] for op in device_layout.operations]
         if device_gates != program_gates:
             raise CircuitError(
-                "Program cannot be used with the device '{}' "
-                "due to incompatible topology.".format(device.target)
+                "The gates or the order of gates used in the Program is incompatible with the device '{}' ".format(device.target)
             )
 
         # Second check: the gates act in the correct modes

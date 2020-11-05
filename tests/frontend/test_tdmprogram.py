@@ -550,7 +550,7 @@ def test_tdm_wrong_layout():
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible topology."):
+    with pytest.raises(sf.program_utils.CircuitError, match="The gates or the order of gates used in the Program"):
         prog.compile(device=device)
 
 
