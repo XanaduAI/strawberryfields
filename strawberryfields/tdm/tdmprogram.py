@@ -304,8 +304,8 @@ class TDMProgram(sf.Program):
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
         return self
 
-    def compile(self, *, device=None, compiler=None, **kwargs):
-        """Compile the program given a Strawberry Fields photonic hardware device specification.
+    def compile(self, *, device=None, compiler=None):
+        """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
         At this stage the compilation is simply a check that the program matches the device.
 
         Args:
@@ -313,18 +313,18 @@ class TDMProgram(sf.Program):
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DeviceSpec`.
-
-        Keyword Args:
-            optimize (bool): If True, try to optimize the program by merging and canceling gates.
-                The default is False.
-            warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
-                connected. The default is True.
+                the hardware :class:`~.DeviceSpec`. For :class:`~.TDMProgram` this should be set to
+                None.
 
         Returns:
             Program: compiled program
         """
+        if compiler is not None:
+            raise CircuitError("Program can only be compiled with default compiler")
+
         device_layout = bb.loads(device.layout)
+
+
         # First check: the gates are in the correct order
         program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
         device_gates = [op["op"] for op in device_layout.operations]
@@ -333,6 +333,8 @@ class TDMProgram(sf.Program):
                 "Program cannot be used with the device '{}' "
                 "due to incompatible topology.".format(device.target)
             )
+
+
         # Second check: the gates act in the correct modes
         program_modes = [[r.ind for r in cmd.reg] for cmd in self.rolled_circuit]
         device_modes = [op["modes"] for op in device_layout.operations]
@@ -341,6 +343,8 @@ class TDMProgram(sf.Program):
                 "Program cannot be used with the device '{}' "
                 "due to incompatible mode ordering.".format(device.target)
             )
+
+
         # Third check: the parameters of the gates are valid
         gate_params_ranges = device.gate_parameters
         # We will loop over the different operations in the device specification
@@ -366,18 +370,14 @@ class TDMProgram(sf.Program):
                 program_param = self.rolled_circuit[i].op.p[k]
                 if sf.parameters.par_is_symbolic(program_param):
                     # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
+                    self.assert_number_of_modes(device)
                     local_p_vals = self.tdm_params[counter]
-                    if len(local_p_vals) > device.modes["temporal"]["max"]:
-                        raise CircuitError(
-                            "Program cannot be used with the device '{}' "
-                            "due to not having enough temporal modes.".format(device.target)
-                        )
-
                     for x in local_p_vals:
                         if not x in param_range:
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
-                                "due to incompatible parameter.".format(device.target)
+                                "due to incompatible parameter. Parameter has value '{}'"
+                                "while its valid range is '{}'".format(device.target, x, param_range)
                             )
                     counter += 1
                 else:
@@ -385,7 +385,8 @@ class TDMProgram(sf.Program):
                     if not program_param in param_range:
                         raise CircuitError(
                             "Program cannot be used with the device '{}' "
-                            "due to incompatible parameter.".format(device.target)
+                            "due to incompatible parameter. Parameter has value '{}'"
+                            "while its valid range is '{}'".format(device.target, program_param, param_range)
                         )
 
     def __enter__(self):

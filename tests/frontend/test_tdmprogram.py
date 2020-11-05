@@ -499,7 +499,7 @@ def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes,
             ops.MeasureHomodyne(p[1]) | q[i]
 
     with pytest.raises(sf.program_utils.CircuitError, match=match):
-        new_prog = prog.compile(device=spec, compiler=DummyCircuit())
+        new_prog = prog.compile(device=spec, compiler=DummyCompiler())
 
 
 ## Test for the compilation
@@ -651,6 +651,6 @@ def test_tdm_not_enough_temporal_modes():
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
     with pytest.raises(
-        sf.program_utils.CircuitError, match="due to not having enough temporal modes."
+        sf.program_utils.CircuitError, match="only supports up to."
     ):
         prog.compile(device=device)
