@@ -319,9 +319,14 @@ class TDMProgram(sf.Program):
         Returns:
             Program: compiled program
         """
+        if compiler == "gaussian":
+            return super().compile(device=device, compiler=compiler)
+
         if compiler is not None:
             raise CircuitError("Program can only be compiled with default compiler")
 
+        if device is None:
+            return
         device_layout = bb.loads(device.layout)
 
         # First check: the gates are in the correct order
