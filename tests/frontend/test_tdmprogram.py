@@ -14,10 +14,11 @@
 r"""Unit tests for tdmprogram.py"""
 import pytest
 import numpy as np
+import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
-
+from strawberryfields.api.devicespec import DeviceSpec
 pytestmark = pytest.mark.frontend
 
 # make test deterministic
@@ -504,7 +505,7 @@ def test_assert_number_of_modes(temporal_modes, concurrent_modes, spatial_modes,
 
 ## Test for the compilation
 
-import blackbird as bb
+
 
 
 ############################################################################
@@ -530,7 +531,7 @@ device_spec = {
 }
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
 
-from strawberryfields.api.devicespec import DeviceSpec
+
 
 device = DeviceSpec("tdm", device_spec, connection=None)
 

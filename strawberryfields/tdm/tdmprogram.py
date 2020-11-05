@@ -348,19 +348,19 @@ class TDMProgram(sf.Program):
         for i, operation in enumerate(device_layout.operations):
             # We obtain the name of the parameter(s)
             param_names = operation["args"]
-            len_params_program = len(self.rolled_circuit[i].op.p)
-            len_params_device = len(param_names)
+            program_params_len = len(self.rolled_circuit[i].op.p)
+            device_params_len = len(param_names)
             # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) being different Sgate(r)
-
-            if len_params_device < len_params_program:
-                for j in range(1, len_params_program):
+            # This assumes that a potential second parameter, that is not explicitly defined in the layout, is always 0.
+            if device_params_len < program_params_len:
+                for j in range(1, program_params_len):
                     if self.rolled_circuit[i].op.p[j] != 0:
                         raise CircuitError(
                             "Program cannot be used with the device '{}' "
                             "due to incompatible parameter.".format(device.target)
                         )
             # Now we will check explicitly if the parameters in the program match
-            counter = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
+            num_symbolic_param = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
 
             for k, param_name in enumerate(param_names):
                 # Obtain the relevant parameter range from the device
@@ -371,7 +371,7 @@ class TDMProgram(sf.Program):
                 if sf.parameters.par_is_symbolic(program_param):
                     # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                     self.assert_number_of_modes(device)
-                    local_p_vals = self.tdm_params[counter]
+                    local_p_vals = self.tdm_params[num_symbolic_param]
 
                     for x in local_p_vals:
                         if not x in param_range:
@@ -382,7 +382,7 @@ class TDMProgram(sf.Program):
                                     device.target, x, param_range
                                 )
                             )
-                    counter += 1
+                    num_symbolic_param += 1
 
                 else:
                     # If it is a numerical value check directly
