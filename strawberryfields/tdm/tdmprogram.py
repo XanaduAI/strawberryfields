@@ -501,8 +501,8 @@ class TDMProgram(sf.Program):
             )
         if self.spatial_modes > device.modes["spatial"]:
             raise CircuitError(
-                f"This program contains {device.timebins} temporal modes, but the device '{device.target}' "
-                f"only supports up to {device.modes['max']['temporal']} modes."
+                f"This program contains {self.spatial_modes} spatial modes, but the device '{device.target}' "
+                f"only supports {device.modes['spatial']} modes."
             )
 
     def __str__(self):
