@@ -324,7 +324,6 @@ class TDMProgram(sf.Program):
 
         device_layout = bb.loads(device.layout)
 
-
         # First check: the gates are in the correct order
         program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
         device_gates = [op["op"] for op in device_layout.operations]
@@ -334,7 +333,6 @@ class TDMProgram(sf.Program):
                 "due to incompatible topology.".format(device.target)
             )
 
-
         # Second check: the gates act in the correct modes
         program_modes = [[r.ind for r in cmd.reg] for cmd in self.rolled_circuit]
         device_modes = [op["modes"] for op in device_layout.operations]
@@ -343,7 +341,6 @@ class TDMProgram(sf.Program):
                 "Program cannot be used with the device '{}' "
                 "due to incompatible mode ordering.".format(device.target)
             )
-
 
         # Third check: the parameters of the gates are valid
         gate_params_ranges = device.gate_parameters
@@ -382,7 +379,9 @@ class TDMProgram(sf.Program):
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
                                 "due to incompatible parameter. Parameter has value '{}'"
-                                "while its valid range is '{}'".format(device.target, x, param_range)
+                                "while its valid range is '{}'".format(
+                                    device.target, x, param_range
+                                )
                             )
                     counter += 1
 
@@ -392,7 +391,9 @@ class TDMProgram(sf.Program):
                         raise CircuitError(
                             "Program cannot be used with the device '{}' "
                             "due to incompatible parameter. Parameter has value '{}'"
-                            "while its valid range is '{}'".format(device.target, program_param, param_range)
+                            "while its valid range is '{}'".format(
+                                device.target, program_param, param_range
+                            )
                         )
 
     def __enter__(self):
