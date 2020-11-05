@@ -49,69 +49,71 @@ def singleloop(r, alpha, phi, theta, copies, shift="default"):
 
     return result.samples[0]
 
+class TestTDMErrorRaising():
+    """Test that the correct error messages are raised"""
 
-def test_number_of_copies_must_be_integer():
-    """Checks number of copies is integer"""
-    sq_r = 1.0
-    N = 3
-    c = 4
-    copies = 1 / 137
-    alpha = [0, np.pi / 4] * c
-    phi = [np.pi / 2, 0] * c
-    theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]
-    with pytest.raises(TypeError, match="Number of copies must be a positive integer"):
-        singleloop(sq_r, alpha, phi, theta, copies)
-
-
-def test_gates_equal_length():
-    """Checks gate list parameters have same length"""
-    sq_r = 1.0
-    N = 3
-    c = 4
-    copies = 10
-    alpha = [0, np.pi / 4] * c
-    phi = [np.pi / 2, 0] * c
-    theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2]
-    with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
-        singleloop(sq_r, alpha, phi, theta, copies)
+    def test_number_of_copies_must_be_integer(self):
+        """Checks number of copies is an integer"""
+        sq_r = 1.0
+        N = 3
+        c = 4
+        copies = 1 / 137
+        alpha = [0, np.pi / 4] * c
+        phi = [np.pi / 2, 0] * c
+        theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]
+        with pytest.raises(TypeError, match="Number of copies must be a positive integer"):
+            singleloop(sq_r, alpha, phi, theta, copies)
 
 
-def test_at_least_one_measurement():
-    """Checks circuit has at least one measurement operator"""
-    sq_r = 1.0
-    N = 3
-    copies = 1
-    alpha = [0] * 4
-    phi = [0] * 4
-    prog = tdmprogram.TDMProgram(N=3)
-    with pytest.raises(ValueError, match="Must be at least one measurement."):
-        with prog.context(alpha, phi, copies=copies, shift="default") as (p, q):
-            ops.Sgate(sq_r, 0) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-        eng = sf.Engine("gaussian")
-        result = eng.run(prog)
+    def test_gates_equal_length(self):
+        """Checks gate list parameters have same length"""
+        sq_r = 1.0
+        N = 3
+        c = 4
+        copies = 10
+        alpha = [0, np.pi / 4] * c
+        phi = [np.pi / 2, 0] * c
+        theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2]
+        with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
+            singleloop(sq_r, alpha, phi, theta, copies)
 
 
-def test_spatial_modes_number_of_measurements_match():
-    """Checks number of spatial modes matches number of measurements"""
-    sq_r = 1.0
-    N = 3
-    copies = 1
-    alpha = [0] * 4
-    phi = [0] * 4
-    theta = [0] * 4
-    with pytest.raises(
-        ValueError, match="Number of measurement operators must match number of spatial modes."
-    ):
-        prog = tdmprogram.TDMProgram(N=[3, 3])
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
-            ops.Sgate(sq_r, 0) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[2]) | q[0]
-        eng = sf.Engine("gaussian")
-        result = eng.run(prog)
+    def test_at_least_one_measurement(self):
+        """Checks circuit has at least one measurement operator"""
+        sq_r = 1.0
+        N = 3
+        copies = 1
+        alpha = [0] * 4
+        phi = [0] * 4
+        prog = tdmprogram.TDMProgram(N=3)
+        with pytest.raises(ValueError, match="Must be at least one measurement."):
+            with prog.context(alpha, phi, copies=copies, shift="default") as (p, q):
+                ops.Sgate(sq_r, 0) | q[2]
+                ops.BSgate(p[0]) | (q[1], q[2])
+                ops.Rgate(p[1]) | q[2]
+            eng = sf.Engine("gaussian")
+            result = eng.run(prog)
+
+
+    def test_spatial_modes_number_of_measurements_match(self):
+        """Checks number of spatial modes matches number of measurements"""
+        sq_r = 1.0
+        N = 3
+        copies = 1
+        alpha = [0] * 4
+        phi = [0] * 4
+        theta = [0] * 4
+        with pytest.raises(
+            ValueError, match="Number of measurement operators must match number of spatial modes."
+        ):
+            prog = tdmprogram.TDMProgram(N=[3, 3])
+            with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+                ops.Sgate(sq_r, 0) | q[2]
+                ops.BSgate(p[0]) | (q[1], q[2])
+                ops.Rgate(p[1]) | q[2]
+                ops.MeasureHomodyne(p[2]) | q[0]
+            eng = sf.Engine("gaussian")
+            result = eng.run(prog)
 
 
 def test_shift_by_specified_amount():
