@@ -624,7 +624,7 @@ class TestTDMcompiler:
         device_spec1 = copy.deepcopy(device_spec)
         device_spec1["modes"][
             "spatial"
-        ] = 100  # Note that singleloo_program has only one spatial mode
+        ] = 100  # Note that singleloop_program has only one spatial mode
         device1 = DeviceSpec("x", device_spec1, connection=None)
         c = 1  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
         copies = 1
