@@ -322,6 +322,7 @@ class TDMProgram(sf.Program):
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
 
+        # The next two if statements need to be updated, in particular with the name of the programs
         if compiler == "tdm_one_loop" and device == "tdm_one_loop_device":
             # Do something clever
             compiler = "tdm" # Devious but it will work, Josh said
