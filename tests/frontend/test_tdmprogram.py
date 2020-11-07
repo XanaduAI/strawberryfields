@@ -610,7 +610,7 @@ class TestTDMcompiler:
             "concurrent"
         ] = 100  # Note that singleloop_program has only two concurrent modes
         device1 = DeviceSpec("x", device_spec1, connection=None)
-        c = 1  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
+        c = 1
         copies = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -626,7 +626,7 @@ class TestTDMcompiler:
             "spatial"
         ] = 100  # Note that singleloop_program has only one spatial mode
         device1 = DeviceSpec("x", device_spec1, connection=None)
-        c = 1  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
+        c = 1
         copies = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
