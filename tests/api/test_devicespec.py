@@ -51,7 +51,7 @@ device_dict = {
 
 mock_layout_tdm = textwrap.dedent(
     """\
-    name template_tdm
+    name template_td2
     version 1.0
     target {target} (shots=1)
     type tdm (temporal_modes={tm}, copies=1)
@@ -81,7 +81,7 @@ device_dict_tdm = {
             "max": 100
         }
     },
-    "compiler": ["tdm"],
+    "compiler": ["td2"],
     "gate_parameters": {
         "r": [0.56],
         "alpha": [0, [0, 6.28]],
@@ -171,7 +171,7 @@ class TestDeviceSpec:
 
         assert spec.layout == textwrap.dedent(
             """\
-            name template_tdm
+            name template_td2
             version 1.0
             target abc (shots=1)
             type tdm (temporal_modes=2, copies=1)
