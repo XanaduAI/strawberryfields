@@ -322,7 +322,6 @@ class TDMProgram(sf.Program):
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
 
-        # The next two if statements need to be updated, in particular with the name of the programs
         if compiler == "tdm_one_loop" and device == "tdm_one_loop_device":
             # Do something clever
             compiler = "TD2"  # Devious but it will work, Josh said
@@ -330,7 +329,7 @@ class TDMProgram(sf.Program):
 
         if compiler == "TD2" and device is not None:
             device_layout = bb.loads(device.layout)
-
+            self.assert_number_of_modes(device)
             # First check: the gates are in the correct order
             program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
             device_gates = [op["op"] for op in device_layout.operations]
@@ -360,7 +359,7 @@ class TDMProgram(sf.Program):
                 program_params_len = len(self.rolled_circuit[i].op.p)
                 device_params_len = len(param_names)
                 # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) being different Sgate(r)
-                # This assumes that a potential second parameter, that is not explicitly defined in the layout, is always 0.
+                # This assumes that parameters other than the first one are zero if not explicitly stated.
                 if device_params_len < program_params_len:
                     for j in range(1, program_params_len):
                         if self.rolled_circuit[i].op.p[j] != 0:
@@ -376,10 +375,8 @@ class TDMProgram(sf.Program):
                     param_range = device.gate_parameters[param_name]
                     # Obtain the value of the corresponding parameter in the program
                     program_param = self.rolled_circuit[i].op.p[k]
-
                     if sf.parameters.par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
-                        self.assert_number_of_modes(device)
                         local_p_vals = self.tdm_params[num_symbolic_param]
 
                         for x in local_p_vals:
