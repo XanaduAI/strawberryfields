@@ -325,10 +325,10 @@ class TDMProgram(sf.Program):
         # The next two if statements need to be updated, in particular with the name of the programs
         if compiler == "tdm_one_loop" and device == "tdm_one_loop_device":
             # Do something clever
-            compiler = "tdm"  # Devious but it will work, Josh said
+            compiler = "td2"  # Devious but it will work, Josh said
             # Do not add a return statement
 
-        if compiler == "tdm" and device is not None:
+        if compiler == "td2" and device is not None:
             device_layout = bb.loads(device.layout)
 
             # First check: the gates are in the correct order
