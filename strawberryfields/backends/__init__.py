@@ -76,7 +76,7 @@ backend development.
     shared_ops
 """
 
-from .base import BaseBackend, BaseFock, BaseGaussian, ModeMap
+from .base import BaseBackend, BaseFock, BaseGaussian, BaseBosonic, ModeMap
 from .gaussianbackend import GaussianBackend
 from .fockbackend import FockBackend
 from .bosonicbackend import BosonicBackend
