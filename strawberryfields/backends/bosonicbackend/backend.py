@@ -49,7 +49,7 @@ class BosonicBackend(BaseBosonic):
             ~ops
     """
 
-    short_name = "gaussian"
+    short_name = "bosonic"
     circuit_spec = "gaussian"
 
     def __init__(self):
@@ -279,4 +279,4 @@ class BosonicBackend(BaseBosonic):
         covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)
+        return BaseBosonicState((means, covmat), len(modes), mode_names=mode_names)

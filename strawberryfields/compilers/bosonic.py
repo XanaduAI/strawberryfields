@@ -18,7 +18,7 @@ from .compiler import Compiler
 class Bosonic(Compiler):
     """Compiler for general Bosonic backends."""
 
-    short_name = "gaussian"
+    short_name = "bosonic"
     interactive = True
 
     primitives = {

@@ -49,6 +49,7 @@ from .gaussian_unitary import GaussianUnitary
 compilers = (
     Fock,
     Gaussian,
+    Bosonic,
     GBS,
     GaussianUnitary,
     Xcov,

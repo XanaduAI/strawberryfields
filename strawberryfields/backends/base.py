@@ -691,7 +691,7 @@ class BaseBosonic(BaseBackend):
 
     def __init__(self):
         super().__init__()
-        self._supported["gaussian"] = True
+        self._supported["bosonic"] = True
 
     def measure_heterodyne(self, mode, shots=1, select=None):
         r"""Perform a heterodyne measurement on the given mode.
