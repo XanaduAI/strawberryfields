@@ -661,12 +661,9 @@ class RemoteEngine:
                     f"to compile with {compiler_name}."
                 )
 
-        #if program.type != "tdm":
         if not program_is_compiled:
             # program is not compiled
-            msg = (
-                f"Compiling program for device {device.target} using compiler {compiler_name}."
-            )
+            msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
             self.log.info(msg)
             program = program.compile(device=device, **compile_options)
 
