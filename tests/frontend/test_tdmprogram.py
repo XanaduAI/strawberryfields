@@ -593,7 +593,7 @@ class TestTDMcompiler:
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_inconsistent_temporal_modes(self):
-        """Test the correct error is raised when the tdm circuit has way too many temporal modes"""
+        """Test the correct error is raised when the tdm circuit has too many temporal modes"""
         sq_r = 0.5643
         c = 100  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
         copies = 1
@@ -605,7 +605,7 @@ class TestTDMcompiler:
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_inconsistent_concurrent_modes(self):
-        """Test the correct error is raised when the tdm circuit has way too many concurrent modes"""
+        """Test the correct error is raised when the tdm circuit has too many concurrent modes"""
         device_spec1 = copy.deepcopy(device_spec)
         device_spec1["modes"][
             "concurrent"
@@ -622,6 +622,7 @@ class TestTDMcompiler:
             prog.compile(device=device1, compiler="TD2")
 
     def test_tdm_inconsistent_spatial_modes(self):
+        """Test the correct error is raised when the tdm circuit has too many spatial modes"""
         device_spec1 = copy.deepcopy(device_spec)
         device_spec1["modes"][
             "spatial"
