@@ -638,7 +638,7 @@ class RemoteEngine:
 
         device = self.device_spec
         if program.type == "tdm":
-            device.fill_template(program, device.target)
+            device.fill_template(program)
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
