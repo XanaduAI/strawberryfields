@@ -489,12 +489,12 @@ def singleloop_program(r, alpha, phi, theta, copies):
     return prog
 
 
-target = "td2"
+target = "TD2"
 tm = 4
 device_spec = {
     "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
-    "compiler": ["td2"],
+    "compiler": ["TD2"],
     "gate_parameters": {
         "p0": [0.5643],
         "p1": [0, [0, 6.283185307179586]],
@@ -503,7 +503,7 @@ device_spec = {
     },
 }
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
-device = DeviceSpec("td2", device_spec, connection=None)
+device = DeviceSpec("TD2", device_spec, connection=None)
 
 
 class TestTDMcompiler:
@@ -526,7 +526,7 @@ class TestTDMcompiler:
             sf.program_utils.CircuitError,
             match="The gates or the order of gates used in the Program",
         ):
-            prog.compile(device=device, compiler="td2")
+            prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_modes(self):
         """Test the correct error is raised when the tdm circuit registers don't match the device spec"""
@@ -546,7 +546,7 @@ class TestTDMcompiler:
         with pytest.raises(
             sf.program_utils.CircuitError, match="due to incompatible mode ordering."
         ):
-            prog.compile(device=device, compiler="td2")
+            prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameters_explicit(self):
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
@@ -558,7 +558,7 @@ class TestTDMcompiler:
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta, copies)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="td2")
+            prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameter_second_argument(self):
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
@@ -578,7 +578,7 @@ class TestTDMcompiler:
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="td2")
+            prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameters_symbolic(self):
         """Test the correct error is raised when the tdm circuit symbolic parameters are not within the allowed ranges"""
@@ -590,7 +590,7 @@ class TestTDMcompiler:
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta, copies)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="td2")
+            prog.compile(device=device, compiler="TD2")
 
     def test_tdm_inconsistent_concurrent_modes(self):
         """Test the correct error is raised when the tdm circuit has way too many temporal modes"""
@@ -602,7 +602,7 @@ class TestTDMcompiler:
         theta = [0, 0] * c
         prog = singleloop_program(sq_r, alpha, phi, theta, copies)
         with pytest.raises(sf.program_utils.CircuitError, match="temporal modes, but the device"):
-            prog.compile(device=device, compiler="td2")
+            prog.compile(device=device, compiler="TD2")
 
     def test_tdm_inconsistent_concurrent_modes(self):
         device_spec1 = copy.deepcopy(device_spec)
@@ -618,7 +618,7 @@ class TestTDMcompiler:
         theta = [0, 0] * c
         prog = singleloop_program(sq_r, alpha, phi, theta, copies)
         with pytest.raises(sf.program_utils.CircuitError, match="concurrent modes, but the device"):
-            prog.compile(device=device1, compiler="td2")
+            prog.compile(device=device1, compiler="TD2")
 
     def test_tdm_inconsistent_spatial_modes(self):
         device_spec1 = copy.deepcopy(device_spec)
@@ -634,4 +634,4 @@ class TestTDMcompiler:
         theta = [0, 0] * c
         prog = singleloop_program(sq_r, alpha, phi, theta, copies)
         with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
-            prog.compile(device=device1, compiler="td2")
+            prog.compile(device=device1, compiler="TD2")

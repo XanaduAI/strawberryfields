@@ -79,7 +79,7 @@ device_dict_tdm = {
             "max": 100
         }
     },
-    "compiler": ["td2"],
+    "compiler": ["TD2"],
     "gate_parameters": {
         "p0": [0.56],
         "p1": [0, [0, 6.28]],
