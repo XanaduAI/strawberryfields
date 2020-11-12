@@ -28,7 +28,7 @@ import scipy.special as ssp
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
 import strawberryfields.decompositions as dec
-from .backends.states import BaseFockState, BaseGaussianState
+from .backends.states import BaseFockState, BaseGaussianState, BaseBosonicState
 from .backends.shared_ops import changebasis
 from .program_utils import Command, RegRef, MergeFailure
 from .parameters import par_regref_deps, par_str, par_evaluate, par_is_symbolic, par_funcs as pf

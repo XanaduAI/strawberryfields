@@ -30,14 +30,14 @@ from numpy import (
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 
-from strawberryfields.backends import BaseGaussian
+from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
-from strawberryfields.backends.states import BaseGaussianState
+from strawberryfields.backends.states import BaseBosonicState
 
 from .gaussiancircuit import GaussianModes
 
 
-class BosonicBackend(BaseGaussian):
+class BosonicBackend(BaseBosonic):
     r"""The BosonicBackend...
 
     ..
