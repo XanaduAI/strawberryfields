@@ -333,8 +333,11 @@ class TDMProgram(sf.Program):
             # Do not add a return statement
 
         if compiler == "TD2" and device is not None:
+
+            if device.modes is not None:
+                self.assert_number_of_modes(device)
             device_layout = bb.loads(device.layout)
-            self.assert_number_of_modes(device)
+
             # First check: the gates are in the correct order
             program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
             device_gates = [op["op"] for op in device_layout.operations]
@@ -361,6 +364,7 @@ class TDMProgram(sf.Program):
             for i, operation in enumerate(device_layout.operations):
                 # We obtain the name of the parameter(s)
                 param_names = operation["args"]
+
                 program_params_len = len(self.rolled_circuit[i].op.p)
                 device_params_len = len(param_names)
                 # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) being different Sgate(r)
@@ -376,10 +380,23 @@ class TDMProgram(sf.Program):
                 num_symbolic_param = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
 
                 for k, param_name in enumerate(param_names):
-                    # Obtain the relevant parameter range from the device
-                    param_range = device.gate_parameters[param_name]
                     # Obtain the value of the corresponding parameter in the program
                     program_param = self.rolled_circuit[i].op.p[k]
+
+                    # make sure that hardcoded parameters in the device layout are correct
+                    if not isinstance(param_name, str):
+                        if not program_param == param_name:
+                            raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to incompatible parameter. Parameter has value '{}'"
+                                "while its valid value is '{}'".format(
+                                    device.target, program_param, param_name
+                                )
+                            )
+                        continue
+
+                    # Obtain the relevant parameter range from the device
+                    param_range = device.gate_parameters[param_name]
                     if sf.parameters.par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                         local_p_vals = self.tdm_params[num_symbolic_param]
