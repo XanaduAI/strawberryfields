@@ -25,7 +25,6 @@ from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
 
-
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 
@@ -294,6 +293,12 @@ class TDMProgram(sf.Program):
         self.measured_modes = []
         self.rolled_circuit = None
         self.unrolled_circuit = None
+        self.run_options = {}
+        """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
+        execution of the program. Note that if the ``run_options`` dictionary is passed
+        directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
+        here.
+        """
 
     # pylint: disable=arguments-differ, invalid-overridden-method
     def context(self, *args, copies=1, shift="default"):
@@ -400,6 +405,7 @@ class TDMProgram(sf.Program):
                                     device.target, program_param, param_range
                                 )
                             )
+        return self
 
     def __enter__(self):
         super().__enter__()
