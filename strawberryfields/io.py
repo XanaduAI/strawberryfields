@@ -103,7 +103,6 @@ def to_blackbird(prog, version="1.0"):
         bb._type["options"].update(
             {
                 "temporal_modes": prog.timebins,
-                "copies": prog.copies,
             }
         )
         bb._var.update(
@@ -191,7 +190,7 @@ def _to_tdm_program(bb):
             args.append(v)
 
     # append the quantum operations
-    with prog.context(*args, copies=bb.programtype["options"]["copies"]) as (p, q):
+    with prog.context(*args) as (p, q):
         for op in bb.operations:
             # check if operation name is in the list of
             # defined StrawberryFields operations.

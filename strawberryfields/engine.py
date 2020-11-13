@@ -420,7 +420,10 @@ class LocalEngine(BaseEngine):
 
         if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
             # At this time we do not support lists of tdm programs
-            program.unroll()
+            shots = kwargs.get("shots", 1)
+            program.unroll(shots=shots)
+            # set shots to 1 so that the gaussian backend works
+            kwargs["shots"] = 1
 
         args = args or {}
         compile_options = compile_options or {}

@@ -54,7 +54,7 @@ mock_layout_tdm = textwrap.dedent(
     name template_td2
     version 1.0
     target {target} (shots=1)
-    type tdm (temporal_modes={tm}, copies=1)
+    type tdm (temporal_modes={tm})
 
     float array p0[1, {tm}] =
         {{rs_array}}
@@ -161,7 +161,7 @@ class TestDeviceSpec:
         """Test that the fill_template methods works"""
         prog = sf.tdm.tdmprogram.TDMProgram(2)
 
-        with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             sf.ops.Sgate(0.7, 0) | q[1]
             sf.ops.BSgate(p[0]) | (q[0], q[1])
             sf.ops.MeasureHomodyne(p[1]) | q[0]
@@ -174,7 +174,7 @@ class TestDeviceSpec:
             name template_td2
             version 1.0
             target abc (shots=1)
-            type tdm (temporal_modes=2, copies=1)
+            type tdm (temporal_modes=2)
 
             float array p0[1, 2] =
                 {rs_array}

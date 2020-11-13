@@ -83,22 +83,16 @@ def validate_measurements(circuit, N):
     return spatial_modes
 
 
-def input_check(args, copies):
+def input_check(args):
     """Checks the input arguments have consistent dimensions.
 
     Args:
         args (Sequence[Sequence]): sequence of sequences specifying the value of the parameters
-        copies (int): number of times the circuit should be run
-
     """
     # check if all lists are of equal length
     param_lengths = [len(param) for param in args]
     if len(set(param_lengths)) != 1:
         raise ValueError("Gate-parameter lists must be of equal length.")
-
-    # check copies
-    if not isinstance(copies, int) or copies < 1:
-        raise TypeError("Number of copies must be a positive integer.")
 
 
 def _get_mode_order(num_of_values, N):
@@ -172,7 +166,7 @@ class TDMProgram(sf.Program):
     Once created, we can construct the program using the ``prog.context()``
     context manager.
 
-    >>> with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+    >>> with prog.context([1, 2], [3, 4]) as (p, q):
     ...     ops.Sgate(0.7, 0) | q[1]
     ...     ops.BSgate(p[0]) | (q[0], q[1])
     ...     ops.MeasureHomodyne(p[1]) | q[0]
@@ -244,12 +238,6 @@ class TDMProgram(sf.Program):
       If the ``p`` variable is not used, the gate argument is assumed to be **constant**
       across all time-bins.
 
-    * ``copies=1`` *(int)*: the number of times to repeat the time-domain program.
-      For example, if a sequence of 10 gate arguments is provided, and ``copies==15``,
-      then there will be a total of :math:`10\times 15` time bins in the time domain
-      program. The sequence corresponding to the gate arguments is repeated ``copies``
-      number of times.
-
     * ``shift="default"`` *(str or int)*: Defines how the qumode register is shifted at the end of
       each time bin. If set to ``"default"``, the qumode register is shifted such that each measured
       qumode reappears as a fresh mode at the beginning of the subsequent time bin. This is
@@ -289,7 +277,6 @@ class TDMProgram(sf.Program):
 
         self.type = "tdm"
         self.timebins = 0
-        self.total_timebins = 0
         self.spatial_modes = 0
         self.measured_modes = []
         self.rolled_circuit = None
@@ -302,9 +289,8 @@ class TDMProgram(sf.Program):
         """
 
     # pylint: disable=arguments-differ, invalid-overridden-method
-    def context(self, *args, copies=1, shift="default"):
-        input_check(args, copies)
-        self.copies = copies
+    def context(self, *args, shift="default"):
+        input_check(args)
         self.tdm_params = args
         self.shift = shift
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
@@ -435,7 +421,6 @@ class TDMProgram(sf.Program):
         if ex_type is None:
             self.spatial_modes = validate_measurements(self.circuit, self.N)
             self.timebins = len(self.tdm_params[0])
-            self.total_timebins = self.timebins * self.copies
             self.rolled_circuit = self.circuit.copy()
 
     @property
@@ -447,10 +432,10 @@ class TDMProgram(sf.Program):
         self.circuit = self.rolled_circuit
         return self
 
-    def unroll(self):
+    def unroll(self, shots):
         """Construct program with the register shift"""
         if self.unrolled_circuit is not None:
-            self.circuit = self.unrolled_circuit
+            self.circuit = self.unrolled_circuit * shots
             return self
 
         self.circuit = []
@@ -489,8 +474,7 @@ class TDMProgram(sf.Program):
         for cmd in self.rolled_circuit:
             if isinstance(cmd.op, ops.Measurement):
                 self.measured_modes.append(cmd.reg[0].ind)
-
-        for i in range(self.total_timebins):
+        for i in range(self.timebins):
             for cmd in self.rolled_circuit:
                 self.apply_op(cmd, q, i)
 
@@ -506,6 +490,7 @@ class TDMProgram(sf.Program):
 
         # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
         self.unrolled_circuit = self.circuit.copy()
+        self.circuit = self.unrolled_circuit * shots
 
         return self
 
@@ -539,7 +524,7 @@ class TDMProgram(sf.Program):
     def __str__(self):
         s = (
             f"<TDMProgram: concurrent modes={self.concurr_modes}, "
-            f"time bins={self.total_timebins}, "
+            f"time bins per shot={self.timebins}, "
             f"spatial modes={self.spatial_modes}>"
         )
         return s
