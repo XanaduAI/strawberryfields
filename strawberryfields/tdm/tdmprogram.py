@@ -17,13 +17,16 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
+import numpy as np
 from operator import itemgetter
 from math import ceil
+
 import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
+
 
 
 def shift_by(l, n):
@@ -95,20 +98,21 @@ def input_check(args):
         raise ValueError("Gate-parameter lists must be of equal length.")
 
 
-def _get_mode_order(num_of_values, N):
+def _get_mode_order(num_of_values, N, timebins):
     """Get the order by which the modes were measured"""
     all_modes = []
     for i in range(len(N)):
-        ra = list(range(sum(N[:i]), sum(N[: i + 1])))
-        all_modes.append(ra * ceil(max(N) / len(ra)))
+        modes = list(range(sum(N[:i]), sum(N[: i + 1])))
+        extended_modes = modes * ceil(1 + timebins // len(modes))
+        all_modes.append(extended_modes[:timebins])
 
     mode_order = [i for j in zip(*all_modes) for i in j]
-    mode_order *= ceil(num_of_values / len(mode_order))
+    mode_order *= ceil(1 + num_of_values / len(mode_order))
 
     return mode_order[:num_of_values]
 
 
-def reshape_samples(all_samples, modes, N):
+def reshape_samples(all_samples, modes, N, timebins):
     """Reshapes the samples dict so that they have the expected correct shape.
 
     Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are the ones
@@ -119,21 +123,32 @@ def reshape_samples(all_samples, modes, N):
         all_samples (dict[int, list]): the raw measured samples
         modes (Sequence[int]): the modes that are measured in the circuit
         N (Sequence[int]): the number of concurrent modes per belt/spatial modes
+        timebins (int): the number of timebins/temporal modes in the program per shot
 
     Returns:
-        new_samples (dict[int, list]): the re-shaped samples
+        new_samples (dict[int, list]): the re-shaped samples, where each key correspond to a spatial
+            mode and the values have shape `(shots, timebins)`
     """
+    # calculate the total number of samples and the order in which they were measured
     num_of_values = len([i for j in all_samples.values() for i in j])
-    mode_order = _get_mode_order(num_of_values, N)
+    mode_order = _get_mode_order(num_of_values, N, timebins)
 
-    # go backwards through all_samples and add them into the correct mode
+    shots = num_of_values // (timebins * len(N))
+
+    # iterate backwards through all_samples and add them into the correct mode
     new_samples = dict()
+    t = 0
     for i, m in enumerate(mode_order):
         idx = modes[i % len(N)]
         if idx not in new_samples:
-            new_samples[idx] = []
-        new_samples[idx].append(all_samples[m].pop(0))
-    return new_samples
+            new_samples[idx] = [[] for _ in range(timebins)]
+        new_samples[idx][t].append(all_samples[m].pop(0)[0])
+
+        if i * len(N) % shots == 0:
+            t = (t + 1) % timebins
+
+    # transpose each value so that it has shape `(shots, timebins)`
+    return {k: np.array(v).T for k, v in new_samples.items()}
 
 
 class TDMProgram(sf.Program):
@@ -432,7 +447,7 @@ class TDMProgram(sf.Program):
         self.circuit = self.rolled_circuit
         return self
 
-    def unroll(self, shots):
+    def unroll(self, shots=1):
         """Construct program with the register shift"""
         if self.unrolled_circuit is not None:
             self.circuit = self.unrolled_circuit * shots
@@ -524,7 +539,7 @@ class TDMProgram(sf.Program):
     def __str__(self):
         s = (
             f"<TDMProgram: concurrent modes={self.concurr_modes}, "
-            f"time bins per shot={self.timebins}, "
+            f"time bins={self.timebins}, "
             f"spatial modes={self.spatial_modes}>"
         )
         return s

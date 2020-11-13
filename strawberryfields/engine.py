@@ -479,9 +479,9 @@ class LocalEngine(BaseEngine):
         if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
             # At this time we do not support lists of tdm programs
             result._all_samples = reshape_samples(
-                result.all_samples, program.measured_modes, program.N
+                result.all_samples, program.measured_modes, program.N, program.timebins
             )
-            result._samples = np.array(list(result.all_samples.values()))
+            result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
             program.roll()
         modes = temp_run_options["modes"]
 
