@@ -1431,7 +1431,7 @@ class BaseBosonicState(BaseState):
         )
 
         self._basis = "gaussian"
-        self._str = "<GaussianState: num_modes={}, pure={}, hbar={}>".format(
+        self._str = "<BosonicState: num_modes={}, pure={}, hbar={}>".format(
             self.num_modes, self._pure, self._hbar
         )
 

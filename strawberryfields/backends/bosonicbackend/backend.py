@@ -34,7 +34,7 @@ from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
-from .gaussiancircuit import GaussianModes
+from .bosoniccircuit import BosonicModes
 
 
 class BosonicBackend(BaseBosonic):
@@ -45,12 +45,12 @@ class BosonicBackend(BaseBosonic):
         .. autosummary::
             :toctree: api
 
-            ~gaussiancircuit.GaussianModes
+            ~bosoniccircuit.BosonicModes
             ~ops
     """
 
     short_name = "bosonic"
-    circuit_spec = "gaussian"
+    circuit_spec = "bosonic"
 
     def __init__(self):
         """Initialize the backend."""
@@ -61,7 +61,7 @@ class BosonicBackend(BaseBosonic):
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
-        self.circuit = GaussianModes(num_subsystems)
+        self.circuit = BosonicModes(num_subsystems)
 
     def add_mode(self, n=1):
         self.circuit.add_mode(n)

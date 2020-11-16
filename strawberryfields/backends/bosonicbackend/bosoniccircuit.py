@@ -20,7 +20,7 @@ from . import ops
 from ..shared_ops import changebasis
 
 
-class GaussianModes:
+class BosonicModes:
     """Base class for representing and operating on a collection of
     continuous variable modes in the symplectic basis as encoded in a
     covariance matrix and a mean vector.
