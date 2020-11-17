@@ -637,7 +637,7 @@ class RemoteEngine:
         kwargs.update(self._backend_options)
 
         device = self.device_spec
-        if program.type == "tdm":
+        if program.type == "tdm" and not device.layout_is_formatted():
             device.fill_template(program)
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
@@ -661,33 +661,30 @@ class RemoteEngine:
                     f"to compile with {compiler_name}."
                 )
 
-        if program.type != "tdm":
-            if not program_is_compiled:
-                # program is not compiled
-                msg = (
-                    f"Compiling program for device {device.target} using compiler {compiler_name}."
-                )
-                self.log.info(msg)
-                program = program.compile(device=device, **compile_options)
+        if not program_is_compiled:
+            # program is not compiled
+            msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
+            self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
 
-            elif recompile:
-                # recompiling program
-                if compile_options:
-                    msg = f"Recompiling program for device {device.target} using the specified compiler options: {compile_options}."
-                else:
-                    msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
-
-                self.log.info(msg)
-                program = program.compile(device=device, **compile_options)
-
+        elif recompile:
+            # recompiling program
+            if compile_options:
+                msg = f"Recompiling program for device {device.target} using the specified compiler options: {compile_options}."
             else:
-                # validating program
-                msg = (
-                    f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
-                    f"Validating program against the Xstrict compiler."
-                )
-                self.log.info(msg)
-                program = program.compile(device=device, compiler="Xstrict")
+                msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
+
+            self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
+
+        else:
+            # validating program
+            msg = (
+                f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
+                f"Validating program against the Xstrict compiler."
+            )
+            self.log.info(msg)
+            program = program.compile(device=device, compiler="Xstrict")
 
         # update the run options if provided
         run_options = {}

@@ -16,6 +16,7 @@ This module contains a class that represents the specifications of
 a device available via the API.
 """
 from collections.abc import Sequence
+import re
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
@@ -98,8 +99,16 @@ class DeviceSpec:
 
         return gate_parameters
 
+    def layout_is_formatted(self):
+        """bool: Whether the device layout is formatted or not."""
+        p = re.compile(r"{{\w*}}")
+        return not bool(p.search(self.layout))
+
     def fill_template(self, program):
         """Fill template with parameter values from a program"""
+        if self.layout_is_formatted():
+            return
+
         if program.type == "tdm" and program.timebins:
             self._spec["layout"] = self._spec["layout"].format(
                 target=self.target, tm=program.timebins

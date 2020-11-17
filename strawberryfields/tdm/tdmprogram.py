@@ -19,6 +19,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 
 from operator import itemgetter
 from math import ceil
+import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
@@ -293,6 +294,12 @@ class TDMProgram(sf.Program):
         self.measured_modes = []
         self.rolled_circuit = None
         self.unrolled_circuit = None
+        self.run_options = {}
+        """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
+        execution of the program. Note that if the ``run_options`` dictionary is passed
+        directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
+        here.
+        """
 
     # pylint: disable=arguments-differ, invalid-overridden-method
     def context(self, *args, copies=1, shift="default"):
@@ -301,6 +308,121 @@ class TDMProgram(sf.Program):
         self.tdm_params = args
         self.shift = shift
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
+        return self
+
+    def compile(self, *, device=None, compiler=None):
+        """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
+        At this stage the compilation is simply a check that the program matches the device.
+
+        Args:
+            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+                program compilation
+            compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
+                to use. If a device is specified, this overrides the compile strategy specified by
+                the hardware :class:`~.DeviceSpec`. For :class:`~.TDMProgram` this should be set to
+                None.
+
+        Returns:
+            Program: compiled program
+        """
+        if compiler == "gaussian":
+            return super().compile(device=device, compiler=compiler)
+
+        if compiler == "tdm_one_loop" and device == "tdm_one_loop_device":
+            # Do something clever
+            compiler = "TD2"  # Devious but it will work, Josh said
+            # Do not add a return statement
+
+        if compiler == "TD2" and device is not None:
+
+            if device.modes is not None:
+                self.assert_number_of_modes(device)
+            device_layout = bb.loads(device.layout)
+
+            # First check: the gates are in the correct order
+            program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
+            device_gates = [op["op"] for op in device_layout.operations]
+            if device_gates != program_gates:
+                raise CircuitError(
+                    "The gates or the order of gates used in the Program is incompatible with the device '{}' ".format(
+                        device.target
+                    )
+                )
+
+            # Second check: the gates act on the correct modes
+            program_modes = [[r.ind for r in cmd.reg] for cmd in self.rolled_circuit]
+            device_modes = [op["modes"] for op in device_layout.operations]
+            if program_modes != device_modes:
+                raise CircuitError(
+                    "Program cannot be used with the device '{}' "
+                    "due to incompatible mode ordering.".format(device.target)
+                )
+
+            # Third check: the parameters of the gates are valid
+            gate_params_ranges = device.gate_parameters
+            # We will loop over the different operations in the device specification
+
+            for i, operation in enumerate(device_layout.operations):
+                # We obtain the name of the parameter(s)
+                param_names = operation["args"]
+
+                program_params_len = len(self.rolled_circuit[i].op.p)
+                device_params_len = len(param_names)
+                # The next if is to make sure we do not flag incorrectly things like Sgate(r,0) being different Sgate(r)
+                # This assumes that parameters other than the first one are zero if not explicitly stated.
+                if device_params_len < program_params_len:
+                    for j in range(1, program_params_len):
+                        if self.rolled_circuit[i].op.p[j] != 0:
+                            raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to incompatible parameter.".format(device.target)
+                            )
+                # Now we will check explicitly if the parameters in the program match
+                num_symbolic_param = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
+
+                for k, param_name in enumerate(param_names):
+                    # Obtain the value of the corresponding parameter in the program
+                    program_param = self.rolled_circuit[i].op.p[k]
+
+                    # make sure that hardcoded parameters in the device layout are correct
+                    if not isinstance(param_name, str):
+                        if not program_param == param_name:
+                            raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to incompatible parameter. Parameter has value '{}'"
+                                "while its valid value is '{}'".format(
+                                    device.target, program_param, param_name
+                                )
+                            )
+                        continue
+
+                    # Obtain the relevant parameter range from the device
+                    param_range = device.gate_parameters[param_name]
+                    if sf.parameters.par_is_symbolic(program_param):
+                        # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
+                        local_p_vals = self.tdm_params[num_symbolic_param]
+
+                        for x in local_p_vals:
+                            if not x in param_range:
+                                raise CircuitError(
+                                    "Program cannot be used with the device '{}' "
+                                    "due to incompatible parameter. Parameter has value '{}'"
+                                    "while its valid range is '{}'".format(
+                                        device.target, x, param_range
+                                    )
+                                )
+                        num_symbolic_param += 1
+
+                    else:
+                        # If it is a numerical value check directly
+                        if not program_param in param_range:
+                            raise CircuitError(
+                                "Program cannot be used with the device '{}' "
+                                "due to incompatible parameter. Parameter has value '{}'"
+                                "while its valid range is '{}'".format(
+                                    device.target, program_param, param_range
+                                )
+                            )
         return self
 
     def __enter__(self):
@@ -403,12 +525,12 @@ class TDMProgram(sf.Program):
                 f"This program contains {self.timebins} temporal modes, but the device '{device.target}' "
                 f"only supports up to {device.modes['temporal']['max']} modes."
             )
-        if self.concurr_modes > device.modes["concurrent"]:
+        if self.concurr_modes != device.modes["concurrent"]:
             raise CircuitError(
                 f"This program contains {self.concurr_modes} concurrent modes, but the device '{device.target}' "
                 f"only supports {device.modes['concurrent']} modes."
             )
-        if self.spatial_modes > device.modes["spatial"]:
+        if self.spatial_modes != device.modes["spatial"]:
             raise CircuitError(
                 f"This program contains {self.spatial_modes} spatial modes, but the device '{device.target}' "
                 f"only supports {device.modes['spatial']} modes."
