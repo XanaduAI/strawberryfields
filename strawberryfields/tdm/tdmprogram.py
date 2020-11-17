@@ -27,7 +27,6 @@ from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
 
 
-
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 
