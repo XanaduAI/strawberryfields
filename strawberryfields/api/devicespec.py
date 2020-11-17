@@ -16,6 +16,7 @@ This module contains a class that represents the specifications of
 a device available via the API.
 """
 from collections.abc import Sequence
+import re
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
@@ -41,11 +42,10 @@ class DeviceSpec:
             job is managed
     """
 
-    def __init__(self, target, spec, connection, layout_is_template=False):
+    def __init__(self, target, spec, connection):
         self._target = target
         self._connection = connection
         self._spec = spec
-        self._layout_is_template = layout_is_template
 
     @property
     def target(self):
@@ -67,11 +67,6 @@ class DeviceSpec:
         """list[str]: A list of strings corresponding to Strawberry Fields compilers supported
         by the hardware device."""
         return self._spec["compiler"]
-
-    @property
-    def layout_is_template(self):
-        """bool: Whether the device layout is not yet formatted or not."""
-        return self._layout_is_template
 
     @property
     def default_compiler(self):
@@ -104,16 +99,20 @@ class DeviceSpec:
 
         return gate_parameters
 
+    def layout_is_formatted(self):
+        """bool: Whether the device layout is formatted or not."""
+        p = re.compile(r"{{\w*}}")
+        return not bool(p.search(self.layout))
+
     def fill_template(self, program):
         """Fill template with parameter values from a program"""
-        if not self.layout_is_template:
+        if self.layout_is_formatted():
             return
 
         if program.type == "tdm" and program.timebins:
             self._spec["layout"] = self._spec["layout"].format(
                 target=self.target, tm=program.timebins
             )
-            self._layout_is_template = False
         else:
             # TODO: update when `self._spec["layout"]` is returned as an unformatted string
             raise NotImplementedError("Formatting not required or supported for non-TDM programs.")
