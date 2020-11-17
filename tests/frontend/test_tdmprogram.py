@@ -492,11 +492,10 @@ def singleloop_program(r, alpha, phi, theta, copies):
 target = "TD2"
 tm = 4
 device_spec = {
-    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p0[1, {tm}] =\n    {{rs_array}}\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(p0) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
+    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
     "compiler": ["TD2"],
     "gate_parameters": {
-        "p0": [0.5643],
         "p1": [0, [0, 6.283185307179586]],
         "p2": [0, [0, 3.141592653589793], 3.141592653589793],
         "p3": [0, [0, 6.283185307179586]],
@@ -504,7 +503,6 @@ device_spec = {
 }
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
 device = DeviceSpec("TD2", device_spec, connection=None)
-
 
 class TestTDMcompiler:
     """Test class for checking error messages from the compiler"""
@@ -555,6 +553,18 @@ class TestTDMcompiler:
         c = 2
         copies = 10
         alpha = [np.pi / 4, 0] * c
+        phi = [0, np.pi / 2] * c
+        theta = [0, 0] + [np.pi / 2, np.pi / 2]
+        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+            prog.compile(device=device, compiler="TD2")
+
+    def test_tdm_wrong_parameters_explicit_in_list(self):
+        """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
+        sq_r = 0.5643
+        c = 2
+        copies = 10
+        alpha = [np.pi / 4, 27] * c # This beamsplitter phase is not in the allowed range of squeezing parameters
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta, copies)
