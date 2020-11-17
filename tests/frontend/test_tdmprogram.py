@@ -27,7 +27,7 @@ pytestmark = pytest.mark.frontend
 np.random.seed(42)
 
 
-def singleloop(r, alpha, phi, theta, copies, shift="default"):
+def singleloop(r, alpha, phi, theta, shots, shift="default"):
     """Single delay loop with program.
 
     Args:
@@ -35,71 +35,59 @@ def singleloop(r, alpha, phi, theta, copies, shift="default"):
         alpha (Sequence[float]): beamsplitter angles
         phi (Sequence[float]): rotation angles
         theta (Sequence[float]): homodyne measurement angles
-        copies (int): number of copies in the tdm program
+        shots (int): number of shots
         shift (string): type of shift used in the program
     Returns:
         (list): homodyne samples from the single loop simulation
     """
     prog = tdmprogram.TDMProgram(N=2)
-    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+    with prog.context(alpha, phi, theta, shift=shift) as (p, q):
         ops.Sgate(r, 0) | q[1]
         ops.BSgate(p[0]) | (q[0], q[1])
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
+    result = eng.run(prog, shots=shots)
 
-    return result.samples[0]
+    return result.samples
 
 
 class TestTDMErrorRaising:
     """Test that the correct error messages are raised when a TDMProgram is created"""
-
-    def test_number_of_copies_must_be_integer(self):
-        """Checks number of copies is an integer"""
-        sq_r = 1.0
-        N = 3
-        c = 4
-        copies = 1 / 137
-        alpha = [0, np.pi / 4] * c
-        phi = [np.pi / 2, 0] * c
-        theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]
-        with pytest.raises(TypeError, match="Number of copies must be a positive integer"):
-            singleloop(sq_r, alpha, phi, theta, copies)
 
     def test_gates_equal_length(self):
         """Checks gate list parameters have same length"""
         sq_r = 1.0
         N = 3
         c = 4
-        copies = 10
+        shots = 10
         alpha = [0, np.pi / 4] * c
         phi = [np.pi / 2, 0] * c
         theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2]
         with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
-            singleloop(sq_r, alpha, phi, theta, copies)
+            singleloop(sq_r, alpha, phi, theta, shots)
 
     def test_at_least_one_measurement(self):
         """Checks circuit has at least one measurement operator"""
         sq_r = 1.0
         N = 3
-        copies = 1
+        shots = 1
         alpha = [0] * 4
         phi = [0] * 4
         prog = tdmprogram.TDMProgram(N=3)
         with pytest.raises(ValueError, match="Must be at least one measurement."):
-            with prog.context(alpha, phi, copies=copies, shift="default") as (p, q):
+            with prog.context(alpha, phi, shift="default") as (p, q):
                 ops.Sgate(sq_r, 0) | q[2]
                 ops.BSgate(p[0]) | (q[1], q[2])
                 ops.Rgate(p[1]) | q[2]
             eng = sf.Engine("gaussian")
-            result = eng.run(prog)
+            result = eng.run(prog, shots=shots)
 
     def test_spatial_modes_number_of_measurements_match(self):
         """Checks number of spatial modes matches number of measurements"""
         sq_r = 1.0
         N = 3
-        copies = 1
+        shots = 1
         alpha = [0] * 4
         phi = [0] * 4
         theta = [0] * 4
@@ -107,13 +95,13 @@ class TestTDMErrorRaising:
             ValueError, match="Number of measurement operators must match number of spatial modes."
         ):
             prog = tdmprogram.TDMProgram(N=[3, 3])
-            with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+            with prog.context(alpha, phi, theta) as (p, q):
                 ops.Sgate(sq_r, 0) | q[2]
                 ops.BSgate(p[0]) | (q[1], q[2])
                 ops.Rgate(p[1]) | q[2]
                 ops.MeasureHomodyne(p[2]) | q[0]
             eng = sf.Engine("gaussian")
-            result = eng.run(prog)
+            result = eng.run(prog, shots=shots)
 
 
 def test_shift_by_specified_amount():
@@ -122,14 +110,14 @@ def test_shift_by_specified_amount():
     np.random.seed(42)
     sq_r = 1.0
     N = 3
-    copies = 1
+    shots = 1
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
     np.random.seed(42)
-    x = singleloop(sq_r, alpha, phi, theta, copies)
+    x = singleloop(sq_r, alpha, phi, theta, shots)
     np.random.seed(42)
-    y = singleloop(sq_r, alpha, phi, theta, copies, shift=1)
+    y = singleloop(sq_r, alpha, phi, theta, shots, shift=1)
     assert np.allclose(x, y)
 
 
@@ -148,7 +136,7 @@ class TestSingleLoopNullifier:
         np.random.seed(42)
         sq_r = 1.0
         c = 2
-        copies = 200
+        shots = 200
 
         # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
         alpha = [np.pi / 4, 0] * c
@@ -156,13 +144,13 @@ class TestSingleLoopNullifier:
 
         # Measurement of 2 subsequent EPR states in XX, PP to investigate nearest-neighbour correlations in all basis permutations
         theta = [0, 0] + [np.pi / 2, np.pi / 2]  #
-        x = singleloop(sq_r, alpha, phi, theta, copies)
+        x = singleloop(sq_r, alpha, phi, theta, shots)
 
         X0 = x[0::8]
         X1 = x[1::8]
         P2 = x[2::8]
         P3 = x[3::8]
-        rtol = 5 / np.sqrt(copies)
+        rtol = 5 / np.sqrt(shots)
         minusstdX1X0 = (X1 - X0).var()
         plusstdX1X0 = (X1 + X0).var()
         squeezed_std = np.exp(-2 * sq_r)
@@ -185,7 +173,7 @@ class TestSingleLoopNullifier:
         np.random.seed(42)
         n = 10
         vac_modes = 1
-        copies = 1000
+        shots = 1000
         sq_r = 5
         alpha = [
             np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n + vac_modes)
@@ -196,24 +184,24 @@ class TestSingleLoopNullifier:
 
         # Measuring X nullifier
         theta = [0] * (n + vac_modes)
-        samples_X = singleloop(sq_r, alpha, phi, theta, copies)
-        reshaped_samples_X = np.array(samples_X).reshape([copies, n + vac_modes])
+        samples_X = singleloop(sq_r, alpha, phi, theta, shots)
+        reshaped_samples_X = np.array(samples_X).reshape([shots, n + vac_modes])
 
         # We will check that the x of all the modes equal the x of the last one
         nullifier_X = lambda sample: (sample - sample[-1])[vac_modes:-1]
         val_nullifier_X = np.var([nullifier_X(x) for x in reshaped_samples_X], axis=0)
-        assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+        assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
         # Measuring P nullifier
         theta = [np.pi / 2] * (n + vac_modes)
-        samples_P = singleloop(sq_r, alpha, phi, theta, copies)
+        samples_P = singleloop(sq_r, alpha, phi, theta, shots)
 
         # We will check that the sum of all the p is equal to zero
-        reshaped_samples_P = np.array(samples_P).reshape([copies, n + vac_modes])
+        reshaped_samples_P = np.array(samples_P).reshape([shots, n + vac_modes])
         nullifier_P = lambda sample: np.sum(sample[vac_modes:])
         val_nullifier_P = np.var([nullifier_P(p) for p in reshaped_samples_P], axis=0)
         assert np.allclose(
-            val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies)
+            val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots)
         )
 
     def test_one_dimensional_cluster(self):
@@ -222,7 +210,7 @@ class TestSingleLoopNullifier:
         """
         np.random.seed(42)
         n = 20
-        copies = 1000
+        shots = 1000
         sq_r = 3
         alpha_c = np.arccos(np.sqrt((np.sqrt(5) - 1) / 2))
         alpha = [alpha_c] * n
@@ -231,13 +219,13 @@ class TestSingleLoopNullifier:
         theta = [0, np.pi / 2] * (
             n // 2
         )  # Note that we measure x for mode i and the p for mode i+1.
-        reshaped_samples = np.array(singleloop(sq_r, alpha, phi, theta, copies)).reshape(copies, n)
+        reshaped_samples = np.array(singleloop(sq_r, alpha, phi, theta, shots)).reshape(shots, n)
         nullifier = lambda x: np.array(
             [-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)]
         )[1:]
         nullifier_samples = np.array([nullifier(y) for y in reshaped_samples])
         delta = np.var(nullifier_samples, axis=0)
-        assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+        assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
 
 def test_one_dimensional_cluster_tokyo():
@@ -250,13 +238,13 @@ def test_one_dimensional_cluster_tokyo():
     N = 3  # concurrent modes
 
     n = 500  # for an n-mode cluster state
-    copies = 1
+    shots = 1
 
     # first half of cluster state measured in X, second half in P
     theta1 = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta2 = theta1  # measurement angles for detector B
     prog = tdmprogram.TDMProgram(N=[1, 2])
-    with prog.context(theta1, theta2, copies=copies, shift="default") as (p, q):
+    with prog.context(theta1, theta2, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
         ops.Rgate(np.pi / 2) | q[0]
@@ -265,7 +253,7 @@ def test_one_dimensional_cluster_tokyo():
         ops.MeasureHomodyne(p[0]) | q[0]
         ops.MeasureHomodyne(p[1]) | q[1]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
+    result = eng.run(prog, shots=shots)
 
     xA = result.all_samples[0]
     xB = result.all_samples[1]
@@ -468,7 +456,7 @@ def test_two_dimensional_cluster_tokyo():
     assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
-def singleloop_program(r, alpha, phi, theta, copies):
+def singleloop_program(r, alpha, phi, theta):
     """Single delay loop with program.
 
     Args:
@@ -476,12 +464,11 @@ def singleloop_program(r, alpha, phi, theta, copies):
         alpha (Sequence[float]): beamsplitter angles
         phi (Sequence[float]): rotation angles
         theta (Sequence[float]): homodyne measurement angles
-        copies (int): number of copies in the tdm program
     Returns:
         (list): homodyne samples from the single loop simulation
     """
     prog = tdmprogram.TDMProgram(N=2)
-    with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+    with prog.context(alpha, phi, theta) as (p, q):
         ops.Sgate(r, 0) | q[1]
         ops.BSgate(p[0]) | (q[1], q[0])
         ops.Rgate(p[1]) | q[1]
@@ -492,7 +479,7 @@ def singleloop_program(r, alpha, phi, theta, copies):
 target = "TD2"
 tm = 4
 device_spec = {
-    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
+    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
     "compiler": ["TD2"],
     "gate_parameters": {
@@ -510,12 +497,11 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit gates don't match the device spec"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        with prog.context(alpha, phi, theta) as (p, q):
             ops.Dgate(sq_r) | q[1]  # Here one should have an Sgate
             ops.BSgate(p[0]) | (q[1], q[0])
             ops.Rgate(p[1]) | q[1]
@@ -531,12 +517,11 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit registers don't match the device spec"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        with prog.context(alpha, phi, theta) as (p, q):
             ops.Sgate(sq_r) | q[1]
             ops.BSgate(p[0]) | (q[0], q[1])  # The order should be (q[1], q[0])
             ops.Rgate(p[1]) | q[1]
@@ -551,11 +536,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 2  # This squeezing is not in the allowed range of squeezing parameters
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
@@ -563,11 +547,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 27] * c # This beamsplitter phase is not in the allowed range of squeezing parameters
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
@@ -575,12 +558,11 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        with prog.context(alpha, phi, theta) as (p, q):
             ops.Sgate(sq_r, 0.4) | q[
                 1
             ]  # Note that the Sgate has a second parameter that is non-zero
@@ -595,11 +577,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit symbolic parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        copies = 200
         alpha = [137, 0] * c  # Note that alpha is outside the allowed range
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
@@ -607,11 +588,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit has too many temporal modes"""
         sq_r = 0.5643
         c = 100  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
-        copies = 1
         alpha = [0.5, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="temporal modes, but the device"):
             prog.compile(device=device, compiler="TD2")
 
@@ -623,12 +603,11 @@ class TestTDMcompiler:
         ] = 100  # Note that singleloop_program has only two concurrent modes
         device1 = DeviceSpec("x", device_spec1, connection=None)
         c = 1
-        copies = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="concurrent modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
 
@@ -640,11 +619,10 @@ class TestTDMcompiler:
         ] = 100  # Note that singleloop_program has only one spatial mode
         device1 = DeviceSpec("x", device_spec1, connection=None)
         c = 1
-        copies = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
