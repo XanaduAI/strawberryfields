@@ -18,6 +18,13 @@ This release contains contributions from (in alphabetical order):
 
 <h3>New features since last release</h3>
 
+* Moves the chemistry utility functions `prob` and `marginals` to the `apps.qchem.utils` module of
+  Applications layer of Strawberry Fields. These functions were initially created as utility
+  functions to help simulating vibrational dynamics. However, they can also be used in other
+  applications and therefore should be moved to the `apps.qchem.utils` module which hosts
+  general-purpose utility functions for chemistry applications.
+  [(#487)](https://github.com/XanaduAI/strawberryfields/pull/487)
+
 * Adds the ability to construct time domain multiplexing algorithms via the new
   `sf.TDMProgram` class, for highly scalable simulation of Gaussian states.
   [(#440)](https://github.com/XanaduAI/strawberryfields/pull/440)
