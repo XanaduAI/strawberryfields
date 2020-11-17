@@ -640,7 +640,7 @@ class RemoteEngine:
         kwargs.update(self._backend_options)
 
         device = self.device_spec
-        if program.type == "tdm" and device.layout_is_template:
+        if program.type == "tdm" and not device.layout_is_formatted():
             device.fill_template(program)
 
         compiler_name = compile_options.get("compiler", device.default_compiler)
