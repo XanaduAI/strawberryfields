@@ -20,7 +20,6 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 import numpy as np
 from operator import itemgetter
 from math import ceil
-
 import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
