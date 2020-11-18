@@ -117,6 +117,35 @@ def reshape_samples(all_samples, modes, N, timebins):
     defined to be measured in the circuit, instead of being spread over a larger
     number of modes due to the mode-shifting occurring in :class:`~.TDMProgram`.
 
+    The function iterates through the unrolled circuit and populates, and returns, a new samples
+    dictionary with the shape ``{spatial mode: (shots, timebins)}``. E.g., this unrolled circuit:
+
+    .. code-block:: pycon
+
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 0, timebin 0, spatial mode 0  (sample 0)
+        MeasureHomodyne(0) | (q[2])  # shot 0, timebin 0, spatial mode 2  (sample 1)
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 0, timebin 1, spatial mode 0  (sample 2)
+        MeasureHomodyne(0) | (q[1])  # shot 0, timebin 1, spatial mode 2  (sample 3)
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 1, timebin 0, spatial mode 0  (sample 4)
+        MeasureHomodyne(0) | (q[2])  # shot 1, timebin 0, spatial mode 2  (sample 5)
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 1, timebin 1, spatial mode 0  (sample 6)
+        MeasureHomodyne(0) | (q[1])  # shot 1, timebin 1, spatial mode 2  (sample 7)
+
+    would return the dictionary
+
+    .. code-block:: pycon
+
+        {
+            0: [[(sample 0), (sample 2)],
+                [(sample 4), (sample 6)]],
+            2: [[(sample 1), (sample 3)],
+                [(sample 5), (sample 7)]],
+        }
+
     Args:
         all_samples (dict[int, list]): the raw measured samples
         modes (Sequence[int]): the modes that are measured in the circuit
@@ -131,8 +160,6 @@ def reshape_samples(all_samples, modes, N, timebins):
     num_of_values = len([i for j in all_samples.values() for i in j])
     mode_order = _get_mode_order(num_of_values, N, timebins)
 
-    shots = num_of_values // (timebins * len(N))
-
     # iterate backwards through all_samples and add them into the correct mode
     new_samples = dict()
     t = 0
@@ -142,7 +169,9 @@ def reshape_samples(all_samples, modes, N, timebins):
             new_samples[idx] = [[] for _ in range(timebins)]
         new_samples[idx][t].append(all_samples[m].pop(0)[0])
 
-        if i * len(N) % shots == 0:
+        # populate each spatial mode in one timebin before moving on to the next timebin
+        # when each timebin has been filled, move to the next shot
+        if (i + 1) % len(N) == 0:
             t = (t + 1) % timebins
 
     # transpose each value so that it has shape `(shots, timebins)`
