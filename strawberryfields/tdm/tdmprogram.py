@@ -142,7 +142,7 @@ def reshape_samples(all_samples, modes, N, timebins):
             new_samples[idx] = [[] for _ in range(timebins)]
         new_samples[idx][t].append(all_samples[m].pop(0)[0])
 
-        if i * len(N) % shots == 0:
+        if (i + 1) % len(N) == 0:
             t = (t + 1) % timebins
 
     # transpose each value so that it has shape `(shots, timebins)`
