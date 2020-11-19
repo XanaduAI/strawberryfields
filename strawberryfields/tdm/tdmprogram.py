@@ -154,7 +154,7 @@ def reshape_samples(all_samples, modes, N, timebins):
 
     Returns:
         new_samples (dict[int, list]): the re-shaped samples, where each key correspond to a spatial
-            mode and the values have shape `(shots, timebins)`
+            mode and the values have shape ``(shots, timebins)``
     """
     # calculate the total number of samples and the order in which they were measured
     num_of_values = len([i for j in all_samples.values() for i in j])
