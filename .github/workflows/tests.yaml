@@ -54,7 +54,7 @@ jobs:
           pip install dist/StrawberryFields*.whl
 
       - name: Run tests
-        run: python3 -m pytest tests --cov=strawberryfields -p no:warnings --randomly-seed=42 --tb=native -m "$OPTIONS"
+        run: python3 -m pytest tests --cov=strawberryfields --cov-report=term-missing --cov-report=xml -p no:warnings --randomly-seed=42 --tb=native -m "$OPTIONS"
 
       - name: Adjust coverage file for Codecov
         run: bash <(sed -i 's/filename=\"/filename=\"strawberryfields\//g' coverage.xml)
