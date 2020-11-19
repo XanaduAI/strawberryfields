@@ -543,8 +543,10 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-            if device.modes is not None:
-                self.assert_number_of_modes(device)
+          # TODO: add validation for device specs that provide a dictionary for `device.modes`.
+            if device.modes is not None and isinstance(device.modes, int):
+                self.assert_number_of_modes(device)            
+
         else:
             compiler = _get_compiler(compiler)
             target = compiler.short_name
