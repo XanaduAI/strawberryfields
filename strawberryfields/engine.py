@@ -422,7 +422,9 @@ class LocalEngine(BaseEngine):
             # At this time we do not support lists of tdm programs
             shots = kwargs.get("shots", 1)
             program.unroll(shots=shots)
-            # set shots to 1 so that the gaussian backend works
+            # Shots >1 for a TDM program simply corresponds to creating
+            # multiple copies of the program, and appending them to run sequentially.
+            # As a result, we set the backend shots to 1 for the Gaussian backend.
             kwargs["shots"] = 1
 
         args = args or {}
