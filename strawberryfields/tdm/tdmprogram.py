@@ -361,7 +361,6 @@ class TDMProgram(sf.Program):
 
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
 
-
     def __str__(self):
         s = (
             f"<TDMProgram: concurrent modes={self.concurr_modes}, "
