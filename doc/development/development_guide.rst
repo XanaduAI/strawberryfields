@@ -323,7 +323,8 @@ automatically to the comment box when you create a new issue.
 
 * Once you have submitted the pull request, three things will automatically occur:
 
-  - The **test suite** will automatically run on `Travis CI <https://travis-ci.org/XanaduAI/strawberryfields>`_
+  - The **test suite** will automatically run on `GitHub Actions
+    <https://github.com/XanaduAI/strawberryfields/actions?query=workflow%3ATests>`_
     to ensure that all tests continue to pass.
 
   - Once the test suite is finished, a **code coverage report** will be generated on
