@@ -153,7 +153,7 @@ def reshape_samples(all_samples, modes, N, timebins):
         timebins (int): the number of timebins/temporal modes in the program per shot
 
     Returns:
-        new_samples (dict[int, list]): the re-shaped samples, where each key correspond to a spatial
+        dict[int, list]: the re-shaped samples, where each key correspond to a spatial
             mode and the values have shape ``(shots, timebins)``
     """
     # calculate the total number of samples and the order in which they were measured
@@ -177,6 +177,43 @@ def reshape_samples(all_samples, modes, N, timebins):
     # transpose each value so that it has shape `(shots, timebins)`
     return {k: np.array(v).T for k, v in new_samples.items()}
 
+
+def move_vac_modes(samples, N, crop=False):
+    """Post-processing function for TDM samples
+
+    Moves all measured vacuum modes from the first shot of the samples
+    array to the end of the last shot.
+
+    Args:
+        samples (ndarray[float]): samples as received from TDMProgram, with the
+            measured vacuum modes in the first shot
+
+        N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
+            modes in each time bin. Alternatively, a sequence of integers
+            may be provided, corresponding to the number of concurrent modes in
+            the possibly multiple bands in the circuit.
+
+    Keyword args:
+        crop (bool): whether to remove all the shots containing measured vacuum
+            modes at the end
+
+    Returns:
+        ndarray[float]: the post-processed samples
+
+    """
+    if isinstance(N, int):
+        N = [N]
+    num_of_vac_modes = np.max(N) - 1
+    shape = samples.shape
+
+    flat_samples = np.ravel(samples)
+    samples = np.append(flat_samples[num_of_vac_modes:], [0] * num_of_vac_modes)
+    samples = samples.reshape(shape)
+
+    if crop:
+        samples = samples[:-num_of_vac_modes // (np.prod(shape[1:]) + 1)]
+
+    return samples
 
 class TDMProgram(sf.Program):
     r"""Represents a photonic quantum circuit in the time domain encoding.
