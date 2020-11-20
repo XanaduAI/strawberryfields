@@ -641,12 +641,24 @@ PLEASE DELETE EVERYTHING BELOW FROM HERE BEFORE MERGING!
 
 def reshapemaster3000(samples, timebins, shots, vac_modes):
     # https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
-    samples_flat = [item for sublist in samples for item in sublist]
-    samples_flat = [item for sublist in samples_flat for item in sublist]
-    samples_flat_stripped = samples_flat[vac_modes:-timebins+vac_modes]
-    samples_reshaped = np.array(samples_flat_stripped).reshape([shots, timebins])
+
+    samples_reshaped_sm = []
+    for sm in range(len(samples[0])):
+        samples_flat = [list(shot[sm]) for shot in samples]
+        samples_flat = [item for sublist in samples_flat for item in sublist]
+        samples_flat_stripped = samples_flat[vac_modes:] + [0]*vac_modes
+        samples_reshaped = np.array(samples_flat_stripped).reshape([shots, timebins])
+        samples_reshaped_sm.append(samples_reshaped)
+
+    samples_reshaped = []
+    for sh in range(shots):
+        one_shot = []
+        for sm in range(len(samples[0])):
+            one_shot.append(samples_reshaped_sm[sm][sh])
+        samples_reshaped.append(one_shot)
 
     return samples_reshaped
+
 
 
 def test_epr2():
@@ -655,7 +667,7 @@ def test_epr2():
     np.random.seed(42)
     vac_modes = 1
     sq_r = 5.0
-    c = 4
+    c = 2
     shots = 10
 
     # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
@@ -663,17 +675,24 @@ def test_epr2():
     phi = [np.pi/2, 0] * c
 
     # Measurement of 2 subsequent EPR states in XX, PP to investigate nearest-neighbour correlations in all basis permutations
-    theta = [np.pi/2, np.pi/2]*2+ [0, 0]*2  #
+    theta = [np.pi/2, 0, 0, np.pi/2]
 
-    x = singleloop(sq_r, alpha, phi, theta, shots+1, vac_modes)
-    # print(x)
-    x = reshapemaster3000(x, len(alpha), shots, vac_modes)
-    print(x)
+    timebins_per_shot = len(alpha)
 
-    X0 = x[0::8]
-    X1 = x[1::8]
-    P2 = x[2::8]
-    P3 = x[3::8]
+    samples = singleloop(sq_r, alpha, phi, theta, shots)
+
+    ######################################################
+    # reshaping differently:
+    ######################################################
+    reshaped_samples = reshapemaster3000(samples, len(alpha), shots, vac_modes)
+    ######################################################
+    ######################################################
+
+    X0 = np.array([x[0][0] for x in reshaped_samples])[:-1]
+    X1 = np.array([x[0][1] for x in reshaped_samples])[:-1]
+    P2 = np.array([x[0][2] for x in reshaped_samples])[:-1]
+    P3 = np.array([x[0][3] for x in reshaped_samples])[:-1]
+
     rtol = 5 / np.sqrt(shots)
     minusstdX1X0 = (X1 - X0).var()
     plusstdX1X0 = (X1 + X0).var()
@@ -698,48 +717,49 @@ def test_ghz2():
     vac_modes = 1
     n = 4
     vac_modes = 1
-    shots = 5
+    shots = 50
     sq_r = 5
-    alpha = [
-        np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n)
-    ]
+    alpha = [np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n)]
     alpha[0] = 0.0
     phi = [0] * n
     phi[0] = np.pi / 2
+    timebins_per_shot = len(alpha)
 
     # Measuring X nullifier
     theta = [0] * n
 
     ######################################################
-    # submitting one extra shot and reshaping differently:
+    # reshaping differently:
     ######################################################
-    samples_X = singleloop(sq_r, alpha, phi, theta, shots+1)
-    reshaped_samples_X = reshapemaster3000(samples_X, len(alpha), shots, vac_modes)
+    samples_X = singleloop(sq_r, alpha, phi, theta, shots)
+    reshaped_samples_X = reshapemaster3000(samples_X, timebins_per_shot, shots, vac_modes)
+    # print(reshaped_samples_X)
     ######################################################
     ######################################################
-
-    # We will check that the x of all the modes equal the x of the last one
-    nullifier_X = lambda sample: (sample - sample[-1])[:-1]
-    val_nullifier_X = np.var([nullifier_X(x) for x in reshaped_samples_X], axis=0)
-    assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
     # Measuring P nullifier
     theta = [np.pi / 2] * n
 
     ######################################################
-    # submitting one extra shot and reshaping differently:
+    # reshaping differently:
     ######################################################
-    samples_P = singleloop(sq_r, alpha, phi, theta, shots+1)
-    reshaped_samples_P = reshapemaster3000(samples_P, n, shots, vac_modes)
+    samples_P = singleloop(sq_r, alpha, phi, theta, shots)
+    reshaped_samples_P = reshapemaster3000(samples_P, timebins_per_shot, shots, vac_modes)
+    # print(reshaped_samples_P)
     ######################################################
     ######################################################
 
+    # We will check that the x of all the modes equal the x of the last one
+    nullifier_X = lambda sample: (sample - sample[-1])[:-1]
+    val_nullifier_X = np.var([nullifier_X(x[0]) for x in reshaped_samples_X[:-1]], axis=0)
+    print(val_nullifier_X)
+    # assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
+
     # We will check that the sum of all the p is equal to zero
     nullifier_P = lambda sample: np.sum(sample)
-    val_nullifier_P = np.var([nullifier_P(p) for p in reshaped_samples_P], axis=0)
-    assert np.allclose(
-        val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots)
-    )
+    val_nullifier_P = np.var([nullifier_P(p[0]) for p in reshaped_samples_P[:-1]], axis=0)
+    print(val_nullifier_P)
+    # assert np.allclose(val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
 def test_one_dimensional_cluster2():
     """Test that the nullifier have the correct value in the experiment described in
@@ -748,28 +768,25 @@ def test_one_dimensional_cluster2():
     np.random.seed(42)
     vac_modes = 1
     n = 20
-    shots = 1000
+    shots = 100
     sq_r = 3
     alpha_c = np.arccos(np.sqrt((np.sqrt(5) - 1) / 2))
     alpha = [alpha_c] * n
     alpha[0] = 0.0
     phi = [np.pi / 2] * n
-    theta = [np.pi / 2, 0] * (
-        n // 2
-    )  # Note that we measure x for mode i and the p for mode i+1.
+    theta = [np.pi / 2, 0] * (n // 2)  # Note that we measure x for mode i and the p for mode i+1.
+    timebins_per_shot = len(alpha)
 
     ######################################################
     # submitting one extra shot and reshaping differently:
     ######################################################
-    x = singleloop(sq_r, theta1, phi, theta, shots+1)
-    reshaped_samples = reshapemaster3000(x, len(alpha), shots, vac_modes)
+    samples = singleloop(sq_r, alpha, phi, theta, shots)
+    reshaped_samples = reshapemaster3000(samples, timebins_per_shot, shots, vac_modes)
     ######################################################
     ######################################################
 
-    nullifier = lambda x: np.array(
-        [-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)]
-    )[1:]
-    nullifier_samples = np.array([nullifier(y) for y in reshaped_samples])
+    nullifier = lambda x: np.array([-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)])[1:]
+    nullifier_samples = np.array([nullifier(y[0]) for y in reshaped_samples[:-1]])
     delta = np.var(nullifier_samples, axis=0)
     assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
@@ -784,14 +801,16 @@ def test_one_dimensional_cluster_tokyo2():
     N = 3  # concurrent modes
     vac_modes = 2
 
-    n = 50  # for an n-mode cluster state
-    shots = 1
+    n = 10  # for an n-mode cluster state
+    shots = 3
 
     # first half of cluster state measured in X, second half in P
-    theta1 = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
-    # theta1 = [0] * n
-    # theta1 = [np.pi/2] * n
+    # theta1 = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
+    theta1 = [np.pi/2]*vac_modes + [0]*int(n/2) + [np.pi/2]*(int(n/2)-vac_modes)
     theta2 = theta1  # measurement angles for detector B
+
+    timebins_per_shot = len(theta1)
+
     prog = tdmprogram.TDMProgram(N=[1, 2])
     with prog.context(theta1, theta2, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
@@ -806,38 +825,30 @@ def test_one_dimensional_cluster_tokyo2():
     ######################################################
     # submitting one extra shot and reshaping differently:
     ######################################################
-    result = eng.run(prog, shots=shots+1)
+    result = eng.run(prog, shots=shots)
+    samples = result.samples
+    reshaped_samples = reshapemaster3000(samples, timebins_per_shot, shots, vac_modes)
 
-    xA = list(result.samples[0][0])+list(result.samples[1][0])
-    xB = list(result.samples[0][1])+list(result.samples[1][1])
-    xA_stripped = xA[vac_modes:-len(theta1)+vac_modes]
-    xB_stripped = xB[vac_modes:-len(theta1)+vac_modes]
-    xA = np.array(xA_stripped).reshape([shots, len(theta1)])
-    xB = np.array(xB_stripped).reshape([shots, len(theta1)])
+    for sh in range(shots-1):
+        # print("PRPRPR",reshaped_samples[sh])
+        X_A = reshaped_samples[sh][0][: n // 2]  # X samples from detector A
+        P_A = reshaped_samples[sh][0][n // 2 :]  # P samples from detector A
+        X_B = reshaped_samples[sh][1][: n // 2]  # X samples from detector B
+        P_B = reshaped_samples[sh][1][n // 2 :]  # P samples from detector B
 
-    X_A = xA[0][: n // 2]  # X samples from detector A
-    P_A = xA[0][n // 2 :]  # P samples from detector A
-    X_B = xB[0][: n // 2]  # X samples from detector B
-    P_B = xB[0][n // 2 :]  # P samples from detector B
+        # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
+        ntot = len(X_A) - 1
+        nX = np.array([X_A[i] + X_B[i] + X_A[i + 1] - X_B[i + 1] for i in range(ntot)])
+        nP = np.array([P_A[i] + P_B[i] - P_A[i + 1] + P_B[i + 1] for i in range(ntot)])
 
-    # P_A = xA[0]
-    # P_B = xB[0]
+        nXvar = np.var(nX)
+        nPvar = np.var(nP)
 
-    # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
-    ntot = len(X_A) - 1
-    nX = np.array([X_A[i] + X_B[i] + X_A[i + 1] - X_B[i + 1] for i in range(ntot)])
-    nP = np.array([P_A[i] + P_B[i] - P_A[i + 1] + P_B[i + 1] for i in range(ntot)])
+        print("nXvar",nXvar)
+        print("nPvar",nPvar)
 
-
-    nXvar = np.var(nX)
-    nPvar = np.var(nP)
-
-    print("nXvar",nXvar)
-    print("nPvar",nPvar)
-
-    assert np.allclose(nXvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
-    assert np.allclose(nPvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
-
+        # assert np.allclose(nXvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
+        # assert np.allclose(nPvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
 
 def test_two_dimensional_cluster_denmark2():
     """
@@ -847,11 +858,16 @@ def test_two_dimensional_cluster_denmark2():
     sq_r = 3
     delay1 = 1  # number of timebins in the short delay line
     delay2 = 12  # number of timebins in the long delay line
-    n = 400  # number of timebins
+    n = 100  # number of timebins
+    shots = 10
+    vac_modes = delay1+ delay2
     # Size of cluste is n x delay2
     # first half of cluster state measured in X, second half in P
-    theta_A = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
+    # theta_A = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
+    theta_A = [np.pi/2]*vac_modes + [0]*int(n/2) + [np.pi/2]*(int(n/2)-vac_modes)
     theta_B = theta_A  # measurement angles for detector B
+    timebins_per_shot = len(theta_A)
+
     # 2D cluster
     prog = tdmprogram.TDMProgram([1, delay2 + delay1 + 1])
     with prog.context(theta_A, theta_B, shift="default") as (p, q):
@@ -864,51 +880,53 @@ def test_two_dimensional_cluster_denmark2():
         ops.MeasureHomodyne(p[1]) | q[0]
         ops.MeasureHomodyne(p[0]) | q[delay1]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
+    result = eng.run(prog, shots=shots)
+    samples = result.samples
+    reshaped_samples = reshapemaster3000(samples, timebins_per_shot, shots, vac_modes)
 
-    xA = result.all_samples[0]
-    xB = result.all_samples[1]
+    for sh in range(shots-1):
+        X_A = reshaped_samples[sh][0][: n // 2]  # X samples from detector A
+        P_A = reshaped_samples[sh][0][n // 2 :]  # P samples from detector A
+        X_B = reshaped_samples[sh][1][: n // 2]  # X samples from detector B
+        P_B = reshaped_samples[sh][1][n // 2 :]  # P samples from detector B
 
-    X_A = xA[: n // 2]  # X samples from detector A
-    P_A = xA[n // 2 :]  # P samples from detector A
-    X_B = xB[: n // 2]  # X samples from detector B
-    P_B = xB[n // 2 :]  # P samples from detector B
+        # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
+        N = delay2
+        ntot = len(X_A) - delay2 - 1
+        nX = np.array(
+            [
+                X_A[k]
+                + X_B[k]
+                - X_A[k + 1]
+                - X_B[k + 1]
+                - X_A[k + N]
+                + X_B[k + N]
+                - X_A[k + N + 1]
+                + X_B[k + N + 1]
+                for k in range(ntot)
+            ]
+        )
+        nP = np.array(
+            [
+                P_A[k]
+                + P_B[k]
+                + P_A[k + 1]
+                + P_B[k + 1]
+                - P_A[k + N]
+                + P_B[k + N]
+                + P_A[k + N + 1]
+                - P_B[k + N + 1]
+                for k in range(ntot)
+            ]
+        )
+        nXvar = np.var(nX)
+        nPvar = np.var(nP)
 
-    # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
-    N = delay2
-    ntot = len(X_A) - delay2 - 1
-    nX = np.array(
-        [
-            X_A[k]
-            + X_B[k]
-            - X_A[k + 1]
-            - X_B[k + 1]
-            - X_A[k + N]
-            + X_B[k + N]
-            - X_A[k + N + 1]
-            + X_B[k + N + 1]
-            for k in range(ntot)
-        ]
-    )
-    nP = np.array(
-        [
-            P_A[k]
-            + P_B[k]
-            + P_A[k + 1]
-            + P_B[k + 1]
-            - P_A[k + N]
-            + P_B[k + N]
-            + P_A[k + N + 1]
-            - P_B[k + N + 1]
-            for k in range(ntot)
-        ]
-    )
-    nXvar = np.var(nX)
-    nPvar = np.var(nP)
-
-    assert np.allclose(nXvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nPvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        print("nXvar",nXvar)
+        print("nPvar",nPvar)
+        
+        # assert np.allclose(nXvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        # assert np.allclose(nPvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
 def test_two_dimensional_cluster_tokyo2():
@@ -1026,6 +1044,6 @@ def test_two_dimensional_cluster_tokyo2():
 # test_ghz2()
 # test_one_dimensional_cluster2()
 
-test_one_dimensional_cluster_tokyo2()
-# TestSingleLoopNullifier().test_epr()
+# test_one_dimensional_cluster_tokyo2()
+test_two_dimensional_cluster_denmark2()
 
