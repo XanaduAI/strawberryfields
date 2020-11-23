@@ -210,10 +210,10 @@ def move_vac_modes(samples, N, crop=False):
     samples = np.append(flat_samples[num_of_vac_modes:], [0] * num_of_vac_modes)
     samples = samples.reshape(shape)
 
-    if crop:
+    if crop and num_of_vac_modes != 0:
         # remove the final shots that include vac mode measurements
-        num_of_shots_with_vac_modes = num_of_vac_modes // (np.prod(shape[1:]) + 1)
-        samples = samples[:-num_of_shots_with_vac_modes]
+        num_of_shots_with_vac_modes = -num_of_vac_modes // (np.prod(shape[1:]) + 1)
+        samples = samples[:num_of_shots_with_vac_modes]
 
     return samples
 
