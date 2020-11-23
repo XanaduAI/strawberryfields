@@ -211,9 +211,10 @@ def move_vac_modes(samples, N, crop=False):
     samples = samples.reshape(shape)
 
     if crop:
-        samples = samples[:-num_of_vac_modes // (np.prod(shape[1:]) + 1)]
+        samples = samples[: -num_of_vac_modes // (np.prod(shape[1:]) + 1)]
 
     return samples
+
 
 class TDMProgram(sf.Program):
     r"""Represents a photonic quantum circuit in the time domain encoding.
