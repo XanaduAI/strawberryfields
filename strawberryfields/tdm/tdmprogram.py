@@ -184,13 +184,11 @@ def reshape_samples(all_samples, modes, N, timebins):
 
 
 def move_vac_modes(samples, N, crop=False):
-    """Post-processing function for TDM samples
-
-    Moves all measured vacuum modes from the first shot of the samples
-    array to the end of the last shot.
+    """Post-processing function for TDM samples. Moves all measured vacuum modes
+    from the first shot of the samples array to the end of the last shot.
 
     Args:
-        samples (ndarray[float]): samples as received from TDMProgram, with the
+        samples (ndarray[float]): samples as received from ``TDMProgram``, with the
             measured vacuum modes in the first shot
         N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
             modes in each time bin. Alternatively, a sequence of integers

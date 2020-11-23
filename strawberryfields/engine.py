@@ -483,6 +483,7 @@ class LocalEngine(BaseEngine):
             result._all_samples = reshape_samples(
                 result.all_samples, program.measured_modes, program.N, program.timebins
             )
+            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
             result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
             program.roll()
         modes = temp_run_options["modes"]
