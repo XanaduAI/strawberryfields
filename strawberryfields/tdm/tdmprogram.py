@@ -140,10 +140,10 @@ def reshape_samples(all_samples, modes, N, timebins):
     .. code-block:: pycon
 
         {
-            0: [[(sample 0), (sample 2)],
-                [(sample 4), (sample 6)]],
-            2: [[(sample 1), (sample 3)],
-                [(sample 5), (sample 7)]],
+            0: np.array([[(sample 0), (sample 2)],
+                         [(sample 4), (sample 6)]]),
+            2: np.array([[(sample 1), (sample 3)],
+                         [(sample 5), (sample 7)]]),
         }
 
     Args:
@@ -162,17 +162,22 @@ def reshape_samples(all_samples, modes, N, timebins):
 
     # iterate backwards through all_samples and add them into the correct mode
     new_samples = dict()
-    t = 0
-    for i, m in enumerate(mode_order):
-        idx = modes[i % len(N)]
-        if idx not in new_samples:
-            new_samples[idx] = [[] for _ in range(timebins)]
-        new_samples[idx][t].append(all_samples[m].pop(0)[0])
+    timebin_idx = 0
+    for i, mode in enumerate(mode_order):
+        mode_idx = modes[i % len(N)]
+
+        if mode_idx not in new_samples:
+            # create an entry for the new mode with a nested list for each timebin
+            new_samples[mode_idx] = [[] for _ in range(timebins)]
+
+        sample = all_samples[mode].pop(0)[0]
+        new_samples[mode_idx][timebin_idx].append(sample)
 
         # populate each spatial mode in one timebin before moving on to the next timebin
         # when each timebin has been filled, move to the next shot
-        if (i + 1) % len(N) == 0:
-            t = (t + 1) % timebins
+        last_mode_in_timebin = (i + 1) % len(N) == 0
+        if last_mode_in_timebin:
+            timebin_idx = (timebin_idx + 1) % timebins
 
     # transpose each value so that it has shape `(shots, timebins)`
     return {k: np.array(v).T for k, v in new_samples.items()}
@@ -209,7 +214,9 @@ def move_vac_modes(samples, N, crop=False):
     samples = samples.reshape(shape)
 
     if crop:
-        samples = samples[: -num_of_vac_modes // (np.prod(shape[1:]) + 1)]
+        # remove the final shots that include vac mode measurements
+        num_of_shots_with_vac_modes = num_of_vac_modes // (np.prod(shape[1:]) + 1)
+        samples = samples[: -num_of_shots_with_vac_modes]
 
     return samples
 
@@ -217,7 +224,7 @@ def move_vac_modes(samples, N, crop=False):
 class TDMProgram(sf.Program):
     r"""Represents a photonic quantum circuit in the time domain encoding.
 
-    The ``TDMProgam`` class provides a context manager for easily defining
+    The ``TDMProgram`` class provides a context manager for easily defining
     a single time-bin of the time domain algorithm. As with the standard
     :class:`~.Program`, Strawberry Fields operations are appended to the
     time domain program using the Python-embedded Blackbird syntax.
