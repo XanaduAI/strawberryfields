@@ -201,8 +201,6 @@ def move_vac_modes(samples, N, crop=False):
         ndarray[float]: the post-processed samples
 
     """
-    if isinstance(N, int):
-        N = [N]
     num_of_vac_modes = np.max(N) - 1
     shape = samples.shape
 

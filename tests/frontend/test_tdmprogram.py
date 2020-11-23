@@ -19,7 +19,7 @@ import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
-from strawberryfields.tdm.tdmprogram import move_vac_modes
+from strawberryfields.tdm.tdmprogram import move_vac_modes, reshape_samples
 from strawberryfields.api.devicespec import DeviceSpec
 
 pytestmark = pytest.mark.frontend
@@ -653,3 +653,35 @@ class TestTDMcompiler:
         prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
+
+class TestTDMProgramFunctions:
+    """Test functions in the tdmprogram module"""
+
+    @pytest.mark.parametrize("N, crop, expected", [
+        (
+            1,
+            False,
+            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+        ),
+        (
+            3,
+            False,
+            [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]
+        ),
+        (
+            [1, 4],
+            False,
+            [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]
+        ),
+        (
+            [4],
+            True,
+            [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]
+        ),
+    ])
+    def test_move_vac_modes(self, N, crop, expected):
+        """Test the `move_vac_modes` function"""
+        samples = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]])
+        res = move_vac_modes(samples, N, crop=crop)
+
+        assert np.all(res == expected)
