@@ -267,10 +267,9 @@ class TDMProgram(sf.Program):
     When we simulate a time-domain program, it is first unrolled by the engine; unrolling involves
     explicitly repeating the single time-bin sequence constructed above, and *shifting* the
     simulated registers. This is performed automatically by the local engine, however, we can
-    visualize the unrolling manually via the
-    :meth:`~.unroll` method.
+    visualize the unrolling manually via the :meth:`~.unroll` method.
 
-    >>> prog.unroll().print()
+    >>> prog.unroll(shots=3).print()
     Sgate(0.7, 0) | (q[1])
     BSgate(1, 0) | (q[0], q[1])
     MeasureHomodyne(3) | (q[0])
@@ -360,6 +359,7 @@ class TDMProgram(sf.Program):
         self.spatial_modes = 0
         self.measured_modes = []
         self.rolled_circuit = None
+        # `unrolled_circuit` only contains the unrolled single-shot circuit
         self.unrolled_circuit = None
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
@@ -512,8 +512,18 @@ class TDMProgram(sf.Program):
         self.circuit = self.rolled_circuit
         return self
 
-    def unroll(self, shots=1):
-        """Construct program with the register shift"""
+    def unroll(self, shots):
+        """Construct program with the register shift
+
+        Constructs the unrolled single-shot program, storing it in `self.unrolled_circuit` when run
+        for the first time, and returns the unrolled program including shots.
+
+        Args:
+            shots (int): the number of times the circuit should be repeated
+
+        Returns:
+            Program: unrolled program (including shots)
+        """
         if self.unrolled_circuit is not None:
             self.circuit = self.unrolled_circuit * shots
             return self
