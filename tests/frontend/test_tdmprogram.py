@@ -19,6 +19,7 @@ import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
+from strawberryfields.tdm.tdmprogram import move_vac_modes
 from strawberryfields.api.devicespec import DeviceSpec
 
 pytestmark = pytest.mark.frontend
@@ -137,30 +138,24 @@ class TestSingleLoopNullifier:
         vac_modes = 1
         sq_r = 5.0
         c = 2
-        shots = 10
+        shots = 100
 
         # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
         alpha = [0, np.pi / 4] * c
-        phi = [np.pi/2, 0] * c
+        phi = [np.pi / 2, 0] * c
 
         # Measurement of 2 subsequent EPR states in XX, PP to investigate nearest-neighbour correlations in all basis permutations
-        theta = [np.pi/2, 0, 0, np.pi/2]
+        theta = [np.pi / 2, 0, 0, np.pi / 2]
 
         timebins_per_shot = len(alpha)
 
         samples = singleloop(sq_r, alpha, phi, theta, shots)
+        reshaped_samples = move_vac_modes(samples, 2, crop=True)
 
-        ######################################################
-        # reshaping differently:
-        ######################################################
-        reshaped_samples = reshapemaster3000(samples, len(alpha), shots, vac_modes)
-        ######################################################
-        ######################################################
-
-        X0 = np.array([x[0][0] for x in reshaped_samples])[:-1]
-        X1 = np.array([x[0][1] for x in reshaped_samples])[:-1]
-        P2 = np.array([x[0][2] for x in reshaped_samples])[:-1]
-        P3 = np.array([x[0][3] for x in reshaped_samples])[:-1]
+        X0 = reshaped_samples[:, 0, 0]
+        X1 = reshaped_samples[:, 0, 1]
+        P2 = reshaped_samples[:, 0, 2]
+        P3 = reshaped_samples[:, 0, 3]
 
         rtol = 5 / np.sqrt(shots)
         minusstdX1X0 = (X1 - X0).var()
@@ -186,7 +181,7 @@ class TestSingleLoopNullifier:
         vac_modes = 1
         n = 4
         vac_modes = 1
-        shots = 4
+        shots = 100
         sq_r = 5
         alpha = [np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n)]
         alpha[0] = 0.0
@@ -196,35 +191,25 @@ class TestSingleLoopNullifier:
 
         # Measuring X nullifier
         theta = [0] * n
-
-        ######################################################
-        # reshaping differently:
-        ######################################################
         samples_X = singleloop(sq_r, alpha, phi, theta, shots)
-        reshaped_samples_X = reshapemaster3000(samples_X, timebins_per_shot, shots, vac_modes)
-        ######################################################
-        ######################################################
+        reshaped_samples_X = move_vac_modes(samples_X, 2, crop=True)
 
         # Measuring P nullifier
         theta = [np.pi / 2] * n
-
-        ######################################################
-        # reshaping differently:
-        ######################################################
         samples_P = singleloop(sq_r, alpha, phi, theta, shots)
-        reshaped_samples_P = reshapemaster3000(samples_P, timebins_per_shot, shots, vac_modes)
-        ######################################################
-        ######################################################
+        reshaped_samples_P = move_vac_modes(samples_P, 2, crop=True)
 
         # We will check that the x of all the modes equal the x of the last one
         nullifier_X = lambda sample: (sample - sample[-1])[:-1]
-        val_nullifier_X = np.var([nullifier_X(x[0]) for x in reshaped_samples_X[:-1]], axis=0)
+        val_nullifier_X = np.var([nullifier_X(x[0]) for x in reshaped_samples_X], axis=0)
         assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
         # We will check that the sum of all the p is equal to zero
         nullifier_P = lambda sample: np.sum(sample)
-        val_nullifier_P = np.var([nullifier_P(p[0]) for p in reshaped_samples_P[:-1]], axis=0)
-        assert np.allclose(val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
+        val_nullifier_P = np.var([nullifier_P(p[0]) for p in reshaped_samples_P], axis=0)
+        assert np.allclose(
+            val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots)
+        )
 
     def test_one_dimensional_cluster(self):
         """Test that the nullifier have the correct value in the experiment described in
@@ -239,12 +224,16 @@ class TestSingleLoopNullifier:
         alpha = [alpha_c] * n
         alpha[0] = 0.0
         phi = [np.pi / 2] * n
-        theta = [0, np.pi / 2] * (n // 2)  # Note that we measure x for mode i and the p for mode i+1.
+        theta = [0, np.pi / 2] * (
+            n // 2
+        )  # Note that we measure x for mode i and the p for mode i+1.
         timebins_per_shot = len(alpha)
 
         reshaped_samples = singleloop(sq_r, alpha, phi, theta, shots)
 
-        nullifier = lambda x: np.array([-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)])[1:]
+        nullifier = lambda x: np.array(
+            [-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)]
+        )[1:]
         nullifier_samples = np.array([nullifier(y[0]) for y in reshaped_samples])
         delta = np.var(nullifier_samples, axis=0)
         assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
@@ -311,7 +300,7 @@ def test_two_dimensional_cluster_denmark():
     delay2 = 12  # number of timebins in the long delay line
     n = 200  # number of timebins
     shots = 10
-    vac_modes = delay1 + delay2 -13
+    vac_modes = delay1 + delay2 - 13
     # first half of cluster state measured in X, second half in P
 
     theta_A = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
@@ -447,25 +436,33 @@ def test_two_dimensional_cluster_tokyo():
         ntot = len(X_A) - N - 1
         nX1 = np.array(
             [
-                X_A[k] + X_B[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N])
+                X_A[k]
+                + X_B[k]
+                - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N])
                 for k in range(ntot)
             ]
         )
         nX2 = np.array(
             [
-                X_C[k] - X_D[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N])
+                X_C[k]
+                - X_D[k]
+                - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N])
                 for k in range(ntot)
             ]
         )
         nP1 = np.array(
             [
-                P_A[k] + P_B[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N])
+                P_A[k]
+                + P_B[k]
+                + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N])
                 for k in range(ntot)
             ]
         )
         nP2 = np.array(
             [
-                P_C[k] - P_D[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N])
+                P_C[k]
+                - P_D[k]
+                + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N])
                 for k in range(ntot)
             ]
         )
@@ -479,6 +476,7 @@ def test_two_dimensional_cluster_tokyo():
         assert np.allclose(nX2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
         assert np.allclose(nP1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
         assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+
 
 def singleloop_program(r, alpha, phi, theta):
     """Single delay loop with program.
@@ -515,8 +513,10 @@ device_spec = {
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
 device = DeviceSpec("TD2", device_spec, connection=None)
 
+
 class TestTDMcompiler:
     """Test class for checking error messages from the compiler"""
+
     def test_tdm_wrong_layout(self):
         """Test the correct error is raised when the tdm circuit gates don't match the device spec"""
         sq_r = 0.5643
@@ -571,7 +571,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        alpha = [np.pi / 4, 27] * c # This beamsplitter phase is not in the allowed range of squeezing parameters
+        alpha = [
+            np.pi / 4,
+            27,
+        ] * c  # This beamsplitter phase is not in the allowed range of squeezing parameters
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta)
@@ -650,35 +653,3 @@ class TestTDMcompiler:
         prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
-
-
-
-
-
-
-
-######## FABIAN AREA #############
-'''
-PLEASE DELETE EVERYTHING BELOW FROM HERE BEFORE MERGING!
-'''
-##################################
-
-def reshapemaster3000(samples, timebins, shots, vac_modes):
-    # https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
-
-    samples_reshaped_sm = []
-    for sm in range(len(samples[0])):
-        samples_flat = [list(shot[sm]) for shot in samples]
-        samples_flat = [item for sublist in samples_flat for item in sublist]
-        samples_flat_stripped = samples_flat[vac_modes:] + [0]*vac_modes
-        samples_reshaped = np.array(samples_flat_stripped).reshape([shots, timebins])
-        samples_reshaped_sm.append(samples_reshaped)
-
-    samples_reshaped = []
-    for sh in range(shots):
-        one_shot = []
-        for sm in range(len(samples[0])):
-            one_shot.append(samples_reshaped_sm[sm][sh])
-        samples_reshaped.append(one_shot)
-
-    return samples_reshaped
