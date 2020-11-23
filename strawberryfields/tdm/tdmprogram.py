@@ -96,14 +96,35 @@ def input_check(args):
         raise ValueError("Gate-parameter lists must be of equal length.")
 
 
-def _get_mode_order(num_of_values, N, timebins):
-    """Get the order by which the modes were measured"""
+def _get_mode_order(num_of_values, modes, N, timebins):
+    """Get the order by which the modes were measured
+
+    The mode order is determined by the circuit and the mode-shifting occurring in
+    :class:`~.TDMProgram`. For the following circuit, the mode order returned by this
+    function would be [0, 2, 0, 1], duplicated shots number of times:
+
+    >>> prog = sf.TDMProgram(N = [1, 2])
+
+    >>> with prog.context([1, 2], [4, 5]) as (p, q):
+    ...     MeasureHomodyne(p[0]) | q[0]
+    ...     MeasureHomodyne(p[1]) | q[2]
+
+    """
     all_modes = []
     for i in range(len(N)):
-        modes = list(range(sum(N[:i]), sum(N[: i + 1])))
-        extended_modes = modes * ceil(1 + timebins // len(modes))
+        timebin_modes = list(range(sum(N[:i]), sum(N[: i + 1])))
+        # shift the timebin_modes if the measured mode isn't the first in the
+        # band, so that the measurements start at the correct mode
+        shift = modes[i] - sum(N[:i])
+        timebin_modes = timebin_modes[shift:] + timebin_modes[:shift]
+
+        # extend the modes by duplicating the list so that the measured mode
+        # orders in all bands have the same length
+        extended_modes = timebin_modes * ceil(1 + timebins // len(timebin_modes))
         all_modes.append(extended_modes[:timebins])
 
+    # alternate measurements in the bands and extend/duplicate the resulting
+    # list so that it is at least as long as `num_of_values`
     mode_order = [i for j in zip(*all_modes) for i in j]
     mode_order *= ceil(1 + num_of_values / len(mode_order))
 
@@ -113,12 +134,13 @@ def _get_mode_order(num_of_values, N, timebins):
 def reshape_samples(all_samples, modes, N, timebins):
     """Reshapes the samples dict so that they have the expected correct shape.
 
-    Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are the ones
-    defined to be measured in the circuit, instead of being spread over a larger
+    Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are
+    the ones defined to be measured in the circuit, instead of being spread over a larger
     number of modes due to the mode-shifting occurring in :class:`~.TDMProgram`.
 
-    The function iterates through samples obtained from the unrolled circuit to populate and return a new samples
-    dictionary with the shape ``{spatial mode: (shots, timebins)}``. E.g., this unrolled circuit:
+    The function iterates through samples obtained from the unrolled circuit to populate
+    and return a new samples dictionary with the shape ``{spatial mode: (shots,
+    timebins)}``. E.g., this unrolled circuit:
 
     .. code-block:: pycon
 
@@ -136,6 +158,16 @@ def reshape_samples(all_samples, modes, N, timebins):
         MeasureHomodyne(0) | (q[1])  # shot 1, timebin 1, spatial mode 2  (sample 7)
 
     would return the dictionary
+
+    .. code-block:: pycon
+
+        {
+            0: np.array([(sample 0), (sample 2), (sample 4), (sample 6)]),
+            2: np.array([(sample 1), (sample 5)]),
+            1: np.array([(sample 3), (sample 7)]),
+        }
+
+    which would then be reshaped, and returned, as follows:
 
     .. code-block:: pycon
 
@@ -158,7 +190,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     """
     # calculate the total number of samples and the order in which they were measured
     num_of_values = len([i for j in all_samples.values() for i in j])
-    mode_order = _get_mode_order(num_of_values, N, timebins)
+    mode_order = _get_mode_order(num_of_values, modes, N, timebins)
 
     # iterate backwards through all_samples and add them into the correct mode
     new_samples = dict()
