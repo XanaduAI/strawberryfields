@@ -117,7 +117,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     defined to be measured in the circuit, instead of being spread over a larger
     number of modes due to the mode-shifting occurring in :class:`~.TDMProgram`.
 
-    The function iterates through the unrolled circuit and populates, and returns, a new samples
+    The function iterates through samples obtained from the unrolled circuit to populate and return a new samples
     dictionary with the shape ``{spatial mode: (shots, timebins)}``. E.g., this unrolled circuit:
 
     .. code-block:: pycon
@@ -153,7 +153,7 @@ def reshape_samples(all_samples, modes, N, timebins):
         timebins (int): the number of timebins/temporal modes in the program per shot
 
     Returns:
-        dict[int, list]: the re-shaped samples, where each key correspond to a spatial
+        dict[int, array]: the re-shaped samples, where each key correspond to a spatial
             mode and the values have shape ``(shots, timebins)``
     """
     # calculate the total number of samples and the order in which they were measured
@@ -192,7 +192,6 @@ def move_vac_modes(samples, N, crop=False):
     Args:
         samples (ndarray[float]): samples as received from TDMProgram, with the
             measured vacuum modes in the first shot
-
         N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
             modes in each time bin. Alternatively, a sequence of integers
             may be provided, corresponding to the number of concurrent modes in
