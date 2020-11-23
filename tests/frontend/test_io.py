@@ -340,7 +340,7 @@ class TestSFToBlackbirdConversion:
     def test_tdm_program(self):
         prog = TDMProgram(2)
 
-        with prog.context([1, 2], [3, 4], [5, 6], copies=3) as (p, q):
+        with prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
             ops.Sgate(0.7, 0) | q[1]
             ops.BSgate(p[0]) | (q[0], q[1])
             ops.Rgate(p[1]) | q[1]
@@ -353,7 +353,7 @@ class TestSFToBlackbirdConversion:
         assert bb.operations[2] == {'kwargs': {}, 'args': ['p1'], 'op': 'Rgate', 'modes': [1]}
         assert bb.operations[3] == {'kwargs': {'phi': 'p2'}, 'args': [], 'op': 'MeasureHomodyne', 'modes': [0]}
 
-        assert bb.programtype == {'name': 'tdm', 'options': {'temporal_modes': 2, 'copies': 3}}
+        assert bb.programtype == {'name': 'tdm', 'options': {'temporal_modes': 2}}
         assert list(bb._var.keys()) == ["p0", "p1", "p2"]
         assert np.all(bb._var["p0"] == np.array([[1, 2]]))
         assert np.all(bb._var["p1"] == np.array([[3, 4]]))
@@ -560,7 +560,7 @@ class TestBlackbirdToSFConversion:
         bb_script = textwrap.dedent("""\
         name None
         version 1.0
-        type tdm (temporal_modes=3, copies=3)
+        type tdm (temporal_modes=3)
 
         int array p0 =
             1, 2
@@ -601,7 +601,6 @@ class TestBlackbirdToSFConversion:
 
         assert prog.concurr_modes == 2
         assert prog.timebins == 2
-        assert prog.copies == 3
         assert prog.spatial_modes == 1
         assert prog.free_params == {
             'p0': FreeParameter("p0"),
@@ -618,7 +617,7 @@ class TestBlackbirdToSFConversion:
         bb_script = """\
         name test_program
         version 1.0
-        type tdm (temporal_modes= 12, copies=42)
+        type tdm (temporal_modes= 12)
         """
 
         bb = blackbird.loads(bb_script)
@@ -632,7 +631,7 @@ class TestBlackbirdToSFConversion:
         bb_script = textwrap.dedent("""\
         name test_program
         version 1.0
-        type tdm (temporal_modes= 12, copies=42)
+        type tdm (temporal_modes= 12)
 
         int array p42 =
             1, 3, 5

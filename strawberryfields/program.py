@@ -543,9 +543,9 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-          # TODO: add validation for device specs that provide a dictionary for `device.modes`.
+            # TODO: add validation for device specs that provide a dictionary for `device.modes`.
             if device.modes is not None and isinstance(device.modes, int):
-                self.assert_number_of_modes(device)            
+                self.assert_number_of_modes(device)
 
         else:
             compiler = _get_compiler(compiler)

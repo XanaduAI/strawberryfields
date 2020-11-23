@@ -19,6 +19,7 @@ import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
+from strawberryfields.tdm.tdmprogram import move_vac_modes, reshape_samples
 from strawberryfields.api.devicespec import DeviceSpec
 
 pytestmark = pytest.mark.frontend
@@ -27,7 +28,7 @@ pytestmark = pytest.mark.frontend
 np.random.seed(42)
 
 
-def singleloop(r, alpha, phi, theta, copies, shift="default"):
+def singleloop(r, alpha, phi, theta, shots, shift="default"):
     """Single delay loop with program.
 
     Args:
@@ -35,71 +36,59 @@ def singleloop(r, alpha, phi, theta, copies, shift="default"):
         alpha (Sequence[float]): beamsplitter angles
         phi (Sequence[float]): rotation angles
         theta (Sequence[float]): homodyne measurement angles
-        copies (int): number of copies in the tdm program
+        shots (int): number of shots
         shift (string): type of shift used in the program
     Returns:
         (list): homodyne samples from the single loop simulation
     """
     prog = tdmprogram.TDMProgram(N=2)
-    with prog.context(alpha, phi, theta, copies=copies, shift=shift) as (p, q):
+    with prog.context(alpha, phi, theta, shift=shift) as (p, q):
         ops.Sgate(r, 0) | q[1]
         ops.BSgate(p[0]) | (q[0], q[1])
         ops.Rgate(p[1]) | q[1]
         ops.MeasureHomodyne(p[2]) | q[0]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
+    result = eng.run(prog, shots=shots)
 
-    return result.samples[0]
+    return result.samples
 
 
 class TestTDMErrorRaising:
     """Test that the correct error messages are raised when a TDMProgram is created"""
-
-    def test_number_of_copies_must_be_integer(self):
-        """Checks number of copies is an integer"""
-        sq_r = 1.0
-        N = 3
-        c = 4
-        copies = 1 / 137
-        alpha = [0, np.pi / 4] * c
-        phi = [np.pi / 2, 0] * c
-        theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2, np.pi / 2]
-        with pytest.raises(TypeError, match="Number of copies must be a positive integer"):
-            singleloop(sq_r, alpha, phi, theta, copies)
 
     def test_gates_equal_length(self):
         """Checks gate list parameters have same length"""
         sq_r = 1.0
         N = 3
         c = 4
-        copies = 10
+        shots = 10
         alpha = [0, np.pi / 4] * c
         phi = [np.pi / 2, 0] * c
         theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2]
         with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
-            singleloop(sq_r, alpha, phi, theta, copies)
+            singleloop(sq_r, alpha, phi, theta, shots)
 
     def test_at_least_one_measurement(self):
         """Checks circuit has at least one measurement operator"""
         sq_r = 1.0
         N = 3
-        copies = 1
+        shots = 1
         alpha = [0] * 4
         phi = [0] * 4
         prog = tdmprogram.TDMProgram(N=3)
         with pytest.raises(ValueError, match="Must be at least one measurement."):
-            with prog.context(alpha, phi, copies=copies, shift="default") as (p, q):
+            with prog.context(alpha, phi, shift="default") as (p, q):
                 ops.Sgate(sq_r, 0) | q[2]
                 ops.BSgate(p[0]) | (q[1], q[2])
                 ops.Rgate(p[1]) | q[2]
             eng = sf.Engine("gaussian")
-            result = eng.run(prog)
+            result = eng.run(prog, shots=shots)
 
     def test_spatial_modes_number_of_measurements_match(self):
         """Checks number of spatial modes matches number of measurements"""
         sq_r = 1.0
         N = 3
-        copies = 1
+        shots = 1
         alpha = [0] * 4
         phi = [0] * 4
         theta = [0] * 4
@@ -107,13 +96,13 @@ class TestTDMErrorRaising:
             ValueError, match="Number of measurement operators must match number of spatial modes."
         ):
             prog = tdmprogram.TDMProgram(N=[3, 3])
-            with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+            with prog.context(alpha, phi, theta) as (p, q):
                 ops.Sgate(sq_r, 0) | q[2]
                 ops.BSgate(p[0]) | (q[1], q[2])
                 ops.Rgate(p[1]) | q[2]
                 ops.MeasureHomodyne(p[2]) | q[0]
             eng = sf.Engine("gaussian")
-            result = eng.run(prog)
+            result = eng.run(prog, shots=shots)
 
 
 def test_shift_by_specified_amount():
@@ -122,14 +111,14 @@ def test_shift_by_specified_amount():
     np.random.seed(42)
     sq_r = 1.0
     N = 3
-    copies = 1
+    shots = 1
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
     np.random.seed(42)
-    x = singleloop(sq_r, alpha, phi, theta, copies)
+    x = singleloop(sq_r, alpha, phi, theta, shots)
     np.random.seed(42)
-    y = singleloop(sq_r, alpha, phi, theta, copies, shift=1)
+    y = singleloop(sq_r, alpha, phi, theta, shots, shift=1)
     assert np.allclose(x, y)
 
 
@@ -146,23 +135,29 @@ class TestSingleLoopNullifier:
         """Generates an EPR state and checks that the correct correlations (noise reductions) are observed
         from the samples"""
         np.random.seed(42)
-        sq_r = 1.0
+        vac_modes = 1
+        sq_r = 5.0
         c = 2
-        copies = 200
+        shots = 100
 
         # This will generate c EPRstates per copy. I chose c = 4 because it allows us to make 4 EPR pairs per copy that can each be measured in different basis permutations.
-        alpha = [np.pi / 4, 0] * c
-        phi = [0, np.pi / 2] * c
+        alpha = [0, np.pi / 4] * c
+        phi = [np.pi / 2, 0] * c
 
         # Measurement of 2 subsequent EPR states in XX, PP to investigate nearest-neighbour correlations in all basis permutations
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]  #
-        x = singleloop(sq_r, alpha, phi, theta, copies)
+        theta = [np.pi / 2, 0, 0, np.pi / 2]
 
-        X0 = x[0::8]
-        X1 = x[1::8]
-        P2 = x[2::8]
-        P3 = x[3::8]
-        rtol = 5 / np.sqrt(copies)
+        timebins_per_shot = len(alpha)
+
+        samples = singleloop(sq_r, alpha, phi, theta, shots)
+        reshaped_samples = move_vac_modes(samples, 2, crop=True)
+
+        X0 = reshaped_samples[:, 0, 0]
+        X1 = reshaped_samples[:, 0, 1]
+        P2 = reshaped_samples[:, 0, 2]
+        P3 = reshaped_samples[:, 0, 3]
+
+        rtol = 5 / np.sqrt(shots)
         minusstdX1X0 = (X1 - X0).var()
         plusstdX1X0 = (X1 + X0).var()
         squeezed_std = np.exp(-2 * sq_r)
@@ -183,37 +178,37 @@ class TestSingleLoopNullifier:
         """
         # Set up the circuit
         np.random.seed(42)
-        n = 10
         vac_modes = 1
-        copies = 1000
+        n = 4
+        vac_modes = 1
+        shots = 100
         sq_r = 5
-        alpha = [
-            np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n + vac_modes)
-        ]
+        alpha = [np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n)]
         alpha[0] = 0.0
-        phi = [0] * (n + vac_modes)
+        phi = [0] * n
         phi[0] = np.pi / 2
+        timebins_per_shot = len(alpha)
 
         # Measuring X nullifier
-        theta = [0] * (n + vac_modes)
-        samples_X = singleloop(sq_r, alpha, phi, theta, copies)
-        reshaped_samples_X = np.array(samples_X).reshape([copies, n + vac_modes])
-
-        # We will check that the x of all the modes equal the x of the last one
-        nullifier_X = lambda sample: (sample - sample[-1])[vac_modes:-1]
-        val_nullifier_X = np.var([nullifier_X(x) for x in reshaped_samples_X], axis=0)
-        assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+        theta = [0] * n
+        samples_X = singleloop(sq_r, alpha, phi, theta, shots)
+        reshaped_samples_X = move_vac_modes(samples_X, 2, crop=True)
 
         # Measuring P nullifier
-        theta = [np.pi / 2] * (n + vac_modes)
-        samples_P = singleloop(sq_r, alpha, phi, theta, copies)
+        theta = [np.pi / 2] * n
+        samples_P = singleloop(sq_r, alpha, phi, theta, shots)
+        reshaped_samples_P = move_vac_modes(samples_P, 2, crop=True)
+
+        # We will check that the x of all the modes equal the x of the last one
+        nullifier_X = lambda sample: (sample - sample[-1])[:-1]
+        val_nullifier_X = np.var([nullifier_X(x[0]) for x in reshaped_samples_X], axis=0)
+        assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
         # We will check that the sum of all the p is equal to zero
-        reshaped_samples_P = np.array(samples_P).reshape([copies, n + vac_modes])
-        nullifier_P = lambda sample: np.sum(sample[vac_modes:])
-        val_nullifier_P = np.var([nullifier_P(p) for p in reshaped_samples_P], axis=0)
+        nullifier_P = lambda sample: np.sum(sample)
+        val_nullifier_P = np.var([nullifier_P(p[0]) for p in reshaped_samples_P], axis=0)
         assert np.allclose(
-            val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies)
+            val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots)
         )
 
     def test_one_dimensional_cluster(self):
@@ -221,8 +216,9 @@ class TestSingleLoopNullifier:
         See Eq. 10 of https://advances.sciencemag.org/content/5/5/eaaw4530
         """
         np.random.seed(42)
+        vac_modes = 1
         n = 20
-        copies = 1000
+        shots = 100
         sq_r = 3
         alpha_c = np.arccos(np.sqrt((np.sqrt(5) - 1) / 2))
         alpha = [alpha_c] * n
@@ -231,13 +227,16 @@ class TestSingleLoopNullifier:
         theta = [0, np.pi / 2] * (
             n // 2
         )  # Note that we measure x for mode i and the p for mode i+1.
-        reshaped_samples = np.array(singleloop(sq_r, alpha, phi, theta, copies)).reshape(copies, n)
+        timebins_per_shot = len(alpha)
+
+        reshaped_samples = singleloop(sq_r, alpha, phi, theta, shots)
+
         nullifier = lambda x: np.array(
             [-x[i - 2] + x[i - 1] - x[i] for i in range(2, len(x) - 2, 2)]
         )[1:]
-        nullifier_samples = np.array([nullifier(y) for y in reshaped_samples])
+        nullifier_samples = np.array([nullifier(y[0]) for y in reshaped_samples])
         delta = np.var(nullifier_samples, axis=0)
-        assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(copies))
+        assert np.allclose(delta, 1.5 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
 
 def test_one_dimensional_cluster_tokyo():
@@ -248,15 +247,19 @@ def test_one_dimensional_cluster_tokyo():
     np.random.seed(42)
     sq_r = 5
     N = 3  # concurrent modes
+    vac_modes = 2
 
-    n = 500  # for an n-mode cluster state
-    copies = 1
+    n = 10  # for an n-mode cluster state
+    shots = 3
 
     # first half of cluster state measured in X, second half in P
     theta1 = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta2 = theta1  # measurement angles for detector B
+
+    timebins_per_shot = len(theta1)
+
     prog = tdmprogram.TDMProgram(N=[1, 2])
-    with prog.context(theta1, theta2, copies=copies, shift="default") as (p, q):
+    with prog.context(theta1, theta2, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
         ops.Rgate(np.pi / 2) | q[0]
@@ -265,26 +268,26 @@ def test_one_dimensional_cluster_tokyo():
         ops.MeasureHomodyne(p[0]) | q[0]
         ops.MeasureHomodyne(p[1]) | q[1]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
 
-    xA = result.all_samples[0]
-    xB = result.all_samples[1]
+    result = eng.run(prog, shots=shots)
+    reshaped_samples = result.samples
 
-    X_A = xA[: n // 2]  # X samples from detector A
-    P_A = xA[n // 2 :]  # P samples from detector A
-    X_B = xB[: n // 2]  # X samples from detector B
-    P_B = xB[n // 2 :]  # P samples from detector B
+    for sh in range(shots):
+        X_A = reshaped_samples[sh][0][: n // 2]  # X samples from detector A
+        P_A = reshaped_samples[sh][0][n // 2 :]  # P samples from detector A
+        X_B = reshaped_samples[sh][1][: n // 2]  # X samples from detector B
+        P_B = reshaped_samples[sh][1][n // 2 :]  # P samples from detector B
 
-    # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
-    ntot = len(X_A) - 1
-    nX = np.array([X_A[i] + X_B[i] + X_A[i + 1] - X_B[i + 1] for i in range(ntot)])
-    nP = np.array([P_A[i] + P_B[i] - P_A[i + 1] + P_B[i + 1] for i in range(ntot)])
+        # nullifiers defined in https://aip.scitation.org/doi/pdf/10.1063/1.4962732, Eqs. (1a) and (1b)
+        ntot = len(X_A) - 1
+        nX = np.array([X_A[i] + X_B[i] + X_A[i + 1] - X_B[i + 1] for i in range(ntot)])
+        nP = np.array([P_A[i] + P_B[i] - P_A[i + 1] + P_B[i + 1] for i in range(ntot)])
 
-    nXvar = np.var(nX)
-    nPvar = np.var(nP)
+        nXvar = np.var(nX)
+        nPvar = np.var(nP)
 
-    assert np.allclose(nXvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
-    assert np.allclose(nPvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
+        assert np.allclose(nXvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
+        assert np.allclose(nPvar, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(n))
 
 
 def test_two_dimensional_cluster_denmark():
@@ -295,11 +298,15 @@ def test_two_dimensional_cluster_denmark():
     sq_r = 3
     delay1 = 1  # number of timebins in the short delay line
     delay2 = 12  # number of timebins in the long delay line
-    n = 400  # number of timebins
-    # Size of cluste is n x delay2
+    n = 200  # number of timebins
+    shots = 10
+    vac_modes = delay1 + delay2 - 13
     # first half of cluster state measured in X, second half in P
+
     theta_A = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta_B = theta_A  # measurement angles for detector B
+    timebins_per_shot = len(theta_A)
+
     # 2D cluster
     prog = tdmprogram.TDMProgram([1, delay2 + delay1 + 1])
     with prog.context(theta_A, theta_B, shift="default") as (p, q):
@@ -312,51 +319,49 @@ def test_two_dimensional_cluster_denmark():
         ops.MeasureHomodyne(p[1]) | q[0]
         ops.MeasureHomodyne(p[0]) | q[delay1]
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
+    result = eng.run(prog, shots=shots)
+    reshaped_samples = result.samples
 
-    xA = result.all_samples[0]
-    xB = result.all_samples[1]
+    for sh in range(shots):
+        X_A = reshaped_samples[sh][0][: n // 2]  # X samples from detector A
+        P_A = reshaped_samples[sh][0][n // 2 :]  # P samples from detector A
+        X_B = reshaped_samples[sh][1][: n // 2]  # X samples from detector B
+        P_B = reshaped_samples[sh][1][n // 2 :]  # P samples from detector B
 
-    X_A = xA[: n // 2]  # X samples from detector A
-    P_A = xA[n // 2 :]  # P samples from detector A
-    X_B = xB[: n // 2]  # X samples from detector B
-    P_B = xB[n // 2 :]  # P samples from detector B
+        # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
+        N = delay2
+        ntot = len(X_A) - delay2 - 1
+        nX = np.array(
+            [
+                X_A[k]
+                + X_B[k]
+                - X_A[k + 1]
+                - X_B[k + 1]
+                - X_A[k + N]
+                + X_B[k + N]
+                - X_A[k + N + 1]
+                + X_B[k + N + 1]
+                for k in range(ntot)
+            ]
+        )
+        nP = np.array(
+            [
+                P_A[k]
+                + P_B[k]
+                + P_A[k + 1]
+                + P_B[k + 1]
+                - P_A[k + N]
+                + P_B[k + N]
+                + P_A[k + N + 1]
+                - P_B[k + N + 1]
+                for k in range(ntot)
+            ]
+        )
+        nXvar = np.var(nX)
+        nPvar = np.var(nP)
 
-    # nullifiers defined in https://arxiv.org/pdf/1906.08709.pdf, Eqs. (1) and (2)
-    N = delay2
-    ntot = len(X_A) - delay2 - 1
-    nX = np.array(
-        [
-            X_A[k]
-            + X_B[k]
-            - X_A[k + 1]
-            - X_B[k + 1]
-            - X_A[k + N]
-            + X_B[k + N]
-            - X_A[k + N + 1]
-            + X_B[k + N + 1]
-            for k in range(ntot)
-        ]
-    )
-    nP = np.array(
-        [
-            P_A[k]
-            + P_B[k]
-            + P_A[k + 1]
-            + P_B[k + 1]
-            - P_A[k + N]
-            + P_B[k + N]
-            + P_A[k + N + 1]
-            - P_B[k + N + 1]
-            for k in range(ntot)
-        ]
-    )
-    nXvar = np.var(nX)
-    nPvar = np.var(nP)
-
-    assert np.allclose(nXvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nPvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        assert np.allclose(nXvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        assert np.allclose(nPvar, 4 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
 def test_two_dimensional_cluster_tokyo():
@@ -368,6 +373,7 @@ def test_two_dimensional_cluster_tokyo():
     delayB = 1
     delayC = 5
     delayD = 0
+
     # concurrent modes in each spatial mode
     concurrA = 1 + delayA
     concurrB = 1 + delayB
@@ -384,6 +390,8 @@ def test_two_dimensional_cluster_tokyo():
     theta_B = theta_A  # measurement angles for detector B
     theta_C = theta_A
     theta_D = theta_A
+
+    shots = 10
 
     # 2D cluster
     prog = tdmprogram.TDMProgram(N)
@@ -409,66 +417,68 @@ def test_two_dimensional_cluster_tokyo():
         ops.MeasureHomodyne(p[3]) | q[9]
 
     eng = sf.Engine("gaussian")
-    result = eng.run(prog)
-    samples = result.all_samples
+    result = eng.run(prog, shots=shots)
+    reshaped_samples = result.samples
 
-    xA = result.all_samples[0]
-    xB = result.all_samples[1]
-    xC = result.all_samples[3]
-    xD = result.all_samples[9]
+    for sh in range(shots):
 
-    X_A = xA[: n // 2]  # X samples from detector A
-    P_A = xA[n // 2 :]  # P samples from detector A
+        X_A = reshaped_samples[sh][0][: n // 2]  # X samples from detector A
+        P_A = reshaped_samples[sh][0][n // 2 :]  # P samples from detector A
+        X_B = reshaped_samples[sh][1][: n // 2]  # X samples from detector B
+        P_B = reshaped_samples[sh][1][n // 2 :]  # P samples from detector B
+        X_C = reshaped_samples[sh][2][: n // 2]  # X samples from detector C
+        P_C = reshaped_samples[sh][2][n // 2 :]  # P samples from detector C
+        X_D = reshaped_samples[sh][3][: n // 2]  # X samples from detector D
+        P_D = reshaped_samples[sh][3][n // 2 :]  # P samples from detector D
 
-    X_B = xB[: n // 2]  # X samples from detector B
-    P_B = xB[n // 2 :]  # P samples from detector B
+        N = delayC
+        # nullifiers defined in https://arxiv.org/pdf/1903.03918.pdf, Fig. S5
+        ntot = len(X_A) - N - 1
+        nX1 = np.array(
+            [
+                X_A[k]
+                + X_B[k]
+                - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N])
+                for k in range(ntot)
+            ]
+        )
+        nX2 = np.array(
+            [
+                X_C[k]
+                - X_D[k]
+                - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N])
+                for k in range(ntot)
+            ]
+        )
+        nP1 = np.array(
+            [
+                P_A[k]
+                + P_B[k]
+                + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N])
+                for k in range(ntot)
+            ]
+        )
+        nP2 = np.array(
+            [
+                P_C[k]
+                - P_D[k]
+                + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N])
+                for k in range(ntot)
+            ]
+        )
 
-    X_C = xC[: n // 2]  # X samples from detector C
-    P_C = xC[n // 2 :]  # P samples from detector C
+        nX1var = np.var(nX1)
+        nX2var = np.var(nX2)
+        nP1var = np.var(nP1)
+        nP2var = np.var(nP2)
 
-    X_D = xD[: n // 2]  # X samples from detector D
-    P_D = xD[n // 2 :]  # P samples from detector D
-
-    N = delayC
-    # nullifiers defined in https://arxiv.org/pdf/1903.03918.pdf, Fig. S5
-    ntot = len(X_A) - N - 1
-    nX1 = np.array(
-        [
-            X_A[k] + X_B[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] + X_C[k + N] + X_D[k + N])
-            for k in range(ntot)
-        ]
-    )
-    nX2 = np.array(
-        [
-            X_C[k] - X_D[k] - np.sqrt(1 / 2) * (-X_A[k + 1] + X_B[k + 1] - X_C[k + N] - X_D[k + N])
-            for k in range(ntot)
-        ]
-    )
-    nP1 = np.array(
-        [
-            P_A[k] + P_B[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] + P_C[k + N] + P_D[k + N])
-            for k in range(ntot)
-        ]
-    )
-    nP2 = np.array(
-        [
-            P_C[k] - P_D[k] + np.sqrt(1 / 2) * (-P_A[k + 1] + P_B[k + 1] - P_C[k + N] - P_D[k + N])
-            for k in range(ntot)
-        ]
-    )
-
-    nX1var = np.var(nX1)
-    nX2var = np.var(nX2)
-    nP1var = np.var(nP1)
-    nP2var = np.var(nP2)
-
-    assert np.allclose(nX1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nX2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nP1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
-    assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        assert np.allclose(nX1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        assert np.allclose(nX2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        assert np.allclose(nP1var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
+        assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
-def singleloop_program(r, alpha, phi, theta, copies):
+def singleloop_program(r, alpha, phi, theta):
     """Single delay loop with program.
 
     Args:
@@ -476,12 +486,11 @@ def singleloop_program(r, alpha, phi, theta, copies):
         alpha (Sequence[float]): beamsplitter angles
         phi (Sequence[float]): rotation angles
         theta (Sequence[float]): homodyne measurement angles
-        copies (int): number of copies in the tdm program
     Returns:
         (list): homodyne samples from the single loop simulation
     """
     prog = tdmprogram.TDMProgram(N=2)
-    with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+    with prog.context(alpha, phi, theta) as (p, q):
         ops.Sgate(r, 0) | q[1]
         ops.BSgate(p[0]) | (q[1], q[0])
         ops.Rgate(p[1]) | q[1]
@@ -492,7 +501,7 @@ def singleloop_program(r, alpha, phi, theta, copies):
 target = "TD2"
 tm = 4
 device_spec = {
-    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm}, copies=1)\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
+    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
     "compiler": ["TD2"],
     "gate_parameters": {
@@ -504,18 +513,19 @@ device_spec = {
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
 device = DeviceSpec("TD2", device_spec, connection=None)
 
+
 class TestTDMcompiler:
     """Test class for checking error messages from the compiler"""
+
     def test_tdm_wrong_layout(self):
         """Test the correct error is raised when the tdm circuit gates don't match the device spec"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        with prog.context(alpha, phi, theta) as (p, q):
             ops.Dgate(sq_r) | q[1]  # Here one should have an Sgate
             ops.BSgate(p[0]) | (q[1], q[0])
             ops.Rgate(p[1]) | q[1]
@@ -531,12 +541,11 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit registers don't match the device spec"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        with prog.context(alpha, phi, theta) as (p, q):
             ops.Sgate(sq_r) | q[1]
             ops.BSgate(p[0]) | (q[0], q[1])  # The order should be (q[1], q[0])
             ops.Rgate(p[1]) | q[1]
@@ -551,11 +560,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 2  # This squeezing is not in the allowed range of squeezing parameters
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
@@ -563,11 +571,13 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        copies = 10
-        alpha = [np.pi / 4, 27] * c # This beamsplitter phase is not in the allowed range of squeezing parameters
+        alpha = [
+            np.pi / 4,
+            27,
+        ] * c  # This beamsplitter phase is not in the allowed range of squeezing parameters
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
@@ -575,12 +585,11 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        copies = 10
         alpha = [np.pi / 4, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta, copies=copies) as (p, q):
+        with prog.context(alpha, phi, theta) as (p, q):
             ops.Sgate(sq_r, 0.4) | q[
                 1
             ]  # Note that the Sgate has a second parameter that is non-zero
@@ -595,11 +604,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit symbolic parameters are not within the allowed ranges"""
         sq_r = 0.5643
         c = 2
-        copies = 200
         alpha = [137, 0] * c  # Note that alpha is outside the allowed range
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
@@ -607,11 +615,10 @@ class TestTDMcompiler:
         """Test the correct error is raised when the tdm circuit has too many temporal modes"""
         sq_r = 0.5643
         c = 100  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
-        copies = 1
         alpha = [0.5, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="temporal modes, but the device"):
             prog.compile(device=device, compiler="TD2")
 
@@ -623,12 +630,11 @@ class TestTDMcompiler:
         ] = 100  # Note that singleloop_program has only two concurrent modes
         device1 = DeviceSpec("x", device_spec1, connection=None)
         c = 1
-        copies = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="concurrent modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
 
@@ -640,11 +646,47 @@ class TestTDMcompiler:
         ] = 100  # Note that singleloop_program has only one spatial mode
         device1 = DeviceSpec("x", device_spec1, connection=None)
         c = 1
-        copies = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta, copies)
+        prog = singleloop_program(sq_r, alpha, phi, theta)
         with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
+
+class TestTDMProgramFunctions:
+    """Test functions in the ``tdmprogram`` module"""
+
+    @pytest.mark.parametrize("N, crop, expected", [
+        (
+            1,
+            False,
+            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+        ),
+        (
+            1,
+            True,
+            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+        ),
+        (
+            3,
+            False,
+            [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]
+        ),
+        (
+            [1, 4],
+            False,
+            [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]
+        ),
+        (
+            [4],
+            True,
+            [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]
+        ),
+    ])
+    def test_move_vac_modes(self, N, crop, expected):
+        """Test the `move_vac_modes` function"""
+        samples = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]])
+        res = move_vac_modes(samples, N, crop=crop)
+
+        assert np.all(res == expected)

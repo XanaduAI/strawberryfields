@@ -420,7 +420,12 @@ class LocalEngine(BaseEngine):
 
         if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
             # At this time we do not support lists of tdm programs
-            program.unroll()
+            shots = kwargs.get("shots", 1)
+            program.unroll(shots=shots)
+            # Shots >1 for a TDM program simply corresponds to creating
+            # multiple copies of the program, and appending them to run sequentially.
+            # As a result, we set the backend shots to 1 for the Gaussian backend.
+            kwargs["shots"] = 1
 
         args = args or {}
         compile_options = compile_options or {}
@@ -476,9 +481,10 @@ class LocalEngine(BaseEngine):
         if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
             # At this time we do not support lists of tdm programs
             result._all_samples = reshape_samples(
-                result.all_samples, program.measured_modes, program.N
+                result.all_samples, program.measured_modes, program.N, program.timebins
             )
-            result._samples = np.array(list(result.all_samples.values()))
+            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+            result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
             program.roll()
         modes = temp_run_options["modes"]
 

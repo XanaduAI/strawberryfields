@@ -17,6 +17,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
+import numpy as np
 from operator import itemgetter
 from math import ceil
 import blackbird as bb
@@ -83,69 +84,176 @@ def validate_measurements(circuit, N):
     return spatial_modes
 
 
-def input_check(args, copies):
+def input_check(args):
     """Checks the input arguments have consistent dimensions.
 
     Args:
         args (Sequence[Sequence]): sequence of sequences specifying the value of the parameters
-        copies (int): number of times the circuit should be run
-
     """
     # check if all lists are of equal length
     param_lengths = [len(param) for param in args]
     if len(set(param_lengths)) != 1:
         raise ValueError("Gate-parameter lists must be of equal length.")
 
-    # check copies
-    if not isinstance(copies, int) or copies < 1:
-        raise TypeError("Number of copies must be a positive integer.")
 
+def _get_mode_order(num_of_values, modes, N, timebins):
+    """Get the order by which the modes were measured
 
-def _get_mode_order(num_of_values, N):
-    """Get the order by which the modes were measured"""
+    The mode order is determined by the circuit and the mode-shifting occurring in
+    :class:`~.TDMProgram`. For the following circuit, the mode order returned by this
+    function would be [0, 2, 0, 1], duplicated shots number of times:
+
+    >>> prog = sf.TDMProgram(N = [1, 2])
+
+    >>> with prog.context([1, 2], [4, 5]) as (p, q):
+    ...     MeasureHomodyne(p[0]) | q[0]
+    ...     MeasureHomodyne(p[1]) | q[2]
+
+    """
     all_modes = []
     for i in range(len(N)):
-        ra = list(range(sum(N[:i]), sum(N[: i + 1])))
-        all_modes.append(ra * ceil(max(N) / len(ra)))
+        timebin_modes = list(range(sum(N[:i]), sum(N[: i + 1])))
+        # shift the timebin_modes if the measured mode isn't the first in the
+        # band, so that the measurements start at the correct mode
+        shift = modes[i] - sum(N[:i])
+        timebin_modes = timebin_modes[shift:] + timebin_modes[:shift]
 
+        # extend the modes by duplicating the list so that the measured mode
+        # orders in all bands have the same length
+        extended_modes = timebin_modes * ceil(1 + timebins // len(timebin_modes))
+        all_modes.append(extended_modes[:timebins])
+
+    # alternate measurements in the bands and extend/duplicate the resulting
+    # list so that it is at least as long as `num_of_values`
     mode_order = [i for j in zip(*all_modes) for i in j]
-    mode_order *= ceil(num_of_values / len(mode_order))
+    mode_order *= ceil(1 + num_of_values / len(mode_order))
 
     return mode_order[:num_of_values]
 
 
-def reshape_samples(all_samples, modes, N):
+def reshape_samples(all_samples, modes, N, timebins):
     """Reshapes the samples dict so that they have the expected correct shape.
 
-    Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are the ones
-    defined to be measured in the circuit, instead of being spread over a larger
+    Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are
+    the ones defined to be measured in the circuit, instead of being spread over a larger
     number of modes due to the mode-shifting occurring in :class:`~.TDMProgram`.
+
+    The function iterates through samples obtained from the unrolled circuit to populate
+    and return a new samples dictionary with the shape ``{spatial mode: (shots,
+    timebins)}``. E.g., this unrolled circuit:
+
+    .. code-block:: pycon
+
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 0, timebin 0, spatial mode 0  (sample 0)
+        MeasureHomodyne(0) | (q[2])  # shot 0, timebin 0, spatial mode 2  (sample 1)
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 0, timebin 1, spatial mode 0  (sample 2)
+        MeasureHomodyne(0) | (q[1])  # shot 0, timebin 1, spatial mode 2  (sample 3)
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 1, timebin 0, spatial mode 0  (sample 4)
+        MeasureHomodyne(0) | (q[2])  # shot 1, timebin 0, spatial mode 2  (sample 5)
+        ...
+        MeasureHomodyne(0) | (q[0])  # shot 1, timebin 1, spatial mode 0  (sample 6)
+        MeasureHomodyne(0) | (q[1])  # shot 1, timebin 1, spatial mode 2  (sample 7)
+
+    would return the dictionary
+
+    .. code-block:: pycon
+
+        {
+            0: np.array([(sample 0), (sample 2), (sample 4), (sample 6)]),
+            2: np.array([(sample 1), (sample 5)]),
+            1: np.array([(sample 3), (sample 7)]),
+        }
+
+    which would then be reshaped, and returned, as follows:
+
+    .. code-block:: pycon
+
+        {
+            0: np.array([[(sample 0), (sample 2)],
+                         [(sample 4), (sample 6)]]),
+            2: np.array([[(sample 1), (sample 3)],
+                         [(sample 5), (sample 7)]]),
+        }
 
     Args:
         all_samples (dict[int, list]): the raw measured samples
         modes (Sequence[int]): the modes that are measured in the circuit
         N (Sequence[int]): the number of concurrent modes per belt/spatial modes
+        timebins (int): the number of timebins/temporal modes in the program per shot
 
     Returns:
-        new_samples (dict[int, list]): the re-shaped samples
+        dict[int, array]: the re-shaped samples, where each key correspond to a spatial
+            mode and the values have shape ``(shots, timebins)``
     """
+    # calculate the total number of samples and the order in which they were measured
     num_of_values = len([i for j in all_samples.values() for i in j])
-    mode_order = _get_mode_order(num_of_values, N)
+    mode_order = _get_mode_order(num_of_values, modes, N, timebins)
 
-    # go backwards through all_samples and add them into the correct mode
+    # iterate backwards through all_samples and add them into the correct mode
     new_samples = dict()
-    for i, m in enumerate(mode_order):
-        idx = modes[i % len(N)]
-        if idx not in new_samples:
-            new_samples[idx] = []
-        new_samples[idx].append(all_samples[m].pop(0))
-    return new_samples
+    timebin_idx = 0
+    for i, mode in enumerate(mode_order):
+        mode_idx = modes[i % len(N)]
+
+        if mode_idx not in new_samples:
+            # create an entry for the new mode with a nested list for each timebin
+            new_samples[mode_idx] = [[] for _ in range(timebins)]
+
+        sample = all_samples[mode].pop(0)[0]
+        new_samples[mode_idx][timebin_idx].append(sample)
+
+        # populate each spatial mode in one timebin before moving on to the next timebin
+        # when each timebin has been filled, move to the next shot
+        last_mode_in_timebin = (i + 1) % len(N) == 0
+        if last_mode_in_timebin:
+            timebin_idx = (timebin_idx + 1) % timebins
+
+    # transpose each value so that it has shape `(shots, timebins)`
+    return {k: np.array(v).T for k, v in new_samples.items()}
+
+
+def move_vac_modes(samples, N, crop=False):
+    """Post-processing function for TDM samples. Moves all measured vacuum modes
+    from the first shot of the samples array to the end of the last shot.
+
+    Args:
+        samples (ndarray[float]): samples as received from ``TDMProgram``, with the
+            measured vacuum modes in the first shot
+        N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
+            modes in each time bin. Alternatively, a sequence of integers
+            may be provided, corresponding to the number of concurrent modes in
+            the possibly multiple bands in the circuit.
+
+    Keyword args:
+        crop (bool): whether to remove all the shots containing measured vacuum
+            modes at the end
+
+    Returns:
+        ndarray[float]: the post-processed samples
+
+    """
+    num_of_vac_modes = np.max(N) - 1
+    shape = samples.shape
+
+    flat_samples = np.ravel(samples)
+    samples = np.append(flat_samples[num_of_vac_modes:], [0] * num_of_vac_modes)
+    samples = samples.reshape(shape)
+
+    if crop and num_of_vac_modes != 0:
+        # remove the final shots that include vac mode measurements
+        num_of_shots_with_vac_modes = -num_of_vac_modes // (np.prod(shape[1:]) + 1)
+        samples = samples[:num_of_shots_with_vac_modes]
+
+    return samples
 
 
 class TDMProgram(sf.Program):
     r"""Represents a photonic quantum circuit in the time domain encoding.
 
-    The ``TDMProgam`` class provides a context manager for easily defining
+    The ``TDMProgram`` class provides a context manager for easily defining
     a single time-bin of the time domain algorithm. As with the standard
     :class:`~.Program`, Strawberry Fields operations are appended to the
     time domain program using the Python-embedded Blackbird syntax.
@@ -172,7 +280,7 @@ class TDMProgram(sf.Program):
     Once created, we can construct the program using the ``prog.context()``
     context manager.
 
-    >>> with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+    >>> with prog.context([1, 2], [3, 4]) as (p, q):
     ...     ops.Sgate(0.7, 0) | q[1]
     ...     ops.BSgate(p[0]) | (q[0], q[1])
     ...     ops.MeasureHomodyne(p[1]) | q[0]
@@ -193,10 +301,9 @@ class TDMProgram(sf.Program):
     When we simulate a time-domain program, it is first unrolled by the engine; unrolling involves
     explicitly repeating the single time-bin sequence constructed above, and *shifting* the
     simulated registers. This is performed automatically by the local engine, however, we can
-    visualize the unrolling manually via the
-    :meth:`~.unroll` method.
+    visualize the unrolling manually via the :meth:`~.unroll` method.
 
-    >>> prog.unroll().print()
+    >>> prog.unroll(shots=3).print()
     Sgate(0.7, 0) | (q[1])
     BSgate(1, 0) | (q[0], q[1])
     MeasureHomodyne(3) | (q[0])
@@ -220,7 +327,7 @@ class TDMProgram(sf.Program):
     for time domain algorithms to be simulated in memory much more efficiently:
 
     >>> eng = sf.Engine("gaussian")
-    >>> results = eng.run(prog)
+    >>> results = eng.run(prog, shots=3)
 
     The engine automatically takes this mode shifting into account; returned samples
     will always be transformed to match the modes specified during construction:
@@ -243,12 +350,6 @@ class TDMProgram(sf.Program):
 
       If the ``p`` variable is not used, the gate argument is assumed to be **constant**
       across all time-bins.
-
-    * ``copies=1`` *(int)*: the number of times to repeat the time-domain program.
-      For example, if a sequence of 10 gate arguments is provided, and ``copies==15``,
-      then there will be a total of :math:`10\times 15` time bins in the time domain
-      program. The sequence corresponding to the gate arguments is repeated ``copies``
-      number of times.
 
     * ``shift="default"`` *(str or int)*: Defines how the qumode register is shifted at the end of
       each time bin. If set to ``"default"``, the qumode register is shifted such that each measured
@@ -289,10 +390,10 @@ class TDMProgram(sf.Program):
 
         self.type = "tdm"
         self.timebins = 0
-        self.total_timebins = 0
         self.spatial_modes = 0
         self.measured_modes = []
         self.rolled_circuit = None
+        # `unrolled_circuit` only contains the unrolled single-shot circuit
         self.unrolled_circuit = None
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
@@ -302,9 +403,8 @@ class TDMProgram(sf.Program):
         """
 
     # pylint: disable=arguments-differ, invalid-overridden-method
-    def context(self, *args, copies=1, shift="default"):
-        input_check(args, copies)
-        self.copies = copies
+    def context(self, *args, shift="default"):
+        input_check(args)
         self.tdm_params = args
         self.shift = shift
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
@@ -435,7 +535,6 @@ class TDMProgram(sf.Program):
         if ex_type is None:
             self.spatial_modes = validate_measurements(self.circuit, self.N)
             self.timebins = len(self.tdm_params[0])
-            self.total_timebins = self.timebins * self.copies
             self.rolled_circuit = self.circuit.copy()
 
     @property
@@ -447,10 +546,20 @@ class TDMProgram(sf.Program):
         self.circuit = self.rolled_circuit
         return self
 
-    def unroll(self):
-        """Construct program with the register shift"""
+    def unroll(self, shots):
+        """Construct program with the register shift
+
+        Constructs the unrolled single-shot program, storing it in `self.unrolled_circuit` when run
+        for the first time, and returns the unrolled program including shots.
+
+        Args:
+            shots (int): the number of times the circuit should be repeated
+
+        Returns:
+            Program: unrolled program (including shots)
+        """
         if self.unrolled_circuit is not None:
-            self.circuit = self.unrolled_circuit
+            self.circuit = self.unrolled_circuit * shots
             return self
 
         self.circuit = []
@@ -489,8 +598,7 @@ class TDMProgram(sf.Program):
         for cmd in self.rolled_circuit:
             if isinstance(cmd.op, ops.Measurement):
                 self.measured_modes.append(cmd.reg[0].ind)
-
-        for i in range(self.total_timebins):
+        for i in range(self.timebins):
             for cmd in self.rolled_circuit:
                 self.apply_op(cmd, q, i)
 
@@ -506,6 +614,7 @@ class TDMProgram(sf.Program):
 
         # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
         self.unrolled_circuit = self.circuit.copy()
+        self.circuit = self.unrolled_circuit * shots
 
         return self
 
@@ -539,7 +648,7 @@ class TDMProgram(sf.Program):
     def __str__(self):
         s = (
             f"<TDMProgram: concurrent modes={self.concurr_modes}, "
-            f"time bins={self.total_timebins}, "
+            f"time bins={self.timebins}, "
             f"spatial modes={self.spatial_modes}>"
         )
         return s
