@@ -213,7 +213,7 @@ def move_vac_modes(samples, N, crop=False):
     if crop:
         # remove the final shots that include vac mode measurements
         num_of_shots_with_vac_modes = num_of_vac_modes // (np.prod(shape[1:]) + 1)
-        samples = samples[: -num_of_shots_with_vac_modes]
+        samples = samples[:-num_of_shots_with_vac_modes]
 
     return samples
 
