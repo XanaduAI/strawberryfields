@@ -293,7 +293,7 @@ class TDMProgram(sf.Program):
     for time domain algorithms to be simulated in memory much more efficiently:
 
     >>> eng = sf.Engine("gaussian")
-    >>> results = eng.run(prog)
+    >>> results = eng.run(prog, shots=3)
 
     The engine automatically takes this mode shifting into account; returned samples
     will always be transformed to match the modes specified during construction:

@@ -4,15 +4,55 @@
 
 <h3>Improvements</h3>
 
+* `copies` are renamed `shots` inside of `TDMProgram` and is now passed via
+  the `eng.run()` method instead of via the program context.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+  ```pycon
+    >>> with prog.context([1, 2], [3, 4]) as (p, q):
+    ...     ops.Sgate(0.7, 0) | q[1]
+    ...     ops.BSgate(p[0]) | (q[0], q[1])
+    ...     ops.MeasureHomodyne(p[1]) | q[0]
+
+    >>> eng = sf.Engine("gaussian")
+    >>> results = eng.run(prog, shots=3)
+  ```
+
+  Furthermore, `TDMProgram.unrolled_circuit` only contains the single-shot
+  unrolled circuit, while the unrolling including shots is returned by the
+  `TDMProgram.unroll()` method, and is strictly contained to this method
+  (and thus not an attribute of the `TDMProgram` class any longer).
+
+* The `reshape_samples` function is updated to return a dictionary where
+  each key correspond to a spatial mode and the values have shape ``(shots,
+  timebins)``.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* The `Result.samples` is updated for TDM programs to return samples of
+  shape `(shots, spatial modes, timebins)` instead of `(shots, spatial
+  modes * timebins)`.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* A sample post-processing function is added that allows user's to move
+  vacuum mode measurements from the first shots to the last shots, and
+  potentially crop out the final shots containing these measurements.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
 <h3>Breaking changes</h3>
 
 <h3>Bug fixes</h3>
+
+* Fixed issue with `reshape_samples` where the samples were sometimes
+  reshaped in the wrong way.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson, Fabian Laudenbach, Nicolas Quesada
 
 # Release 0.16.0 (current release)
 
