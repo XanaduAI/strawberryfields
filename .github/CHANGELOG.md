@@ -2,6 +2,9 @@
 
 <h3>New features since last release</h3>
 
+* `TDMProgram`s can now be compiled and submitted via the API.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
+
 <h3>Improvements</h3>
 
 * `copies` are renamed `shots` inside of `TDMProgram` and is now passed via
@@ -38,6 +41,9 @@
   potentially crop out the final shots containing these measurements.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
+* `TDMProgram`s can be converted into Blackbird programs and vice versa.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
+
 <h3>Breaking changes</h3>
 
 <h3>Bug fixes</h3>
@@ -45,6 +51,10 @@
 * Fixed issue with `reshape_samples` where the samples were sometimes
   reshaped in the wrong way.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* The list of modes is now correctly added to the Blackbird program when using the
+  `io.to_blackbird` function.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
 <h3>Documentation</h3>
 
