@@ -300,8 +300,8 @@ class TDMProgram(sf.Program):
 
     When we simulate a time-domain program, it is first unrolled by the engine; unrolling involves
     explicitly repeating the single time-bin sequence constructed above, and *shifting* the
-    simulated registers. This is performed automatically by the local engine, however, we can
-    visualize the unrolling manually via the :meth:`~.unroll` method.
+    simulated registers. This 'unrolling' procedure is performed automatically by the engine, however, we can
+    visualize the unrolled program by calling the :meth:`~.unroll` method.
 
     >>> prog.unroll(shots=3).print()
     Sgate(0.7, 0) | (q[1])
@@ -419,8 +419,7 @@ class TDMProgram(sf.Program):
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DeviceSpec`. For :class:`~.TDMProgram` this should be set to
-                None.
+                the hardware :class:`~.DeviceSpec`.
 
         Returns:
             Program: compiled program

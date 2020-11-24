@@ -109,7 +109,7 @@ class DeviceSpec:
         if self.layout_is_formatted():
             return
 
-        if program.type == "tdm" and program.timebins:
+        if program.type == "tdm":
             self._spec["layout"] = self._spec["layout"].format(
                 target=self.target, tm=program.timebins
             )
