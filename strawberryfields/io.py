@@ -30,6 +30,7 @@ from . import ops
 __all__ = ["to_blackbird", "to_program", "loads"]
 
 
+# pylint:disable=too-many-branches
 def to_blackbird(prog, version="1.0"):
     """Convert a Strawberry Fields Program to a Blackbird Program.
 
@@ -175,6 +176,7 @@ def to_program(bb):
     return prog
 
 
+# pylint:disable=too-many-branches
 def _to_tdm_program(bb):
     # pylint: disable=import-outside-toplevel
     from strawberryfields.tdm.tdmprogram import TDMProgram
@@ -364,8 +366,8 @@ def load(f):
             fid = open(filename, "r")
             own_file = True
 
-    except TypeError:
-        raise ValueError("file must be a string, pathlib.Path, or file-like object")
+    except TypeError as e:
+        raise ValueError("file must be a string, pathlib.Path, or file-like object") from e
 
     try:
         bb_str = fid.read()

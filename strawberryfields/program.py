@@ -586,11 +586,11 @@ class Program:
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
-            except bb.utils.TemplateError:
+            except bb.utils.TemplateError as e:
                 raise CircuitError(
                     "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(compiler.short_name)
-                )
+                ) from e
 
             device.validate_parameters(**user_parameters)
 

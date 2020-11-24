@@ -613,9 +613,9 @@ class RemoteEngine:
                     raise FailedJobError(message)
 
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
             self._connection.cancel_job(job.id)
-            raise KeyboardInterrupt("The job has been cancelled.")
+            raise KeyboardInterrupt("The job has been cancelled.") from e
 
     def run_async(
         self, program: Program, *, compile_options=None, recompile=False, **kwargs

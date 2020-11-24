@@ -17,9 +17,10 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
-import numpy as np
 from operator import itemgetter
 from math import ceil
+
+import numpy as np
 import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
@@ -410,6 +411,7 @@ class TDMProgram(sf.Program):
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
         return self
 
+    # pylint: disable=too-many-branches
     def compile(self, *, device=None, compiler=None):
         """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
         At this stage the compilation is simply a check that the program matches the device.
@@ -458,7 +460,6 @@ class TDMProgram(sf.Program):
                 )
 
             # Third check: the parameters of the gates are valid
-            gate_params_ranges = device.gate_parameters
             # We will loop over the different operations in the device specification
 
             for i, operation in enumerate(device_layout.operations):
@@ -538,6 +539,8 @@ class TDMProgram(sf.Program):
 
     @property
     def parameters(self):
+        """Return the parameters of the ``TDMProgram`` as a dictionary with the parameter
+        name as keys, and the parameter lists as values"""
         return dict(zip([i.name for i in self.loop_vars], self.tdm_params))
 
     def roll(self):
