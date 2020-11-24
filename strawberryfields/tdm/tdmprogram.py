@@ -429,11 +429,6 @@ class TDMProgram(sf.Program):
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
 
-        if compiler == "tdm_one_loop" and device == "tdm_one_loop_device":
-            # Do something clever
-            compiler = "TD2"  # Devious but it will work, Josh said
-            # Do not add a return statement
-
         if compiler == "TD2" and device is not None:
 
             if device.modes is not None:
