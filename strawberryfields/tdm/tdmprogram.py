@@ -143,7 +143,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     and return a new samples dictionary with the shape ``{spatial mode: (shots,
     timebins)}``. E.g., this unrolled circuit:
 
-    .. code-block:: pycon
+    .. code-block:: python
 
         ...
         MeasureHomodyne(0) | (q[0])  # shot 0, timebin 0, spatial mode 0  (sample 0)
@@ -160,7 +160,7 @@ def reshape_samples(all_samples, modes, N, timebins):
 
     would return the dictionary
 
-    .. code-block:: pycon
+    .. code-block:: python
 
         {
             0: np.array([(sample 0), (sample 2), (sample 4), (sample 6)]),
@@ -170,7 +170,7 @@ def reshape_samples(all_samples, modes, N, timebins):
 
     which would then be reshaped, and returned, as follows:
 
-    .. code-block:: pycon
+    .. code-block:: python
 
         {
             0: np.array([[(sample 0), (sample 2)],
@@ -413,7 +413,7 @@ class TDMProgram(sf.Program):
     # pylint: disable=too-many-branches
     def compile(self, *, device=None, compiler=None):
         """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
-        
+
         Currently, the compilation is simply a check that the program matches the device.
 
         Args:
@@ -421,7 +421,8 @@ class TDMProgram(sf.Program):
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DeviceSpec`.
+                the hardware :class:`~.DeviceSpec`. If no compiler is passed, the default "TD2"
+                compiler is used. Currently, the only other allowed compiler is "gaussian".
 
         Returns:
             Program: compiled program
@@ -429,11 +430,17 @@ class TDMProgram(sf.Program):
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
 
-        if compiler == "TD2" and device is not None:
+        if device is not None:
+            device_layout = bb.loads(device.layout)
+
+            if device_layout.programtype != "tdm":
+                raise TypeError(
+                    'TDM compiler only supports "tdm" type device specification layouts. '
+                    'Received {} type.'.format(device_layout.programtype)
+                )
 
             if device.modes is not None:
                 self.assert_number_of_modes(device)
-            device_layout = bb.loads(device.layout)
 
             # First check: the gates are in the correct order
             program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
@@ -518,7 +525,9 @@ class TDMProgram(sf.Program):
                                     device.target, program_param, param_range
                                 )
                             )
-        return self
+            return self
+
+        raise CircuitError("TDM programs cannot be compiled without a valid device specification.")
 
     def __enter__(self):
         super().__enter__()
