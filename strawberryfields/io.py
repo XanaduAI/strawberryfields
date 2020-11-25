@@ -150,7 +150,7 @@ def to_program(bb):
             # create the list of regrefs
             regrefs = [q[i] for i in op["modes"]]
 
-            if "args" in op:
+            if "args" in op and "kwargs" in op:
                 # the gate has arguments
                 args = op["args"]
                 kwargs = op["kwargs"]
