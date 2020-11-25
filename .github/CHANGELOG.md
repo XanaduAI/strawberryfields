@@ -8,7 +8,7 @@
 <h3>Improvements</h3>
 
 * The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
-  copies of a TDM algorithm can now be set by passing the `shots` keyword argument to 
+  copies of a TDM algorithm can now be set by passing the `shots` keyword argument to
   the `eng.run()` method.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
@@ -19,15 +19,11 @@
   ...     ops.MeasureHomodyne(p[1]) | q[0]
   >>> eng = sf.Engine("gaussian")
   >>> results = eng.run(prog, shots=3)
+  ```
 
   Furthermore, the `TDMProgram.unrolled_circuit` attribute now only contains the single-shot
   unrolled circuit. Unrolling with multiple shots can still be specified via the `unroll` method:
   `TDMProgram.unroll(shots=60)`.
-
-* The `reshape_samples` function is updated to return a dictionary where
-  each key correspond to a spatial mode and the values have shape ``(shots,
-  timebins)``.
-  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
 * The `Result.samples` returned by TDM programs has been updated to return
   samples of shape `(shots, spatial modes, timebins)` instead of `(shots, spatial
