@@ -433,10 +433,10 @@ class TDMProgram(sf.Program):
         if device is not None:
             device_layout = bb.loads(device.layout)
 
-            if device_layout.programtype != "tdm":
+            if device_layout.programtype["name"] != "tdm":
                 raise TypeError(
                     'TDM compiler only supports "tdm" type device specification layouts. '
-                    "Received {} type.".format(device_layout.programtype)
+                    "Received {} type.".format(device_layout.programtype["name"])
                 )
 
             if device.modes is not None:
