@@ -158,7 +158,7 @@ class TestDeviceSpec:
         assert spec.modes == 42
 
     def test_fill_template(self, connection, monkeypatch):
-        """Test that the fill_template methods works"""
+        """Test that the fill_template method works"""
         prog = sf.tdm.tdmprogram.TDMProgram(2)
 
         with prog.context([1, 2], [3, 4]) as (p, q):
