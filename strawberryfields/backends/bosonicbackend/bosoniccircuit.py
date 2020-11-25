@@ -15,9 +15,46 @@
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
 from thewalrus.quantum import Xmat
+import thewalrus.symplectic as symp
+
 
 from . import ops
 from ..shared_ops import changebasis
+
+
+# Shape of the weights, means, and covs arrays.
+def w_shape(nmodes, ngauss):
+    return (nmodes, ngauss)
+
+
+def m_shape(nmodes, ngauss):
+    return (nmodes**ngauss, 2*nmodes)
+
+
+def c_shape(nmodes, ngauss):
+    return (ngauss**nmodes, 2*nmodes, 2*nmodes)
+
+
+def to_xp(n):
+    return np.concatenate((np.arange(0, 2*n, 2), np.arange(0, 2*n, 2) + 1))
+
+
+def from_xp(n):
+    perm_inds_list = [(i, i + n) for i in range(n)]
+    perm_inds = [a for tup in perm_inds_list for a in tup]
+    return perm_inds
+
+
+def update_means(means, X, perm_out):
+    X_perm = X[:, perm_out][perm_out,:]
+    return (X_perm @ means.T).T
+
+
+def update_covs(covs, X, perm_out, Y=0):
+    X_perm = X[:, perm_out][perm_out, :]
+    if not isinstance(Y, int):
+        Y = Y[:, perm_out][perm_out, :]
+    return (X_perm @ covs @ X_perm.T) + Y
 
 
 class BosonicModes:
@@ -29,7 +66,7 @@ class BosonicModes:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, num_subsystems):
+    def __init__(self, num_subsystems, num_weights=1):
         r"""The class is initialized by providing an integer indicating the number of modes
         Unlike the "standard" covariance matrix for the Wigner function that uses symmetric ordering
         as defined in e.g.
@@ -53,31 +90,28 @@ class BosonicModes:
             raise ValueError("Number of modes must be an integer")
 
         self.hbar = 2
-        self.reset(num_subsystems)
+        self.reset(num_subsystems, num_weights)
 
     def add_mode(self, n=1):
-        """add mode to the circuit"""
-        newnlen = self.nlen + n
-        newnmat = np.zeros((newnlen, newnlen), dtype=complex)
-        newmmat = np.zeros((newnlen, newnlen), dtype=complex)
-        newmean = np.zeros(newnlen, dtype=complex)
-        newactive = list(np.arange(newnlen, dtype=int))
+        """Add n modes to the circuit."""
 
-        for i in range(self.nlen):
-            newmean[i] = self.mean[i]
-            newactive[i] = self.active[i]
-            for j in range(self.nlen):
-                newnmat[i, j] = self.nmat[i, j]
-                newmmat[i, j] = self.mmat[i, j]
+        self.nlen += n
 
-        self.mean = newmean
-        self.nmat = newnmat
-        self.mmat = newmmat
-        self.active = newactive
-        self.nlen = newnlen
+        # Updated mode index permutation list
+        self.to_xp = to_xp(self.nlen)
+        self.from_xp = from_xp(self.nlen)
+
+        # Revisit if concatenate is too slow - alternatively create full-size
+        # array first and then populate. Note the data type of the original
+        # array should be preseved here.
+        self.weights = np.concatenate(self.weights, np.zeros(w_shape(n, self._trunc)))
+        self.means = np.concatenate(self.means, np.zeros(m_shape(n, self._trunc)))
+        new_covs = [np.identity(2 * self.nlen) for i in range(self._trunc ** n)]
+        self.covs = np.concatenate(self.covs, new_covs)
+        self.active = np.concatenate(self.active, np.arange(self.n))
 
     def del_mode(self, modes):
-        """ delete mode from the circuit"""
+        """Delete modes modes from the circuit."""
         if isinstance(modes, int):
             modes = [modes]
 
@@ -88,161 +122,77 @@ class BosonicModes:
             self.loss(0.0, mode)
             self.active[mode] = None
 
-    def reset(self, num_subsystems=None):
-        """Resets the simulation state.
+    def reset(self, num_subsystems=None, num_weights=None):
+        """Reset the simulation state.
 
         Args:
             num_subsystems (int, optional): Sets the number of modes in the reset
                 circuit. None means unchanged.
+            num_weights (int): Sets the number of gaussians per mode in the
+                superposition. None means unchanged.
         """
         if num_subsystems is not None:
             if not isinstance(num_subsystems, int):
                 raise ValueError("Number of modes must be an integer")
             self.nlen = num_subsystems
 
-        self.nmat = np.zeros((self.nlen, self.nlen), dtype=complex)
-        self.mmat = np.zeros((self.nlen, self.nlen), dtype=complex)
-        self.mean = np.zeros(self.nlen, dtype=complex)
+        if num_weights is not None:
+            if not isinstance(num_weights, int):
+                raise ValueError("Number of weights must be an integer")
+            self._trunc = num_weights
+
         self.active = list(np.arange(self.nlen, dtype=int))
+        # Mode index permutation list to and from XP ordering.
+        self.to_xp = to_xp(self.nlen)
+        self.from_xp = from_xp(self.nlen)
+
+        self.weights = np.zeros(w_shape(self.nlen, self._trunc), dtype=complex)
+        self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
+        id_covs = [np.identity(2*self.nlen, dtype=complex)
+                   for i in range(self._trunc ** self.nlen)]
+        self.covs = np.array(id_covs)
 
     def get_modes(self):
-        """return the modes currently active"""
+        """Return the modes currently active."""
         return [x for x in self.active if x is not None]
 
     def displace(self, r, phi, i):
-        """ Implements a displacement operation by the complex number `beta = r * np.exp(1j * phi)` in mode i"""
-        # Update displacement of mode i by the complex amount bet
+        """Displace mode i by the amount r*np.exp(1j*phi)."""
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
 
-        self.mean[i] += r * np.exp(1j * phi)
+        self.means += symp.expand_vector(r * np.exp(1j * phi), i, self.nlen)[self.from_xp]
 
     def squeeze(self, r, phi, k):
-        """ Implements a squeezing operation in mode k by the amount z = r*exp(1j*phi)."""
+        """Squeeze mode k by the amount r*exp(1j*phi)."""
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
 
-        phase = np.exp(1j * phi)
-        phase2 = phase * phase
-        sh = np.sinh(r)
-        ch = np.cosh(r)
-        sh2 = sh * sh
-        ch2 = ch * ch
-        shch = sh * ch
-        nk = np.copy(self.nmat[k])
-        mk = np.copy(self.mmat[k])
-
-        alphak = np.copy(self.mean[k])
-        # Update displacement of mode k
-        self.mean[k] = alphak * ch - phase * np.conj(alphak) * sh
-        # Update covariance matrix elements. Only the k column and row of nmat and mmat need to be updated.
-        # First update the diagonal elements
-        self.nmat[k, k] = (
-            sh2
-            - phase * shch * np.conj(mk[k])
-            - shch * np.conj(phase) * mk[k]
-            + ch2 * nk[k]
-            + sh2 * nk[k]
-        )
-        self.mmat[k, k] = (
-            -(phase * shch) + phase2 * sh2 * np.conj(mk[k]) + ch2 * mk[k] - 2 * phase * shch * nk[k]
-        )
-
-        # Update the column k
-        for l in np.delete(np.arange(self.nlen), k):
-            self.nmat[k, l] = -(sh * np.conj(phase) * mk[l]) + ch * nk[l]
-            self.mmat[k, l] = ch * mk[l] - phase * sh * nk[l]
-
-        # Update row k
-        self.nmat[:, k] = np.conj(self.nmat[k])
-        self.mmat[:, k] = self.mmat[k]
+        sq = symp.expand(symp.squeezing(r, phi), k, self.nlen)
+        self.means = update_means(self.means, sq, self.from_xp)
+        self.covs = update_covs(self.covs, sq, self.from_xp)
 
     def phase_shift(self, phi, k):
-        """ Implements a phase shift in mode k by the amount phi."""
+        """Implement a phase shift in mode k by the amount phi."""
         if self.active[k] is None:
             raise ValueError("Cannot phase shift mode, mode does not exist")
 
-        phase = np.exp(1j * phi)
-        phase2 = phase * phase
-        # Update displacement of mode k
-        self.mean[k] = self.mean[k] * phase
-
-        # Update covariance matrix elements. Only the k column and row of nmat and mmat need to be updated.
-        # First update the diagonal elements
-        self.mmat[k][k] = phase2 * self.mmat[k][k]
-
-        # Update the column k
-        for l in np.delete(np.arange(self.nlen), k):
-            self.nmat[k][l] = np.conj(phase) * self.nmat[k][l]
-            self.mmat[k][l] = phase * self.mmat[k][l]
-
-        # Update row k
-        self.nmat[:, k] = np.conj(self.nmat[k])
-        self.mmat[:, k] = self.mmat[k]
+        rot = symp.expand(symp.rotation(phi), k, self.nlen)
+        self.means = update_means(self.means, rot, self.from_xp)
+        self.covs = update_covs(self.covs, rot, self.from_xp)
 
     def beamsplitter(self, theta, phi, k, l):
-        """ Implements a beam splitter operation between modes k and l by the amount theta, phi"""
+        """Implement a beam splitter operation between modes k and l by the amount theta, phi."""
         if self.active[k] is None or self.active[l] is None:
             raise ValueError("Cannot perform beamsplitter, mode(s) do not exist")
 
         if k == l:
             raise ValueError("Cannot use the same mode for beamsplitter inputs")
 
-        phase = np.exp(1j * phi)
-        phase2 = phase * phase
-        sh = np.sin(theta)
-        ch = np.cos(theta)
-        sh2 = sh * sh
-        ch2 = ch * ch
-        shch = sh * ch
-        # alpha1 = self.mean[0]
-
-        nk = np.copy(self.nmat[k])
-        mk = np.copy(self.mmat[k])
-        nl = np.copy(self.nmat[l])
-        ml = np.copy(self.mmat[l])
-        # Update displacement of mode k and l
-        alphak = np.copy(self.mean[k])
-        alphal = np.copy(self.mean[l])
-        self.mean[k] = ch * alphak + phase * sh * alphal
-        self.mean[l] = ch * alphal - np.conj(phase) * sh * alphak
-        # Update covariance matrix elements. Only the k and l columns and rows of nmat and mmat need to be updated.
-        # First update the (k,k), (k,l), (l,l), and (l,l) elements
-        self.nmat[k][k] = (
-            ch2 * nk[k] + phase * shch * nk[l] + shch * np.conj(phase) * nl[k] + sh2 * nl[l]
-        )
-        self.nmat[k][l] = (
-            -(shch * np.conj(phase) * nk[k])
-            + ch2 * nk[l]
-            - sh2 * np.conj(phase2) * nl[k]
-            + shch * np.conj(phase) * nl[l]
-        )
-        self.nmat[l][k] = np.conj(self.nmat[k][l])
-        self.nmat[l][l] = (
-            sh2 * nk[k] - phase * shch * nk[l] - shch * np.conj(phase) * nl[k] + ch2 * nl[l]
-        )
-
-        self.mmat[k][k] = ch2 * mk[k] + 2 * phase * shch * ml[k] + phase2 * sh2 * ml[l]
-        self.mmat[k][l] = (
-            -(shch * np.conj(phase) * mk[k]) + ch2 * ml[k] - sh2 * ml[k] + phase * shch * ml[l]
-        )
-        self.mmat[l][k] = self.mmat[k][l]
-        self.mmat[l][l] = (
-            sh2 * np.conj(phase2) * mk[k] - 2 * shch * np.conj(phase) * ml[k] + ch2 * ml[l]
-        )
-
-        # Update columns k and l
-        for i in np.delete(np.arange(self.nlen), (k, l)):
-            self.nmat[k][i] = ch * nk[i] + sh * np.conj(phase) * nl[i]
-            self.mmat[k][i] = ch * mk[i] + phase * sh * ml[i]
-            self.nmat[l][i] = -(phase * sh * nk[i]) + ch * nl[i]
-            self.mmat[l][i] = -(sh * np.conj(phase) * mk[i]) + ch * ml[i]
-
-        # Update rows k and l
-        self.nmat[:, k] = np.conj(self.nmat[k])
-        self.mmat[:, k] = self.mmat[k]
-        self.nmat[:, l] = np.conj(self.nmat[l])
-        self.mmat[:, l] = self.mmat[l]
+        # Cross-check with Gaussian backend.
+        bs = symp.expand(symp.beam_splitter(theta, phi), [k, l], self.nlen)
+        self.means = update_means(self.means, bs, self.from_xp)
+        self.covs = update_covs(self.covs, bs, self.from_xp)
 
     def scovmatxp(self):
         r"""Constructs and returns the symmetric ordered covariance matrix in the xp ordering.
@@ -254,62 +204,30 @@ class BosonicModes:
         Said permutation matrix is implemented in the function changebasis(n) where n is
         the number of modes.
         """
-        mm11 = (
-            self.nmat
-            + np.transpose(self.nmat)
-            + self.mmat
-            + np.conj(self.mmat)
-            + np.identity(self.nlen)
-        )
-        mm12 = 1j * (
-            -np.transpose(self.mmat)
-            + np.transpose(np.conj(self.mmat))
-            + np.transpose(self.nmat)
-            - self.nmat
-        )
-        mm22 = (
-            self.nmat
-            + np.transpose(self.nmat)
-            - self.mmat
-            - np.conj(self.mmat)
-            + np.identity(self.nlen)
-        )
-        return np.concatenate(
-            (
-                np.concatenate((mm11, mm12), axis=1),
-                np.concatenate((np.transpose(mm12), mm22), axis=1),
-            ),
-            axis=0,
-        ).real
+        return self.covs[:, self.perm_inds][..., self.prem_inds]
 
     def smeanxp(self):
-        r"""Constructs and returns the symmetric ordered vector of mean in the xp ordering.
+        r"""Return the symmetric-ordered vector of mean in the xp ordering.
 
         The order for the canonical operators is :math:`q_1, \ldots, q_n, p_1, \ldots, p_n`.
         This differs from the ordering used in [1] which is :math:`q_1, p_1, q_2, p_2, \ldots, q_n, p_n`.
         Note that one ordering can be obtained from the other by using a permutation matrix.
-
-        Said permutation matrix is implemented in the function changebasis(n) where n is
-        the number of modes.
         """
-        nmodes = self.nlen
-        r = np.empty(2 * nmodes)
-        r[0:nmodes] = 2 * self.mean.real
-        r[nmodes : 2 * nmodes] = 2 * self.mean.imag
-        return r
+        return self.means.T[self.perm_inds].T
 
     def scovmat(self):
-        """Constructs and returns the symmetric ordered covariance matrix as defined in [1]"""
-        rotmat = changebasis(self.nlen)
-        return np.dot(np.dot(rotmat, self.scovmatxp()), np.transpose(rotmat))
+        """Return the symmetric-ordered covariance matrix as defined in [1]"""
+        # rotmat = changebasis(self.nlen)
+        # return np.dot(np.dot(rotmat, self.scovmatxp()), np.transpose(rotmat))
+        return self.covs
 
     def smean(self):
-        r"""the symmetric mean $[q_1,p_1,q_2,p_2,...,q_n,p_n]$"""
-        r = np.empty(2 * self.nlen)
-        for i in range(self.nlen):
-            r[2 * i] = 2 * self.mean[i].real
-            r[2 * i + 1] = 2 * self.mean[i].imag
-        return r
+        r"""The symmetric mean $[q_1,p_1,q_2,p_2,...,q_n,p_n]$"""
+        return self.means
+
+    def sweights(self):
+        '''Returns the matrix of weights.'''
+        return self.weights
 
     def fromsmean(self, r, modes=None):
         r"""Populates the means from a provided vector of means with hbar=2 assumed.
@@ -330,7 +248,7 @@ class BosonicModes:
 
         Args:
             V (array): covariance matrix in symmetric ordering
-            modes (Sequence): sequence of modes corresponding to the covariance matrix
+            modes (sequence): sequence of modes corresponding to the covariance matrix
         """
         if modes is None:
             n = len(V) // 2
@@ -429,19 +347,14 @@ class BosonicModes:
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
         (energy loss amount T)"""
+
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
-        sqrtT = np.sqrt(T)
-        self.nmat[k] = sqrtT * self.nmat[k]
-        self.mmat[k] = sqrtT * self.mmat[k]
-
-        self.nmat[k][k] = sqrtT * self.nmat[k][k]
-        self.mmat[k][k] = sqrtT * self.mmat[k][k]
-
-        self.nmat[:, k] = np.conj(self.nmat[k])
-        self.mmat[:, k] = self.mmat[k]
-        self.mean[k] = sqrtT * self.mean[k]
+        X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
+        Y = symp.expand((1 - T) * np.identity(2), k, self.nlen)
+        self.means = update_means(self.means, X, self.from_xp)
+        self.covs = update_covs(self.covs, X, self.from_xp, Y)
 
     def thermal_loss(self, T, nbar, k):
         r"""Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
@@ -451,12 +364,13 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         self.loss(T, k)
-        self.nmat += (1 - T) * nbar
+        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][self.from_xp, :]
+        self.covs += Y
 
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
-        self.loss(0.0, mode)
-        self.nmat[mode][mode] = population
+        # self.loss(0.0, mode)
+        # self.nmat[mode][mode] = population
 
     def is_vacuum(self, tol=0.0):
         """ Checks if the state is vacuum by calculating its fidelity with vacuum """
@@ -470,84 +384,89 @@ class BosonicModes:
         Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129
         """
-        if covmat.shape != (2 * len(indices), 2 * len(indices)):
-            raise ValueError("Covariance matrix size does not match indices provided")
+        # if covmat.shape != (2 * len(indices), 2 * len(indices)):
+        #     raise ValueError("Covariance matrix size does not match indices provided")
 
-        for i in indices:
-            if self.active[i] is None:
-                raise ValueError("Cannot apply homodyne measurement, mode does not exist")
+        # for i in indices:
+        #     if self.active[i] is None:
+        #         raise ValueError("Cannot apply homodyne measurement, mode does not exist")
 
-        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        mp = self.scovmat()
-        (A, B, C) = ops.chop_in_blocks(mp, expind)
-        V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        V1 = ops.reassemble(V, expind)
-        self.fromscovmat(V1)
+        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+        # mp = self.scovmat()
+        # (A, B, C) = ops.chop_in_blocks(mp, expind)
+        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
+        # V1 = ops.reassemble(V, expind)
+        # self.fromscovmat(V1)
 
-        r = self.smean()
-        (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm = np.random.multivariate_normal(vc, C, size=shots)
-        # The next line is a hack in that it only updates conditioned on the first samples value
-        # should still work if shots = 1
-        va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm[0] - vc)
-        va = ops.reassemble_vector(va, expind)
-        self.fromsmean(va)
-        return vm
+        # r = self.smean()
+        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
+        # vm = np.random.multivariate_normal(vc, C, size=shots)
+        # # The next line is a hack in that it only updates conditioned on the first samples value
+        # # should still work if shots = 1
+        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm[0] - vc)
+        # va = ops.reassemble_vector(va, expind)
+        # self.fromsmean(va)
+        return
 
     def homodyne(self, n, shots=1, eps=0.0002):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
-        res = self.measure_dyne(covmat, [n], shots=shots)
-
-        return res
+        # covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
+        # res = self.measure_dyne(covmat, [n], shots=shots)
+        return
 
     def post_select_homodyne(self, n, val, eps=0.0002):
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
-        indices = [n]
-        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        mp = self.scovmat()
-        (A, B, C) = ops.chop_in_blocks(mp, expind)
-        V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        V1 = ops.reassemble(V, expind)
-        self.fromscovmat(V1)
+        # covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
+        # indices = [n]
+        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+        # mp = self.scovmat()
+        # (A, B, C) = ops.chop_in_blocks(mp, expind)
+        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
+        # V1 = ops.reassemble(V, expind)
+        # self.fromscovmat(V1)
 
-        r = self.smean()
-        (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm1 = np.random.normal(vc[1], np.sqrt(C[1][1]))
-        vm = np.array([val, vm1])
-        va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
-        va = ops.reassemble_vector(va, expind)
-        self.fromsmean(va)
-        return val
+        # r = self.smean()
+        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
+        # vm1 = np.random.normal(vc[1], np.sqrt(C[1][1]))
+        # vm = np.array([val, vm1])
+        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
+        # va = ops.reassemble_vector(va, expind)
+        # self.fromsmean(va)
+        return
 
     def post_select_heterodyne(self, n, alpha_val):
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """
         if self.active[n] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
-        covmat = np.identity(2)
-        indices = [n]
-        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        mp = self.scovmat()
-        (A, B, C) = ops.chop_in_blocks(mp, expind)
-        V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        V1 = ops.reassemble(V, expind)
-        self.fromscovmat(V1)
+        # covmat = np.identity(2)
+        # indices = [n]
+        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+        # mp = self.scovmat()
+        # (A, B, C) = ops.chop_in_blocks(mp, expind)
+        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
+        # V1 = ops.reassemble(V, expind)
+        # self.fromscovmat(V1)
 
-        r = self.smean()
-        (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm = 2.0 * np.array([np.real(alpha_val), np.imag(alpha_val)])
-        va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
-        va = ops.reassemble_vector(va, expind)
-        self.fromsmean(va)
-        return alpha_val
+        # r = self.smean()
+        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
+        # vm = 2.0 * np.array([np.real(alpha_val), np.imag(alpha_val)])
+        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
+        # va = ops.reassemble_vector(va, expind)
+        # self.fromsmean(va)
+        return
 
     def apply_u(self, U):
         """ Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j]"""
-        self.mean = np.dot(np.conj(U), self.mean)
-        self.nmat = np.dot(np.dot(U, self.nmat), np.conj(np.transpose(U)))
-        self.mmat = np.dot(np.dot(np.conj(U), self.mmat), np.conj(np.transpose(U)))
+        Us = symp.interferometer(U)
+        self.means = update_means(self.means, U, self.from_xp)
+        self.covs = update_covs(self.covs, U, self.from_xp)
+
+    def apply_channel(self, X, Y):
+        self.means = update_means(self.means, X, self.from_xp, Y)
+        self.covs = update_covs(self.covs, X, self.from_xp, Y)
+
+

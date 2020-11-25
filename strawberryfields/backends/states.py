@@ -1413,14 +1413,15 @@ class BaseBosonicState(BaseState):
     """
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, state_data, num_modes, mode_names=None):
+    def __init__(self, state_data, num_modes, num_weights, mode_names=None):
         super().__init__(num_modes, mode_names)
 
         self._data = state_data
-
+        self.num_weights = num_weights
         # vector of means and covariance matrix, using frontend x,p scaling
         self._mu = self._data[0] * np.sqrt(self._hbar / 2)
         self._cov = self._data[1] * (self._hbar / 2)
+        self._weights = self._data[2]
         # complex displacements of the Gaussian state
         self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
         self._alpha /= np.sqrt(2 * self._hbar)
@@ -1431,8 +1432,8 @@ class BaseBosonicState(BaseState):
         )
 
         self._basis = "gaussian"
-        self._str = "<BosonicState: num_modes={}, pure={}, hbar={}>".format(
-            self.num_modes, self._pure, self._hbar
+        self._str = "<BosonicState: num_modes={}, num_weights={}, pure={}, hbar={}>".format(
+            self.num_modes, self.num_weights, self._pure, self._hbar
         )
 
     def __eq__(self, other):
@@ -1498,6 +1499,9 @@ class BaseBosonicState(BaseState):
           array: the :math:`2N\times 2N` covariance matrix.
         """
         return self._cov
+
+    def weights(self):
+        return self._weights
 
     def reduced_gaussian(self, modes):
         r"""Returns the vector of means and the covariance matrix of the specified modes.

@@ -18,6 +18,7 @@ import warnings
 from numpy import (
     empty,
     concatenate,
+    arange,
     array,
     identity,
     arctan2,
@@ -27,8 +28,11 @@ from numpy import (
     zeros_like,
     allclose,
     ix_,
+    zeros,
+    shape
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
+import itertools as it
 
 from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
@@ -253,30 +257,45 @@ class BosonicBackend(BaseBosonic):
 
         return samples
 
-    def state(self, modes=None, **kwargs):
+    def state(self, modes=None, peaks=None, **kwargs):
         """Returns the state of the quantum simulation.
 
         See :meth:`.BaseBackend.state`.
 
         Returns:
-            GaussianState: state description
+            BosonicState: state description
         """
-        m = self.circuit.scovmat()
-        r = self.circuit.smean()
-
         if modes is None:
             modes = list(range(len(self.get_modes())))
 
+        w = self.circuit.weights
+
+        # Generate dictionary between tuples of the form (peek_0, ... peek_i)
+        # where the subscript denotes the mode, and the corresponding index
+        # in the cov object.
+        # if peaks is None:
+        #     peaks = tuple(zeros(len(modes)))
+        # g_list = [arange(len(w)) for i in range(len(modes))]
+        # combs = it.product(*g_list)
+        # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
+
+
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
-        covmat = empty((2 * len(modes), 2 * len(modes)))
-        means = r[listmodes]
+        covmat = self.circuit.covs
+        means = self.circuit.means
+        if shape(w)[1] == 1:
+            m = covmat[0]
+            r = means[0]
 
-        for i, ii in enumerate(listmodes):
-            for j, jj in enumerate(listmodes):
-                covmat[i, j] = m[ii, jj]
-
-        means *= sqrt(2 * self.circuit.hbar) / 2
-        covmat *= self.circuit.hbar / 2
-
+            covmat = empty((2 * len(modes), 2 * len(modes)))
+            means = r[listmodes]
+    
+            for i, ii in enumerate(listmodes):
+                for j, jj in enumerate(listmodes):
+                    covmat[i, j] = m[ii, jj]
+    
+            means *= sqrt(2 * self.circuit.hbar) / 2
+            covmat *= self.circuit.hbar / 2
+    
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        return BaseBosonicState((means, covmat), len(modes), mode_names=mode_names)
+        return BaseBosonicState((means, covmat, w), len(modes), shape(w)[1], mode_names=mode_names)
