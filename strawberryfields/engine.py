@@ -418,8 +418,12 @@ class LocalEngine(BaseEngine):
         # pylint: disable=import-outside-toplevel
         from strawberryfields.tdm.tdmprogram import reshape_samples
 
-        if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
+        if isinstance(program, collections.abc.Sequence) and any(p.type == "tdm" for p in program):
             # At this time we do not support lists of tdm programs
+            raise NotImplementedError(
+                "Lists of TDM programs are not currently supported"
+            )
+        if program.type == "tdm":
             shots = kwargs.get("shots", 1)
             program.unroll(shots=shots)
             # Shots >1 for a TDM program simply corresponds to creating
@@ -432,7 +436,7 @@ class LocalEngine(BaseEngine):
         temp_run_options = {}
 
         if isinstance(program, collections.abc.Sequence):
-            # succesively update all run option defaults.
+            # successively update all run option defaults.
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
@@ -478,8 +482,7 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if not isinstance(program, collections.abc.Sequence) and program.type == "tdm":
-            # At this time we do not support lists of tdm programs
+        if program.type == "tdm":
             result._all_samples = reshape_samples(
                 result.all_samples, program.measured_modes, program.N, program.timebins
             )

@@ -104,6 +104,21 @@ class TestTDMErrorRaising:
             eng = sf.Engine("gaussian")
             result = eng.run(prog, shots=shots)
 
+    def test_passing_list_of_tdmprograms(self):
+        prog = tdmprogram.TDMProgram(N=2)
+        with prog.context([1, 1], [1, 1], [1, 1]) as (p, q):
+            ops.Sgate(0, 0) | q[1]
+            ops.BSgate(p[0]) | (q[0], q[1])
+            ops.Rgate(p[1]) | q[1]
+            ops.MeasureHomodyne(p[2]) | q[0]
+
+        eng = sf.Engine("gaussian")
+
+        with pytest.raises(
+            NotImplementedError, match="Lists of TDM programs are not currently supported"
+        ):
+            result = eng.run([prog, prog])
+
 
 def test_shift_by_specified_amount():
     """Checks that shifting by 1 is equivalent to shift='end' for a program
