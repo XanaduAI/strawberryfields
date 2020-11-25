@@ -98,11 +98,11 @@ def input_check(args):
 
 
 def _get_mode_order(num_of_values, modes, N, timebins):
-    """Get the order by which the modes were measured
+    """Get the order in which the modes were measured.
 
     The mode order is determined by the circuit and the mode-shifting occurring in
     :class:`~.TDMProgram`. For the following circuit, the mode order returned by this
-    function would be [0, 2, 0, 1], duplicated shots number of times:
+    function would be ``[0, 2, 0, 1]``, duplicated shots number of times:
 
     >>> prog = sf.TDMProgram(N = [1, 2])
 
@@ -217,11 +217,11 @@ def reshape_samples(all_samples, modes, N, timebins):
 
 
 def move_vac_modes(samples, N, crop=False):
-    """Post-processing function for TDM samples. Moves all measured vacuum modes
-    from the first shot of the samples array to the end of the last shot.
+    """Moves all measured vacuum modes from the first shot of the
+    returned TDM samples array to the end of the last shot.
 
     Args:
-        samples (ndarray[float]): samples as received from ``TDMProgram``, with the
+        samples (array[float]): samples as received from ``TDMProgram``, with the
             measured vacuum modes in the first shot
         N (int or Sequence[int]): If an integer, the number of concurrent (or 'alive')
             modes in each time bin. Alternatively, a sequence of integers
@@ -233,8 +233,7 @@ def move_vac_modes(samples, N, crop=False):
             modes at the end
 
     Returns:
-        ndarray[float]: the post-processed samples
-
+        array[float]: the post-processed samples
     """
     num_of_vac_modes = np.max(N) - 1
     shape = samples.shape
@@ -414,7 +413,8 @@ class TDMProgram(sf.Program):
     # pylint: disable=too-many-branches
     def compile(self, *, device=None, compiler=None):
         """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
-        At this stage the compilation is simply a check that the program matches the device.
+        
+        Currently, the compilation is simply a check that the program matches the device.
 
         Args:
             device (~strawberryfields.api.DeviceSpec): device specification object to use for
