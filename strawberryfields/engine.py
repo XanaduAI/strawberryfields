@@ -420,9 +420,7 @@ class LocalEngine(BaseEngine):
 
         if isinstance(program, collections.abc.Sequence) and any(p.type == "tdm" for p in program):
             # At this time we do not support lists of tdm programs
-            raise NotImplementedError(
-                "Lists of TDM programs are not currently supported"
-            )
+            raise NotImplementedError("Lists of TDM programs are not currently supported")
         if program.type == "tdm":
             shots = kwargs.get("shots", 1)
             program.unroll(shots=shots)

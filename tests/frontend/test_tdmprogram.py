@@ -29,7 +29,7 @@ np.random.seed(42)
 
 
 def singleloop(r, alpha, phi, theta, shots, shift="default"):
-    """Single delay loop with program.
+    """Single-loop program.
 
     Args:
         r (float): squeezing parameter
@@ -502,7 +502,7 @@ def singleloop_program(r, alpha, phi, theta):
         phi (Sequence[float]): rotation angles
         theta (Sequence[float]): homodyne measurement angles
     Returns:
-        (list): homodyne samples from the single loop simulation
+        (array): homodyne samples from the single loop simulation
     """
     prog = tdmprogram.TDMProgram(N=2)
     with prog.context(alpha, phi, theta) as (p, q):
