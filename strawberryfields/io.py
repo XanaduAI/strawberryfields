@@ -183,11 +183,14 @@ def _to_tdm_program(bb):
 
     prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
 
+    def is_free_param(param):
+        return isinstance(param, str) and param[0] == "p" and param[1:].isdigit()
+
     # retrieve all the free parameters in the Blackbird program (e.g. "p0", "p1"
     # etc.) and add their corresponding values to args
     args = []
     for k in bb._var.keys():
-        if k[0] == "p" and k[1:].isdigit():
+        if is_free_param(k):
             v = bb._var[k].flatten()
             args.append(v)
 
@@ -214,10 +217,10 @@ def _to_tdm_program(bb):
                 kwargs = op["kwargs"]
 
                 for i, p in enumerate(args):
-                    if isinstance(p, str) and p[0] == "p" and p[1:].isdigit():
+                    if is_free_param(p):
                         args[i] = sfpar.FreeParameter(p)
                 for k, v in kwargs.items():
-                    if isinstance(v, str) and v[0] == "p" and v[1:].isdigit():
+                    if is_free_param(v):
                         kwargs[k] = sfpar.FreeParameter(v)
 
                 # Convert symbolic expressions in args/kwargs containing measured and free parameters to
