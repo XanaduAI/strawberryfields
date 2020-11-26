@@ -399,6 +399,7 @@ class LocalEngine(BaseEngine):
 
         return samples
 
+    # pylint:disable=too-many-branches
     def run(self, program, *, args=None, compile_options=None, **kwargs):
         """Execute quantum programs by sending them to the backend.
 
