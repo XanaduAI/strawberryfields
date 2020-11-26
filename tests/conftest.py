@@ -28,38 +28,41 @@ from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
 from strawberryfields.backends.fockbackend import FockBackend
 from strawberryfields.backends.gaussianbackend import GaussianBackend
+from strawberryfields.backends.bosonicbackend import BosonicBackend
 
-
-try:
-    import tensorflow as tf
-except (ImportError, ModuleNotFoundError) as e:
-    tf_available = False
-    tf_version = False
-else:
-    tf_available = True
-    tf_version = tf.__version__
+# try:
+#     import tensorflow as tf
+# except (ImportError, ModuleNotFoundError) as e:
+#     tf_available = False
+#     tf_version = False
+# else:
+#     tf_available = True
+#     tf_version = tf.__version__
 
 
 backend_params = [
     pytest.param(FockBackend, marks=pytest.mark.fock),
     pytest.param(GaussianBackend, marks=pytest.mark.gaussian),
+    pytest.param(BosonicBackend, marks=pytest.mark.bosonic)
 ]
 
 
 eng_backend_params = [
     pytest.param("fock", marks=pytest.mark.fock),
     pytest.param("gaussian", marks=pytest.mark.gaussian),
+    pytest.param("bosonic", marks=pytest.mark.bosonic)
 ]
 
 
-if tf_available and tf.__version__[:2] == "2.":
-    from strawberryfields.backends.tfbackend import TFBackend
+# if tf_available and tf.__version__[:2] == "2.":
+#     from strawberryfields.backends.tfbackend import TFBackend
 
-    backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
-    eng_backend_params.append(pytest.param("tf", marks=pytest.mark.tf))
-else:
-    tf_available = False
+#     backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
+#     eng_backend_params.append(pytest.param("tf", marks=pytest.mark.tf))
+# else:
+#     tf_available = False
 
+tf_available = False
 
 # defaults
 TOL = 1e-3
@@ -218,9 +221,9 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""
     if tf_available:
-        allowed_backends = {"gaussian", "tf", "fock"}
+        allowed_backends = {"gaussian", "tf", "fock", "bosonic"}
     else:
-        allowed_backends = {"gaussian", "fock"}
+        allowed_backends = {"gaussian", "fock", "bosonic"}
 
     # load the marker specifying what the backend is
     marks = {mark.name for mark in item.iter_markers() if mark.name in allowed_backends}
