@@ -598,7 +598,7 @@ class RemoteEngine:
 
         Returns:
             [strawberryfields.api.Result, None]: the job result if successful, and
-            ``None`` otherwise
+                ``None`` otherwise
         """
         job = self.run_async(
             program, compile_options=compile_options, recompile=recompile, **kwargs

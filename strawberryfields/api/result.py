@@ -118,7 +118,15 @@ class Result:
 
     def __repr__(self):
         """String representation."""
-        shots, modes = self.samples.shape
+        try:
+            shots, modes = self.samples.shape
+        except ValueError:
+            # if the samples has dim 3, then they're from a TDMProgram
+            shots, modes, timebins = self.samples.shape
+            return "<Result: spatial_modes={}, shots={}, timebins={} contains state={}>".format(
+                modes, shots, timebins, self._is_stateful
+            )
+
         return "<Result: num_modes={}, shots={}, contains state={}>".format(
             modes, shots, self._is_stateful
         )
