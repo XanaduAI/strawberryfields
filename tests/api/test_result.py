@@ -54,3 +54,14 @@ class TestResult:
         assert "modes=2" in out
         assert "shots=3" in out
         assert "contains state=True" in out
+
+    def test_tdm_print(self, capfd):
+        """Test that printing a result object with TDM samples provides the correct output."""
+        samples = np.ones((2, 3, 4))
+        result = Result(samples)
+        print(result)
+        out, err = capfd.readouterr()
+        assert "spatial_modes=3" in out
+        assert "shots=2" in out
+        assert "timebins=4" in out
+        assert "contains state=True" in out
