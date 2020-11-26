@@ -2,17 +2,61 @@
 
 <h3>New features since last release</h3>
 
+* `TDMProgram` objects can now be compiled and submitted via the API.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
+
 <h3>Improvements</h3>
+
+* The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
+  copies of a TDM algorithm can now be set by passing the `shots` keyword argument to
+  the `eng.run()` method.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+  ```pycon
+  >>> with prog.context([1, 2], [3, 4]) as (p, q):
+  ...     ops.Sgate(0.7, 0) | q[1]
+  ...     ops.BSgate(p[0]) | (q[0], q[1])
+  ...     ops.MeasureHomodyne(p[1]) | q[0]
+  >>> eng = sf.Engine("gaussian")
+  >>> results = eng.run(prog, shots=3)
+  ```
+
+  Furthermore, the `TDMProgram.unrolled_circuit` attribute now only contains the single-shot
+  unrolled circuit. Unrolling with multiple shots can still be specified via the `unroll` method:
+  `TDMProgram.unroll(shots=60)`.
+
+* The `Result.samples` returned by TDM programs has been updated to return
+  samples of shape `(shots, spatial modes, timebins)` instead of `(shots, spatial
+  modes * timebins)`.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* A sample post-processing function is added that allows users to move
+  vacuum mode measurements from the first shots to the last shots, and
+  potentially crop out the final shots containing these measurements.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* `TDMProgram` objects can now be serialized into Blackbird scripts, and vice versa.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
 <h3>Breaking changes</h3>
 
 <h3>Bug fixes</h3>
+
+* Fixed issue with `reshape_samples` where the samples were sometimes
+  reshaped in the wrong way.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* The list of modes is now correctly added to the Blackbird program when using the
+  `io.to_blackbird` function.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
 
 # Release 0.16.0 (current release)
 
