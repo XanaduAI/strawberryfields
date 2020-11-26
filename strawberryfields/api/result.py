@@ -44,9 +44,7 @@ class Result:
     >>> eng = sf.Engine("gaussian")
     >>> results = eng.run(prog)
     >>> print(results)
-    Result: 3 subsystems
-        state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [[0, 0, 0]]
+    <Result: shots=1, num_modes=3, contains state=True>
     >>> results.samples
     np.array([[0, 0, 0]])
     >>> results.state.is_pure()
@@ -123,10 +121,10 @@ class Result:
         except ValueError:
             # if the samples has dim 3, then they're from a TDMProgram
             shots, modes, timebins = self.samples.shape
-            return "<Result: spatial_modes={}, shots={}, timebins={} contains state={}>".format(
-                modes, shots, timebins, self._is_stateful
+            return "<Result: shots={}, spatial_modes={}, timebins={} contains state={}>".format(
+                shots, modes, timebins, self._is_stateful
             )
 
-        return "<Result: num_modes={}, shots={}, contains state={}>".format(
-            modes, shots, self._is_stateful
+        return "<Result: shots={}, num_modes={}, contains state={}>".format(
+            shots, modes, self._is_stateful
         )
