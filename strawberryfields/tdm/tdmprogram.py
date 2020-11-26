@@ -628,9 +628,10 @@ class TDMProgram(sf.Program):
         """Apply a particular operation on register q at timestep t"""
         params = cmd.op.p.copy()
 
-        if par_is_symbolic(params[0]):
-            arg_index = int(params[0].name[1:])
-            params[0] = self.tdm_params[arg_index][t % self.timebins]
+        for i in range(len(params)):
+            if par_is_symbolic(params[i]):
+                arg_index = int(params[i].name[1:])
+                params[i] = self.tdm_params[arg_index][t % self.timebins]
 
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
 
