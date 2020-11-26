@@ -50,6 +50,10 @@
   `io.to_blackbird` function.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
+* Printing the `Result` object containing samples from a TDM experiment (with shape
+  `(shots, spatial_modes, timebins)`) works.
+  [(#493)](https://github.com/XanaduAI/strawberryfields/pull/493)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
