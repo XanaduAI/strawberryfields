@@ -480,7 +480,7 @@ class TDMProgram(sf.Program):
                                 "due to incompatible parameter.".format(device.target)
                             )
                 # Now we will check explicitly if the parameters in the program match
-                num_symbolic_param = 0  # counts the number of symbolic variables, which are labeled consecutively by the context method
+                num_symbolic_param = 0  # counts the number of symbolic variables, which are labelled consecutively by the context method
 
                 for k, param_name in enumerate(param_names):
                     # Obtain the value of the corresponding parameter in the program
