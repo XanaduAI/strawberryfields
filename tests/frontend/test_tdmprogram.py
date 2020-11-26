@@ -105,6 +105,7 @@ class TestTDMErrorRaising:
             result = eng.run(prog, shots=shots)
 
     def test_passing_list_of_tdmprograms(self):
+        """Test that error is raised when passing a list containing TDM programs"""
         prog = tdmprogram.TDMProgram(N=2)
         with prog.context([1, 1], [1, 1], [1, 1]) as (p, q):
             ops.Sgate(0, 0) | q[1]

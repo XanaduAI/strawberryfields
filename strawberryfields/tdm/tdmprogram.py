@@ -491,7 +491,7 @@ class TDMProgram(sf.Program):
                         if not program_param == param_name:
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
-                                "due to incompatible parameter. Parameter has value '{}'"
+                                "due to incompatible parameter. Parameter has value '{}' "
                                 "while its valid value is '{}'".format(
                                     device.target, program_param, param_name
                                 )
@@ -508,7 +508,7 @@ class TDMProgram(sf.Program):
                             if not x in param_range:
                                 raise CircuitError(
                                     "Program cannot be used with the device '{}' "
-                                    "due to incompatible parameter. Parameter has value '{}'"
+                                    "due to incompatible parameter. Parameter has value '{}' "
                                     "while its valid range is '{}'".format(
                                         device.target, x, param_range
                                     )
@@ -520,7 +520,7 @@ class TDMProgram(sf.Program):
                         if not program_param in param_range:
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
-                                "due to incompatible parameter. Parameter has value '{}'"
+                                "due to incompatible parameter. Parameter has value '{}' "
                                 "while its valid range is '{}'".format(
                                     device.target, program_param, param_range
                                 )
