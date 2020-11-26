@@ -119,7 +119,7 @@ class Result:
         try:
             shots, modes = self.samples.shape
         except ValueError:
-            # if the samples has dim 3, then they're from a TDMProgram
+            # if samples has dim 3, then we assume they're from a TDMProgram
             shots, modes, timebins = self.samples.shape
             return "<Result: shots={}, spatial_modes={}, timebins={} contains state={}>".format(
                 shots, modes, timebins, self._is_stateful
