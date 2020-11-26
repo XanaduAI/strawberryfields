@@ -24,8 +24,6 @@ from strawberryfields.api.devicespec import DeviceSpec
 
 pytestmark = pytest.mark.frontend
 
-pytestmark = pytest.mark.frontend
-
 # make test deterministic
 np.random.seed(42)
 
