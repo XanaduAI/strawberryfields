@@ -86,7 +86,7 @@ class Result:
 
         Returns:
             dict[int, list]: mode index associated with the list of
-                measurement outcomes
+            measurement outcomes
         """
         return self._all_samples
 
@@ -116,15 +116,18 @@ class Result:
 
     def __repr__(self):
         """String representation."""
-        try:
+        if self.samples.ndim == 2:
+            # if samples has dim 2, assume they're GBS
             shots, modes = self.samples.shape
-        except ValueError:
-            # if samples has dim 3, then we assume they're from a TDMProgram
+            return "<Result: shots={}, num_modes={}, contains state={}>".format(
+                shots, modes, self._is_stateful
+            )
+
+        if self.samples.ndim == 3:
+            # if samples has dim 3, assume they're TDM
             shots, modes, timebins = self.samples.shape
-            return "<Result: shots={}, spatial_modes={}, timebins={} contains state={}>".format(
+            return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
                 shots, modes, timebins, self._is_stateful
             )
 
-        return "<Result: shots={}, num_modes={}, contains state={}>".format(
-            shots, modes, self._is_stateful
-        )
+        return "<Result: contains state={}>".format(self._is_stateful)
