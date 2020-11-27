@@ -1419,17 +1419,18 @@ class BaseBosonicState(BaseState):
         self._data = state_data
         self.num_weights = num_weights
         # vector of means and covariance matrix, using frontend x,p scaling
-        self._mu = self._data[0] * np.sqrt(self._hbar / 2)
-        self._cov = self._data[1] * (self._hbar / 2)
-        self._weights = self._data[2]
-        # complex displacements of the Gaussian state
-        self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
-        self._alpha /= np.sqrt(2 * self._hbar)
-
-        self._pure = (
-            np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
-            < self.EQ_TOLERANCE
-        )
+        if num_weights == 1:
+            self._mu = self._data[0] * np.sqrt(self._hbar / 2)
+            self._cov = self._data[1] * (self._hbar / 2)
+            self._weights = self._data[2]
+            # complex displacements of the Gaussian state
+            self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
+            self._alpha /= np.sqrt(2 * self._hbar)
+    
+            self._pure = (
+                np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
+                < self.EQ_TOLERANCE
+            )
 
         self._basis = "gaussian"
         self._str = "<BosonicState: num_modes={}, num_weights={}, pure={}, hbar={}>".format(

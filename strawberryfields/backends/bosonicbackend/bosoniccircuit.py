@@ -24,15 +24,15 @@ from ..shared_ops import changebasis
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(nmodes, ngauss):
-    return (nmodes, ngauss)
+    return (ngauss ** nmodes)
 
 
 def m_shape(nmodes, ngauss):
-    return (nmodes**ngauss, 2*nmodes)
+    return (ngauss ** nmodes, 2 * nmodes)
 
 
 def c_shape(nmodes, ngauss):
-    return (ngauss**nmodes, 2*nmodes, 2*nmodes)
+    return (ngauss ** nmodes, 2 * nmodes, 2 * nmodes)
 
 
 def to_xp(n):
@@ -146,7 +146,9 @@ class BosonicModes:
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
 
-        self.weights = np.zeros(w_shape(self.nlen, self._trunc), dtype=complex)
+        self.weights = np.ones(w_shape(self.nlen, self._trunc), dtype=complex)
+        self.weights = self.weights / np.sum(self.weights)
+
         self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
         id_covs = [np.identity(2*self.nlen, dtype=complex)
                    for i in range(self._trunc ** self.nlen)]

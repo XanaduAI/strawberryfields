@@ -283,7 +283,7 @@ class BosonicBackend(BaseBosonic):
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
         covmat = self.circuit.covs
         means = self.circuit.means
-        if shape(w)[1] == 1:
+        if len(w) == 1:
             m = covmat[0]
             r = means[0]
 
@@ -298,4 +298,5 @@ class BosonicBackend(BaseBosonic):
             covmat *= self.circuit.hbar / 2
     
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        return BaseBosonicState((means, covmat, w), len(modes), shape(w)[1], mode_names=mode_names)
+        num_w = int(len(w) ** (1/len(modes)))
+        return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)
