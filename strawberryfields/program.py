@@ -55,6 +55,8 @@ import warnings
 import blackbird as bb
 from blackbird.utils import match_template
 import networkx as nx
+import numpy as np
+import plotly.io as pio
 
 import strawberryfields as sf
 
@@ -64,6 +66,7 @@ import strawberryfields.program_utils as pu
 
 from .program_utils import Command, RegRef, CircuitError, RegRefError
 from .parameters import FreeParameter, ParameterError
+from .post_processing import generate_wigner_chart
 
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
@@ -728,3 +731,12 @@ class Program:
                 k.val = v
             else:
                 raise ParameterError("Unknown free parameter '{}'".format(k))
+
+    def plot_wigner(self, state, qmin, qmax, qbit=0, dq=0.1):
+        """TODO"""
+        q = np.arange(qmin, qmax, dq)
+        pio.renderers.default = 'browser'
+
+        data = state.wigner(qbit, q, q)
+        new_chart = generate_wigner_chart(data, q)
+        pio.show(new_chart)
