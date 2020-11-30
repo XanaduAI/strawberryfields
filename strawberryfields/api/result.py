@@ -117,7 +117,7 @@ class Result:
     def __repr__(self):
         """String representation."""
         if self.samples.ndim == 2:
-            # if samples has dim 2, assume they're GBS
+            # if samples has dim 2, assume they're from a standard Program
             shots, modes = self.samples.shape
             return "<Result: shots={}, num_modes={}, contains state={}>".format(
                 shots, modes, self._is_stateful
