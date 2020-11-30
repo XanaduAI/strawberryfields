@@ -54,3 +54,29 @@ class TestResult:
         assert "modes=2" in out
         assert "shots=3" in out
         assert "contains state=True" in out
+
+    @pytest.mark.parametrize("stateful", [True, False])
+    def test_tdm_print(self, stateful, capfd):
+        """Test that printing a result object with TDM samples provides the correct output."""
+        samples = np.ones((2, 3, 4))
+        result = Result(samples, is_stateful=stateful)
+        print(result)
+        out, err = capfd.readouterr()
+        assert "spatial_modes=3" in out
+        assert "shots=2" in out
+        assert "timebins=4" in out
+        assert f"contains state={stateful}" in out
+
+    @pytest.mark.parametrize("stateful", [True, False])
+    def test_unkown_shape_print(self, stateful, capfd):
+        """Test that printing a result object with samples with an unknown shape
+        provides the correct output."""
+        samples = np.ones((2, 3, 4, 5))
+        result = Result(samples, is_stateful=stateful)
+        print(result)
+        out, err = capfd.readouterr()
+        assert "modes" not in out
+        assert "shots" not in out
+        assert "timebins" not in out
+        assert f"contains state={stateful}" in out
+

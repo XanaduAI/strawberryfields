@@ -597,8 +597,7 @@ class RemoteEngine:
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
-            [strawberryfields.api.Result, None]: the job result if successful, and
-            ``None`` otherwise
+            strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
         """
         job = self.run_async(
             program, compile_options=compile_options, recompile=recompile, **kwargs

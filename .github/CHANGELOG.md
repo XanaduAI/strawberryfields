@@ -50,6 +50,11 @@
   `io.to_blackbird` function.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
+* Fixes a bug where printing the `Result` object containing samples from a time-domain
+  experiment would result in an error. Printing the result object now correctly displays
+  information about the results.
+  [(#493)](https://github.com/XanaduAI/strawberryfields/pull/493)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
