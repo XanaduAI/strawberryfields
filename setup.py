@@ -26,7 +26,7 @@ requirements = [
     "scipy>=1.0.0",
     "sympy>=1.5",
     "networkx>=2.0",
-    "quantum-blackbird>=0.2.3",
+    "quantum-blackbird>=0.3.0",
     "python-dateutil>=2.8.0",
     "thewalrus>=0.14.0",
     "numba",
