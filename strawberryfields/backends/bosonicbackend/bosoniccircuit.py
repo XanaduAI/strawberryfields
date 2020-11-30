@@ -94,22 +94,28 @@ class BosonicModes:
 
     def add_mode(self, n=1):
         """Add n modes to the circuit."""
+        self.nlen += n
 
-        # self.nlen += n
+        # Updated mode index permutation list
+        self.to_xp = to_xp(self.nlen)
+        self.from_xp = from_xp(self.nlen)
 
-        # # Updated mode index permutation list
-        # self.to_xp = to_xp(self.nlen)
-        # self.from_xp = from_xp(self.nlen)
+        new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
+        new_weights[:self._trunc ** self.nlen] = self.weights
+        self.weights = new_weights
 
-        # # Revisit if concatenate is too slow - alternatively create full-size
-        # # array first and then populate. Note the data type of the original
-        # # array should be preseved here.
-        # self.weights = np.concatenate(self.weights, np.zeros(w_shape(n, self._trunc)))
-        # self.means = np.concatenate(self.means, np.zeros(m_shape(n, self._trunc)))
-        # new_covs = [np.identity(2 * self.nlen) for i in range(self._trunc ** n)]
-        # self.covs = np.concatenate(self.covs, new_covs)
-        # self.active = np.concatenate(self.active, np.arange(self.n))
-        pass
+        rows = np.arange(self._trunc ** self.nlen)
+        cols = np.arange(2 * self.nlen)
+
+        new_means = np.zeros(m_shape(self.nlen, self._trunc))
+        new_means[np.ix_(rows, cols)] = self.means
+        self.means = new_means
+
+        id_covs = [np.identity(2 * self.nlen, dtype=complex)
+                    for i in range(self._trunc ** self.nlen)]
+        new_covs = np.array(id_covs)
+        new_covs[np.ix_(rows, cols, cols)] = self.covs
+        self.covs = new_covs
 
     def del_mode(self, modes):
         """Delete modes modes from the circuit."""
@@ -148,7 +154,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
 
         self.weights = np.ones(w_shape(self.nlen, self._trunc), dtype=complex)
-        self.weights = self.weights / np.sum(self.weights)
+        self.weights = self.weights / (self._trunc ** self.nlen)
 
         self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
         id_covs = [np.identity(2*self.nlen, dtype=complex)
@@ -471,5 +477,3 @@ class BosonicModes:
     def apply_channel(self, X, Y):
         self.means = update_means(self.means, X, self.from_xp, Y)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
-
-
