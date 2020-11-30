@@ -95,20 +95,21 @@ class BosonicModes:
     def add_mode(self, n=1):
         """Add n modes to the circuit."""
 
-        self.nlen += n
+        # self.nlen += n
 
-        # Updated mode index permutation list
-        self.to_xp = to_xp(self.nlen)
-        self.from_xp = from_xp(self.nlen)
+        # # Updated mode index permutation list
+        # self.to_xp = to_xp(self.nlen)
+        # self.from_xp = from_xp(self.nlen)
 
-        # Revisit if concatenate is too slow - alternatively create full-size
-        # array first and then populate. Note the data type of the original
-        # array should be preseved here.
-        self.weights = np.concatenate(self.weights, np.zeros(w_shape(n, self._trunc)))
-        self.means = np.concatenate(self.means, np.zeros(m_shape(n, self._trunc)))
-        new_covs = [np.identity(2 * self.nlen) for i in range(self._trunc ** n)]
-        self.covs = np.concatenate(self.covs, new_covs)
-        self.active = np.concatenate(self.active, np.arange(self.n))
+        # # Revisit if concatenate is too slow - alternatively create full-size
+        # # array first and then populate. Note the data type of the original
+        # # array should be preseved here.
+        # self.weights = np.concatenate(self.weights, np.zeros(w_shape(n, self._trunc)))
+        # self.means = np.concatenate(self.means, np.zeros(m_shape(n, self._trunc)))
+        # new_covs = [np.identity(2 * self.nlen) for i in range(self._trunc ** n)]
+        # self.covs = np.concatenate(self.covs, new_covs)
+        # self.active = np.concatenate(self.active, np.arange(self.n))
+        pass
 
     def del_mode(self, modes):
         """Delete modes modes from the circuit."""
@@ -464,8 +465,8 @@ class BosonicModes:
     def apply_u(self, U):
         """ Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j]"""
         Us = symp.interferometer(U)
-        self.means = update_means(self.means, U, self.from_xp)
-        self.covs = update_covs(self.covs, U, self.from_xp)
+        self.means = update_means(self.means, Us, self.from_xp)
+        self.covs = update_covs(self.covs, Us, self.from_xp)
 
     def apply_channel(self, X, Y):
         self.means = update_means(self.means, X, self.from_xp, Y)
