@@ -316,6 +316,11 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
+    def __new__(cls, backend, *, backend_options=None):
+        if backend == "bosonic":
+            return BosonicEngine.__new__(BosonicEngine, backend, backend_options=backend_options)
+
+        return cls.__new__(cls, backend, backend_options=backend_options)
 
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
@@ -703,3 +708,72 @@ class Engine(LocalEngine):
 
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__
+
+
+
+class BosonicEngine(LocalEngine):
+    def _init_backend(self, init_num_subsystems):
+        self.backend.begin_circuit(init_num_subsystems, **self.backend_options)
+
+    def _run_program(self, prog, **kwargs):
+        applied = []
+        samples_dict = {}
+        all_samples = {}
+        batches = self.backend_options.get("batch_size", 0)
+
+        # Custom Bosonic run code
+        samples = self.backend.run_prog(prog)
+
+        return applied, samples, all_samples
+
+    def run(self, program, *, args=None, compile_options=None, **kwargs):
+        # pylint: disable=import-outside-toplevel
+        args = args or {}
+        compile_options = compile_options or {}
+        temp_run_options = {}
+
+        temp_run_options.update(kwargs or {})
+        temp_run_options.setdefault("shots", 1)
+        temp_run_options.setdefault("modes", None)
+
+        # avoid unexpected keys being sent to Operations
+        eng_run_keys = ["eval", "session", "feed_dict", "shots"]
+        eng_run_options = {
+            key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
+        }
+
+        # check that post-selection and feed-forwarding is not used together with shots > 1
+        for p in program_lst:
+            for c in p.circuit:
+                try:
+                    if c.op.select and eng_run_options["shots"] > 1:
+                        raise NotImplementedError(
+                            "Post-selection cannot be used together with multiple shots."
+                        )
+                except AttributeError:
+                    pass
+
+                if c.op.measurement_deps and eng_run_options["shots"] > 1:
+                    raise NotImplementedError(
+                        "Feed-forwarding of measurements cannot be used together with multiple shots."
+                    )
+
+        result = super()._run(
+            program, args=args, compile_options=compile_options, **eng_run_options
+        )
+
+        if isinstance(program, TDMProgram):
+            result._all_samples = reshape_samples(
+                result.all_samples, program.measured_modes, program.N
+            )
+            result._samples = np.array(list(result.all_samples.values()))
+
+        modes = temp_run_options["modes"]
+
+        if modes is None or modes:
+            # state object requested
+            # session and feed_dict are needed by TF backend both during simulation (if program
+            # contains measurements) and state object construction.
+            result._state = self.backend.state(**temp_run_options)
+
+        return result
