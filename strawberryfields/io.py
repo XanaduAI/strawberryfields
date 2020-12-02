@@ -272,7 +272,7 @@ def serialize_program(prog, eng=None):
 
         operations.append(op)
 
-    code_seq.append("from strawberryfields.ops import " +", ".join(op_imports) + "\n")
+    code_seq.append("from strawberryfields.ops import " + ", ".join(op_imports) + "\n")
 
     if prog.type == "tdm":
         code_seq.append(f"prog = sf.TDMProgram(N={prog.N})")
@@ -293,9 +293,7 @@ def serialize_program(prog, eng=None):
 
     if prog.type == "tdm":
         tdm_params = [f"{par}" for par in prog.tdm_params]
-        code_seq.append(
-            "with prog.context(" + ", ".join(tdm_params) + ") as (p, q):"
-        )
+        code_seq.append("with prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
     else:
         code_seq.append("with prog.context as q:")
 
