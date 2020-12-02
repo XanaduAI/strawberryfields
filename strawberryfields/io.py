@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module contains functions for loading and saving Strawberry
-Fields :class:`~.Program` objects from/to Blackbird scripts.
+This module contains functions for loading and saving Strawberry Fields
+:class:`~.Program` objects from/to Blackbird scripts and Strawberry Fields
+code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
@@ -242,6 +243,68 @@ def _to_tdm_program(bb):
         prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
 
     return prog
+
+
+def serialize_program(prog, eng=None):
+    """Converts a Strawberry Fields program into valid Strawberry Fields code.
+
+    Args:
+        prog (Program): the Strawberry Fields program
+        eng (Engine): the Strawberryfields engine
+
+    Returns:
+        str: the Strawberry Fields code, for constructing the program, as a string
+    """
+    code_seq = ["import strawberryfields as sf"]
+
+    operations = []
+    op_imports = []
+    for cmd in prog.circuit:
+        op_name = cmd.op.__class__.__name__
+        if op_name not in op_imports:
+            op_imports.append(op_name)
+
+        if prog.type == "tdm":
+            format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
+            op = cmd.__str__().format(**format_dict)
+        else:
+            op = cmd.__str__()
+
+        operations.append(op)
+
+    code_seq.append("from strawberryfields.ops import " +", ".join(op_imports) + "\n")
+
+    if prog.type == "tdm":
+        code_seq.append(f"prog = sf.TDMProgram(N={prog.N})")
+    else:
+        code_seq.append(f"prog = sf.Program({prog.num_subsystems})")
+
+    if eng:
+        eng_type = eng.__class__.__name__
+        if eng_type == "RemoteEngine":
+            code_seq.append(f"eng = sf.RemoteEngine({eng.target})")
+        else:
+            if eng.backend_options:
+                code_seq.append(
+                    f"eng = sf.Engine({eng.backend_name}, backend_options={eng.backend_options})\n"
+                )
+            else:
+                code_seq.append(f"eng = sf.Engine({eng.backend_name})\n")
+
+    if prog.type == "tdm":
+        tdm_params = [f"{par}" for par in prog.tdm_params]
+        code_seq.append(
+            "with prog.context(" + ", ".join(tdm_params) + ") as (p, q):"
+        )
+    else:
+        code_seq.append("with prog.context as q:")
+
+    code_seq.append("    " + "\n    ".join(operations) + "\n")
+
+    if eng:
+        code_seq.append(f"results = eng.run()")
+
+    return "\n".join(code_seq)
 
 
 def save(f, prog):
