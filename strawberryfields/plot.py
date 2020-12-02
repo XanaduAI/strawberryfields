@@ -18,31 +18,48 @@ ways using Plot.ly
 from copy import deepcopy
 
 import numpy as np
-import plotly.io as pio
+
+plotly_error = (
+    "Plot.ly required for using this function. It can be installed using pip install "
+    "plotly or visiting https://plot.ly/python/getting-started/#installation"
+)
+
+try:
+    import plotly.io as pio
+except ImportError as e:
+    raise(plotly_error) from e
 
 
-def plot_wigner(state, renderer="browser", wire=0, dq=0.1):
+def plot_wigner(state, p_axis, q_axis, renderer="browser", wire=0, dq=0.1):
     """Plot the Wigner function with Plot.ly
 
     Args:
         state (:class:`.BaseState`): the state used for plotting
+        p_axis (int): Range of the discretized :math:`p` quadrature values.
+            E.g., ranging from ``-p_axis`` to ``p_axis``.
+        q_axis (int): Range of the discretized :math:`x` quadrature values.
+            E.g., ranging from ``-q_axis`` to ``q_axis``.
         renderer (string): the renderer for plotting with Plot.ly
         wire (int): wire used to calculate the reduced Wigner function
-        dq (float): stepsize along the q and p axes
+        dq (float): stepsize along the p_axis and q_axis
     """
-    q = np.arange(-state.cutoff_dim, state.cutoff_dim, dq)
+    xvec = np.arange(-q_axis, q_axis, dq)
+    pvec = np.arange(-p_axis, p_axis, dq)
     pio.renderers.default = renderer
 
-    data = state.wigner(wire, q, q)
-    new_chart = generate_wigner_chart(data, q)
+    data = state.wigner(wire, xvec, pvec)
+    new_chart = generate_wigner_chart(data, xvec, pvec)
     pio.show(new_chart)
 
 
-def generate_wigner_chart(data, qp):
+def generate_wigner_chart(data, xvec, pvec):
     """Populates a chart dictionary with reduced Wigner function surface plot data.
 
     Args:
-        qp (tuple[float]): minimum and maximum values of the q and p axes
+        data (array): 2D array of size [len(xvec), len(pvec)], containing reduced
+            Wigner function values for specified x and p values.
+        xvec (array): array of discretized :math:`x` quadrature values
+        pvec (array): array of discretized :math:`p` quadrature values
 
     Returns:
         dict: a Plot.ly JSON-format surface plot
@@ -59,8 +76,8 @@ def generate_wigner_chart(data, qp):
     }
     chart["data"] = deepcopy(surfaceplotDefault["data"])
 
-    chart["data"][0]["x"] = qp.tolist()
-    chart["data"][0]["y"] = qp.tolist()
+    chart["data"][0]["x"] = xvec.tolist()
+    chart["data"][0]["y"] = pvec.tolist()
     chart["data"][0]["z"] = data.tolist()
 
     chart["data"][0]["cmin"] = -1 / np.pi
