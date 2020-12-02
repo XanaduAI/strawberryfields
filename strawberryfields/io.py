@@ -300,7 +300,7 @@ def serialize_program(prog, eng=None):
     code_seq.append("    " + "\n    ".join(operations) + "\n")
 
     if eng:
-        code_seq.append(f"results = eng.run()")
+        code_seq.append("results = eng.run()")
 
     return "\n".join(code_seq)
 
