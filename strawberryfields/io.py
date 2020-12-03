@@ -245,7 +245,7 @@ def _to_tdm_program(bb):
     return prog
 
 
-def serialize_program(prog, eng=None):
+def generate_code(prog, eng=None):
     """Converts a Strawberry Fields program into valid Strawberry Fields code.
 
     Args:
@@ -300,7 +300,7 @@ def serialize_program(prog, eng=None):
     code_seq.append("    " + "\n    ".join(operations) + "\n")
 
     if eng:
-        code_seq.append("results = eng.run()")
+        code_seq.append("results = eng.run(prog, shots=1)")
 
     return "\n".join(code_seq)
 
