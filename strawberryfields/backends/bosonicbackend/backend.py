@@ -80,23 +80,79 @@ class BosonicBackend(BaseBosonic):
         self.circuit.reset(self._init_modes)
 
     def prepare_thermal_state(self, nbar, mode):
-        self.circuit.init_thermal(nbar, mode)
+        # self.circuit.init_thermal(nbar, mode)
 
     def prepare_vacuum_state(self, mode):
-        self.circuit.loss(0.0, mode)
+        # self.circuit.loss(0.0, mode)
 
     def prepare_coherent_state(self, r, phi, mode):
-        self.circuit.loss(0.0, mode)
-        self.circuit.displace(r, phi, mode)
+        # self.circuit.loss(0.0, mode)
+        # self.circuit.displace(r, phi, mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
-        self.circuit.loss(0.0, mode)
-        self.circuit.squeeze(r, phi, mode)
+        # self.circuit.loss(0.0, mode)
+        # self.circuit.squeeze(r, phi, mode)
 
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
-        self.circuit.loss(0.0, mode)
-        self.circuit.squeeze(r_s, phi_s, mode)
-        self.circuit.displace(r_d, phi_d, mode)
+        # self.circuit.loss(0.0, mode)
+        # self.circuit.squeeze(r_s, phi_s, mode)
+        # self.circuit.displace(r_d, phi_d, mode)
+
+    def prepare_cat(self, alpha, phi, desc):
+        """ Prepares the arrays of weights, means and covs for a cat state"""
+        if desc == "complex":
+            norm = np.exp(- np.absolute(alpha)**2) / (2*(1 + np.exp(- 2*np.absolute(alpha)**2) * np.cos(phi)))
+            cplx_coef = np.exp(-2*np.absolute(alpha)**2-1j*phi)
+            rplus = np.sqrt(2*self.hbar)*np.array([alpha.real, alpha.imag])
+            rminus = -replus
+            rcomplex = np.sqrt(2*self.hbar)*np.array([1j*alpha.imag, -1j*alpha.real])
+            cov = 0.5*self.hbar*(np.identity(2))
+
+            ## To be completed here
+
+        else if desc == "real":
+            raise ValueError("Only the complex description of Cat state has been implemented")      
+
+    def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
+        """ Prepares the arrays of weights, means and covs for a gkp state """
+        
+        theta, phi = state[0], state[1]
+
+        if shape == "square":
+            def coef(l, m):
+                if l % 2 == 0  and m % 2 == 0 :
+                    c = np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
+                else if l % 4 == 0  and m % 2 == 1 :
+                    c = np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
+                else if l % 4 == 2 and m % 2 == 1 :
+                    c = np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
+                else if m % 4 == 0 and l % 4 % 2 == 1 :
+                    c = np.sin( theta ) * np.cos( phi )
+                else if m % 4 == 2 and l % 4 % 2 == 1 :
+                    c = - np.sin( theta ) * np.cos ( phi )
+                else if ( l % 4 == 3 and m % 4 == 3 ) or ( l % 4 == 1 and m % 4 == 1 ):
+                    c = - np.sin( theta ) * np.sin( phi )
+                else if ( l % 4 == 3 and m % 4 == 1) or ( l % 4 == 1 and m % 4 == 3 ):
+                    c = np.sin( theta ) * np.sin( phi )
+                return c / (4*np.sqrt(np.pi))
+
+            if desc == "real":
+
+
+        ### To be completed here
+
+    def prepare_fock(self, n, r=0.0001):
+        """ Prepares the arrays of weights, means and covs of a Fock state"""
+
+        pass
+
+        ## To be completed here
+
+    def prepare_comb(self, n, d, r, cutoff):
+        """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
+
+        pass
+
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
