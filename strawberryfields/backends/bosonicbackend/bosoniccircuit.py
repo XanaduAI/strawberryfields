@@ -401,15 +401,15 @@ class BosonicModes:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
         
-        print("Real Gaussians only.")
+        print("Measurements implemened for real-valued Gaussians only.")
                 
 
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         
         vals = np.zeros((shots,2*len(indices)))
         
-        pos_weights_ind = np.where(self.weights > 0)[0]
-        pos_weights = self.weights[pos_weights_ind]
+        pos_weights_ind = np.where(self.weights.real > 0)[0]
+        pos_weights = self.weights[pos_weights_ind].real
         pos_weights = pos_weights/np.sum(pos_weights)
         
         for i in range(shots):
@@ -423,8 +423,9 @@ class BosonicModes:
                 exp_arg = np.einsum('...j,...jk,...k',(peak_sample - self.means[:,expind]),
                                     np.linalg.inv(self.covs[:,expind,:][:,:,expind] + covmat),
                                     (peak_sample - self.means[:,expind]))
-                prob_dist_val = np.sum(self.weights * np.exp(-exp_arg))
-                prob_upbnd = np.sum(self.weights[pos_weights_ind] * np.exp(-exp_arg[pos_weights_ind]))
+                weighted_exp = self.weights * np.exp(-exp_arg)
+                prob_dist_val = np.sum(weighted_exp)
+                prob_upbnd = np.sum(weighted_exp[pos_weights_ind])
                 vertical_sample = np.random.random(size=1)*prob_upbnd
                 if vertical_sample < prob_dist_val:
                     drawn = True
@@ -442,14 +443,14 @@ class BosonicModes:
     def homodyne(self, n, shots=1, eps=0.0002):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
+        covmat = self.hbar*np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))/2
         res = self.measure_dyne(covmat, [n], shots=shots)
         return res
     
     def heterodyne(self, n, shots=1):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = np.eye(2)
+        covmat = self.hbar*np.eye(2)/2
         res = self.measure_dyne(covmat, [n], shots=shots)
         return res
 
@@ -487,7 +488,7 @@ class BosonicModes:
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
         self.phase_shift(phi,n)
-        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
+        covmat = self.hbar*np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))/2
         indices = [n]
         vals = np.array([val,0])
         self.post_select_generaldyne(covmat, indices, vals)
@@ -498,7 +499,7 @@ class BosonicModes:
         if self.active[n] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
-        covmat = np.identity(2)
+        covmat = self.hbar*np.identity(2)/2
         indices = [n]
         vals = np.array(alpha_val.real,alpha_val.imag)
         self.post_select_generaldyne(covmat, indices, vals)
