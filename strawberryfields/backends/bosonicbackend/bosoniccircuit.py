@@ -361,7 +361,9 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
-        Y = symp.expand((1 - T) * np.identity(2), k, self.nlen)
+        Y = np.zeros((2*self.nlen,2*self.nlen))
+        Y[k,k] = (1 - T) * np.identity(2)
+        Y[2*k,2*k] = (1 - T) * np.identity(2)
         self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
 
@@ -372,9 +374,12 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
-        self.loss(T, k)
-        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][self.from_xp, :]
-        self.covs += Y
+        X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
+        Y = np.zeros((2*self.nlen,2*self.nlen))
+        Y[k,k] = (1 - T) * np.identity(2) * nbar
+        Y[2*k,2*k] = (1 - T) * np.identity(2) * nbar
+        self.means = update_means(self.means, X, self.from_xp)
+        self.covs = update_covs(self.covs, X, self.from_xp, Y)
 
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
