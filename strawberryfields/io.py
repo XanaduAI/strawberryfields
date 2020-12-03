@@ -255,24 +255,7 @@ def generate_code(prog, eng=None):
     Returns:
         str: the Strawberry Fields code, for constructing the program, as a string
     """
-    code_seq = ["import strawberryfields as sf"]
-
-    operations = []
-    op_imports = []
-    for cmd in prog.circuit:
-        op_name = cmd.op.__class__.__name__
-        if op_name not in op_imports:
-            op_imports.append(op_name)
-
-        if prog.type == "tdm":
-            format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
-            op = cmd.__str__().format(**format_dict)
-        else:
-            op = cmd.__str__()
-
-        operations.append(op)
-
-    code_seq.append("from strawberryfields.ops import " + ", ".join(op_imports) + "\n")
+    code_seq = ["import strawberryfields as sf", "from strawberryfields import ops\n"]
 
     if prog.type == "tdm":
         code_seq.append(f"prog = sf.TDMProgram(N={prog.N})")
@@ -282,25 +265,41 @@ def generate_code(prog, eng=None):
     if eng:
         eng_type = eng.__class__.__name__
         if eng_type == "RemoteEngine":
-            code_seq.append(f"eng = sf.RemoteEngine({eng.target})")
+            code_seq.append(f'eng = sf.RemoteEngine("{eng.target}")')
         else:
             if eng.backend_options:
                 code_seq.append(
-                    f"eng = sf.Engine({eng.backend_name}, backend_options={eng.backend_options})\n"
+                    f'eng = sf.Engine("{eng.backend_name}", backend_options={eng.backend_options})'
                 )
             else:
-                code_seq.append(f"eng = sf.Engine({eng.backend_name})\n")
+                code_seq.append(f'eng = sf.Engine("{eng.backend_name}")')
 
     if prog.type == "tdm":
         tdm_params = [f"{par}" for par in prog.tdm_params]
-        code_seq.append("with prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
+        code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
     else:
-        code_seq.append("with prog.context as q:")
+        code_seq.append("\nwith prog.context as q:")
 
-    code_seq.append("    " + "\n    ".join(operations) + "\n")
+    for cmd in prog.circuit:
+        if prog.type == "tdm":
+            format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
+            name = cmd.op.__class__.__name__
+            params_str = str(cmd.op.p)[1:-1].format(**format_dict)
+        else:
+            name = cmd.op.__class__.__name__
+            params_str = str(cmd.op.p)[1:-1]
+
+        modes = [f"q[{r.ind}]" for r in cmd.reg]
+        if len(modes) == 1:
+            modes_str = ", ".join(modes)
+        else:
+            modes_str = "(" + ", ".join(modes) + ")"
+        op = f"    ops.{name}({params_str}) | {modes_str}"
+
+        code_seq.append(op)
 
     if eng:
-        code_seq.append("results = eng.run(prog, shots=1)")
+        code_seq.append("\nresults = eng.run(prog)")
 
     return "\n".join(code_seq)
 
