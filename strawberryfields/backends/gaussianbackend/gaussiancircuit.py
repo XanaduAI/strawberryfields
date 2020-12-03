@@ -486,7 +486,7 @@ class GaussianModes:
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        vm = np.random.multivariate_normal(vc, C, size=shots)
+        vm = np.random.multivariate_normal(vc, C + covmat, size=shots)
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
         va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm[0] - vc)
