@@ -24,7 +24,7 @@ from ..shared_ops import changebasis
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(nmodes, ngauss):
-    return (ngauss ** nmodes)
+    return ngauss ** nmodes
 
 
 def m_shape(nmodes, ngauss):
@@ -36,7 +36,7 @@ def c_shape(nmodes, ngauss):
 
 
 def to_xp(n):
-    return np.concatenate((np.arange(0, 2*n, 2), np.arange(0, 2*n, 2) + 1))
+    return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
 
 
 def from_xp(n):
@@ -46,7 +46,7 @@ def from_xp(n):
 
 
 def update_means(means, X, perm_out):
-    X_perm = X[:, perm_out][perm_out,:]
+    X_perm = X[:, perm_out][perm_out, :]
     return (X_perm @ means.T).T
 
 
@@ -101,7 +101,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
 
         new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[:self._trunc ** self.nlen] = self.weights
+        new_weights[: self._trunc ** self.nlen] = self.weights
         self.weights = new_weights
 
         rows = np.arange(self._trunc ** self.nlen)
@@ -111,8 +111,9 @@ class BosonicModes:
         new_means[np.ix_(rows, cols)] = self.means
         self.means = new_means
 
-        id_covs = [np.identity(2 * self.nlen, dtype=complex)
-                    for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         new_covs = np.array(id_covs)
         new_covs[np.ix_(rows, cols, cols)] = self.covs
         self.covs = new_covs
@@ -157,8 +158,9 @@ class BosonicModes:
         self.weights = self.weights / (self._trunc ** self.nlen)
 
         self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
-        id_covs = [np.identity(2*self.nlen, dtype=complex)
-                   for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         self.covs = np.array(id_covs)
 
     def get_modes(self):
@@ -235,7 +237,7 @@ class BosonicModes:
         return self.means
 
     def sweights(self):
-        '''Returns the matrix of weights.'''
+        """Returns the matrix of weights."""
         return self.weights
 
     def fromsmean(self, r, modes=None):
@@ -300,20 +302,17 @@ class BosonicModes:
         rows = np.reshape(modes, [-1, 1])
         cols = np.reshape(modes, [1, -1])
 
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate(
-                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
-                    ),
-                    np.concatenate(
-                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
-                    ),
+        sigmaq = np.concatenate(
+            (
+                np.concatenate(
+                    (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
                 ),
-                axis=0,
-            )
-            + np.identity(2 * len(modes))
-        )
+                np.concatenate(
+                    (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
+                ),
+            ),
+            axis=0,
+        ) + np.identity(2 * len(modes))
         return sigmaq
 
     def fidelity_coherent(self, alpha, modes=None):
@@ -341,16 +340,13 @@ class BosonicModes:
     def Amat(self):
         """ Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
-                    np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
-                ),
-                axis=0,
-            )
-            + np.identity(2 * self.nlen)
-        )
+        sigmaq = np.concatenate(
+            (
+                np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
+                np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
+            ),
+            axis=0,
+        ) + np.identity(2 * self.nlen)
         return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
@@ -361,9 +357,9 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
-        Y = np.zeros((2*self.nlen,2*self.nlen))
-        Y[k,k] = (1 - T) * np.identity(2)
-        Y[2*k,2*k] = (1 - T) * np.identity(2)
+        Y = np.zeros((2 * self.nlen, 2 * self.nlen))
+        Y[k, k] = (1 - T) * np.identity(2)
+        Y[2 * k, 2 * k] = (1 - T) * np.identity(2)
         self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
 
@@ -375,9 +371,9 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
-        Y = np.zeros((2*self.nlen,2*self.nlen))
-        Y[k,k] = (1 - T) * np.identity(2) * nbar
-        Y[2*k,2*k] = (1 - T) * np.identity(2) * nbar
+        Y = np.zeros((2 * self.nlen, 2 * self.nlen))
+        Y[k, k] = (1 - T) * np.identity(2) * nbar
+        Y[2 * k, 2 * k] = (1 - T) * np.identity(2) * nbar
         self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
 
