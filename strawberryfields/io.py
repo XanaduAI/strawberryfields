@@ -281,12 +281,11 @@ def generate_code(prog, eng=None):
         code_seq.append("\nwith prog.context as q:")
 
     for cmd in prog.circuit:
+        name = cmd.op.__class__.__name__
         if prog.type == "tdm":
             format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
-            name = cmd.op.__class__.__name__
             params_str = str(cmd.op.p)[1:-1].format(**format_dict)
         else:
-            name = cmd.op.__class__.__name__
             params_str = str(cmd.op.p)[1:-1]
 
         modes = [f"q[{r.ind}]" for r in cmd.reg]
