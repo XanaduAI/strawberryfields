@@ -1318,7 +1318,12 @@ class BaseGaussianState(BaseState):
 
         if self._pure:
             return twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
 
         return None  # pragma: no cover
@@ -1344,7 +1349,12 @@ class BaseGaussianState(BaseState):
 
         if self.is_pure:
             psi = twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
             rho = np.outer(psi, psi.conj())
             return rho
@@ -1408,7 +1418,7 @@ class BaseGaussianState(BaseState):
 
 
 class BaseBosonicState(BaseState):
-    r"""Class for the representation of quantum states as superpositions of 
+    r"""Class for the representation of quantum states as superpositions of
     Gaussian states.
     """
     # pylint: disable=too-many-public-methods
@@ -1426,7 +1436,7 @@ class BaseBosonicState(BaseState):
             # complex displacements of the Gaussian state
             self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
             self._alpha /= np.sqrt(2 * self._hbar)
-    
+
             self._pure = (
                 np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
                 < self.EQ_TOLERANCE
@@ -1739,7 +1749,12 @@ class BaseBosonicState(BaseState):
 
         if self._pure:
             return twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
 
         return None  # pragma: no cover
@@ -1765,7 +1780,12 @@ class BaseBosonicState(BaseState):
 
         if self.is_pure:
             psi = twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
             rho = np.outer(psi, psi.conj())
             return rho
