@@ -95,26 +95,25 @@ class BosonicModes:
     def add_mode(self, n=1):
         """Add n modes to the circuit."""
         self.nlen += n
-        self.active.append(self.nlen)
+        self.active.append(self.nlen - 1)
 
         # Updated mode index permutation list
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
 
         new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[: self._trunc ** self.nlen] = self.weights
+        new_weights[:self._trunc ** self.nlen] = self.weights
         self.weights = new_weights
 
-        rows = np.arange(self._trunc ** self.nlen)
-        cols = np.arange(2 * self.nlen)
+        rows = np.arange(self._trunc ** (self.nlen - n))
+        cols = np.arange(2 * (self.nlen - n))
 
         new_means = np.zeros(m_shape(self.nlen, self._trunc))
         new_means[np.ix_(rows, cols)] = self.means
         self.means = new_means
 
-        id_covs = [
-            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
-        ]
+        id_covs = [np.identity(2 * self.nlen, dtype=complex)
+                    for i in range(self._trunc ** self.nlen)]
         new_covs = np.array(id_covs)
         new_covs[np.ix_(rows, cols, cols)] = self.covs
         self.covs = new_covs
@@ -200,25 +199,22 @@ class BosonicModes:
 
         if avg:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
-            Y = np.diag(
-                [
-                    (np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
-                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,
-                ]
-            )
+            Y = np.diag([(np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
+                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,])
             X2, Y2 = self.expandXY([k], X, Y)
             self.apply_channel(X2, Y2)
 
         if not avg:
             self.add_mode()
-            new_mode = self.nlen
+            new_mode = self.nlen-1
             self.squeeze(r_anc, 0, new_mode)
             self.beamsplitter(theta, 0, k, new_mode)
-            self.loss(1 - eta_anc)
-            val = self.measure_homodyne(np.pi / 2, new_mode)
-            self.delete_mode(new_mode)
-            prefac = -np.tan(theta) / np.sqrt(2 * self.circuit.hbar * eta_anc)
-            self.displacement(prefac * val, np.pi / 2, k)
+            self.loss(eta_anc, new_mode)
+            self.phase_shift(np.pi / 2, new_mode)
+            val = self.homodyne(new_mode)[0][0]
+            self.del_mode(new_mode)
+            prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
+            self.displace(prefac * val, np.pi / 2, k)
 
         self.phase_shift(-phi / 2, k)
 
@@ -406,7 +402,7 @@ class BosonicModes:
 
         X = np.sqrt(T) * np.identity(2)
         Y = (1 - T) * np.identity(2)
-        X2, Y2 = self.expandXY(self, [k], X, Y)
+        X2, Y2 = self.expandXY([k], X, Y)
         self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
@@ -417,7 +413,7 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
         X = np.sqrt(T) * np.identity(2)
         Y = (1 - T) * nbar * np.identity(2)
-        X2, Y2 = self.expandXY(self, [k], X, Y)
+        X2, Y2 = self.expandXY([k], X, Y)
         self.apply_channel(X2, Y2)
 
     def init_thermal(self, population, mode):
