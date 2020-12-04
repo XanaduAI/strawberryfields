@@ -332,7 +332,7 @@ def _factor_out_pi(num_list, precision=12):
             a.append(str(p))
             continue
 
-        if np.isclose(p % (), [0, factor]).any() and p != 0:
+        if np.isclose(p % factor, [0, factor]).any() and p != 0:
             gcd = np.gcd(int(p / factor), precision)
             if gcd == precision:
                 if int(p/np.pi) == 1:
