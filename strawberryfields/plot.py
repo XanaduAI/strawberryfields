@@ -89,9 +89,11 @@ def generate_wigner_chart(data, xvec, pvec):
 
     chart["data"][0]["type"] = "surface"
     chart["data"][0]["colorscale"] = [
-        [0.0, "rgb(031, 144, 148)"],
-        [0.5, "rgb(255, 255, 255)"],
-        [1.0, "rgb(031, 089, 154)"],
+        [0.0, "purple"],
+        [0.25, "red"],
+        [0.5, "yellow"],
+        [0.75, "green"],
+        [1.0, "blue"],
     ]
 
     chart["data"][0]["x"] = xvec.tolist()
