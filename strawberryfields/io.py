@@ -263,6 +263,8 @@ def generate_code(prog, eng=None):
     else:
         code_seq.append(f"prog = sf.Program({prog.num_subsystems})")
 
+    # check if an engine is supplied; if so, format and add backend/target
+    # along with backend options
     if eng:
         eng_type = eng.__class__.__name__
         if eng_type == "RemoteEngine":
@@ -279,12 +281,14 @@ def generate_code(prog, eng=None):
             else:
                 code_seq.append(f'eng = sf.Engine("{eng.backend_name}")')
 
+    # check if program is of TDM type and format the context as appropriate
     if prog.type == "tdm":
         tdm_params = [f"[{_factor_out_pi(par)}]" for par in prog.tdm_params]
         code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
     else:
         code_seq.append("\nwith prog.context as q:")
 
+    # add the operations, and replace any free parameters with e.g. `p[0]`, `p[1]`
     for cmd in prog.circuit:
         name = cmd.op.__class__.__name__
         if prog.type == "tdm":
@@ -320,23 +324,27 @@ def _factor_out_pi(num_list, precision=12):
     Return:
         string: containing strings of values and/or input string objects
     """
+    factor = np.pi / precision
+
     a = []
     for p in num_list:
         if not isinstance(p, Number):
             a.append(str(p))
             continue
-        if np.isclose(p % (np.pi/precision), [0, np.pi/precision]).any() and p != 0:
-            gcd = np.gcd(int(p / (np.pi/precision)), precision)
+
+        if np.isclose(p % (), [0, factor]).any() and p != 0:
+            gcd = np.gcd(int(p / factor), precision)
             if gcd == precision:
                 if int(p/np.pi) == 1:
                     a.append("np.pi")
                 else:
                     a.append(f"{int(p/np.pi)}*np.pi")
             else:
-                if int(p / (np.pi/precision) / gcd) == 1:
+                coeff = int(p / factor / gcd)
+                if coeff == 1:
                     a.append(f"np.pi/{int(precision/gcd)}")
                 else:
-                    a.append(f"{int(p / (np.pi/precision) / gcd)}*np.pi/{int(precision / gcd)}")
+                    a.append(f"{coeff}*np.pi/{int(precision / gcd)}")
         else:
             a.append(str(p))
     return ", ".join(a)
