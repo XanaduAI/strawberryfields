@@ -18,6 +18,7 @@ code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
+from numbers import Number
 
 import numpy as np
 
@@ -268,14 +269,18 @@ def generate_code(prog, eng=None):
             code_seq.append(f'eng = sf.RemoteEngine("{eng.target}")')
         else:
             if eng.backend_options:
+                formatting_str = (
+                    f'"{eng.backend_name}", backend_options=' +
+                    f'{{"cutoff_dim": {eng.backend_options["cutoff_dim"]}}}'
+                )
                 code_seq.append(
-                    f'eng = sf.Engine("{eng.backend_name}", backend_options={eng.backend_options})'
+                    f'eng = sf.Engine({formatting_str})'
                 )
             else:
                 code_seq.append(f'eng = sf.Engine("{eng.backend_name}")')
 
     if prog.type == "tdm":
-        tdm_params = [f"{par}" for par in prog.tdm_params]
+        tdm_params = [f"[{_factor_out_pi(par)}]" for par in prog.tdm_params]
         code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
     else:
         code_seq.append("\nwith prog.context as q:")
@@ -284,9 +289,9 @@ def generate_code(prog, eng=None):
         name = cmd.op.__class__.__name__
         if prog.type == "tdm":
             format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
-            params_str = str(cmd.op.p)[1:-1].format(**format_dict)
+            params_str = _factor_out_pi(cmd.op.p).format(**format_dict)
         else:
-            params_str = str(cmd.op.p)[1:-1]
+            params_str = _factor_out_pi(cmd.op.p)
 
         modes = [f"q[{r.ind}]" for r in cmd.reg]
         if len(modes) == 1:
@@ -301,6 +306,40 @@ def generate_code(prog, eng=None):
         code_seq.append("\nresults = eng.run(prog)")
 
     return "\n".join(code_seq)
+
+
+def _factor_out_pi(num_list, precision=12):
+    """Factors out pi, divided by the precision value, from all number in a list
+    and returns a string representation.
+
+    Args:
+        num_list (list[Number, string]): a list of numbers and/or strings
+        precision (int): largest divisor used to factor out pi divided by precision;
+            e.g. default would be to factor out np.pi/12
+
+    Return:
+        string: containing strings of values and/or input string objects
+    """
+    a = []
+    for p in num_list:
+        if not isinstance(p, Number):
+            a.append(str(p))
+            continue
+        if np.isclose(p % (np.pi/precision), [0, np.pi/precision]).any() and p != 0:
+            gcd = np.gcd(int(p / (np.pi/precision)), precision)
+            if gcd == precision:
+                if int(p/np.pi) == 1:
+                    a.append("np.pi")
+                else:
+                    a.append(f"{int(p/np.pi)}*np.pi")
+            else:
+                if int(p / (np.pi/precision) / gcd) == 1:
+                    a.append(f"np.pi/{int(precision/gcd)}")
+                else:
+                    a.append(f"{int(p / (np.pi/precision) / gcd)}*np.pi/{int(precision / gcd)}")
+        else:
+            a.append(str(p))
+    return ", ".join(a)
 
 
 def save(f, prog):
