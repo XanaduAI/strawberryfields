@@ -316,11 +316,17 @@ class LocalEngine(BaseEngine):
         backend (str, BaseBackend): short name of the backend, or a pre-constructed backend instance
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
+
     def __new__(cls, backend, *, backend_options=None):
         if backend == "bosonic":
-            return BosonicEngine.__new__(BosonicEngine, backend, backend_options=backend_options)
+            bos_eng = super().__new__(BosonicEngine)
+            bos_eng.__init__(backend, backend_options=backend_options)
+            return bos_eng
 
-        return cls.__new__(cls, backend, backend_options=backend_options)
+        return super().__new__(cls)
+
+    # def __init__(self, backend, backend_options=None):
+    #     super().__init__(backend, backend_options=backend_options)
 
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
@@ -710,20 +716,18 @@ class Engine(LocalEngine):
     __doc__ = LocalEngine.__doc__
 
 
-
 class BosonicEngine(LocalEngine):
+    """BosonicEngine class."""
+
     def _init_backend(self, init_num_subsystems):
         self.backend.begin_circuit(init_num_subsystems, **self.backend_options)
 
     def _run_program(self, prog, **kwargs):
-        applied = []
-        samples_dict = {}
-        all_samples = {}
         batches = self.backend_options.get("batch_size", 0)
 
         # Custom Bosonic run code
-        samples = self.backend.run_prog(prog)
-
+        applied, samples_dict, all_samples = self.backend.run_prog(prog, batches, **kwargs)
+        samples = self._combine_and_sort_samples(samples_dict)
         return applied, samples, all_samples
 
     def run(self, program, *, args=None, compile_options=None, **kwargs):
@@ -731,6 +735,19 @@ class BosonicEngine(LocalEngine):
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
+
+        if isinstance(program, collections.abc.Sequence):
+            # succesively update all run option defaults.
+            # the run options of successive programs
+            # overwrite the run options of previous programs
+            # in the list
+            program_lst = program
+            for p in program:
+                temp_run_options.update(p.run_options)
+        else:
+            # single program to execute
+            program_lst = [program]
+            temp_run_options.update(program.run_options)
 
         temp_run_options.update(kwargs or {})
         temp_run_options.setdefault("shots", 1)
@@ -761,12 +778,6 @@ class BosonicEngine(LocalEngine):
         result = super()._run(
             program, args=args, compile_options=compile_options, **eng_run_options
         )
-
-        if isinstance(program, TDMProgram):
-            result._all_samples = reshape_samples(
-                result.all_samples, program.measured_modes, program.N
-            )
-            result._samples = np.array(list(result.all_samples.values()))
 
         modes = temp_run_options["modes"]
 
