@@ -21,13 +21,15 @@ plotly_error = (
     "Plot.ly required for using this function. It can be installed using pip install "
     "plotly or visiting https://plot.ly/python/getting-started/#installation"
 )
+
+
 def _get_plotly():
     """Import Plot.ly on demand to avoid errors being raised unnecessarily"""
     try:
         # pylint:disable=import-outside-toplevel
         import plotly.io as pio
     except ImportError as e:
-        raise(plotly_error) from e
+        raise (plotly_error) from e
     return pio
 
 
@@ -64,23 +66,25 @@ def generate_wigner_chart(data, xvec, pvec):
     textcolor = "#787878"
 
     chart = {
-        "data": [{
-            "type": "surface",
-            "colorscale": [],
-            "x": [],
-            "y": [],
-            "z": [],
-            "contours": {
-                "z": {},
-            },
-        }],
+        "data": [
+            {
+                "type": "surface",
+                "colorscale": [],
+                "x": [],
+                "y": [],
+                "z": [],
+                "contours": {
+                    "z": {},
+                },
+            }
+        ],
         "layout": {
-            "scene":{
+            "scene": {
                 "xaxis": {},
                 "yaxis": {},
                 "zaxis": {},
             }
-        }
+        },
     }
 
     chart["data"][0]["type"] = "surface"
