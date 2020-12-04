@@ -24,7 +24,7 @@ from ..shared_ops import changebasis
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(nmodes, ngauss):
-    return (ngauss ** nmodes)
+    return ngauss ** nmodes
 
 
 def m_shape(nmodes, ngauss):
@@ -36,7 +36,7 @@ def c_shape(nmodes, ngauss):
 
 
 def to_xp(n):
-    return np.concatenate((np.arange(0, 2*n, 2), np.arange(0, 2*n, 2) + 1))
+    return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
 
 
 def from_xp(n):
@@ -46,7 +46,7 @@ def from_xp(n):
 
 
 def update_means(means, X, perm_out):
-    X_perm = X[:, perm_out][perm_out,:]
+    X_perm = X[:, perm_out][perm_out, :]
     return (X_perm @ means.T).T
 
 
@@ -101,7 +101,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
 
         new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[:self._trunc ** self.nlen] = self.weights
+        new_weights[: self._trunc ** self.nlen] = self.weights
         self.weights = new_weights
 
         rows = np.arange(self._trunc ** self.nlen)
@@ -111,8 +111,9 @@ class BosonicModes:
         new_means[np.ix_(rows, cols)] = self.means
         self.means = new_means
 
-        id_covs = [np.identity(2 * self.nlen, dtype=complex)
-                    for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         new_covs = np.array(id_covs)
         new_covs[np.ix_(rows, cols, cols)] = self.covs
         self.covs = new_covs
@@ -157,8 +158,9 @@ class BosonicModes:
         self.weights = self.weights / (self._trunc ** self.nlen)
 
         self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
-        id_covs = [np.identity(2*self.nlen, dtype=complex)
-                   for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         self.covs = np.array(id_covs)
 
     def get_modes(self):
@@ -235,7 +237,7 @@ class BosonicModes:
         return self.means
 
     def sweights(self):
-        '''Returns the matrix of weights.'''
+        """Returns the matrix of weights."""
         return self.weights
 
     def fromsmean(self, r, modes=None):
@@ -373,7 +375,9 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         self.loss(T, k)
-        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][self.from_xp, :]
+        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][
+            self.from_xp, :
+        ]
         self.covs += Y
 
     def init_thermal(self, population, mode):
@@ -393,64 +397,68 @@ class BosonicModes:
         Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129
         """
-        
+
         if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
         for i in indices:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
-        
+
         print("Measurements implemened for real-valued Gaussians only.")
-                
 
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        
-        vals = np.zeros((shots,2*len(indices)))
-        
+
+        vals = np.zeros((shots, 2 * len(indices)))
+
         pos_weights_ind = np.where(self.weights.real > 0)[0]
         pos_weights = self.weights[pos_weights_ind].real
-        pos_weights = pos_weights/np.sum(pos_weights)
-        
+        pos_weights = pos_weights / np.sum(pos_weights)
+
         for i in range(shots):
             drawn = False
             while drawn == False:
-                peak_ind_sample = np.random.choice(pos_weights_ind,size=1,p = pos_weights)[0]
-        
-                cov_meas = self.covs[peak_ind_sample,expind,:][:,expind] + covmat
-                peak_sample = np.random.multivariate_normal(self.means[peak_ind_sample,expind].real,cov_meas.real)
-        
-                exp_arg = np.einsum('...j,...jk,...k',(peak_sample - self.means[:,expind]),
-                                    np.linalg.inv(self.covs[:,expind,:][:,:,expind] + covmat),
-                                    (peak_sample - self.means[:,expind]))
+                peak_ind_sample = np.random.choice(pos_weights_ind, size=1, p=pos_weights)[0]
+
+                cov_meas = self.covs[peak_ind_sample, expind, :][:, expind] + covmat
+                peak_sample = np.random.multivariate_normal(
+                    self.means[peak_ind_sample, expind].real, cov_meas.real
+                )
+
+                exp_arg = np.einsum(
+                    "...j,...jk,...k",
+                    (peak_sample - self.means[:, expind]),
+                    np.linalg.inv(self.covs[:, expind, :][:, :, expind] + covmat),
+                    (peak_sample - self.means[:, expind]),
+                )
                 weighted_exp = self.weights * np.exp(-exp_arg)
                 prob_dist_val = np.sum(weighted_exp)
                 prob_upbnd = np.sum(weighted_exp[pos_weights_ind])
-                vertical_sample = np.random.random(size=1)*prob_upbnd
+                vertical_sample = np.random.random(size=1) * prob_upbnd
                 if vertical_sample < prob_dist_val:
                     drawn = True
                     vals[i] = peak_sample
                 if drawn == True:
                     break
-        
+
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
         if len(indices) < len(self.active):
-            self.post_select_generaldyne(covmat,indices,vals[0])
+            self.post_select_generaldyne(covmat, indices, vals[0])
 
         return vals
 
     def homodyne(self, n, shots=1, eps=0.0002):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = self.hbar*np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))/2
+        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
         res = self.measure_dyne(covmat, [n], shots=shots)
         return res
-    
+
     def heterodyne(self, n, shots=1):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = self.hbar*np.eye(2)/2
+        covmat = self.hbar * np.eye(2) / 2
         res = self.measure_dyne(covmat, [n], shots=shots)
         return res
 
@@ -462,35 +470,39 @@ class BosonicModes:
         for i in indices:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
-                
+
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         mp = self.scovmat()
         (A, B, C) = ops.chop_in_blocks_multi(mp, expind)
-        V = A - B@np.linalg.inv(C + covmat)@B.transpose(0,2,1)
+        V = A - B @ np.linalg.inv(C + covmat) @ B.transpose(0, 2, 1)
         V1 = ops.reassemble_multi(V, expind)
         self.covs = V1
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
-        va = va + np.einsum('...ij,...j',B@np.linalg.inv(C + covmat),(vals - vc))
+        va = va + np.einsum("...ij,...j", B @ np.linalg.inv(C + covmat), (vals - vc))
         va = ops.reassemble_vector_multi(va, expind)
         self.means = va
-        
-        reweights_exp_arg = np.einsum('...j,...jk,...k',(vals-vc),np.linalg.inv(C + covmat),(vals - vc))
-        reweights = np.exp(-reweights_exp_arg)/((np.pi**len(indices)/2)*np.sqrt(np.linalg.det(C+covmat)))
-        self.weights = self.weights*reweights
-        self.weights = self.weights/np.sum(self.weights)
-        
+
+        reweights_exp_arg = np.einsum(
+            "...j,...jk,...k", (vals - vc), np.linalg.inv(C + covmat), (vals - vc)
+        )
+        reweights = np.exp(-reweights_exp_arg) / (
+            (np.pi ** len(indices) / 2) * np.sqrt(np.linalg.det(C + covmat))
+        )
+        self.weights = self.weights * reweights
+        self.weights = self.weights / np.sum(self.weights)
+
         return
 
-    def post_select_homodyne(self, n, val, eps=0.0002,phi=0):
+    def post_select_homodyne(self, n, val, eps=0.0002, phi=0):
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        self.phase_shift(phi,n)
-        covmat = self.hbar*np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))/2
+        self.phase_shift(phi, n)
+        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
         indices = [n]
-        vals = np.array([val,0])
+        vals = np.array([val, 0])
         self.post_select_generaldyne(covmat, indices, vals)
         return
 
@@ -499,9 +511,9 @@ class BosonicModes:
         if self.active[n] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
-        covmat = self.hbar*np.identity(2)/2
+        covmat = self.hbar * np.identity(2) / 2
         indices = [n]
-        vals = np.array(alpha_val.real,alpha_val.imag)
+        vals = np.array(alpha_val.real, alpha_val.imag)
         self.post_select_generaldyne(covmat, indices, vals)
         return
 
