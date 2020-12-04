@@ -16,8 +16,8 @@
 import warnings
 
 import numpy as np
-
 from scipy.linalg import block_diag
+
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
 
@@ -418,6 +418,7 @@ class BosonicBackend(BaseBosonic):
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
         listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
+
         covmat = self.circuit.covs
         means = self.circuit.means
         if len(w) == 1:
