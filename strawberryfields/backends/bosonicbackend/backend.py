@@ -15,22 +15,7 @@
 """Bosonic backend"""
 import warnings
 
-from numpy import (
-    empty,
-    concatenate,
-    arange,
-    array,
-    identity,
-    arctan2,
-    angle,
-    sqrt,
-    vstack,
-    zeros_like,
-    allclose,
-    ix_,
-    zeros,
-    shape
-)
+import numpy as np
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
 
@@ -141,11 +126,11 @@ class BosonicBackend(BaseBosonic):
         if select is None:
             qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
         else:
-            val = select * 2 / sqrt(2 * self.circuit.hbar)
+            val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
         # `qs` will always be a single value since multiple shots is not supported
-        return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
+        return np.array([[qs * np.sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
@@ -162,15 +147,15 @@ class BosonicBackend(BaseBosonic):
             )
 
         if select is None:
-            m = identity(2)
+            m = np.identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            return array([[res[0, 0] + 1j * res[0, 1]]])
+            return np.array([[res[0, 0] + 1j * res[0, 1]]])
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
 
         # `res` will always be a single value since multiple shots is not supported
-        return array([[res]])
+        return np.array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
         if isinstance(modes, int):
@@ -186,7 +171,7 @@ class BosonicBackend(BaseBosonic):
             )
 
         # convert xp-ordering to symmetric ordering
-        means = vstack([r[:N], r[N:]]).reshape(-1, order="F")
+        means = np.vstack([r[:N], r[N:]]).reshape(-1, order="F")
         C = changebasis(N)
         cov = C @ V @ C.T
 
@@ -217,14 +202,14 @@ class BosonicBackend(BaseBosonic):
         mean = self.circuit.smeanxp()
         cov = self.circuit.scovmatxp()
 
-        x_idxs = array(modes)
+        x_idxs = np.array(modes)
         p_idxs = x_idxs + len(mu)
-        modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        modes_idxs = np.concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         reduced_mean = mean[modes_idxs]
 
         # check we are sampling from a gaussian state with zero mean
-        if allclose(mu, zeros_like(mu)):
+        if np.allclose(mu, np.zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
@@ -245,14 +230,14 @@ class BosonicBackend(BaseBosonic):
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
-        if not allclose(mu, zeros_like(mu)):
+        if not np.allclose(mu, np.zeros_like(mu)):
             raise NotImplementedError(
                 "Threshold measurement is only supported for " "Gaussian states with zero mean"
             )
-        x_idxs = array(modes)
+        x_idxs = np.array(modes)
         p_idxs = x_idxs + len(mu)
-        modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        modes_idxs = np.concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         samples = torontonian_sample_state(reduced_cov, shots)
 
         return samples
@@ -279,24 +264,23 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-
-        listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
+        listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
         covmat = self.circuit.covs
         means = self.circuit.means
         if len(w) == 1:
             m = covmat[0]
             r = means[0]
 
-            covmat = empty((2 * len(modes), 2 * len(modes)))
+            covmat = np.empty((2 * len(modes), 2 * len(modes)))
             means = r[listmodes]
-    
+
             for i, ii in enumerate(listmodes):
                 for j, jj in enumerate(listmodes):
                     covmat[i, j] = m[ii, jj]
-    
-            means *= sqrt(2 * self.circuit.hbar) / 2
+
+            means *= np.sqrt(2 * self.circuit.hbar) / 2
             covmat *= self.circuit.hbar / 2
-    
-        mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        num_w = int(len(w) ** (1/len(modes)))
+
+        mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
+        num_w = int(len(w) ** (1 / len(modes)))
         return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)
