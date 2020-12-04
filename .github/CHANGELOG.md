@@ -5,6 +5,10 @@
 * `TDMProgram` objects can now be compiled and submitted via the API.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
+* Strawberry Fields code can be generated from a program (and an engine) by
+  calling `sf.io.generate_code(program, eng=engine)`.
+  [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
+
 <h3>Improvements</h3>
 
 * The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
