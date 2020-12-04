@@ -29,7 +29,7 @@ from numpy import (
     allclose,
     ix_,
     zeros,
-    shape
+    shape,
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
@@ -279,7 +279,6 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
         covmat = self.circuit.covs
         means = self.circuit.means
@@ -289,14 +288,14 @@ class BosonicBackend(BaseBosonic):
 
             covmat = empty((2 * len(modes), 2 * len(modes)))
             means = r[listmodes]
-    
+
             for i, ii in enumerate(listmodes):
                 for j, jj in enumerate(listmodes):
                     covmat[i, j] = m[ii, jj]
-    
+
             means *= sqrt(2 * self.circuit.hbar) / 2
             covmat *= self.circuit.hbar / 2
-    
+
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        num_w = int(len(w) ** (1/len(modes)))
+        num_w = int(len(w) ** (1 / len(modes)))
         return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)
