@@ -136,7 +136,7 @@ class BosonicBackend(BaseBosonic):
                     if type(cmd.op) == ops.Bosonic:
                         w, m, c = [pars[i].tolist() for i in range(3)]
 
-                    elif type(cmd.op) == ops.Cat:
+                    elif type(cmd.op) == ops.Catstate:
                         w, m, c = self.prepare_cat(*pars)
 
                     elif type(cmd.op) == ops.GKP:
