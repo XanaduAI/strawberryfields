@@ -29,7 +29,7 @@ from numpy import (
     allclose,
     ix_,
     zeros,
-    shape
+    shape,
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
@@ -106,18 +106,17 @@ class BosonicBackend(BaseBosonic):
 
     def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
-    
+
     def mbsqueeze(self, mode, r, phi, r_anc, eta_anc, avg):
         if avg:
             self.circuit.mbsqueeze(mode, r, phi, r_anc, eta_anc, avg)
         if not avg:
             ancilla_val = self.circuit.mbsqueeze(mode, r, phi, r_anc, eta_anc, avg)
             return ancilla_val
-        
+
     def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
 
-    
     def gaussian_cptp(self, modes, X, Y):
         if not isinstance(Y, int):
             X2, Y2 = self.circuit.expandXY(modes, X, Y)
@@ -125,7 +124,7 @@ class BosonicBackend(BaseBosonic):
         else:
             X2 = self.circuit.expandS(modes, X)
             self.circuit.apply_channel(X, 0)
-    
+
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
@@ -295,7 +294,6 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
         covmat = self.circuit.covs
         means = self.circuit.means
@@ -305,14 +303,14 @@ class BosonicBackend(BaseBosonic):
 
             covmat = empty((2 * len(modes), 2 * len(modes)))
             means = r[listmodes]
-    
+
             for i, ii in enumerate(listmodes):
                 for j, jj in enumerate(listmodes):
                     covmat[i, j] = m[ii, jj]
-    
+
             means *= sqrt(2 * self.circuit.hbar) / 2
             covmat *= self.circuit.hbar / 2
-    
+
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        num_w = int(len(w) ** (1/len(modes)))
+        num_w = int(len(w) ** (1 / len(modes)))
         return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)

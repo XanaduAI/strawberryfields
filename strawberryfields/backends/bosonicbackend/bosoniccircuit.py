@@ -24,7 +24,7 @@ from ..shared_ops import changebasis
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(nmodes, ngauss):
-    return (ngauss ** nmodes)
+    return ngauss ** nmodes
 
 
 def m_shape(nmodes, ngauss):
@@ -36,7 +36,7 @@ def c_shape(nmodes, ngauss):
 
 
 def to_xp(n):
-    return np.concatenate((np.arange(0, 2*n, 2), np.arange(0, 2*n, 2) + 1))
+    return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
 
 
 def from_xp(n):
@@ -46,7 +46,7 @@ def from_xp(n):
 
 
 def update_means(means, X, perm_out):
-    X_perm = X[:, perm_out][perm_out,:]
+    X_perm = X[:, perm_out][perm_out, :]
     return (X_perm @ means.T).T
 
 
@@ -102,7 +102,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
 
         new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[:self._trunc ** self.nlen] = self.weights
+        new_weights[: self._trunc ** self.nlen] = self.weights
         self.weights = new_weights
 
         rows = np.arange(self._trunc ** self.nlen)
@@ -112,8 +112,9 @@ class BosonicModes:
         new_means[np.ix_(rows, cols)] = self.means
         self.means = new_means
 
-        id_covs = [np.identity(2 * self.nlen, dtype=complex)
-                    for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         new_covs = np.array(id_covs)
         new_covs[np.ix_(rows, cols, cols)] = self.covs
         self.covs = new_covs
@@ -158,8 +159,9 @@ class BosonicModes:
         self.weights = self.weights / (self._trunc ** self.nlen)
 
         self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
-        id_covs = [np.identity(2*self.nlen, dtype=complex)
-                   for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         self.covs = np.array(id_covs)
 
     def get_modes(self):
@@ -181,28 +183,32 @@ class BosonicModes:
         sq = symp.expand(symp.squeezing(r, phi), k, self.nlen)
         self.means = update_means(self.means, sq, self.from_xp)
         self.covs = update_covs(self.covs, sq, self.from_xp)
-        
+
     def mbsqueeze(self, k, r, phi, r_anc, eta_anc, avg):
         """Squeeze mode k by the amount r*exp(1j*phi) using measurement-based squeezing.
         The squeezing of the ancilla resource is r_anc, and the detection efficiency of
-        the homodyne on the ancilla mode is eta_anc. Average map or single shot map 
+        the homodyne on the ancilla mode is eta_anc. Average map or single shot map
         can be applied."""
-        
+
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
-        
+
         phi = phi + (1 - np.sign(r)) * np.pi / 2
         r = np.abs(r)
-        theta = np.arccos(np.exp(- r))
-        self.phase_shift(phi / 2,k)
-        
+        theta = np.arccos(np.exp(-r))
+        self.phase_shift(phi / 2, k)
+
         if avg:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
-            Y = np.diag([(np.sin(theta) ** 2) * (np.exp(- 2 * r_anc)), 
-                          (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc])
+            Y = np.diag(
+                [
+                    (np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
+                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,
+                ]
+            )
             X2, Y2 = self.expandXY([k], X, Y)
-            self.apply_channel(X2, Y2)   
-            
+            self.apply_channel(X2, Y2)
+
         if not avg:
             self.add_mode()
             new_mode = self.nlen
@@ -211,11 +217,11 @@ class BosonicModes:
             self.loss(1 - eta_anc)
             val = self.measure_homodyne(np.pi / 2, new_mode)
             self.delete_mode(new_mode)
-            prefac = - np.tan(theta) / np.sqrt(2 * self.circuit.hbar * eta_anc)
+            prefac = -np.tan(theta) / np.sqrt(2 * self.circuit.hbar * eta_anc)
             self.displacement(prefac * val, np.pi / 2, k)
-            
-        self.phase_shift(-phi / 2,k)
-        
+
+        self.phase_shift(-phi / 2, k)
+
         if not avg:
             return val
 
@@ -273,7 +279,7 @@ class BosonicModes:
         return self.means
 
     def sweights(self):
-        '''Returns the matrix of weights.'''
+        """Returns the matrix of weights."""
         return self.weights
 
     def fromsmean(self, r, modes=None):
@@ -400,7 +406,7 @@ class BosonicModes:
 
         X = np.sqrt(T) * np.identity(2)
         Y = (1 - T) * np.identity(2)
-        X2, Y2 = self.expandXY(self, [k], X, Y)     
+        X2, Y2 = self.expandXY(self, [k], X, Y)
         self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
@@ -409,10 +415,10 @@ class BosonicModes:
         beam splitter is prepared in a thermal state with mean photon number nth"""
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
-        
+
         X = np.sqrt(T) * np.identity(2)
         Y = (1 - T) * nbar * np.identity(2)
-        X2, Y2 = self.expandXY(self, [k], X, Y)     
+        X2, Y2 = self.expandXY(self, [k], X, Y)
         self.apply_channel(X2, Y2)
 
     def init_thermal(self, population, mode):
@@ -516,22 +522,22 @@ class BosonicModes:
     def apply_channel(self, X, Y):
         self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
-    
+
     def expandS(self, modes, S):
         """ Expands symplectic matrix for modes to symplectic matrix for the whole system. """
         S2 = symp.expand(S, modes, self.nlen)
         return S2
-    
+
     def expandXY(self, modes, X, Y):
         """ Expands X and Y matrices for modes to X and Y matrices for the whole system. """
         X2 = symp.expand(X, modes, self.nlen)
         M = len(Y) // 2
         Y2 = np.zeros((2 * self.nlen, 2 * self.nlen), dtype=Y.dtype)
         w = np.array(modes)
-    
+
         Y2[w.reshape(-1, 1), w.reshape(1, -1)] = Y[:M, :M].copy()
         Y2[(w + self.nlen).reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[M:, M:].copy()
         Y2[w.reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[:M, M:].copy()
         Y2[(w + self.nlen).reshape(-1, 1), w.reshape(1, -1)] = Y[M:, :M].copy()
-        
+
         return X2, Y2
