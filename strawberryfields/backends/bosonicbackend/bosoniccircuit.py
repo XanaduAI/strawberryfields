@@ -415,7 +415,6 @@ class BosonicModes:
         beam splitter is prepared in a thermal state with mean photon number nth"""
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
-
         X = np.sqrt(T) * np.identity(2)
         Y = (1 - T) * nbar * np.identity(2)
         X2, Y2 = self.expandXY(self, [k], X, Y)
@@ -438,57 +437,113 @@ class BosonicModes:
         Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129
         """
-        # if covmat.shape != (2 * len(indices), 2 * len(indices)):
-        #     raise ValueError("Covariance matrix size does not match indices provided")
 
-        # for i in indices:
-        #     if self.active[i] is None:
-        #         raise ValueError("Cannot apply homodyne measurement, mode does not exist")
+        if covmat.shape != (2 * len(indices), 2 * len(indices)):
+            raise ValueError("Covariance matrix size does not match indices provided")
 
-        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        # mp = self.scovmat()
-        # (A, B, C) = ops.chop_in_blocks(mp, expind)
-        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        # V1 = ops.reassemble(V, expind)
-        # self.fromscovmat(V1)
+        for i in indices:
+            if self.active[i] is None:
+                raise ValueError("Cannot apply measurement, mode does not exist")
 
-        # r = self.smean()
-        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        # vm = np.random.multivariate_normal(vc, C, size=shots)
-        # # The next line is a hack in that it only updates conditioned on the first samples value
-        # # should still work if shots = 1
-        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm[0] - vc)
-        # va = ops.reassemble_vector(va, expind)
-        # self.fromsmean(va)
-        return
+        print("Measurements implemened for real-valued Gaussians only.")
+
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+
+        vals = np.zeros((shots, 2 * len(indices)))
+
+        pos_weights_ind = np.where(self.weights.real > 0)[0]
+        pos_weights = self.weights[pos_weights_ind].real
+        pos_weights = pos_weights / np.sum(pos_weights)
+
+        for i in range(shots):
+            drawn = False
+            while drawn == False:
+                peak_ind_sample = np.random.choice(pos_weights_ind, size=1, p=pos_weights)[0]
+
+                cov_meas = self.covs[peak_ind_sample, expind, :][:, expind] + covmat
+                peak_sample = np.random.multivariate_normal(
+                    self.means[peak_ind_sample, expind].real, cov_meas.real
+                )
+
+                exp_arg = np.einsum(
+                    "...j,...jk,...k",
+                    (peak_sample - self.means[:, expind]),
+                    np.linalg.inv(self.covs[:, expind, :][:, :, expind] + covmat),
+                    (peak_sample - self.means[:, expind]),
+                )
+                weighted_exp = self.weights * np.exp(-exp_arg)
+                prob_dist_val = np.sum(weighted_exp)
+                prob_upbnd = np.sum(weighted_exp[pos_weights_ind])
+                vertical_sample = np.random.random(size=1) * prob_upbnd
+                if vertical_sample < prob_dist_val:
+                    drawn = True
+                    vals[i] = peak_sample
+                if drawn == True:
+                    break
+
+        # The next line is a hack in that it only updates conditioned on the first samples value
+        # should still work if shots = 1
+        if len(indices) < len(self.active):
+            self.post_select_generaldyne(covmat, indices, vals[0])
+
+        return vals
 
     def homodyne(self, n, shots=1, eps=0.0002):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        # covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
-        # res = self.measure_dyne(covmat, [n], shots=shots)
+        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
+        res = self.measure_dyne(covmat, [n], shots=shots)
+        return res
+
+    def heterodyne(self, n, shots=1):
+        """Performs a homodyne measurement by calling measure dyne an giving it the
+        covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
+        covmat = self.hbar * np.eye(2) / 2
+        res = self.measure_dyne(covmat, [n], shots=shots)
+        return res
+
+    def post_select_generaldyne(self, covmat, indices, vals):
+        """ Performs a generaldyne measurement but postelecting on the value vals for modes n """
+        if covmat.shape != (2 * len(indices), 2 * len(indices)):
+            raise ValueError("Covariance matrix size does not match indices provided")
+
+        for i in indices:
+            if self.active[i] is None:
+                raise ValueError("Cannot apply measurement, mode does not exist")
+
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+        mp = self.scovmat()
+        (A, B, C) = ops.chop_in_blocks_multi(mp, expind)
+        V = A - B @ np.linalg.inv(C + covmat) @ B.transpose(0, 2, 1)
+        V1 = ops.reassemble_multi(V, expind)
+        self.covs = V1
+
+        r = self.smean()
+        (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
+        va = va + np.einsum("...ij,...j", B @ np.linalg.inv(C + covmat), (vals - vc))
+        va = ops.reassemble_vector_multi(va, expind)
+        self.means = va
+
+        reweights_exp_arg = np.einsum(
+            "...j,...jk,...k", (vals - vc), np.linalg.inv(C + covmat), (vals - vc)
+        )
+        reweights = np.exp(-reweights_exp_arg) / (
+            (np.pi ** len(indices) / 2) * np.sqrt(np.linalg.det(C + covmat))
+        )
+        self.weights = self.weights * reweights
+        self.weights = self.weights / np.sum(self.weights)
+
         return
 
-    def post_select_homodyne(self, n, val, eps=0.0002):
+    def post_select_homodyne(self, n, val, eps=0.0002, phi=0):
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        # covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
-        # indices = [n]
-        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        # mp = self.scovmat()
-        # (A, B, C) = ops.chop_in_blocks(mp, expind)
-        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        # V1 = ops.reassemble(V, expind)
-        # self.fromscovmat(V1)
-
-        # r = self.smean()
-        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        # vm1 = np.random.normal(vc[1], np.sqrt(C[1][1]))
-        # vm = np.array([val, vm1])
-        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
-        # va = ops.reassemble_vector(va, expind)
-        # self.fromsmean(va)
+        self.phase_shift(phi, n)
+        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
+        indices = [n]
+        vals = np.array([val, 0])
+        self.post_select_generaldyne(covmat, indices, vals)
         return
 
     def post_select_heterodyne(self, n, alpha_val):
@@ -496,21 +551,10 @@ class BosonicModes:
         if self.active[n] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
-        # covmat = np.identity(2)
-        # indices = [n]
-        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        # mp = self.scovmat()
-        # (A, B, C) = ops.chop_in_blocks(mp, expind)
-        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        # V1 = ops.reassemble(V, expind)
-        # self.fromscovmat(V1)
-
-        # r = self.smean()
-        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        # vm = 2.0 * np.array([np.real(alpha_val), np.imag(alpha_val)])
-        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
-        # va = ops.reassemble_vector(va, expind)
-        # self.fromsmean(va)
+        covmat = self.hbar * np.identity(2) / 2
+        indices = [n]
+        vals = np.array(alpha_val.real, alpha_val.imag)
+        self.post_select_generaldyne(covmat, indices, vals)
         return
 
     def apply_u(self, U):
