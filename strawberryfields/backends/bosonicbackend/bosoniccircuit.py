@@ -191,10 +191,10 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
         
-        phi = phi + (1 - np.sign(r)) * np.pi / 4
+        phi = phi + (1 - np.sign(r)) * np.pi / 2
         r = np.abs(r)
         theta = np.arccos(np.exp(- r))
-        self.phase_shift(phi,k)
+        self.phase_shift(phi / 2,k)
         
         if avg:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
@@ -214,7 +214,7 @@ class BosonicModes:
             prefac = - np.tan(theta) / np.sqrt(2 * self.circuit.hbar * eta_anc)
             self.displacement(prefac * val, np.pi / 2, k)
             
-        self.phase_shift(-phi,k)
+        self.phase_shift(-phi / 2,k)
         
         if not avg:
             return val
