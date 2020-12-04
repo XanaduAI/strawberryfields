@@ -272,12 +272,10 @@ def generate_code(prog, eng=None):
         else:
             if eng.backend_options:
                 formatting_str = (
-                    f'"{eng.backend_name}", backend_options=' +
-                    f'{{"cutoff_dim": {eng.backend_options["cutoff_dim"]}}}'
+                    f'"{eng.backend_name}", backend_options='
+                    + f'{{"cutoff_dim": {eng.backend_options["cutoff_dim"]}}}'
                 )
-                code_seq.append(
-                    f'eng = sf.Engine({formatting_str})'
-                )
+                code_seq.append(f"eng = sf.Engine({formatting_str})")
             else:
                 code_seq.append(f'eng = sf.Engine("{eng.backend_name}")')
 
@@ -335,7 +333,7 @@ def _factor_out_pi(num_list, precision=12):
         if np.isclose(p % factor, [0, factor]).any() and p != 0:
             gcd = np.gcd(int(p / factor), precision)
             if gcd == precision:
-                if int(p/np.pi) == 1:
+                if int(p / np.pi) == 1:
                     a.append("np.pi")
                 else:
                     a.append(f"{int(p/np.pi)}*np.pi")
