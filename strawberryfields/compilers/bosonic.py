@@ -33,6 +33,13 @@ class Bosonic(Compiler):
         "DisplacedSqueezed",
         "Thermal",
         "Gaussian",
+        "Fock",
+        "Ket",
+        "DensityMatrix",
+        "Bosonic",
+        "GKP",
+        "Cat",
+        "Comb",
         # measurements
         "MeasureHomodyne",
         "MeasureHeterodyne",
