@@ -95,6 +95,7 @@ class BosonicModes:
     def add_mode(self, n=1):
         """Add n modes to the circuit."""
         self.nlen += n
+        self.active.append(self.nlen)
 
         # Updated mode index permutation list
         self.to_xp = to_xp(self.nlen)
@@ -180,6 +181,43 @@ class BosonicModes:
         sq = symp.expand(symp.squeezing(r, phi), k, self.nlen)
         self.means = update_means(self.means, sq, self.from_xp)
         self.covs = update_covs(self.covs, sq, self.from_xp)
+        
+    def mbsqueeze(self, k, r, phi, r_anc, eta_anc, avg):
+        """Squeeze mode k by the amount r*exp(1j*phi) using measurement-based squeezing.
+        The squeezing of the ancilla resource is r_anc, and the detection efficiency of
+        the homodyne on the ancilla mode is eta_anc. Average map or single shot map 
+        can be applied."""
+        
+        if self.active[k] is None:
+            raise ValueError("Cannot squeeze mode, mode does not exist")
+        
+        phi = phi + (1 - np.sign(r)) * np.pi / 4
+        r = np.abs(r)
+        theta = np.arccos(np.exp(- r))
+        self.phase_shift(phi,k)
+        
+        if avg:
+            X = np.diag([np.cos(theta), 1 / np.cos(theta)])
+            Y = np.diag([(np.sin(theta) ** 2) * (np.exp(- 2 * r_anc)), 
+                          (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc])
+            X2, Y2 = self.expandXY([k], X, Y)
+            self.apply_channel(X2, Y2)   
+            
+        if not avg:
+            self.add_mode()
+            new_mode = self.nlen
+            self.squeeze(r_anc, 0, new_mode)
+            self.beamsplitter(theta, 0, k, new_mode)
+            self.loss(1 - eta_anc)
+            val = self.measure_homodyne(np.pi / 2, new_mode)
+            self.delete_mode(new_mode)
+            prefac = - np.tan(theta) / np.sqrt(2 * self.circuit.hbar * eta_anc)
+            self.displacement(prefac * val, np.pi / 2, k)
+            
+        self.phase_shift(-phi,k)
+        
+        if not avg:
+            return val
 
     def phase_shift(self, phi, k):
         """Implement a phase shift in mode k by the amount phi."""
@@ -360,10 +398,10 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
-        X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
-        Y = symp.expand((1 - T) * np.identity(2), k, self.nlen)
-        self.means = update_means(self.means, X, self.from_xp)
-        self.covs = update_covs(self.covs, X, self.from_xp, Y)
+        X = np.sqrt(T) * np.identity(2)
+        Y = (1 - T) * np.identity(2)
+        X2, Y2 = self.expandXY(self, [k], X, Y)     
+        self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
         r"""Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
@@ -371,10 +409,11 @@ class BosonicModes:
         beam splitter is prepared in a thermal state with mean photon number nth"""
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
-
-        self.loss(T, k)
-        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][self.from_xp, :]
-        self.covs += Y
+        
+        X = np.sqrt(T) * np.identity(2)
+        Y = (1 - T) * nbar * np.identity(2)
+        X2, Y2 = self.expandXY(self, [k], X, Y)     
+        self.apply_channel(X2, Y2)
 
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
@@ -477,3 +516,22 @@ class BosonicModes:
     def apply_channel(self, X, Y):
         self.means = update_means(self.means, X, self.from_xp, Y)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
+    
+    def expandS(self, modes, S):
+        """ Expands symplectic matrix for modes to symplectic matrix for the whole system. """
+        S2 = symp.expand(S, modes, self.nlen)
+        return S2
+    
+    def expandXY(self, modes, X, Y):
+        """ Expands X and Y matrices for modes to X and Y matrices for the whole system. """
+        X2 = symp.expand(X, modes, self.nlen)
+        M = len(Y) // 2
+        Y2 = np.zeros((2 * self.nlen, 2 * self.nlen), dtype=Y.dtype)
+        w = np.array(modes)
+    
+        Y2[w.reshape(-1, 1), w.reshape(1, -1)] = Y[:M, :M].copy()
+        Y2[(w + self.nlen).reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[M:, M:].copy()
+        Y2[w.reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[:M, M:].copy()
+        Y2[(w + self.nlen).reshape(-1, 1), w.reshape(1, -1)] = Y[M:, :M].copy()
+        
+        return X2, Y2

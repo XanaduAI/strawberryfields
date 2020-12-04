@@ -106,10 +106,26 @@ class BosonicBackend(BaseBosonic):
 
     def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
-
+    
+    def mbsqueeze(self, mode, r, phi, r_anc, eta_anc, avg):
+        if avg:
+            self.circuit.mbsqueeze(mode, r, phi, r_anc, eta_anc, avg)
+        if not avg:
+            ancilla_val = self.circuit.mbsqueeze(mode, r, phi, r_anc, eta_anc, avg)
+            return ancilla_val
+        
     def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
 
+    
+    def gaussian_cptp(self, modes, X, Y):
+        if not isinstance(Y, int):
+            X2, Y2 = self.circuit.expandXY(modes, X, Y)
+            self.circuit.apply_channel(X2, Y2)
+        else:
+            X2 = self.circuit.expandS(modes, X)
+            self.circuit.apply_channel(X, 0)
+    
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
 
