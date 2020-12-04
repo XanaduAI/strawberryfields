@@ -514,7 +514,7 @@ class BosonicModes:
         self.covs = update_covs(self.covs, Us, self.from_xp)
 
     def apply_channel(self, X, Y):
-        self.means = update_means(self.means, X, self.from_xp, Y)
+        self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
     
     def expandS(self, modes, S):
