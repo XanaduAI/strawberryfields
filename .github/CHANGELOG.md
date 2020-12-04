@@ -5,6 +5,25 @@
 * `TDMProgram` objects can now be compiled and submitted via the API.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
+* Wigner functions can be plotted directly via Strawberry Fields using Plot.ly.
+  [(#495)](https://github.com/XanaduAI/strawberryfields/pull/495)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim": 10})
+
+  with prog.context as q:
+    gamma = 2
+    Vgate(gamma) | q[0]
+
+  state = eng.run(prog).state
+
+  xvec = np.arange(-4, 4, 0.01)
+  pvec = np.arange(-4, 4, 0.01)
+
+  sf.plot_wigner(state, xvec, pvec, renderer="browser")
+  ```
+
 <h3>Improvements</h3>
 
 * The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
