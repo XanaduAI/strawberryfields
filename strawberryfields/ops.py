@@ -2833,7 +2833,7 @@ simple_state_preparations = (
     Catstate,
     Thermal,
 )  # have __init__ methods with default arguments
-state_preparations = simple_state_preparations + (Ket, DensityMatrix)
+state_preparations = simple_state_preparations + (Ket, DensityMatrix, Bosonic, GKP, Comb)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne, MeasureThreshold)
 
