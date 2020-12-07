@@ -28,7 +28,6 @@ from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
 from strawberryfields.backends.fockbackend import FockBackend
 from strawberryfields.backends.gaussianbackend import GaussianBackend
-from strawberryfields.backends.bosonicbackend import BosonicBackend
 
 try:
     import tensorflow as tf
@@ -43,14 +42,12 @@ else:
 backend_params = [
     pytest.param(FockBackend, marks=pytest.mark.fock),
     pytest.param(GaussianBackend, marks=pytest.mark.gaussian),
-    pytest.param(BosonicBackend, marks=pytest.mark.bosonic)
 ]
 
 
 eng_backend_params = [
     pytest.param("fock", marks=pytest.mark.fock),
     pytest.param("gaussian", marks=pytest.mark.gaussian),
-    pytest.param("bosonic", marks=pytest.mark.bosonic)
 ]
 
 
@@ -220,9 +217,9 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""
     if tf_available:
-        allowed_backends = {"gaussian", "tf", "fock", "bosonic"}
+        allowed_backends = {"gaussian", "tf", "fock"}
     else:
-        allowed_backends = {"gaussian", "fock", "bosonic"}
+        allowed_backends = {"gaussian", "fock"}
 
     # load the marker specifying what the backend is
     marks = {mark.name for mark in item.iter_markers() if mark.name in allowed_backends}
