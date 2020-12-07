@@ -13,8 +13,11 @@
 # limitations under the License.
 r"""Unit tests for tdmprogram.py"""
 import copy
+from collections import Iterable
+
 import pytest
 import numpy as np
+
 import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
@@ -142,6 +145,21 @@ def test_str_tdm_method():
     """Testing the string method"""
     prog = tdmprogram.TDMProgram(N=1)
     assert prog.__str__() == "<TDMProgram: concurrent modes=1, time bins=0, spatial modes=0>"
+
+
+def test_single_parameter_list_program():
+    """Test that a TDMProgram with a single parameter list works."""
+    prog = sf.TDMProgram(2)
+    eng = sf.Engine("gaussian")
+
+    with prog.context([1, 2]) as (p, q):
+        ops.Sgate(p[0]) | q[0]
+        ops.MeasureHomodyne(p[0]) | q[0]
+
+    eng.run(prog)
+
+    assert isinstance(prog.loop_vars, Iterable)
+    assert prog.parameters == {'p0': [1, 2]}
 
 
 class TestSingleLoopNullifier:
