@@ -1318,7 +1318,12 @@ class BaseGaussianState(BaseState):
 
         if self._pure:
             return twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
 
         return None  # pragma: no cover
@@ -1344,7 +1349,12 @@ class BaseGaussianState(BaseState):
 
         if self.is_pure:
             psi = twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
             rho = np.outer(psi, psi.conj())
             return rho
@@ -1739,7 +1749,12 @@ class BaseBosonicState(BaseState):
 
         if self._pure:
             return twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
 
         return None  # pragma: no cover
@@ -1765,7 +1780,12 @@ class BaseBosonicState(BaseState):
 
         if self.is_pure:
             psi = twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
             rho = np.outer(psi, psi.conj())
             return rho

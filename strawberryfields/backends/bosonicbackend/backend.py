@@ -15,22 +15,9 @@
 """Bosonic backend"""
 import warnings
 
-from numpy import (
-    empty,
-    concatenate,
-    arange,
-    array,
-    identity,
-    arctan2,
-    angle,
-    sqrt,
-    vstack,
-    zeros_like,
-    allclose,
-    ix_,
-    zeros,
-    shape,
-)
+import numpy as np
+from scipy.linalg import block_diag
+
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
 
@@ -39,19 +26,44 @@ from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
 from .bosoniccircuit import BosonicModes
+from ..base import NotApplicableError
+
+
+def to_xp(n):
+    """Permutation to quadrature-like (x_1,...x_n, p_1...p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
+    return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
+
+
+def from_xp(n):
+    """Permutation to mode-like (x_1,p_1...x_n,p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
+    perm_inds_list = [(i, i + n) for i in range(n)]
+    perm_inds = [a for tup in perm_inds_list for a in tup]
+    return perm_inds
+
+
+def kron_list(l):
+    """Take Kronecker products of a list of lists."""
+    if len(l) == 1:
+        return l[0]
+    return np.kron(l[0], kron_list(l[1:]))
 
 
 class BosonicBackend(BaseBosonic):
-    r"""The BosonicBackend...
-
-    ..
-        .. currentmodule:: strawberryfields.backends.gaussianbackend
-        .. autosummary::
-            :toctree: api
-
-            ~bosoniccircuit.BosonicModes
-            ~ops
-    """
+    """Bosonic backend class."""
 
     short_name = "bosonic"
     circuit_spec = "bosonic"
@@ -62,6 +74,141 @@ class BosonicBackend(BaseBosonic):
         self._supported["mixed_states"] = True
         self._init_modes = None
         self.circuit = None
+
+    def run_prog(self, prog, batches, **kwargs):
+        # Initialize the circuit.
+        self.init_circuit(prog)
+
+        # Apply operations to circuit. For now, copied from LocalEngne.
+        for cmd in prog.circuit:
+            applied = []
+            samples_dict = {}
+            all_samples = {}
+            try:
+                # try to apply it to the backend and, if op is a measurement, store it in values
+                val = cmd.op.apply(cmd.reg, self, **kwargs)
+                if val is not None:
+                    for i, r in enumerate(cmd.reg):
+                        if batches:
+                            samples_dict[r.ind] = val[:, :, i]
+
+                            # Internally also store all the measurement outcomes
+                            if r.ind not in all_samples:
+                                all_samples[r.ind] = list()
+                            all_samples[r.ind].append(val[:, :, i])
+                        else:
+                            samples_dict[r.ind] = val[:, i]
+
+                            # Internally also store all the measurement outcomes
+                            if r.ind not in all_samples:
+                                all_samples[r.ind] = list()
+                            all_samples[r.ind].append(val[:, i])
+
+                applied.append(cmd)
+
+            except NotApplicableError:
+                # command is not applicable to the current backend type
+                raise NotApplicableError(
+                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                ) from None
+
+            except NotImplementedError:
+                # command not directly supported by backend API
+                raise NotImplementedError(
+                    "The operation {} has not been implemented in {} for the arguments {}.".format(
+                        cmd.op, self.backend, kwargs
+                    )
+                ) from None
+
+        return applied, samples_dict, all_samples
+
+    def init_circuit(self, prog, **kwargs):
+        """Instantiate the circuit and initialize weights, means, and covs
+        depending on the Preparation classes."""
+
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            Comb,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+        )
+
+        nmodes = prog.num_subsystems
+        self.circuit = BosonicModes()
+        init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
+
+        vac_means = np.zeros(2, dtype=complex).tolist()
+        vac_covs = np.identity(2, dtype=complex).tolist()
+
+        # List of modes that have been traversed through
+        reg_list = []
+
+        # Go through the operations in the circuit
+        for cmd in prog.circuit:
+            # Check if an operation has already acted on these modes.
+            labels = [label.ind for label in cmd.reg]
+            isitnew = 1 - np.isin(labels, reg_list)
+            if np.any(isitnew):
+                # Operation parameters
+                pars = cmd.op.p
+                for reg in labels:
+                    # All the possible preparations should go in this loop
+                    if type(cmd.op) == Bosonic:
+                        w, m, c = [pars[i].tolist() for i in range(3)]
+
+                    elif type(cmd.op) == Catstate:
+                        w, m, c = self.prepare_cat(*pars)
+
+                    elif type(cmd.op) == GKP:
+                        w, m, c = self.prepare_gkp(*pars)
+
+                    elif type(cmd.op) == Comb:
+                        w, m, c = self.prepare_comb(*pars)
+
+                    elif type(cmd.op) == Fock:
+                        w, m, c = self.prepare_fock(*pars)
+
+                    elif type(cmd.op) in (Ket, DensityMatrix):
+                        raise Exception("Not yet implemented!")
+
+                    # The rest of the preparations are gaussian.
+                    else:
+                        w, m, c = [[1]], [vac_means[:]], [vac_covs[:]]
+
+                    init_weights[reg] = w
+                    init_means[reg] = m
+                    init_covs[reg] = c
+
+                reg_list += labels
+
+        # Assume unused modes in the circuit are vacua.
+        for i in set(range(nmodes)).difference(reg_list):
+            init_weights[i], init_means[i], init_covs[i] = [[1]], [vac_means[:]], [vac_covs[:]]
+
+        # Find all possible combinations of means and combs of the
+        # Gaussians between the modes.
+        mean_combs = it.product(*init_means)
+        cov_combs = it.product(*init_covs)
+
+        # Tensor product of the weights.
+        weights = kron_list(init_weights)
+        # De-nest the means iterator.
+        means = np.array([[a for b in tup for a in b] for tup in mean_combs])
+        # Stack covs appropriately.
+        covs = np.array([block_diag(*tup) for tup in cov_combs])
+
+        # Declare circuit attributes.
+        self.circuit.nlen = nmodes
+        self.circuit.to_xp = to_xp(nmodes)
+        self.circuit.from_xp = from_xp(nmodes)
+        self.circuit.active = list(np.arange(nmodes, dtype=int))
+
+        self.circuit.weights = weights
+        self.circuit.means = means
+        self.circuit.covs = covs
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
@@ -97,6 +244,22 @@ class BosonicBackend(BaseBosonic):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r_s, phi_s, mode)
         self.circuit.displace(r_d, phi_d, mode)
+
+    def prepare_cat(self, alpha, phi, desc):
+        """ Prepares the arrays of weights, means and covs for a cat state"""
+        return
+
+    def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
+        """ Prepares the arrays of weights, means and covs for a gkp state """
+        return
+
+    def prepare_fock(self, n, r=0.0001):
+        """ Prepares the arrays of weights, means and covs of a Fock state"""
+        return
+
+    def prepare_comb(self, n, d, r, cutoff):
+        """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
+        return
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
@@ -141,11 +304,11 @@ class BosonicBackend(BaseBosonic):
         if select is None:
             qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
         else:
-            val = select * 2 / sqrt(2 * self.circuit.hbar)
+            val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
         # `qs` will always be a single value since multiple shots is not supported
-        return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
+        return np.array([[qs * np.sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
@@ -162,15 +325,15 @@ class BosonicBackend(BaseBosonic):
             )
 
         if select is None:
-            m = identity(2)
+            m = np.identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            return array([[res[0, 0] + 1j * res[0, 1]]])
+            return np.array([[res[0, 0] + 1j * res[0, 1]]])
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
 
         # `res` will always be a single value since multiple shots is not supported
-        return array([[res]])
+        return np.array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
         if isinstance(modes, int):
@@ -186,7 +349,7 @@ class BosonicBackend(BaseBosonic):
             )
 
         # convert xp-ordering to symmetric ordering
-        means = vstack([r[:N], r[N:]]).reshape(-1, order="F")
+        means = np.vstack([r[:N], r[N:]]).reshape(-1, order="F")
         C = changebasis(N)
         cov = C @ V @ C.T
 
@@ -217,14 +380,14 @@ class BosonicBackend(BaseBosonic):
         mean = self.circuit.smeanxp()
         cov = self.circuit.scovmatxp()
 
-        x_idxs = array(modes)
+        x_idxs = np.array(modes)
         p_idxs = x_idxs + len(mu)
-        modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        modes_idxs = np.concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         reduced_mean = mean[modes_idxs]
 
         # check we are sampling from a gaussian state with zero mean
-        if allclose(mu, zeros_like(mu)):
+        if np.allclose(mu, np.zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
@@ -245,14 +408,14 @@ class BosonicBackend(BaseBosonic):
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
-        if not allclose(mu, zeros_like(mu)):
+        if not np.allclose(mu, np.zeros_like(mu)):
             raise NotImplementedError(
                 "Threshold measurement is only supported for " "Gaussian states with zero mean"
             )
-        x_idxs = array(modes)
+        x_idxs = np.array(modes)
         p_idxs = x_idxs + len(mu)
-        modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        modes_idxs = np.concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         samples = torontonian_sample_state(reduced_cov, shots)
 
         return samples
@@ -279,23 +442,24 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
+        listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
+
         covmat = self.circuit.covs
         means = self.circuit.means
         if len(w) == 1:
             m = covmat[0]
             r = means[0]
 
-            covmat = empty((2 * len(modes), 2 * len(modes)))
+            covmat = np.empty((2 * len(modes), 2 * len(modes)))
             means = r[listmodes]
 
             for i, ii in enumerate(listmodes):
                 for j, jj in enumerate(listmodes):
                     covmat[i, j] = m[ii, jj]
 
-            means *= sqrt(2 * self.circuit.hbar) / 2
+            means *= np.sqrt(2 * self.circuit.hbar) / 2
             covmat *= self.circuit.hbar / 2
 
-        mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
+        mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
         num_w = int(len(w) ** (1 / len(modes)))
         return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)

@@ -317,6 +317,17 @@ class LocalEngine(BaseEngine):
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
 
+    def __new__(cls, backend, *, backend_options=None):
+        if backend == "bosonic":
+            bos_eng = super().__new__(BosonicEngine)
+            bos_eng.__init__(backend, backend_options=backend_options)
+            return bos_eng
+
+        return super().__new__(cls)
+
+    # def __init__(self, backend, backend_options=None):
+    #     super().__init__(backend, backend_options=backend_options)
+
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
@@ -722,3 +733,77 @@ class Engine(LocalEngine):
 
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__
+
+
+class BosonicEngine(LocalEngine):
+    """BosonicEngine class."""
+
+    def _init_backend(self, init_num_subsystems):
+        self.backend.begin_circuit(init_num_subsystems, **self.backend_options)
+
+    def _run_program(self, prog, **kwargs):
+        batches = self.backend_options.get("batch_size", 0)
+
+        # Custom Bosonic run code
+        applied, samples_dict, all_samples = self.backend.run_prog(prog, batches, **kwargs)
+        samples = self._combine_and_sort_samples(samples_dict)
+        return applied, samples, all_samples
+
+    def run(self, program, *, args=None, compile_options=None, **kwargs):
+        # pylint: disable=import-outside-toplevel
+        args = args or {}
+        compile_options = compile_options or {}
+        temp_run_options = {}
+
+        if isinstance(program, collections.abc.Sequence):
+            # succesively update all run option defaults.
+            # the run options of successive programs
+            # overwrite the run options of previous programs
+            # in the list
+            program_lst = program
+            for p in program:
+                temp_run_options.update(p.run_options)
+        else:
+            # single program to execute
+            program_lst = [program]
+            temp_run_options.update(program.run_options)
+
+        temp_run_options.update(kwargs or {})
+        temp_run_options.setdefault("shots", 1)
+        temp_run_options.setdefault("modes", None)
+
+        # avoid unexpected keys being sent to Operations
+        eng_run_keys = ["eval", "session", "feed_dict", "shots"]
+        eng_run_options = {
+            key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
+        }
+
+        # check that post-selection and feed-forwarding is not used together with shots > 1
+        for p in program_lst:
+            for c in p.circuit:
+                try:
+                    if c.op.select and eng_run_options["shots"] > 1:
+                        raise NotImplementedError(
+                            "Post-selection cannot be used together with multiple shots."
+                        )
+                except AttributeError:
+                    pass
+
+                if c.op.measurement_deps and eng_run_options["shots"] > 1:
+                    raise NotImplementedError(
+                        "Feed-forwarding of measurements cannot be used together with multiple shots."
+                    )
+
+        result = super()._run(
+            program, args=args, compile_options=compile_options, **eng_run_options
+        )
+
+        modes = temp_run_options["modes"]
+
+        if modes is None or modes:
+            # state object requested
+            # session and feed_dict are needed by TF backend both during simulation (if program
+            # contains measurements) and state object construction.
+            result._state = self.backend.state(**temp_run_options)
+
+        return result
