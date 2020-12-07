@@ -249,9 +249,44 @@ def _to_tdm_program(bb):
 def generate_code(prog, eng=None):
     """Converts a Strawberry Fields program into valid Strawberry Fields code.
 
+    **Example:**
+
+    .. code-block:: python3
+
+        prog = sf.Program(3)
+        eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+        with prog.context as q:
+            ops.Sgate(2*np.pi/3) | q[1]
+            ops.BSgate(0.6, 0.1) | (q[2], q[0])
+            ops.MeasureFock() | q
+
+        results = eng.run(prog)
+
+        code_str = sf.io.generate_code(prog, eng=eng)
+
+    This will create the following string:
+
+    .. code-block:: pycon
+
+        >>> print(code_str)
+        import strawberryfields as sf
+        from strawberryfields import ops
+
+        prog = sf.Program(3)
+        eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+        with prog.context as q:
+            ops.Sgate(2*np.pi/3, 0.0) | q[1]
+            ops.BSgate(0.6, 0.1) | (q[2], q[0])
+            ops.MeasureFock() | (q[0], q[1], q[2])
+
+        results = eng.run(prog)
+
     Args:
         prog (Program): the Strawberry Fields program
-        eng (Engine): the Strawberryfields engine
+        eng (Engine): The Strawberryfields engine. If ``None``, only the Program
+            parts will be in the resulting code-string.
 
     Returns:
         str: the Strawberry Fields code, for constructing the program, as a string
@@ -270,7 +305,7 @@ def generate_code(prog, eng=None):
         if eng_type == "RemoteEngine":
             code_seq.append(f'eng = sf.RemoteEngine("{eng.target}")')
         else:
-            if eng.backend_options:
+            if "cutoff_dim" in eng.backend_options:
                 formatting_str = (
                     f'"{eng.backend_name}", backend_options='
                     + f'{{"cutoff_dim": {eng.backend_options["cutoff_dim"]}}}'
@@ -281,6 +316,7 @@ def generate_code(prog, eng=None):
 
     # check if program is of TDM type and format the context as appropriate
     if prog.type == "tdm":
+        # if the context arrays contain pi-values, rewrite them as pi-expressions
         tdm_params = [f"[{_factor_out_pi(par)}]" for par in prog.tdm_params]
         code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
     else:
@@ -326,6 +362,7 @@ def _factor_out_pi(num_list, precision=12):
 
     a = []
     for p in num_list:
+        # if list element is not a number then append its string representation
         if not isinstance(p, Number):
             a.append(str(p))
             continue

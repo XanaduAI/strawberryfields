@@ -737,10 +737,9 @@ class TestGenerateCode:
 
         code_list = code.split("\n")
         formatting_str = f"\"{engine_kwargs['backend']}\""
-        '"fock", backend_options={"cutoff_dim": 5}'
         if "backend_options" in engine_kwargs:
             formatting_str += (
-                ", backend_options=" +
+                ", backend_options="
                 f'{{"cutoff_dim": {engine_kwargs["backend_options"]["cutoff_dim"]}}}'
             )
         expected = prog_txt.format(engine_args=formatting_str).split("\n")
@@ -778,7 +777,12 @@ class TestGenerateCode:
         ],
     )
     def test_factor_out_pi(self, value):
-        """Test for the factor_out_pi function"""
+        """Test that the factor_out_pi function is able to convert floats
+        that are equal to a pi expression, to strings containing a pi
+        expression.
+
+        For example, the float 6.28318530718 should be converted to the string "2*np.pi"
+        """
         try:
             val = eval(value)
         except NameError:
