@@ -29,7 +29,11 @@ from numpy import (
     allclose,
     ix_,
     zeros,
-    shape
+    shape,
+    cos,
+    sin,
+    exp,
+    zeros,
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
@@ -100,18 +104,22 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_cat(self, alpha, phi, desc):
         """ Prepares the arrays of weights, means and covs for a cat state"""
-        if desc == "complex":
-            norm = np.exp(- np.absolute(alpha)**2) / (2*(1 + np.exp(- 2*np.absolute(alpha)**2) * np.cos(phi)))
-            cplx_coef = np.exp(-2*np.absolute(alpha)**2-1j*phi)
-            rplus = np.sqrt(2*self.hbar)*np.array([alpha.real, alpha.imag])
-            rminus = -replus
-            rcomplex = np.sqrt(2*self.hbar)*np.array([1j*alpha.imag, -1j*alpha.real])
-            cov = 0.5*self.hbar*(np.identity(2))
 
-            ## To be completed here
+        norm = np.exp(- np.absolute(alpha) ** 2) / ( 2 * ( 1 + np.exp( - 2 * np.absolute(alpha) ** 2) * np.cos(phi)))
+        rplus = np.sqrt(2 * self.hbar) * np.array([alpha.real, alpha.imag])
+        rminus = - replus
+        cov = 0.5 * self.hbar * np.identity(2)
+
+        if desc == "complex":
+            cplx_coef = np.exp(- 2 * np.absolute(alpha) ** 2 - 1j * phi)
+            rcomplex = np.sqrt(2 * self.hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
+            weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
+            means = np.array([rplus, rminus, rcomplex, np.conjugate(rcomplex)])
+
+            return [weights, means, cov]
 
         else if desc == "real":
-            raise ValueError("Only the complex description of Cat state has been implemented")      
+            raise ValueError("The real description of Cat state is not implemented")      
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
         """ Prepares the arrays of weights, means and covs for a gkp state """
@@ -119,27 +127,51 @@ class BosonicBackend(BaseBosonic):
         theta, phi = state[0], state[1]
 
         if shape == "square":
-            def coef(l, m):
-                if l % 2 == 0  and m % 2 == 0 :
-                    c = np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
-                else if l % 4 == 0  and m % 2 == 1 :
-                    c = np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
-                else if l % 4 == 2 and m % 2 == 1 :
-                    c = np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
-                else if m % 4 == 0 and l % 4 % 2 == 1 :
-                    c = np.sin( theta ) * np.cos( phi )
-                else if m % 4 == 2 and l % 4 % 2 == 1 :
-                    c = - np.sin( theta ) * np.cos ( phi )
-                else if ( l % 4 == 3 and m % 4 == 3 ) or ( l % 4 == 1 and m % 4 == 1 ):
-                    c = - np.sin( theta ) * np.sin( phi )
-                else if ( l % 4 == 3 and m % 4 == 1) or ( l % 4 == 1 and m % 4 == 3 ):
-                    c = np.sin( theta ) * np.sin( phi )
-                return c / (4*np.sqrt(np.pi))
-
             if desc == "real":
 
+                def coef(arr):
+                    l, m = arr[:,0], arr[:,1]
+                    t = np.zeros(arr.shape[0], dtype=float)
+                    t += np.logical_and(l % 2 == 0, m % == 0) * np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
+                    t += np.logical_and(l % 4 == 0, m % 2 == 1) * np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
+                    t += np.logical_and(l % 4 == 2, m % 2 == 1) * np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
+                    t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin( theta ) * np.cos( phi )
+                    t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin( theta ) * np.cos ( phi )
+                    t -= np.logical_and(l % 4 == 3, m % 4 == 3) * np.sin( theta ) * np.sin( phi )
+                    t += np.logical_or(np.logical_and(l % 4 == 3, m % 4 == 1), np.logical_and(l % 4 == 1, m % 4 == 3)) * np.sin( theta ) * np.sin( phi )
+                    # if l % 2 == 0  and m % 2 == 0 :
+                        # c = np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
+                    # else if l % 4 == 0  and m % 2 == 1 :
+                        # c = np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
+                    # else if l % 4 == 2 and m % 2 == 1 :
+                        # c = np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
+                    # else if m % 4 == 0 and l % 4 % 2 == 1 :
+                        # c = np.sin( theta ) * np.cos( phi )
+                    # else if m % 4 == 2 and l % 4 % 2 == 1 :
+                        # c = - np.sin( theta ) * np.cos ( phi )
+                    # else if ( l % 4 == 3 and m % 4 == 3 ) or ( l % 4 == 1 and m % 4 == 1 ):
+                        # c = - np.sin( theta ) * np.sin( phi )
+                    # else if ( l % 4 == 3 and m % 4 == 1) or ( l % 4 == 1 and m % 4 == 3 ):
+                        # c = np.sin( theta ) * np.sin( phi )
 
-        ### To be completed here
+                    return t * np.exp( - np.pi * 0.25 * (l ** 2 + m ** 2 ) * ( 1 - np.exp( - 2 * epsilon ) ) / ( 1 + np.exp( - 2 * epsilon ) ) )    
+                    
+                z_max = np.ceil( np.sqrt( - 4 * self.hbar * np.log(cutoff) * ( 1 + np.exp( - 2 * epsilon ) ) / ( 1 - np.exp( - 2 * epsilon ) ) ) )
+                damping = 2 * np.exp( - epsilon ) / ( 1 + np.exp( - 2 * epsilon ) )
+
+                means_large_gen = [l + 1j * m for l, m in it.product(range(-z_max, z_max + 1), repeat=2)]
+                means_gen = it.tee(it.filterfalse(lambda x: (np.exp(- 0.25 * np.pi * np.abs(x) ** 2 ) < cutoff), means_large_gen), 2)
+                means = np.concatenate(np.reshape(np.fromiter(means_gen[0], complex), (-1,1)).real,np.reshape(np.fromiter(a[1], complex), (-1,1).imag), axis=1)
+                weights = coef(means)
+                means *= 0.5 * damping * np.sqrt(np.pi)
+                cov = 2 * (1 + np.exp( - 2 * epsilon ) ) / (1 - np.exp( - 2 * epsilon ) ) * np.identity(2)
+                
+                return [weights,  means, cov]
+
+            else if desc == "complex":
+                raise ValueError("The complex description of GKP is not implemented")
+        else :
+            raise ValueError("Only square GKP are implemented for now")
 
     def prepare_fock(self, n, r=0.0001):
         """ Prepares the arrays of weights, means and covs of a Fock state"""
