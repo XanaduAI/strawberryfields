@@ -19,7 +19,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 
 from operator import itemgetter
 from math import ceil
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import blackbird as bb

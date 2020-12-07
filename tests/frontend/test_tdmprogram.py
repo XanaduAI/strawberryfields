@@ -13,7 +13,7 @@
 # limitations under the License.
 r"""Unit tests for tdmprogram.py"""
 import copy
-from collections import Iterable
+from collections.abc import Iterable
 
 import pytest
 import numpy as np
