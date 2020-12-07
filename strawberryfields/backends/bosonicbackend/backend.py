@@ -34,6 +34,8 @@ from numpy import (
     sin,
     exp,
     zeros,
+    logical_and,
+    logical_or,
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
@@ -85,92 +87,140 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_thermal_state(self, nbar, mode):
         # self.circuit.init_thermal(nbar, mode)
+        pass
 
     def prepare_vacuum_state(self, mode):
         # self.circuit.loss(0.0, mode)
+        pass
 
     def prepare_coherent_state(self, r, phi, mode):
         # self.circuit.loss(0.0, mode)
         # self.circuit.displace(r, phi, mode)
+        pass
 
     def prepare_squeezed_state(self, r, phi, mode):
         # self.circuit.loss(0.0, mode)
         # self.circuit.squeeze(r, phi, mode)
+        pass
 
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
         # self.circuit.loss(0.0, mode)
         # self.circuit.squeeze(r_s, phi_s, mode)
         # self.circuit.displace(r_d, phi_d, mode)
+        pass
 
     def prepare_cat(self, alpha, phi, desc):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
-        norm = np.exp(- np.absolute(alpha) ** 2) / ( 2 * ( 1 + np.exp( - 2 * np.absolute(alpha) ** 2) * np.cos(phi)))
+        norm = np.exp(-np.absolute(alpha) ** 2) / (
+            2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi))
+        )
         rplus = np.sqrt(2 * self.hbar) * np.array([alpha.real, alpha.imag])
-        rminus = - replus
+        rminus = -replus
         cov = 0.5 * self.hbar * np.identity(2)
 
         if desc == "complex":
-            cplx_coef = np.exp(- 2 * np.absolute(alpha) ** 2 - 1j * phi)
+            cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
             rcomplex = np.sqrt(2 * self.hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             means = np.array([rplus, rminus, rcomplex, np.conjugate(rcomplex)])
 
             return [weights, means, cov]
 
-        else if desc == "real":
-            raise ValueError("The real description of Cat state is not implemented")      
+        elif desc == "real":
+            raise ValueError("The real description of Cat state is not implemented")
+
+        else:
+            raise ValueError('desc accept only "real" or "complex" arguments')
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
         """ Prepares the arrays of weights, means and covs for a gkp state """
-        
+
         theta, phi = state[0], state[1]
 
         if shape == "square":
             if desc == "real":
 
                 def coef(arr):
-                    l, m = arr[:,0], arr[:,1]
+                    l, m = arr[:, 0], arr[:, 1]
                     t = np.zeros(arr.shape[0], dtype=float)
-                    t += np.logical_and(l % 2 == 0, m % == 0) * np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
-                    t += np.logical_and(l % 4 == 0, m % 2 == 1) * np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
-                    t += np.logical_and(l % 4 == 2, m % 2 == 1) * np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
-                    t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin( theta ) * np.cos( phi )
-                    t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin( theta ) * np.cos ( phi )
-                    t -= np.logical_and(l % 4 == 3, m % 4 == 3) * np.sin( theta ) * np.sin( phi )
-                    t += np.logical_or(np.logical_and(l % 4 == 3, m % 4 == 1), np.logical_and(l % 4 == 1, m % 4 == 3)) * np.sin( theta ) * np.sin( phi )
+                    t += np.logical_and(l % 2 == 0, m % 2 == 0) * (
+                        np.cos(0.5 * theta) ** 2 + np.sin(0.5 * theta) ** 2
+                    )
+                    t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
+                        np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
+                    )
+                    t += np.logical_and(l % 4 == 2, m % 2 == 1) * (
+                        np.sin(0.5 * theta) ** 2 - np.cos(0.5 * theta) ** 2
+                    )
+                    t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
+                    t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
+                    t -= np.logical_and(l % 4 == 3, m % 4 == 3) * np.sin(theta) * np.sin(phi)
+                    t += (
+                        np.logical_or(
+                            np.logical_and(l % 4 == 3, m % 4 == 1),
+                            np.logical_and(l % 4 == 1, m % 4 == 3),
+                        )
+                        * np.sin(theta)
+                        * np.sin(phi)
+                    )
                     # if l % 2 == 0  and m % 2 == 0 :
-                        # c = np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
+                    # c = np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
                     # else if l % 4 == 0  and m % 2 == 1 :
-                        # c = np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
+                    # c = np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
                     # else if l % 4 == 2 and m % 2 == 1 :
-                        # c = np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
+                    # c = np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
                     # else if m % 4 == 0 and l % 4 % 2 == 1 :
-                        # c = np.sin( theta ) * np.cos( phi )
+                    # c = np.sin( theta ) * np.cos( phi )
                     # else if m % 4 == 2 and l % 4 % 2 == 1 :
-                        # c = - np.sin( theta ) * np.cos ( phi )
+                    # c = - np.sin( theta ) * np.cos ( phi )
                     # else if ( l % 4 == 3 and m % 4 == 3 ) or ( l % 4 == 1 and m % 4 == 1 ):
-                        # c = - np.sin( theta ) * np.sin( phi )
+                    # c = - np.sin( theta ) * np.sin( phi )
                     # else if ( l % 4 == 3 and m % 4 == 1) or ( l % 4 == 1 and m % 4 == 3 ):
-                        # c = np.sin( theta ) * np.sin( phi )
+                    # c = np.sin( theta ) * np.sin( phi )
 
-                    return t * np.exp( - np.pi * 0.25 * (l ** 2 + m ** 2 ) * ( 1 - np.exp( - 2 * epsilon ) ) / ( 1 + np.exp( - 2 * epsilon ) ) )    
-                    
-                z_max = np.ceil( np.sqrt( - 4 * self.hbar * np.log(cutoff) * ( 1 + np.exp( - 2 * epsilon ) ) / ( 1 - np.exp( - 2 * epsilon ) ) ) )
-                damping = 2 * np.exp( - epsilon ) / ( 1 + np.exp( - 2 * epsilon ) )
+                    return t * np.exp(
+                        -np.pi
+                        * 0.25
+                        * (l ** 2 + m ** 2)
+                        * (1 - np.exp(-2 * epsilon))
+                        / (1 + np.exp(-2 * epsilon))
+                    )
 
-                means_large_gen = [l + 1j * m for l, m in it.product(range(-z_max, z_max + 1), repeat=2)]
-                means_gen = it.tee(it.filterfalse(lambda x: (np.exp(- 0.25 * np.pi * np.abs(x) ** 2 ) < cutoff), means_large_gen), 2)
-                means = np.concatenate(np.reshape(np.fromiter(means_gen[0], complex), (-1,1)).real,np.reshape(np.fromiter(a[1], complex), (-1,1).imag), axis=1)
+                z_max = np.ceil(
+                    np.sqrt(
+                        -4
+                        * self.hbar
+                        * np.log(cutoff)
+                        * (1 + np.exp(-2 * epsilon))
+                        / (1 - np.exp(-2 * epsilon))
+                    )
+                )
+                damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
+
+                means_large_gen = [
+                    l + 1j * m for l, m in it.product(range(-z_max, z_max + 1), repeat=2)
+                ]
+                means_gen = it.tee(
+                    it.filterfalse(
+                        lambda x: (np.exp(-0.25 * np.pi * np.abs(x) ** 2) < cutoff), means_large_gen
+                    ),
+                    2,
+                )
+                means = np.concatenate(
+                    np.reshape(np.fromiter(means_gen[0], complex), (-1, 1)).real,
+                    np.reshape(np.fromiter(a[1], complex), (-1, 1).imag),
+                    axis=1,
+                )
                 weights = coef(means)
                 means *= 0.5 * damping * np.sqrt(np.pi)
-                cov = 2 * (1 + np.exp( - 2 * epsilon ) ) / (1 - np.exp( - 2 * epsilon ) ) * np.identity(2)
-                
-                return [weights,  means, cov]
+                cov = 2 * (1 + np.exp(-2 * epsilon)) / (1 - np.exp(-2 * epsilon)) * np.identity(2)
 
-            else if desc == "complex":
+                return [weights, means, cov]
+
+            elif desc == "complex":
                 raise ValueError("The complex description of GKP is not implemented")
-        else :
+        else:
             raise ValueError("Only square GKP are implemented for now")
 
     def prepare_fock(self, n, r=0.0001):
@@ -184,7 +234,6 @@ class BosonicBackend(BaseBosonic):
         """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
 
         pass
-
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
@@ -367,7 +416,6 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
         covmat = self.circuit.covs
         means = self.circuit.means
@@ -377,14 +425,14 @@ class BosonicBackend(BaseBosonic):
 
             covmat = empty((2 * len(modes), 2 * len(modes)))
             means = r[listmodes]
-    
+
             for i, ii in enumerate(listmodes):
                 for j, jj in enumerate(listmodes):
                     covmat[i, j] = m[ii, jj]
-    
+
             means *= sqrt(2 * self.circuit.hbar) / 2
             covmat *= self.circuit.hbar / 2
-    
+
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
-        num_w = int(len(w) ** (1/len(modes)))
+        num_w = int(len(w) ** (1 / len(modes)))
         return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)

@@ -1408,7 +1408,7 @@ class BaseGaussianState(BaseState):
 
 
 class BaseBosonicState(BaseState):
-    r"""Class for the representation of quantum states as superpositions of 
+    r"""Class for the representation of quantum states as superpositions of
     Gaussian states.
     """
     # pylint: disable=too-many-public-methods
@@ -1426,7 +1426,7 @@ class BaseBosonicState(BaseState):
             # complex displacements of the Gaussian state
             self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
             self._alpha /= np.sqrt(2 * self._hbar)
-    
+
             self._pure = (
                 np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
                 < self.EQ_TOLERANCE

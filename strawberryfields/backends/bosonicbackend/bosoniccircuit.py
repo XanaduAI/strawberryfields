@@ -24,7 +24,7 @@ from ..shared_ops import changebasis
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(nmodes, ngauss):
-    return (ngauss ** nmodes)
+    return ngauss ** nmodes
 
 
 def m_shape(nmodes, ngauss):
@@ -36,7 +36,7 @@ def c_shape(nmodes, ngauss):
 
 
 def to_xp(n):
-    return np.concatenate((np.arange(0, 2*n, 2), np.arange(0, 2*n, 2) + 1))
+    return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
 
 
 def from_xp(n):
@@ -46,7 +46,7 @@ def from_xp(n):
 
 
 def update_means(means, X, perm_out):
-    X_perm = X[:, perm_out][perm_out,:]
+    X_perm = X[:, perm_out][perm_out, :]
     return (X_perm @ means.T).T
 
 
@@ -101,7 +101,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
 
         new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[:self._trunc ** self.nlen] = self.weights
+        new_weights[: self._trunc ** self.nlen] = self.weights
         self.weights = new_weights
 
         rows = np.arange(self._trunc ** self.nlen)
@@ -111,8 +111,9 @@ class BosonicModes:
         new_means[np.ix_(rows, cols)] = self.means
         self.means = new_means
 
-        id_covs = [np.identity(2 * self.nlen, dtype=complex)
-                    for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         new_covs = np.array(id_covs)
         new_covs[np.ix_(rows, cols, cols)] = self.covs
         self.covs = new_covs
@@ -157,8 +158,9 @@ class BosonicModes:
         self.weights = self.weights / (self._trunc ** self.nlen)
 
         self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
-        id_covs = [np.identity(2*self.nlen, dtype=complex)
-                   for i in range(self._trunc ** self.nlen)]
+        id_covs = [
+            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
+        ]
         self.covs = np.array(id_covs)
 
     def get_modes(self):
@@ -235,7 +237,7 @@ class BosonicModes:
         return self.means
 
     def sweights(self):
-        '''Returns the matrix of weights.'''
+        """Returns the matrix of weights."""
         return self.weights
 
     def fromsmean(self, r, modes=None):
@@ -373,7 +375,9 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         self.loss(T, k)
-        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][self.from_xp, :]
+        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][
+            self.from_xp, :
+        ]
         self.covs += Y
 
     def init_thermal(self, population, mode):
