@@ -42,7 +42,6 @@ class Bosonic(Compiler):
         "Comb",
         # measurements
         "MeasureHomodyne",
-        "MeasureHeterodyne",
         "MeasureFock",
         "MeasureThreshold",
         # channels

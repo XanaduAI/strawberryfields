@@ -24,19 +24,33 @@ import itertools as it
 from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
-import strawberryfields.ops as ops
+from strawberryfields.ops import Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket
 
 from .bosoniccircuit import BosonicModes
 from ..base import NotApplicableError
 
 
 def to_xp(n):
-    """Permutation to quadrature-like (x_1,...x_n, p_1...p_n) ordering."""
+    """Permutation to quadrature-like (x_1,...x_n, p_1...p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
     return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
 
 
 def from_xp(n):
-    """Permutation to mode-like (x_1,p_1...x_n,p_n) ordering."""
+    """Permutation to mode-like (x_1,p_1...x_n,p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
     perm_inds_list = [(i, i + n) for i in range(n)]
     perm_inds = [a for tup in perm_inds_list for a in tup]
     return perm_inds
@@ -133,22 +147,22 @@ class BosonicBackend(BaseBosonic):
                 pars = cmd.op.p
                 for reg in labels:
                     # All the possible preparations should go in this loop
-                    if type(cmd.op) == ops.Bosonic:
+                    if type(cmd.op) == Bosonic:
                         w, m, c = [pars[i].tolist() for i in range(3)]
 
-                    elif type(cmd.op) == ops.Catstate:
+                    elif type(cmd.op) == Catstate:
                         w, m, c = self.prepare_cat(*pars)
 
-                    elif type(cmd.op) == ops.GKP:
+                    elif type(cmd.op) == GKP:
                         w, m, c = self.prepare_gkp(*pars)
 
-                    elif type(cmd.op) == ops.Comb:
+                    elif type(cmd.op) == Comb:
                         w, m, c = self.prepare_comb(*pars)
 
-                    elif type(cmd.op) == ops.Fock:
+                    elif type(cmd.op) == Fock:
                         w, m, c = self.prepare_fock(*pars)
 
-                    elif type(cmd.op) in (ops.Ket, ops.DensityMatrix):
+                    elif type(cmd.op) in (Ket, DensityMatrix):
                         raise Exception("Not yet implemented!")
 
                     # The rest of the preparations are gaussian.
@@ -224,17 +238,19 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_cat(self, alpha, phi, desc):
         """ Prepares the arrays of weights, means and covs for a cat state"""
+        return
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
         """ Prepares the arrays of weights, means and covs for a gkp state """
+        return
 
     def prepare_fock(self, n, r=0.0001):
         """ Prepares the arrays of weights, means and covs of a Fock state"""
-        pass
+        return
 
     def prepare_comb(self, n, d, r, cutoff):
         """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
-        pass
+        return
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
