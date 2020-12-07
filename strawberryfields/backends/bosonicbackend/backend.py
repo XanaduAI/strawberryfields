@@ -24,7 +24,6 @@ import itertools as it
 from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
-from strawberryfields.ops import Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket
 
 from .bosoniccircuit import BosonicModes
 from ..base import NotApplicableError
@@ -126,6 +125,16 @@ class BosonicBackend(BaseBosonic):
     def init_circuit(self, prog, **kwargs):
         """Instantiate the circuit and initialize weights, means, and covs
         depending on the Preparation classes."""
+
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            Comb,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+        )
 
         nmodes = prog.num_subsystems
         self.circuit = BosonicModes()
