@@ -182,6 +182,7 @@ class BosonicBackend(BaseBosonic):
                     return t * np.exp(
                         -np.pi
                         * 0.25
+                        / self.hbar
                         * (l ** 2 + m ** 2)
                         * (1 - np.exp(-2 * epsilon))
                         / (1 + np.exp(-2 * epsilon))
