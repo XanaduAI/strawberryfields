@@ -876,10 +876,12 @@ class Catstate(Preparation):
 
 class GKP(Preparation):
     r"""Prepare a mode in a GKP state."""
+    pass
 
 
 class Comb(Preparation):
     r"""Prepare a mode in a comb state."""
+    pass
 
 
 class Ket(Preparation):
