@@ -214,6 +214,7 @@ class BosonicBackend(BaseBosonic):
                     axis=1,
                 )
                 weights = coef(means)
+                weights /= np.sum(weights)
                 means *= 0.5 * damping * np.sqrt(np.pi)
                 cov = 2 * (1 + np.exp(-2 * epsilon)) / (1 - np.exp(-2 * epsilon)) * np.identity(2)
 
