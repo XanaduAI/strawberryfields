@@ -706,3 +706,46 @@ class TestTDMProgramFunctions:
         res = move_vac_modes(samples, N, crop=crop)
 
         assert np.all(res == expected)
+
+class TestEngineTDMProgramInteraction:
+    """Test the Engine class and its interaction with TDMProgram instances."""
+
+    def test_shots_default(self):
+        """Test that default shots (1) is used"""
+        prog = sf.TDMProgram(2)
+        eng = sf.Engine("gaussian")
+
+        with prog.context([1,2], [3,4]) as (p, q):
+            ops.Sgate(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        results = eng.run(prog)
+        assert results.samples.shape[0] == 1
+
+    def test_shots_run_options(self):
+        """Test that run_options takes precedence over default"""
+        prog = sf.TDMProgram(2)
+        eng = sf.Engine("gaussian")
+
+        with prog.context([1,2], [3,4]) as (p, q):
+            ops.Sgate(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        prog.run_options = {"shots": 5}
+        results = eng.run(prog)
+        assert results.samples.shape[0] == 5
+
+    def test_shots_passed(self):
+        """Test that shots supplied via eng.run takes precedence over
+        run_options and that run_options isn't changed"""
+        prog = sf.TDMProgram(2)
+        eng = sf.Engine("gaussian")
+
+        with prog.context([1,2], [3,4]) as (p, q):
+            ops.Sgate(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        prog.run_options = {"shots": 5}
+        results = eng.run(prog, shots=2)
+        assert results.samples.shape[0] == 2
+        assert prog.run_options["shots"] == 5
