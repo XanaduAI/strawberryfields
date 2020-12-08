@@ -59,6 +59,10 @@
   information about the results.
   [(#493)](https://github.com/XanaduAI/strawberryfields/pull/493)
 
+* Fixes a bug where a single parameter list passed to the `TDMProgram`
+  context results in an error.
+  [(#503)](https://github.com/XanaduAI/strawberryfields/pull/503)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
