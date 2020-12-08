@@ -31,7 +31,7 @@ from ..base import NotApplicableError
 
 def to_xp(n):
     """Permutation to quadrature-like (x_1,...x_n, p_1...p_n) ordering.
-
+    
     Args:
         n (int): number of modes
 
@@ -76,6 +76,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit = None
 
     def run_prog(self, prog, batches, **kwargs):
+
         from strawberryfields.ops import Preparation
 
         # Initialize the circuit.
