@@ -31,7 +31,7 @@ from ..base import NotApplicableError
 
 def to_xp(n):
     """Permutation to quadrature-like (x_1,...x_n, p_1...p_n) ordering.
-    
+
     Args:
         n (int): number of modes
 
