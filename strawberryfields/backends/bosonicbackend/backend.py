@@ -306,7 +306,6 @@ class BosonicBackend(BaseBosonic):
         weights = weights / np.sum(weights)
         return [[weights], [means], [covs]]
 
-
         ## To be completed here
 
     def prepare_comb(self, n, d, r, cutoff):
