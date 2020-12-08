@@ -316,7 +316,7 @@ def generate_code(prog, eng=None):
 
     # check if program is of TDM type and format the context as appropriate
     if prog.type == "tdm":
-        # if the context arrays contain pi-values, rewrite them as pi-expressions
+        # if the context arrays contain pi-values, factor out multiples of np.pi
         tdm_params = [f"[{_factor_out_pi(par)}]" for par in prog.tdm_params]
         code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
     else:
