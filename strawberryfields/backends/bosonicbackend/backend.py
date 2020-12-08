@@ -36,6 +36,8 @@ from numpy import (
     zeros,
     logical_and,
     logical_or,
+    log,
+    isclose,
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
@@ -109,7 +111,7 @@ class BosonicBackend(BaseBosonic):
         # self.circuit.displace(r_d, phi_d, mode)
         pass
 
-    def prepare_cat(self, alpha, phi, desc):
+    def prepare_cat(self, alpha, phi, cutoff=1e-8, desc="real"):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
         norm = np.exp(-np.absolute(alpha) ** 2) / (
@@ -117,7 +119,7 @@ class BosonicBackend(BaseBosonic):
         )
         rplus = np.sqrt(2 * self.hbar) * np.array([alpha.real, alpha.imag])
         rminus = -replus
-        cov = 0.5 * self.hbar * np.identity(2)
+        cov = 0.5 * np.identity(2)
 
         if desc == "complex":
             cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
@@ -125,15 +127,70 @@ class BosonicBackend(BaseBosonic):
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             means = np.array([rplus, rminus, rcomplex, np.conjugate(rcomplex)])
 
-            return [weights, means, cov]
+            return [[weights], [means], [cov]]
 
         elif desc == "real":
-            raise ValueError("The real description of Cat state is not implemented")
+            D = 2
+            if np.isclose(alpha.imag, 0):
+                # Defining useful constants
+                alpha = alpha.real
+                norm = np.exp(-(alpha ** 2)) / (2 * (1 + np.exp(-2 * alpha ** 2)) * np.cos(phi))
+                E = np.pi ** 2 * D * self.hbar / (16 * alpha ** 2)
+                v = self.hbar / 2
+                num_mean = 8 * alpha / (np.pi * D * np.sqrt(2))
+                denom_mean = 16 * alpha ** 2 / (np.pi ** 2 * D) + 2
+                coef_sigma = np.pi ** 2 * self.hbar / (32 * alpha ** 2 * (E + v))
+                prefac = np.exp(0.5 * np.pi ** 2 * D) / (v * np.sqrt(D) * np.pi ** 1.5)
+                z_max = np.ceil(
+                    -4
+                    * np.sqrt(2)
+                    * alpha
+                    / (np.pi * np.sqrt(self.hbar))
+                    * np.sqrt((-2 * (E + v) * np.log(cutoff)))
+                )
+                # Creating the means array for oscillating terms
+                p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
+                # p_means = np.fromiter(map(lambda x : x/2, range(- 2 * z_max, 2 * z_max + 1 ) ), float, count= 2 * z_max + 1 )
+                means = np.concatenate(
+                    (
+                        np.reshape(np.zeros(4 * z_max + 1, dtype=float), (-1, 1)),
+                        np.reshape(p_means, (-1, 1)),
+                    ),
+                    axis=1,
+                )
+                means *= num_mean / denom_mean
+                # Creating the weigths array for oscillating terms
+                odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
+                even_terms = (odd_terms + 1) % 2
+                even_phases = (-1) ** (
+                    (np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2
+                )
+                odd_phases = (-1) ** (
+                    ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
+                )
+                weights = np.cos(phi) * even_terms * even_phases * np.exp(
+                    -0.5 * coef_sigma * p_means ** 2
+                ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
+                # Creating the cov  array for oscillating terms
+                cov = np.array([[0.5, 0], [0, (E + v) / (E * v * self.hbar ** 2)]])
+                cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
+                # adding the weights for the real terms
+                weights_real = np.ones(2, dtype=float)
+                weights = np.concatenate((weights_real, weights))
+                # adding the means for the real terms
+                means_real = (
+                    np.sqrt(2 * self.hbar) * alpha * np.array([[1, 0], [-1, 0]], dtype=float)
+                )
+                means = np.concatenate((means_real, means))
+                # adding the covs for the real terms
+                cov_real = 0.5 * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+                cov = np.concatenate((cov_real, cov))
 
+                return [[weights], [means], [cov]]
         else:
             raise ValueError('desc accept only "real" or "complex" arguments')
 
-    def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, cutoff=1e-8, desc="real", shape="square"):
         """ Prepares the arrays of weights, means and covs for a gkp state """
 
         theta, phi = state[0], state[1]
@@ -199,9 +256,9 @@ class BosonicBackend(BaseBosonic):
                 )
                 damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
 
-                means_large_gen = [
-                    l + 1j * m for l, m in it.product(range(-z_max, z_max + 1), repeat=2)
-                ]
+                means_large_gen = it.starmap(
+                    lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
+                )
                 means_gen = it.tee(
                     it.filterfalse(
                         lambda x: (np.exp(-0.25 * np.pi * np.abs(x) ** 2) < cutoff), means_large_gen
@@ -210,7 +267,7 @@ class BosonicBackend(BaseBosonic):
                 )
                 means = np.concatenate(
                     np.reshape(np.fromiter(means_gen[0], complex), (-1, 1)).real,
-                    np.reshape(np.fromiter(a[1], complex), (-1, 1).imag),
+                    np.reshape(np.fromiter(means_gen[1], complex), (-1, 1).imag),
                     axis=1,
                 )
                 weights = coef(means)
@@ -218,7 +275,7 @@ class BosonicBackend(BaseBosonic):
                 means *= 0.5 * damping * np.sqrt(np.pi)
                 cov = 2 * (1 + np.exp(-2 * epsilon)) / (1 - np.exp(-2 * epsilon)) * np.identity(2)
 
-                return [weights, means, cov]
+                return [[weights], [means], [cov]]
 
             elif desc == "complex":
                 raise ValueError("The complex description of GKP is not implemented")
