@@ -38,7 +38,7 @@ class Bosonic(Compiler):
         "DensityMatrix",
         "Bosonic",
         "GKP",
-        "Cat",
+        "Catstate",
         "Comb",
         # measurements
         "MeasureHomodyne",

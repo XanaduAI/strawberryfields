@@ -76,49 +76,55 @@ class BosonicBackend(BaseBosonic):
         self.circuit = None
 
     def run_prog(self, prog, batches, **kwargs):
+
+        from strawberryfields.ops import Preparation
+
         # Initialize the circuit.
         self.init_circuit(prog)
 
-        # Apply operations to circuit. For now, copied from LocalEngne.
+        # Apply operations to circuit. For now, copied from LocalEngine;
+        # only change is to ignore preparation classes
+        # TODO: Deal with Preparation classes in the middle of a circuit.
+        applied = []
+        samples_dict = {}
+        all_samples = {}
         for cmd in prog.circuit:
-            applied = []
-            samples_dict = {}
-            all_samples = {}
-            try:
-                # try to apply it to the backend and, if op is a measurement, store it in values
-                val = cmd.op.apply(cmd.reg, self, **kwargs)
-                if val is not None:
-                    for i, r in enumerate(cmd.reg):
-                        if batches:
-                            samples_dict[r.ind] = val[:, :, i]
+            if not isinstance(cmd.op, Preparation):
+                try:
+                    # try to apply it to the backend and, if op is a measurement, store it in values
+                    val = cmd.op.apply(cmd.reg, self, **kwargs)
+                    if val is not None:
+                        for i, r in enumerate(cmd.reg):
+                            if batches:
+                                samples_dict[r.ind] = val[:, :, i]
 
-                            # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, :, i])
-                        else:
-                            samples_dict[r.ind] = val[:, i]
+                                # Internally also store all the measurement outcomes
+                                if r.ind not in all_samples:
+                                    all_samples[r.ind] = list()
+                                all_samples[r.ind].append(val[:, :, i])
+                            else:
+                                samples_dict[r.ind] = val[:, i]
 
-                            # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, i])
+                                # Internally also store all the measurement outcomes
+                                if r.ind not in all_samples:
+                                    all_samples[r.ind] = list()
+                                all_samples[r.ind].append(val[:, i])
 
-                applied.append(cmd)
+                    applied.append(cmd)
 
-            except NotApplicableError:
-                # command is not applicable to the current backend type
-                raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
-                ) from None
+                except NotApplicableError:
+                    # command is not applicable to the current backend type
+                    raise NotApplicableError(
+                        "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    ) from None
 
-            except NotImplementedError:
-                # command not directly supported by backend API
-                raise NotImplementedError(
-                    "The operation {} has not been implemented in {} for the arguments {}.".format(
-                        cmd.op, self.backend, kwargs
-                    )
-                ) from None
+                except NotImplementedError:
+                    # command not directly supported by backend API
+                    raise NotImplementedError(
+                        "The operation {} has not been implemented in {} for the arguments {}.".format(
+                            cmd.op, self.backend, kwargs
+                        )
+                    ) from None
 
         return applied, samples_dict, all_samples
 
@@ -175,6 +181,9 @@ class BosonicBackend(BaseBosonic):
                         raise Exception("Not yet implemented!")
 
                     # The rest of the preparations are gaussian.
+                    # TODO: initialize with Gaussian |vacuum> state
+                    # directly by asking preparation methods below for
+                    # the right weights, means, covs.
                     else:
                         w, m, c = [[1]], [vac_means[:]], [vac_covs[:]]
 
