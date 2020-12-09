@@ -367,7 +367,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.fromsmean(means, modes)
 
     def is_vacuum(self, tol=0.0, **kwargs):
-        fid = self.fidelity_vacuum()
+        fid = self.state().fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
     def loss(self, T, mode):
