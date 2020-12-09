@@ -306,8 +306,6 @@ class BosonicBackend(BaseBosonic):
         weights = weights / np.sum(weights)
         return [[weights], [means], [covs]]
 
-        ## To be completed here
-
     def prepare_comb(self, n, d, r, cutoff):
         """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
 
