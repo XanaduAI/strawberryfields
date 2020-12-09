@@ -39,6 +39,7 @@ from numpy import (
     log,
     isclose,
 )
+from scipy.special import comb
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
 
@@ -284,10 +285,26 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_fock(self, n, r=0.0001):
         """ Prepares the arrays of weights, means and covs of a Fock state"""
-
-        pass
-
-        ## To be completed here
+        if r ** 2 > 1 / n:
+            raise ValueError("The parameter r**2={} is larger than n={}".format(r ** 2, n))
+        # A simple function to calculate the parity
+        parity = lambda n: 1 if n % 2 == 0 else -1
+        # All the means are zero
+        means = np.zeros([n + 1, 2])
+        covs = np.array(
+            [
+                0.5 * self.hbar * np.identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
+                for j in range(n + 1)
+            ]
+        )
+        weights = np.array(
+            [
+                (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
+                for j in range(n + 1)
+            ]
+        )
+        weights = weights / np.sum(weights)
+        return [[weights], [means], [covs]]
 
     def prepare_comb(self, n, d, r, cutoff):
         """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
