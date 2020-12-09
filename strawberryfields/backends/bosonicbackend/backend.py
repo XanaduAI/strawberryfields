@@ -30,7 +30,6 @@ from numpy import (
     ix_,
     zeros,
     shape,
-<<<<<<< HEAD
     cos,
     sin,
     exp,
@@ -39,8 +38,6 @@ from numpy import (
     logical_or,
     log,
     isclose,
-=======
->>>>>>> gkps
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
