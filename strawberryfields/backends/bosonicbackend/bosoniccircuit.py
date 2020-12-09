@@ -14,8 +14,10 @@
 """Bosonic circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
+from scipy.linalg import block_diag
 from thewalrus.quantum import Xmat
 import thewalrus.symplectic as symp
+import itertools as it
 
 from ..shared_ops import changebasis
 
@@ -69,31 +71,36 @@ class BosonicModes:
         self.hbar = 2
         # self.reset(num_subsystems, num_weights)
 
-    def add_mode(self, n=1):
-        """Add n modes to the circuit."""
-        self.nlen += n
+    def add_mode(self, peak_list=[1]):
+        """Add len(peak_list) modes to the circuit with number of weights specified by peak_list."""
+        nmodes = len(peak_list)
+        ngauss = np.prod(peak_list)
+        self.nlen += nmodes
 
         # Updated mode index permutation list
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
+        self.active = list(np.arange(self.nlen, dtype=int))
 
-        new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[: self._trunc ** self.nlen] = self.weights
-        self.weights = new_weights
+        vac_weights = [1 / ngauss for i in range(ngauss)]
+        vac_means = np.zeros((ngauss, 2 * nmodes)).tolist()
+        vac_covs = [np.identity(2 * nmodes).tolist() for i in range(ngauss)]
 
-        rows = np.arange(self._trunc ** self.nlen)
-        cols = np.arange(2 * self.nlen)
+        # Find all possible combinations of means and combs of the
+        # Gaussians between the modes.
+        mean_combs = it.product(self.means.tolist(), vac_means)
+        cov_combs = it.product(self.covs.tolist(), vac_covs)
 
-        new_means = np.zeros(m_shape(self.nlen, self._trunc))
-        new_means[np.ix_(rows, cols)] = self.means
-        self.means = new_means
+        # Tensor product of the weights.
+        weights = np.kron(self.weights, vac_weights)
+        # De-nest the means iterator.
+        means = np.array([[a for b in tup for a in b] for tup in mean_combs])
+        # Stack covs appropriately.
+        covs = np.array([block_diag(*tup) for tup in cov_combs])
 
-        id_covs = [
-            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
-        ]
-        new_covs = np.array(id_covs)
-        new_covs[np.ix_(rows, cols, cols)] = self.covs
-        self.covs = new_covs
+        self.weights = weights
+        self.means = means
+        self.covs = covs
 
     def del_mode(self, modes):
         """Delete modes modes from the circuit."""
