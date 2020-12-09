@@ -96,7 +96,8 @@ __all__ = [
     "TFBackend",
     "BaseState",
     "BaseFockState",
-    "BaseGaussianState" "BaseBosonicState",
+    "BaseGaussianState",
+    "BaseBosonicState",
 ]
 
 
