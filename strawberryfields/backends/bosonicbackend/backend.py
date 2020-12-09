@@ -186,7 +186,7 @@ class BosonicBackend(BaseBosonic):
                     # directly by asking preparation methods below for
                     # the right weights, means, covs.
                     else:
-                        w, m, c = [[1]], [vac_means[:]], [vac_covs[:]]
+                        w, m, c = [1], [vac_means[:]], [vac_covs[:]]
 
                     init_weights[reg] = w
                     init_means[reg] = m
@@ -196,7 +196,7 @@ class BosonicBackend(BaseBosonic):
 
         # Assume unused modes in the circuit are vacua.
         for i in set(range(nmodes)).difference(reg_list):
-            init_weights[i], init_means[i], init_covs[i] = [[1]], [vac_means[:]], [vac_covs[:]]
+            init_weights[i], init_means[i], init_covs[i] = [1], [vac_means[:]], [vac_covs[:]]
 
         # Find all possible combinations of means and combs of the
         # Gaussians between the modes.
