@@ -78,7 +78,7 @@ class BosonicBackend(BaseBosonic):
 
     def run_prog(self, prog, batches, **kwargs):
 
-        from strawberryfields.ops import Preparation
+        from strawberryfields.ops import (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
 
         # Initialize the circuit.
         self.init_circuit(prog)
@@ -90,7 +90,8 @@ class BosonicBackend(BaseBosonic):
         samples_dict = {}
         all_samples = {}
         for cmd in prog.circuit:
-            if not isinstance(cmd.op, Preparation):
+            nongausspreps = (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
+            if type(cmd.op) not in nongausspreps:
                 try:
                     # try to apply it to the backend and, if op is a measurement, store it in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
@@ -186,7 +187,7 @@ class BosonicBackend(BaseBosonic):
                     # directly by asking preparation methods below for
                     # the right weights, means, covs.
                     else:
-                        w, m, c = [[1]], [vac_means[:]], [vac_covs[:]]
+                        w, m, c = [1], [vac_means[:]], [vac_covs[:]]
 
                     init_weights[reg] = w
                     init_means[reg] = m
@@ -196,7 +197,7 @@ class BosonicBackend(BaseBosonic):
 
         # Assume unused modes in the circuit are vacua.
         for i in set(range(nmodes)).difference(reg_list):
-            init_weights[i], init_means[i], init_covs[i] = [[1]], [vac_means[:]], [vac_covs[:]]
+            init_weights[i], init_means[i], init_covs[i] = [1], [vac_means[:]], [vac_covs[:]]
 
         # Find all possible combinations of means and combs of the
         # Gaussians between the modes.
