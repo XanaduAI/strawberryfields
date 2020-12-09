@@ -49,6 +49,47 @@ device_dict = {
     },
 }
 
+mock_layout_tdm = textwrap.dedent(
+    """\
+    name template_td2
+    version 1.0
+    target {target} (shots=1)
+    type tdm (temporal_modes={tm})
+
+    float array p0[1, {tm}] =
+        {{rs_array}}
+    float array p1[1, {tm}] =
+        {{bs_array}}
+    float array p2[1, {tm}] =
+        {{r_array}}
+    float array p3[1, {tm}] =
+        {{m_array}}
+
+    Sgate(p0) | 1
+    BSgate(p1) | (1, 0)
+    Rgate(p2) | 1
+    MeasureHomodyne(p3) | 0
+    """
+)
+
+device_dict_tdm = {
+    "layout": mock_layout_tdm,
+    "modes": {
+        "concurrent": 2,
+        "spatial": 1,
+        "temporal": {
+            "max": 100
+        }
+    },
+    "compiler": ["TD2"],
+    "gate_parameters": {
+        "p0": [0.56],
+        "p1": [0, [0, 6.28]],
+        "p2": [0, [0, 3.14], 3.14],
+        "p3": [0, [0, 6.28]]
+    }
+}
+
 
 class TestDeviceSpec:
     """Tests for the ``DeviceSpec`` class."""
@@ -115,3 +156,38 @@ class TestDeviceSpec:
         spec.refresh()
         assert spec.modes != device_dict["modes"]
         assert spec.modes == 42
+
+    def test_fill_template(self, connection, monkeypatch):
+        """Test that the fill_template method works"""
+        prog = sf.tdm.tdmprogram.TDMProgram(2)
+
+        with prog.context([1, 2], [3, 4]) as (p, q):
+            sf.ops.Sgate(0.7, 0) | q[1]
+            sf.ops.BSgate(p[0]) | (q[0], q[1])
+            sf.ops.MeasureHomodyne(p[1]) | q[0]
+
+        spec = DeviceSpec(connection=connection, spec=device_dict_tdm, target="abc")
+        spec.fill_template(prog)
+
+        assert spec.layout == textwrap.dedent(
+            """\
+            name template_td2
+            version 1.0
+            target abc (shots=1)
+            type tdm (temporal_modes=2)
+
+            float array p0[1, 2] =
+                {rs_array}
+            float array p1[1, 2] =
+                {bs_array}
+            float array p2[1, 2] =
+                {r_array}
+            float array p3[1, 2] =
+                {m_array}
+
+            Sgate(p0) | 1
+            BSgate(p1) | (1, 0)
+            Rgate(p2) | 1
+            MeasureHomodyne(p3) | 0
+            """
+        )

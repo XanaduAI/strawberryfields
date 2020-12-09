@@ -3,9 +3,9 @@
 
 ##################################################
 
-.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=popout-square
-    :alt: Travis
-    :target: https://travis-ci.org/XanaduAI/strawberryfields
+.. image:: https://img.shields.io/github/workflow/status/XanaduAI/strawberryfields/Tests/master?logo=github&style=flat-square
+    :alt: GitHub Workflow Status (branch)
+    :target: https://github.com/XanaduAI/strawberryfields/actions?query=workflow%3ATests
 
 .. image:: https://img.shields.io/codecov/c/github/xanaduai/strawberryfields/master.svg?style=popout-square
     :alt: Codecov coverage

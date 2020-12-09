@@ -44,9 +44,7 @@ class Result:
     >>> eng = sf.Engine("gaussian")
     >>> results = eng.run(prog)
     >>> print(results)
-    Result: 3 subsystems
-        state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [[0, 0, 0]]
+    <Result: shots=1, num_modes=3, contains state=True>
     >>> results.samples
     np.array([[0, 0, 0]])
     >>> results.state.is_pure()
@@ -88,7 +86,7 @@ class Result:
 
         Returns:
             dict[int, list]: mode index associated with the list of
-                measurement outcomes
+            measurement outcomes
         """
         return self._all_samples
 
@@ -118,7 +116,18 @@ class Result:
 
     def __repr__(self):
         """String representation."""
-        shots, modes = self.samples.shape
-        return "<Result: num_modes={}, shots={}, contains state={}>".format(
-            modes, shots, self._is_stateful
-        )
+        if self.samples.ndim == 2:
+            # if samples has dim 2, assume they're from a standard Program
+            shots, modes = self.samples.shape
+            return "<Result: shots={}, num_modes={}, contains state={}>".format(
+                shots, modes, self._is_stateful
+            )
+
+        if self.samples.ndim == 3:
+            # if samples has dim 3, assume they're TDM
+            shots, modes, timebins = self.samples.shape
+            return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
+                shots, modes, timebins, self._is_stateful
+            )
+
+        return "<Result: contains state={}>".format(self._is_stateful)

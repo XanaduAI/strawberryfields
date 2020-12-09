@@ -138,6 +138,8 @@ class Program:
     def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
+        #: str: program type
+        self.type = None
         #: list[Command]: Commands constituting the quantum circuit in temporal order
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
@@ -449,6 +451,19 @@ class Program:
             p.source = self.source
         return p
 
+    def assert_number_of_modes(self, device):
+        """Check that the number of modes in the program is valid for the given device."""
+
+        # Program subsystems may be created and destroyed during execution. The length
+        # of the program registers represents the total number of modes that has ever existed.
+        modes_total = len(self.reg_refs)
+
+        if modes_total > device.modes:
+            raise CircuitError(
+                f"This program contains {modes_total} modes, but the device '{device.target}' "
+                f"only supports a {device.modes}-mode program."
+            )
+
     def compile(self, *, device=None, compiler=None, **kwargs):
         """Compile the program given a Strawberry Fields photonic compiler, or
         hardware device specification.
@@ -528,18 +543,10 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-            if device.modes is not None:
-                # Check that the number of modes in the program is valid for the given device.
+            # TODO: add validation for device specs that provide a dictionary for `device.modes`.
+            if device.modes is not None and isinstance(device.modes, int):
+                self.assert_number_of_modes(device)
 
-                # Program subsystems may be created and destroyed during execution. The length
-                # of the program registers represents the total number of modes that has ever existed.
-                modes_total = len(self.reg_refs)
-
-                if modes_total > device.modes:
-                    raise CircuitError(
-                        f"This program contains {modes_total} modes, but the device '{target}' "
-                        f"only supports a {device.modes}-mode program."
-                    )
         else:
             compiler = _get_compiler(compiler)
             target = compiler.short_name
@@ -579,11 +586,11 @@ class Program:
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
-            except bb.utils.TemplateError:
+            except bb.utils.TemplateError as e:
                 raise CircuitError(
                     "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(compiler.short_name)
-                )
+                ) from e
 
             device.validate_parameters(**user_parameters)
 

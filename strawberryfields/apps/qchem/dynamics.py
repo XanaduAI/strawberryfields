@@ -68,7 +68,6 @@ import warnings
 
 import numpy as np
 from scipy.constants import c, pi
-from thewalrus import quantum
 
 import strawberryfields as sf
 from strawberryfields.utils import operation
@@ -194,41 +193,6 @@ def sample_fock(
         s.append(eng.run(prog).samples[0].tolist())
 
     return s
-
-
-def prob(samples: list, excited_state: list) -> float:
-    r"""Estimate probability of observing an excited state.
-
-    The probability is estimated by calculating the relative frequency of the excited
-    state among the samples.
-
-    **Example usage:**
-
-    >>> excited_state = [0, 2]
-    >>> samples = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1]]
-    >>> prob(samples, excited_state)
-    0.3333333333333333
-
-    Args:
-        samples list[list[int]]: a list of samples
-        excited_state (list): a Fock state
-
-    Returns:
-        float: probability of observing a Fock state in the given samples
-    """
-    if len(samples) == 0:
-        raise ValueError("The samples list must not be empty")
-
-    if len(excited_state) == 0:
-        raise ValueError("The excited state list must not be empty")
-
-    if not len(excited_state) == len(samples[0]):
-        raise ValueError("The number of modes in the samples and the excited state must be equal")
-
-    if np.any(np.array(excited_state) < 0):
-        raise ValueError("The excited state must not contain negative values")
-
-    return samples.count(excited_state) / len(samples)
 
 
 def sample_tmsv(
@@ -388,61 +352,3 @@ def sample_coherent(
         s = eng.run(prog, shots=n_samples).samples
 
     return s.tolist()
-
-
-def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
-    r"""Generate single-mode marginal distributions from the displacement vector and covariance
-    matrix of a Gaussian state.
-
-    **Example usage:**
-
-    >>> mu = np.array([0.00000000, 2.82842712, 0.00000000,
-    ...                0.00000000, 0.00000000, 0.00000000])
-    >>> V = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    ...               [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-    ...               [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-    ...               [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-    ...               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-    ...               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
-    >>> n_max = 10
-    >>> marginals(mu, V, n_max)
-    array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00],
-           [1.35335284e-01, 2.70670567e-01, 2.70670566e-01, 1.80447044e-01,
-            9.02235216e-02, 3.60894085e-02, 1.20298028e-02, 3.43708650e-03,
-            8.59271622e-04, 1.90949249e-04],
-           [1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00]])
-
-    Args:
-        mu (array): displacement vector
-        V (array): covariance matrix
-        n_max (int): maximum number of vibrational quanta in the distribution
-        hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
-
-    Returns:
-        array[list[float]]: marginal distributions
-    """
-    if not V.shape[0] == V.shape[1]:
-        raise ValueError("The covariance matrix must be a square matrix")
-
-    if not len(mu) == len(V):
-        raise ValueError(
-            "The dimension of the displacement vector and the covariance matrix must be equal"
-        )
-
-    if n_max <= 0:
-        raise ValueError("The number of vibrational states must be larger than zero")
-
-    n_modes = len(mu) // 2
-
-    p = np.zeros((n_modes, n_max))
-
-    for mode in range(n_modes):
-        mui, vi = quantum.reduced_gaussian(mu, V, mode)
-        for i in range(n_max):
-            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar=hbar))
-
-    return p
