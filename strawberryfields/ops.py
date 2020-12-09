@@ -31,7 +31,13 @@ import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState, BaseBosonicState
 from .backends.shared_ops import changebasis
 from .program_utils import Command, RegRef, MergeFailure
-from .parameters import par_regref_deps, par_str, par_evaluate, par_is_symbolic, par_funcs as pf
+from .parameters import (
+    par_regref_deps,
+    par_str,
+    par_evaluate,
+    par_is_symbolic,
+    par_funcs as pf,
+)
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -786,6 +792,15 @@ class Fock(Preparation):
         backend.prepare_fock_state(p[0], *reg)
 
 
+class Bosonic(Preparation):
+    def __init__(self, weights=None, covs=None, means=None):
+        self.p.append(weights, covs, means)
+        return
+
+    def _apply(self, reg, backend, **kwargs):
+        return
+
+
 class Catstate(Preparation):
     r"""Prepare a mode in a cat state.
 
@@ -859,23 +874,14 @@ class Catstate(Preparation):
         backend.prepare_ket_state(ket, *reg)
 
 
-class GKPstate(Preparation):
-    r"""Prepare a mode in a GKP state.
+class GKP(Preparation):
+    r"""Prepare a mode in a GKP state."""
+    pass
 
-    .. warning::
-        GKP states are **non-Gaussian**, and thus can
-        only be used in the Fock or Bosonic backends, *not* the Gaussian backend.
 
-    Args:
-        epsilon (float): the peak variance
-        model (str): the noise model
-    """
-
-    def __init__(self, epsilon=0.1):
-        return
-
-    def _apply(self, reg, backend, **kwargs):
-        return
+class Comb(Preparation):
+    r"""Prepare a mode in a comb state."""
+    pass
 
 
 class Ket(Preparation):
@@ -1868,7 +1874,12 @@ class S2gate(Gate):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(np.pi / 4, 0)
-        return [Command(BS, reg), Command(S, reg[0]), Command(S.H, reg[1]), Command(BS.H, reg)]
+        return [
+            Command(BS, reg),
+            Command(S, reg[0]),
+            Command(S.H, reg[1]),
+            Command(BS.H, reg),
+        ]
 
 
 class CXgate(Gate):
@@ -2506,7 +2517,8 @@ class BipartiteGraphEmbed(Decomposition):
                 if not (drop_identity and np.all(X == np.identity(len(X)))):
                     cmds.append(
                         Command(
-                            Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol), _reg
+                            Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol),
+                            _reg,
                         )
                     )
 
@@ -2808,7 +2820,16 @@ MeasureHD = MeasureHeterodyne()
 
 Fourier = Fouriergate()
 
-shorthands = ["New", "Del", "Vac", "MeasureX", "MeasureP", "MeasureHD", "Fourier", "All"]
+shorthands = [
+    "New",
+    "Del",
+    "Vac",
+    "MeasureX",
+    "MeasureP",
+    "MeasureHD",
+    "Fourier",
+    "All",
+]
 
 # =======================================================================
 # here we list different classes of operations for unit testing purposes
@@ -2829,11 +2850,17 @@ simple_state_preparations = (
     Catstate,
     Thermal,
 )  # have __init__ methods with default arguments
-state_preparations = simple_state_preparations + (Ket, DensityMatrix)
+state_preparations = simple_state_preparations + (Ket, DensityMatrix, Bosonic, GKP, Comb)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne, MeasureThreshold)
 
-decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTransform, Gaussian)
+decompositions = (
+    Interferometer,
+    BipartiteGraphEmbed,
+    GraphEmbed,
+    GaussianTransform,
+    Gaussian,
+)
 
 # =======================================================================
 # exported symbols

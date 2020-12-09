@@ -16,8 +16,10 @@ This module contains a class that represents the specifications of
 a device available via the API.
 """
 from collections.abc import Sequence
+import re
 
 import blackbird
+from blackbird.error import BlackbirdSyntaxError
 
 import strawberryfields as sf
 from strawberryfields.compilers import Ranges
@@ -97,17 +99,35 @@ class DeviceSpec:
 
         return gate_parameters
 
+    def layout_is_formatted(self):
+        """bool: Whether the device layout is formatted or not."""
+        p = re.compile(r"{{\w*}}")
+        return not bool(p.search(self.layout))
+
+    def fill_template(self, program):
+        """Fill template with parameter values from a program"""
+        if self.layout_is_formatted():
+            return
+
+        if program.type == "tdm":
+            self._spec["layout"] = self._spec["layout"].format(
+                target=self.target, tm=program.timebins
+            )
+        else:
+            # TODO: update when `self._spec["layout"]` is returned as an unformatted string
+            raise NotImplementedError("Formatting not required or supported for non-TDM programs.")
+
     def validate_parameters(self, **parameters):
         """Validate gate parameters against the device spec.
 
         Gate parameters should be passed as keyword arguments, with names
-        correspond to those present in the Blackbird circuit layout.
+        corresponding to those present in the Blackbird circuit layout.
         """
         # check that all provided parameters are valid
         for p, v in parameters.items():
             if p in self.gate_parameters and v not in self.gate_parameters[p]:
                 # parameter is present in the device specifications
-                # but the user has provided a disallowed value
+                # but the user has provided an invalid value
                 raise ValueError(
                     f"{p} has invalid value {v}. Only {self.gate_parameters[p]} allowed."
                 )
@@ -137,7 +157,10 @@ class DeviceSpec:
         Returns:
             strawberryfields.program.Program: program compiled to the device
         """
-        bb = blackbird.loads(self.layout)
+        try:
+            bb = blackbird.loads(self.layout)
+        except BlackbirdSyntaxError as e:
+            raise BlackbirdSyntaxError("Layout is not formatted correctly.") from e
         self.validate_parameters(**parameters)
 
         # determine parameter value if not provided
