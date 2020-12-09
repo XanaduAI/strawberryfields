@@ -77,7 +77,7 @@ class BosonicBackend(BaseBosonic):
 
     def run_prog(self, prog, batches, **kwargs):
 
-        from strawberryfields.ops import Preparation
+        from strawberryfields.ops import (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
 
         # Initialize the circuit.
         self.init_circuit(prog)
@@ -89,7 +89,8 @@ class BosonicBackend(BaseBosonic):
         samples_dict = {}
         all_samples = {}
         for cmd in prog.circuit:
-            if not isinstance(cmd.op, Preparation):
+            nongausspreps = (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
+            if type(cmd.op) not in nongausspreps:
                 try:
                     # try to apply it to the backend and, if op is a measurement, store it in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
