@@ -23,6 +23,10 @@
 
   sf.plot_wigner(state, xvec, pvec, renderer="browser")
   ```
+  
+* Strawberry Fields code can be generated from a program (and an engine) by
+  calling `sf.io.generate_code(program, eng=engine)`.
+  [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
 
 <h3>Improvements</h3>
 
