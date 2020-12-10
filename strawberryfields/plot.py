@@ -34,7 +34,7 @@ def _get_plotly():
 
 
 def plot_wigner(state, xvec, pvec, renderer="browser", wire=0):
-    """Plot the Wigner function with Plot.ly
+    """Plot the Wigner function with Plot.ly.
 
     Args:
         state (:class:`.BaseState`): the state used for plotting
