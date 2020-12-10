@@ -33,25 +33,26 @@ def _get_plotly():
     return pio
 
 
-def plot_wigner(state, xvec, pvec, renderer="browser", wire=0):
+def plot_wigner(state, mode, xvec, pvec, renderer="browser", contours=True):
     """Plot the Wigner function with Plot.ly
 
     Args:
         state (:class:`.BaseState`): the state used for plotting
+        mode (int): mode used to calculate the reduced Wigner function
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
         renderer (string): the renderer for plotting with Plot.ly
-        wire (int): wire used to calculate the reduced Wigner function
+        contours (bool): whether to show the contour lines in the plot
     """
     pio = _get_plotly()
     pio.renderers.default = renderer
 
-    data = state.wigner(wire, xvec, pvec)
-    new_chart = generate_wigner_chart(data, xvec, pvec)
+    data = state.wigner(mode, xvec, pvec)
+    new_chart = generate_wigner_chart(data, xvec, pvec, contours=contours)
     pio.show(new_chart)
 
 
-def generate_wigner_chart(data, xvec, pvec):
+def generate_wigner_chart(data, xvec, pvec, contours=True):
     """Populates a chart dictionary with reduced Wigner function surface plot data.
 
     Args:
@@ -59,6 +60,7 @@ def generate_wigner_chart(data, xvec, pvec):
             Wigner function values for specified x and p values.
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
+        contours (bool): whether to show the contour lines in the plot
 
     Returns:
         dict: a Plot.ly JSON-format surface plot
@@ -100,7 +102,7 @@ def generate_wigner_chart(data, xvec, pvec):
     chart["data"][0]["y"] = pvec.tolist()
     chart["data"][0]["z"] = data.tolist()
 
-    chart["data"][0]["contours"]["z"]["show"] = True
+    chart["data"][0]["contours"]["z"]["show"] = contours
 
     chart["data"][0]["cmin"] = -1 / np.pi
     chart["data"][0]["cmax"] = 1 / np.pi
