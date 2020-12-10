@@ -29,6 +29,7 @@ from numpy import (
     allclose,
     ix_,
     zeros,
+    ones,
     shape,
     cos,
     sin,
@@ -38,6 +39,17 @@ from numpy import (
     logical_or,
     log,
     isclose,
+    linalg,
+    empty_like,
+    norm,
+    ceil,
+    absolute,
+    concatenate,
+    pi,
+    reshape,
+    repeat,
+    fromiter,
+    sum,
 )
 from scipy.special import comb
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
@@ -115,77 +127,170 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat(self, alpha, phi, cutoff=1e-8, desc="real"):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
-        norm = np.exp(-np.absolute(alpha) ** 2) / (
-            2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi))
-        )
-        rplus = np.sqrt(2 * self.hbar) * np.array([alpha.real, alpha.imag])
+        norm = exp(-absolute(alpha) ** 2) / (2 * (1 + exp(-2 * absolute(alpha) ** 2) * cos(phi)))
+        rplus = sqrt(2 * self.hbar) * array([alpha.real, alpha.imag])
         rminus = -replus
-        cov = 0.5 * np.identity(2)
+        cov = 0.5 * identity(2)
 
         if desc == "complex":
-            cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
-            rcomplex = np.sqrt(2 * self.hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
-            weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
-            means = np.array([rplus, rminus, rcomplex, np.conjugate(rcomplex)])
+            cplx_coef = exp(-2 * absolute(alpha) ** 2 - 1j * phi)
+            rcomplex = sqrt(2 * self.hbar) * array([1j * alpha.imag, -1j * alpha.real])
+            weights = norm * array([1, 1, cplx_coef, conjugate(cplx_coef)])
+            weights /= sum(weights)
+            means = array([rplus, rminus, rcomplex, conjugate(rcomplex)])
 
             return [[weights], [means], [cov]]
 
         elif desc == "real":
             D = 2
-            if np.isclose(alpha.imag, 0):
-                # Defining useful constants
-                alpha = alpha.real
-                norm = np.exp(-(alpha ** 2)) / (2 * (1 + np.exp(-2 * alpha ** 2)) * np.cos(phi))
-                E = np.pi ** 2 * D * self.hbar / (16 * alpha ** 2)
-                v = self.hbar / 2
-                num_mean = 8 * alpha / (np.pi * D * np.sqrt(2))
-                denom_mean = 16 * alpha ** 2 / (np.pi ** 2 * D) + 2
-                coef_sigma = np.pi ** 2 * self.hbar / (32 * alpha ** 2 * (E + v))
-                prefac = np.exp(0.5 * np.pi ** 2 * D) / (v * np.sqrt(D) * np.pi ** 1.5)
-                z_max = np.ceil(
-                    -4
-                    * np.sqrt(2)
-                    * alpha
-                    / (np.pi * np.sqrt(self.hbar))
-                    * np.sqrt((-2 * (E + v) * np.log(cutoff)))
+            if (not isclose(alpha.imag, 0)) and (not isclose(alpha.real, 0)):
+                # most general case
+                # First setting some constants
+                V = 0.5 * self.hbar * identity(2)
+                E = (
+                    pi ** 2
+                    * self.hbar
+                    * D
+                    / 1
+                    * array([[alpha.imag ** (-2), 0], [0, imag.real ** (-2)]])
                 )
-                # Creating the means array for oscillating terms
-                p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
-                # p_means = np.fromiter(map(lambda x : x/2, range(- 2 * z_max, 2 * z_max + 1 ) ), float, count= 2 * z_max + 1 )
-                means = np.concatenate(
+                cov = (V + E) * linalg.inv(V * E)
+                prefac = exp(0.5 * pi ** 2 * D) * sqrt(linalg.det(cov)) / (pi * 2 * D * self.hbar)
+                cov /= self.hbar
+                norm = exp(-(absolute(alpha) ** 2)) / (
+                    2 * (1 + exp(-2 * norm(alpha) ** 2)) * cos(phi)
+                )
+                # Setting the domain for the peaks
+                alpha_min = alpha.real if alpha.real ** 2 < alpha.imag ** 2 else alpha.imag
+                z_max = ceil(sqrt(-(pi ** 2 * D + 16 * alpha_min ** 2) / pi ** 2 * log(cutoff)))
+                # Creating the means
+                lattice_pts = array(
+                    list(
+                        it.product(fromiter(range(-2 * z_max, 2 * z_max + 1), dtype=int), repeat=2)
+                    )
+                )
+
+                means = 0.5 * pi * sqrt(self.hbar) / (2 * sqrt(2)) * lattice_pts
+                means[:, 0] /= alpha.imag
+                means[:, 1] /= alpha.real
+                # Filtering the array of means and lattice pts, keeping only terms big enough in memory
+                inv = linalg.inv(E + V)
+                filt = (
+                    exp(-0.5 * (means[:, 0] ** 2 * inv[0][0] + means[:, 1] ** 2 * inv[1][1]))
+                    > cutoff / prefac
+                )
+                means = means[filt]
+                lattice_pts = lattice_pts[filt]
+                # Computing the weights
+                weights = empty_like(means[:, 0])
+                odd_terms = lattice_pts % 2
+                even_terms = (odd_terms + 1) % 2
+                weights = (
+                    cos(phi)
+                    * (-1) ** (0.5 * (lattice_pts[:, 0] + lattice_pts[:, 1]))
+                    * (even_terms[:, 0] * even_terms[:, 1] + odd_terms[:, 0] * odd_terms[:, 1])
+                )
+                weights += (
+                    sin(phi)
+                    * (-1) ** ((lattice_pts[:, 0] + lattice_pts[:, 1]) // 2)
+                    * (even_terms[:, 0] * odd_terms[:, 1] + odd_terms[:, 0] * even_terms[:, 1])
+                )
+                weights *= prefac * exp(
+                    -0.5 * (means[:, 0] ** 2 * inv[0][0] + means[:, 1] ** 2 * inv[1][1])
+                )
+                # Completing means calculation for oscillating terms
+                means = (linalg.inv(E) * linalg.inv(linalg.inv(E) + linalg.inv(V)) @ means.T).T
+                # Completing cov calculation for oscillating terms
+                cov = repeat(cov[None, :], weights.size, axis=0)
+                # adding the weights for the real terms
+                weights_real = ones(2, dtype=float)
+                weights = norm * concatenate((weights_real, weights))
+                weights /= sum(weights)
+                # adding the means for the real terms
+                means_real = sqrt(2 * self.hbar) * array(
+                    [[alpha.real, alpha.imag], [-alpha.real, -alpha.imag]], dtype=float
+                )
+                means = concatenate((means_real, means))
+                # adding the covs for the real terms
+                cov_real = 0.5 * array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+                cov = concatenate((cov_real, cov))
+
+                return [[weights], [means], [cov]]
+
+            elif isclose(absolute(alpha), 0):
+                # alpha = 0 case -> prepare is_vacuum
+                return [
+                    array([1], dtype=float),
+                    array([0, 0], dtype=float),
+                    0.5 * identity(2),
+                ]
+
+            else:
+
+                # Defining useful constants
+                E = pi ** 2 * D * self.hbar / (16 * absolute(alpha) ** 2)
+                v = self.hbar / 2
+                z_max = ceil(
+                    -4
+                    * sqrt(2)
+                    * absolute(alpha)
+                    / (pi * sqrt(self.hbar))
+                    * sqrt((-2 * (E + v) * log(cutoff)))
+                )
+                if isclose(alpha.imag, 0):
+                    alpha = alpha.real
+                    x_means = zeros(4 * z_max + 1, dtype=float)
+                    p_means = 0.5 * array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
+                    cov = array([[0.5, 0], [0, (E + v) / (E * v * self.hbar ** 2)]])
+                else:
+                    alpha = alpha.imag
+                    phi *= -1
+                    x_means = 0.5 * array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
+                    p_means = zeros(4 * z_max + 1, dtype=float)
+                    cov = array([[0, (E + v) / (E * v * self.hbar ** 2)], [0.5, 0]])
+
+                norm = exp(-(alpha ** 2)) / (2 * (1 + exp(-2 * alpha ** 2)) * cos(phi))
+                num_mean = 8 * alpha / (pi * D * sqrt(2))
+                denom_mean = 16 * alpha ** 2 / (pi ** 2 * D) + 2
+                coef_sigma = pi ** 2 * self.hbar / (32 * alpha ** 2 * (E + v))
+                prefac = (
+                    exp(0.5 * pi ** 2 * D)
+                    / (v * sqrt(D) * pi ** 1.5)
+                    * (pi * self.hbar * sqrt(1 + 32 * alpha ** 2 / (self.hbar ** 2 * pi ** 2 * D)))
+                )
+                means = concatenate(
                     (
-                        np.reshape(np.zeros(4 * z_max + 1, dtype=float), (-1, 1)),
-                        np.reshape(p_means, (-1, 1)),
+                        reshape(x_means, (-1, 1)),
+                        reshape(p_means, (-1, 1)),
                     ),
                     axis=1,
                 )
                 means *= num_mean / denom_mean
                 # Creating the weigths array for oscillating terms
-                odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
+                odd_terms = array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
                 even_terms = (odd_terms + 1) % 2
                 even_phases = (-1) ** (
-                    (np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2
+                    (array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2
                 )
                 odd_phases = (-1) ** (
-                    ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
+                    ((array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
                 )
-                weights = np.cos(phi) * even_terms * even_phases * np.exp(
+                weights = cos(phi) * even_terms * even_phases * exp(
                     -0.5 * coef_sigma * p_means ** 2
-                ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
-                # Creating the cov  array for oscillating terms
-                cov = np.array([[0.5, 0], [0, (E + v) / (E * v * self.hbar ** 2)]])
-                cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
+                ) - sin(phi) * odd_terms * odd_phases * exp(-0.5 * coef_sigma * p_means ** 2)
+                weights *= prefac
+                # Creating the cov array for oscillating terms
+                cov = repeat(cov[None, :], 4 * z_max + 1, axis=0)
                 # adding the weights for the real terms
-                weights_real = np.ones(2, dtype=float)
-                weights = np.concatenate((weights_real, weights))
+                weights_real = ones(2, dtype=float)
+                weights = concatenate((weights_real, weights))
+                weights *= norm / sum(weights)
                 # adding the means for the real terms
-                means_real = (
-                    np.sqrt(2 * self.hbar) * alpha * np.array([[1, 0], [-1, 0]], dtype=float)
-                )
-                means = np.concatenate((means_real, means))
+                means_real = sqrt(2 * self.hbar) * alpha * array([[1, 0], [-1, 0]], dtype=float)
+                means = concatenate((means_real, means))
                 # adding the covs for the real terms
-                cov_real = 0.5 * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
-                cov = np.concatenate((cov_real, cov))
+                cov_real = 0.5 * array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+                cov = concatenate((cov_real, cov))
 
                 return [[weights], [means], [cov]]
         else:
@@ -201,80 +306,67 @@ class BosonicBackend(BaseBosonic):
 
                 def coef(arr):
                     l, m = arr[:, 0], arr[:, 1]
-                    t = np.zeros(arr.shape[0], dtype=float)
-                    t += np.logical_and(l % 2 == 0, m % 2 == 0) * (
-                        np.cos(0.5 * theta) ** 2 + np.sin(0.5 * theta) ** 2
+                    t = zeros(arr.shape[0], dtype=float)
+                    t += logical_and(l % 2 == 0, m % 2 == 0) * (
+                        cos(0.5 * theta) ** 2 + sin(0.5 * theta) ** 2
                     )
-                    t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
-                        np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
+                    t += logical_and(l % 4 == 0, m % 2 == 1) * (
+                        cos(0.5 * theta) ** 2 - sin(0.5 * theta) ** 2
                     )
-                    t += np.logical_and(l % 4 == 2, m % 2 == 1) * (
-                        np.sin(0.5 * theta) ** 2 - np.cos(0.5 * theta) ** 2
+                    t += logical_and(l % 4 == 2, m % 2 == 1) * (
+                        sin(0.5 * theta) ** 2 - cos(0.5 * theta) ** 2
                     )
-                    t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
-                    t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
-                    t -= np.logical_and(l % 4 == 3, m % 4 == 3) * np.sin(theta) * np.sin(phi)
+                    t += logical_and(l % 4 % 2 == 1, m % 4 == 0) * sin(theta) * cos(phi)
+                    t -= logical_and(l % 4 % 2 == 1, m % 4 == 2) * sin(theta) * cos(phi)
+                    t -= logical_and(l % 4 == 3, m % 4 == 3) * sin(theta) * sin(phi)
                     t += (
-                        np.logical_or(
-                            np.logical_and(l % 4 == 3, m % 4 == 1),
-                            np.logical_and(l % 4 == 1, m % 4 == 3),
+                        logical_or(
+                            logical_and(l % 4 == 3, m % 4 == 1),
+                            logical_and(l % 4 == 1, m % 4 == 3),
                         )
-                        * np.sin(theta)
-                        * np.sin(phi)
+                        * sin(theta)
+                        * sin(phi)
                     )
-                    # if l % 2 == 0  and m % 2 == 0 :
-                    # c = np.cos( 0.5 * theta ) ** 2 + np.sin( 0.5 * theta ) ** 2
-                    # else if l % 4 == 0  and m % 2 == 1 :
-                    # c = np.cos( 0.5 * theta ) ** 2 - np.sin( 0.5 * theta ) ** 2
-                    # else if l % 4 == 2 and m % 2 == 1 :
-                    # c = np.sin( 0.5 * theta ) ** 2 - np.cos( 0.5 * theta ) ** 2
-                    # else if m % 4 == 0 and l % 4 % 2 == 1 :
-                    # c = np.sin( theta ) * np.cos( phi )
-                    # else if m % 4 == 2 and l % 4 % 2 == 1 :
-                    # c = - np.sin( theta ) * np.cos ( phi )
-                    # else if ( l % 4 == 3 and m % 4 == 3 ) or ( l % 4 == 1 and m % 4 == 1 ):
-                    # c = - np.sin( theta ) * np.sin( phi )
-                    # else if ( l % 4 == 3 and m % 4 == 1) or ( l % 4 == 1 and m % 4 == 3 ):
-                    # c = np.sin( theta ) * np.sin( phi )
 
-                    return t * np.exp(
-                        -np.pi
+                    return t * exp(
+                        -pi
                         * 0.25
                         / self.hbar
                         * (l ** 2 + m ** 2)
-                        * (1 - np.exp(-2 * epsilon))
-                        / (1 + np.exp(-2 * epsilon))
+                        * (1 - exp(-2 * epsilon))
+                        / (1 + exp(-2 * epsilon))
                     )
 
-                z_max = np.ceil(
-                    np.sqrt(
+                z_max = ceil(
+                    sqrt(
                         -4
                         * self.hbar
-                        * np.log(cutoff)
-                        * (1 + np.exp(-2 * epsilon))
-                        / (1 - np.exp(-2 * epsilon))
+                        * log(cutoff)
+                        * (1 + exp(-2 * epsilon))
+                        / (1 - exp(-2 * epsilon))
                     )
                 )
-                damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
+                damping = 2 * exp(-epsilon) / (1 + exp(-2 * epsilon))
 
                 means_large_gen = it.starmap(
                     lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
                 )
                 means_gen = it.tee(
                     it.filterfalse(
-                        lambda x: (np.exp(-0.25 * np.pi * np.abs(x) ** 2) < cutoff), means_large_gen
+                        lambda x: (exp(-0.25 * pi * absolute(x) ** 2) < cutoff),
+                        means_large_gen,
                     ),
                     2,
                 )
-                means = np.concatenate(
-                    np.reshape(np.fromiter(means_gen[0], complex), (-1, 1)).real,
-                    np.reshape(np.fromiter(means_gen[1], complex), (-1, 1).imag),
+                means = concatenate(
+                    reshape(fromiter(means_gen[0], complex), (-1, 1)).real,
+                    reshape(fromiter(means_gen[1], complex), (-1, 1).imag),
                     axis=1,
                 )
                 weights = coef(means)
-                weights /= np.sum(weights)
-                means *= 0.5 * damping * np.sqrt(np.pi)
-                cov = 2 * (1 + np.exp(-2 * epsilon)) / (1 - np.exp(-2 * epsilon)) * np.identity(2)
+                weights /= sum(weights)
+                means *= 0.5 * damping * sqrt(pi)
+                cov = 2 * (1 + exp(-2 * epsilon)) / (1 - exp(-2 * epsilon)) * identity(2)
 
                 return [[weights], [means], [cov]]
 
@@ -290,26 +382,25 @@ class BosonicBackend(BaseBosonic):
         # A simple function to calculate the parity
         parity = lambda n: 1 if n % 2 == 0 else -1
         # All the means are zero
-        means = np.zeros([n + 1, 2])
-        covs = np.array(
+        means = zeros([n + 1, 2])
+        covs = array(
             [
-                0.5 * self.hbar * np.identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
+                0.5 * self.hbar * identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
                 for j in range(n + 1)
             ]
         )
-        weights = np.array(
+        weights = array(
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
             ]
         )
-        weights = weights / np.sum(weights)
+        weights = weights / sum(weights)
         return [[weights], [means], [covs]]
 
     def prepare_comb(self, n, d, r, cutoff):
         """ Prepares the arrays of weights, means and covs of a squeezed comb state"""
-
-        pass
+        raise ValueError("Squeezed comb states not implemented")
 
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
