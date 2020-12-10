@@ -365,7 +365,7 @@ class BosonicBackend(BaseBosonic):
                 )
                 weights = coef(means)
                 weights /= sum(weights)
-                means *= 0.5 * damping * sqrt(pi)
+                means *= 0.5 * damping * sqrt(pi * self.hbar)
                 cov = 2 * (1 + exp(-2 * epsilon)) / (1 - exp(-2 * epsilon)) * identity(2)
 
                 return [[weights], [means], [cov]]
