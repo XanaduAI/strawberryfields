@@ -346,19 +346,19 @@ def generate_code(prog, eng=None):
     return "\n".join(code_seq)
 
 
-def _factor_out_pi(num_list, precision=12):
-    """Factors out pi, divided by the precision value, from all number in a list
+def _factor_out_pi(num_list, denominator=12):
+    """Factors out pi, divided by the denominator value, from all number in a list
     and returns a string representation.
 
     Args:
         num_list (list[Number, string]): a list of numbers and/or strings
-        precision (int): largest divisor used to factor out pi divided by precision;
+        denominator (int): factor out pi divided by denominator;
             e.g. default would be to factor out np.pi/12
 
     Return:
         string: containing strings of values and/or input string objects
     """
-    factor = np.pi / precision
+    factor = np.pi / denominator
 
     a = []
     for p in num_list:
@@ -368,8 +368,8 @@ def _factor_out_pi(num_list, precision=12):
             continue
 
         if np.isclose(p % factor, [0, factor]).any() and p != 0:
-            gcd = np.gcd(int(p / factor), precision)
-            if gcd == precision:
+            gcd = np.gcd(int(p / factor), denominator)
+            if gcd == denominator:
                 if int(p / np.pi) == 1:
                     a.append("np.pi")
                 else:
@@ -377,9 +377,9 @@ def _factor_out_pi(num_list, precision=12):
             else:
                 coeff = int(p / factor / gcd)
                 if coeff == 1:
-                    a.append(f"np.pi/{int(precision/gcd)}")
+                    a.append(f"np.pi/{int(denominator/gcd)}")
                 else:
-                    a.append(f"{coeff}*np.pi/{int(precision / gcd)}")
+                    a.append(f"{coeff}*np.pi/{int(denominator / gcd)}")
         else:
             a.append(str(p))
     return ", ".join(a)
