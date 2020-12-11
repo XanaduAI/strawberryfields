@@ -26,6 +26,13 @@ from strawberryfields.program import Program
 from strawberryfields.program_utils import MergeFailure, RegRefError
 from strawberryfields.parameters import par_evaluate
 
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError):
+    tf_available = False
+else:
+    tf_available = True
+
 
 # make test deterministic
 np.random.seed(42)
@@ -220,3 +227,19 @@ def test_merge_measured_pars():
     # gates that have different p[1] parameters
     with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):
         assert D.merge(G)
+
+
+@pytest.mark.skipif(not tf_available, reason="Test only works if TF is installed")
+def test_tf_batch_in_dgate():
+    """Test if the Dgate supports TF tensors in batch form"""
+    batch_size = 2
+    prog = Program(1)
+    eng = Engine(backend="tf", backend_options={"cutoff_dim": 3, "batch_size": batch_size})
+
+    theta = prog.params("theta")
+    _theta = tf.Variable([0.1] * batch_size)
+
+    with prog.context as q:
+        ops.Dgate(theta) | q[0]
+
+    eng.run(prog, args={"theta": _theta})
