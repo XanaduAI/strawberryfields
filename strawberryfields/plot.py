@@ -18,7 +18,7 @@ ways using Plot.ly.
 import numpy as np
 
 plotly_error = (
-    "Plot.ly required for using this function. It can be installed as follows:
+    "Plot.ly required for using this function. It can be installed as follows:"
     "pip install plotly."
 )
 
