@@ -48,6 +48,7 @@
 
 * Fixes a bug where the `Dgate` does not support TensorFlow tensors if the tensor has an added
   dimension due to the existence of batching.
+  [(#507)](https://github.com/XanaduAI/strawberryfields/pull/507)
 
 * Fixed issue with `reshape_samples` where the samples were sometimes
   reshaped in the wrong way.
