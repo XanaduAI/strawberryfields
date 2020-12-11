@@ -11,14 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Gaussian circuit operations"""
+"""Bosonic circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
 from thewalrus.quantum import Xmat
 import thewalrus.symplectic as symp
 
-
-from . import ops
 from ..shared_ops import changebasis
 
 
@@ -58,39 +56,18 @@ def update_covs(covs, X, perm_out, Y=0):
 
 
 class BosonicModes:
-    """Base class for representing and operating on a collection of
-    continuous variable modes in the symplectic basis as encoded in a
-    covariance matrix and a mean vector.
-    The modes are initialized in the (multimode) vacuum state,
-    The state of the modes is manipulated by calling the various methods."""
+    """A Bosonic circuit class."""
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, num_subsystems, num_weights=1):
-        r"""The class is initialized by providing an integer indicating the number of modes
-        Unlike the "standard" covariance matrix for the Wigner function that uses symmetric ordering
-        as defined in e.g.
-        [1] Gaussian quantum information
-        Christian Weedbrook, Stefano Pirandola, Raúl García-Patrón, Nicolas J. Cerf, Timothy C. Ralph, Jeffrey H. Shapiro, and Seth Lloyd
-        Rev. Mod. Phys. 84, 621 – Published 1 May 2012
-        we define covariance matrices in terms of the following two quantities:
-        $$
-        N_{i,j} =\langle a_i^\dagger a_j \rangle
-        M_{i,j} = \langle a_i a_j \rangle
-        $$
-        Note that the matrix $N$ is hermitian and the matrix M is symmetric.
-        The mean displacements are stored as expectation values of the destruction operator $\alpha_i  = \langle a_i \rangle$
-        We also provide functions that give the symmetric ordered covariance matrices and the mean displacement for the quadrature
-        operators $q = a+a^\dagger$ and $p = i(a^\dagger -a)$. Note that with these conventions $[q,p]=2 i$.
-        For vacuum one has $N_{i,j}=M_{i,j}=alpha_i =0$,
-        The quantities $N,M,\alpha$ are stored in the variable nmat, mmat, mean respectively
-        """
+    def __init__(self, num_subsystems=1, num_weights=1):
+
         # Check validity
-        if not isinstance(num_subsystems, int):
-            raise ValueError("Number of modes must be an integer")
+        # if not isinstance(num_subsystems, int):
+        #     raise ValueError("Number of modes must be an integer")
 
         self.hbar = 2
-        self.reset(num_subsystems, num_weights)
+        # self.reset(num_subsystems, num_weights)
 
     def add_mode(self, n=1):
         """Add n modes to the circuit."""
@@ -306,10 +283,12 @@ class BosonicModes:
             np.concatenate(
                 (
                     np.concatenate(
-                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
+                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])),
+                        axis=1,
                     ),
                     np.concatenate(
-                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
+                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])),
+                        axis=1,
                     ),
                 ),
                 axis=0,

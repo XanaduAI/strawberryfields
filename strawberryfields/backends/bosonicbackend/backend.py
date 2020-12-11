@@ -49,8 +49,12 @@ from numpy import (
     repeat,
     fromiter,
     sum,
+    kron,
+    any,
+    ix_
 )
 from scipy.special import comb
+from scipy.linalg import block_diag
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 import itertools as it
 
@@ -59,19 +63,44 @@ from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
 from .bosoniccircuit import BosonicModes
+from ..base import NotApplicableError
+
+
+def to_xp(n):
+    """Permutation to quadrature-like (x_1,...x_n, p_1...p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
+    return concatenate((arange(0, 2 * n, 2), arange(0, 2 * n, 2) + 1))
+
+
+def from_xp(n):
+    """Permutation to mode-like (x_1,p_1...x_n,p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
+    perm_inds_list = [(i, i + n) for i in range(n)]
+    perm_inds = [a for tup in perm_inds_list for a in tup]
+    return perm_inds
+
+
+def kron_list(l):
+    """Take Kronecker products of a list of lists."""
+    if len(l) == 1:
+        return l[0]
+    return kron(l[0], kron_list(l[1:]))
 
 
 class BosonicBackend(BaseBosonic):
-    r"""The BosonicBackend...
-
-    ..
-        .. currentmodule:: strawberryfields.backends.gaussianbackend
-        .. autosummary::
-            :toctree: api
-
-            ~bosoniccircuit.BosonicModes
-            ~ops
-    """
+    """Bosonic backend class."""
 
     short_name = "bosonic"
     circuit_spec = "bosonic"
@@ -82,6 +111,151 @@ class BosonicBackend(BaseBosonic):
         self._supported["mixed_states"] = True
         self._init_modes = None
         self.circuit = None
+
+    def run_prog(self, prog, batches, **kwargs):
+
+        from strawberryfields.ops import (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
+
+        # Initialize the circuit.
+        self.init_circuit(prog)
+
+        # Apply operations to circuit. For now, copied from LocalEngine;
+        # only change is to ignore preparation classes
+        # TODO: Deal with Preparation classes in the middle of a circuit.
+        applied = []
+        samples_dict = {}
+        all_samples = {}
+        for cmd in prog.circuit:
+            nongausspreps = (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
+            if type(cmd.op) not in nongausspreps:
+                try:
+                    # try to apply it to the backend and, if op is a measurement, store it in values
+                    val = cmd.op.apply(cmd.reg, self, **kwargs)
+                    if val is not None:
+                        for i, r in enumerate(cmd.reg):
+                            if batches:
+                                samples_dict[r.ind] = val[:, :, i]
+
+                                # Internally also store all the measurement outcomes
+                                if r.ind not in all_samples:
+                                    all_samples[r.ind] = list()
+                                all_samples[r.ind].append(val[:, :, i])
+                            else:
+                                samples_dict[r.ind] = val[:, i]
+
+                                # Internally also store all the measurement outcomes
+                                if r.ind not in all_samples:
+                                    all_samples[r.ind] = list()
+                                all_samples[r.ind].append(val[:, i])
+
+                    applied.append(cmd)
+
+                except NotApplicableError:
+                    # command is not applicable to the current backend type
+                    raise NotApplicableError(
+                        "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    ) from None
+
+                except NotImplementedError:
+                    # command not directly supported by backend API
+                    raise NotImplementedError(
+                        "The operation {} has not been implemented in {} for the arguments {}.".format(
+                            cmd.op, self.backend, kwargs
+                        )
+                    ) from None
+
+        return applied, samples_dict, all_samples
+
+    def init_circuit(self, prog, **kwargs):
+        """Instantiate the circuit and initialize weights, means, and covs
+        depending on the Preparation classes."""
+
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            Comb,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+        )
+
+        nmodes = prog.num_subsystems
+        self.circuit = BosonicModes()
+        init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
+
+        vac_means = zeros(2, dtype=complex).tolist()
+        vac_covs = identity(2, dtype=complex).tolist()
+
+        # List of modes that have been traversed through
+        reg_list = []
+
+        # Go through the operations in the circuit
+        for cmd in prog.circuit:
+            # Check if an operation has already acted on these modes.
+            labels = [label.ind for label in cmd.reg]
+            isitnew = 1 - isin(labels, reg_list)
+            if any(isitnew):
+                # Operation parameters
+                pars = cmd.op.p
+                for reg in labels:
+                    # All the possible preparations should go in this loop
+                    if type(cmd.op) == Bosonic:
+                        w, m, c = [pars[i].tolist() for i in range(3)]
+
+                    elif type(cmd.op) == Catstate:
+                        w, m, c = self.prepare_cat(*pars)
+
+                    elif type(cmd.op) == GKP:
+                        w, m, c = self.prepare_gkp(*pars)
+
+                    elif type(cmd.op) == Comb:
+                        w, m, c = self.prepare_comb(*pars)
+
+                    elif type(cmd.op) == Fock:
+                        w, m, c = self.prepare_fock(*pars)
+
+                    elif type(cmd.op) in (Ket, DensityMatrix):
+                        raise Exception("Not yet implemented!")
+
+                    # The rest of the preparations are gaussian.
+                    # TODO: initialize with Gaussian |vacuum> state
+                    # directly by asking preparation methods below for
+                    # the right weights, means, covs.
+                    else:
+                        w, m, c = [1], [vac_means[:]], [vac_covs[:]]
+
+                    init_weights[reg] = w
+                    init_means[reg] = m
+                    init_covs[reg] = c
+
+                reg_list += labels
+
+        # Assume unused modes in the circuit are vacua.
+        for i in set(range(nmodes)).difference(reg_list):
+            init_weights[i], init_means[i], init_covs[i] = [1], [vac_means[:]], [vac_covs[:]]
+
+        # Find all possible combinations of means and combs of the
+        # Gaussians between the modes.
+        mean_combs = it.product(*init_means)
+        cov_combs = it.product(*init_covs)
+
+        # Tensor product of the weights.
+        weights = kron_list(init_weights)
+        # De-nest the means iterator.
+        means = array([[a for b in tup for a in b] for tup in mean_combs])
+        # Stack covs appropriately.
+        covs = array([block_diag(*tup) for tup in cov_combs])
+
+        # Declare circuit attributes.
+        self.circuit.nlen = nmodes
+        self.circuit.to_xp = to_xp(nmodes)
+        self.circuit.from_xp = from_xp(nmodes)
+        self.circuit.active = list(arange(nmodes, dtype=int))
+
+        self.circuit.weights = weights
+        self.circuit.means = means
+        self.circuit.covs = covs
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
@@ -583,6 +757,7 @@ class BosonicBackend(BaseBosonic):
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
         listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
+
         covmat = self.circuit.covs
         means = self.circuit.means
         if len(w) == 1:
