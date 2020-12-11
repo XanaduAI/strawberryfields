@@ -43,8 +43,8 @@ class TestWignerPlotting:
 
     @pytest.mark.parametrize("renderer", ["png", "json", "browser"])
     @pytest.mark.parametrize("mode", [0, 1])
-    @pytest.mark.parametrize("contour", [True, False])
-    def test_no_errors(self, mode, renderer, contour, prog, monkeypatch):
+    @pytest.mark.parametrize("contours", [True, False])
+    def test_no_errors(self, mode, renderer, contours, prog, monkeypatch):
         """Test that no errors are thrown when calling the `plot_wigner` function"""
         eng = sf.Engine("gaussian")
         results = eng.run(prog)
@@ -53,4 +53,4 @@ class TestWignerPlotting:
         pvec = np.arange(-4, 4, 0.1)
         with monkeypatch.context() as m:
             m.setattr(pio, "show", lambda x: None)
-            plot_wigner(results.state, mode, xvec, pvec, renderer=renderer, contour=contour)
+            plot_wigner(results.state, mode, xvec, pvec, renderer=renderer, contours=contours)
