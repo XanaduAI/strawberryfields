@@ -302,13 +302,13 @@ class BosonicBackend(BaseBosonic):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
         norm = exp(-absolute(alpha) ** 2) / (2 * (1 + exp(-2 * absolute(alpha) ** 2) * cos(phi)))
-        rplus = sqrt(2 * self.hbar) * array([alpha.real, alpha.imag])
+        rplus = sqrt(2 * self.circuit.hbar) * array([alpha.real, alpha.imag])
         rminus = -replus
         cov = 0.5 * identity(2)
 
         if desc == "complex":
             cplx_coef = exp(-2 * absolute(alpha) ** 2 - 1j * phi)
-            rcomplex = sqrt(2 * self.hbar) * array([1j * alpha.imag, -1j * alpha.real])
+            rcomplex = sqrt(2 * self.circuit.hbar) * array([1j * alpha.imag, -1j * alpha.real])
             weights = norm * array([1, 1, cplx_coef, conjugate(cplx_coef)])
             weights /= sum(weights)
             means = array([rplus, rminus, rcomplex, conjugate(rcomplex)])
@@ -320,17 +320,17 @@ class BosonicBackend(BaseBosonic):
             if (not isclose(alpha.imag, 0)) and (not isclose(alpha.real, 0)):
                 # most general case
                 # First setting some constants
-                V = 0.5 * self.hbar * identity(2)
+                V = 0.5 * self.circuit.hbar * identity(2)
                 E = (
                     pi ** 2
-                    * self.hbar
+                    * self.circuit.hbar
                     * D
                     / 1
                     * array([[alpha.imag ** (-2), 0], [0, imag.real ** (-2)]])
                 )
                 cov = (V + E) * linalg.inv(V * E)
-                prefac = exp(0.5 * pi ** 2 * D) * sqrt(linalg.det(cov)) / (pi * 2 * D * self.hbar)
-                cov /= self.hbar
+                prefac = exp(0.5 * pi ** 2 * D) * sqrt(linalg.det(cov)) / (pi * 2 * D * self.circuit.hbar)
+                cov /= self.circuit.hbar
                 norm = exp(-(absolute(alpha) ** 2)) / (
                     2 * (1 + exp(-2 * absolute(alpha) ** 2)) * cos(phi)
                 )
@@ -344,7 +344,7 @@ class BosonicBackend(BaseBosonic):
                     )
                 )
 
-                means = 0.5 * pi * sqrt(self.hbar) / (2 * sqrt(2)) * lattice_pts
+                means = 0.5 * pi * sqrt(self.circuit.hbar) / (2 * sqrt(2)) * lattice_pts
                 means[:, 0] /= alpha.imag
                 means[:, 1] /= alpha.real
                 # Filtering the array of means and lattice pts, keeping only terms big enough in memory
@@ -381,7 +381,7 @@ class BosonicBackend(BaseBosonic):
                 weights = norm * concatenate((weights_real, weights))
                 weights /= sum(weights)
                 # adding the means for the real terms
-                means_real = sqrt(2 * self.hbar) * array(
+                means_real = sqrt(2 * self.circuit.hbar) * array(
                     [[alpha.real, alpha.imag], [-alpha.real, -alpha.imag]], dtype=float
                 )
                 means = concatenate((means_real, means))
@@ -402,35 +402,35 @@ class BosonicBackend(BaseBosonic):
             else:
 
                 # Defining useful constants
-                E = pi ** 2 * D * self.hbar / (16 * absolute(alpha) ** 2)
-                v = self.hbar / 2
+                E = pi ** 2 * D * self.circuit.hbar / (16 * absolute(alpha) ** 2)
+                v = self.circuit.hbar / 2
                 z_max = ceil(
                     -4
                     * sqrt(2)
                     * absolute(alpha)
-                    / (pi * sqrt(self.hbar))
+                    / (pi * sqrt(self.circuit.hbar))
                     * sqrt((-2 * (E + v) * log(cutoff)))
                 )
                 if isclose(alpha.imag, 0):
                     alpha = alpha.real
                     x_means = zeros(4 * z_max + 1, dtype=float)
                     p_means = 0.5 * array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
-                    cov = array([[0.5, 0], [0, (E + v) / (E * v * self.hbar ** 2)]])
+                    cov = array([[0.5, 0], [0, (E + v) / (E * v * self.circuit.hbar ** 2)]])
                 else:
                     alpha = alpha.imag
                     phi *= -1
                     x_means = 0.5 * array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
                     p_means = zeros(4 * z_max + 1, dtype=float)
-                    cov = array([[0, (E + v) / (E * v * self.hbar ** 2)], [0.5, 0]])
+                    cov = array([[0, (E + v) / (E * v * self.circuit.hbar ** 2)], [0.5, 0]])
 
                 norm = exp(-(alpha ** 2)) / (2 * (1 + exp(-2 * alpha ** 2)) * cos(phi))
                 num_mean = 8 * alpha / (pi * D * sqrt(2))
                 denom_mean = 16 * alpha ** 2 / (pi ** 2 * D) + 2
-                coef_sigma = pi ** 2 * self.hbar / (32 * alpha ** 2 * (E + v))
+                coef_sigma = pi ** 2 * self.circuit.hbar / (32 * alpha ** 2 * (E + v))
                 prefac = (
                     exp(0.5 * pi ** 2 * D)
                     / (v * sqrt(D) * pi ** 1.5)
-                    * (pi * self.hbar * sqrt(1 + 32 * alpha ** 2 / (self.hbar ** 2 * pi ** 2 * D)))
+                    * (pi * self.circuit.hbar * sqrt(1 + 32 * alpha ** 2 / (self.circuit.hbar ** 2 * pi ** 2 * D)))
                 )
                 means = concatenate(
                     (
@@ -460,7 +460,7 @@ class BosonicBackend(BaseBosonic):
                 weights = concatenate((weights_real, weights))
                 weights *= norm / sum(weights)
                 # adding the means for the real terms
-                means_real = sqrt(2 * self.hbar) * alpha * array([[1, 0], [-1, 0]], dtype=float)
+                means_real = sqrt(2 * self.circuit.hbar) * alpha * array([[1, 0], [-1, 0]], dtype=float)
                 means = concatenate((means_real, means))
                 # adding the covs for the real terms
                 cov_real = 0.5 * array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
@@ -470,7 +470,7 @@ class BosonicBackend(BaseBosonic):
         else:
             raise ValueError('desc accept only "real" or "complex" arguments')
 
-    def prepare_gkp(self, state, epsilon, cutoff=1e-8, desc="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
         """ Prepares the arrays of weights, means and covs for a gkp state """
 
         theta, phi = state[0], state[1]
@@ -505,7 +505,7 @@ class BosonicBackend(BaseBosonic):
                     return t * exp(
                         -pi
                         * 0.25
-                        / self.hbar
+                        / self.circuit.hbar
                         * (l ** 2 + m ** 2)
                         * (1 - exp(-2 * epsilon))
                         / (1 + exp(-2 * epsilon))
@@ -514,7 +514,7 @@ class BosonicBackend(BaseBosonic):
                 z_max = ceil(
                     sqrt(
                         -4
-                        * self.hbar
+                        * self.circuit.hbar
                         * log(cutoff)
                         * (1 + exp(-2 * epsilon))
                         / (1 - exp(-2 * epsilon))
@@ -539,7 +539,7 @@ class BosonicBackend(BaseBosonic):
                 )
                 weights = coef(means)
                 weights /= sum(weights)
-                means *= 0.5 * damping * sqrt(pi * self.hbar)
+                means *= 0.5 * damping * sqrt(pi * self.circuit.hbar)
                 cov = 2 * (1 + exp(-2 * epsilon)) / (1 - exp(-2 * epsilon)) * identity(2)
 
                 return [[weights], [means], [cov]]
@@ -559,7 +559,7 @@ class BosonicBackend(BaseBosonic):
         means = zeros([n + 1, 2])
         covs = array(
             [
-                0.5 * self.hbar * identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
+                0.5 * self.circuit.hbar * identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
                 for j in range(n + 1)
             ]
         )
