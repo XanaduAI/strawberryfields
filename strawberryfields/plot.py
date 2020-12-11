@@ -18,8 +18,8 @@ ways using Plot.ly.
 import numpy as np
 
 plotly_error = (
-    "Plot.ly required for using this function. It can be installed using pip install "
-    "plotly or visiting https://plot.ly/python/getting-started/#installation"
+    "Plot.ly required for using this function. It can be installed as follows:
+    "pip install plotly."
 )
 
 
