@@ -41,7 +41,6 @@ from numpy import (
     isclose,
     linalg,
     empty_like,
-    norm,
     ceil,
     absolute,
     concatenate,
@@ -158,7 +157,7 @@ class BosonicBackend(BaseBosonic):
                 prefac = exp(0.5 * pi ** 2 * D) * sqrt(linalg.det(cov)) / (pi * 2 * D * self.hbar)
                 cov /= self.hbar
                 norm = exp(-(absolute(alpha) ** 2)) / (
-                    2 * (1 + exp(-2 * norm(alpha) ** 2)) * cos(phi)
+                    2 * (1 + exp(-2 * absolute(alpha) ** 2)) * cos(phi)
                 )
                 # Setting the domain for the peaks
                 alpha_min = alpha.real if alpha.real ** 2 < alpha.imag ** 2 else alpha.imag
