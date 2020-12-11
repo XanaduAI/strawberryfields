@@ -51,7 +51,8 @@ from numpy import (
     sum,
     kron,
     any,
-    ix_
+    ix_,
+    isin
 )
 from scipy.special import comb
 from scipy.linalg import block_diag
