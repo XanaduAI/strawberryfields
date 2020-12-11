@@ -20,10 +20,11 @@
 
   xvec = np.arange(-4, 4, 0.01)
   pvec = np.arange(-4, 4, 0.01)
+  mode = 0
 
-  sf.plot_wigner(state, xvec, pvec, renderer="browser")
+  sf.plot_wigner(state, mode, xvec, pvec, renderer="browser")
   ```
-  
+
 * Strawberry Fields code can be generated from a program (and an engine) by
   calling `sf.io.generate_code(program, eng=engine)`.
   [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
