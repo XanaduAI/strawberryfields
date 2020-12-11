@@ -1337,7 +1337,10 @@ class Dgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         r, phi = par_evaluate(self.p)
 
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [r, phi])
+        tf_complex = any(
+            hasattr(arg, "numpy") and np.any(np.iscomplex(arg.numpy().flatten()))
+            for arg in [r, phi]
+        )
 
         if (np.iscomplex([r, phi])).any() or tf_complex:
             raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
