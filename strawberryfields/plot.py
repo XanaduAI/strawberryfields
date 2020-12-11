@@ -13,7 +13,7 @@
 # limitations under the License.
 r"""
 This module provides tools to visualize the state in various interactive
-ways using Plot.ly
+ways using Plot.ly.
 """
 import numpy as np
 
@@ -24,7 +24,7 @@ plotly_error = (
 
 
 def _get_plotly():
-    """Import Plot.ly on demand to avoid errors being raised unnecessarily"""
+    """Import Plot.ly on demand to avoid errors being raised unnecessarily."""
     try:
         # pylint:disable=import-outside-toplevel
         import plotly.io as pio
