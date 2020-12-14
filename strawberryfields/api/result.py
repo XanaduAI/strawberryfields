@@ -58,11 +58,12 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, samples, all_samples=None, is_stateful=True):
+    def __init__(self, samples, all_samples=None, is_stateful=True, ancilla_samples = None):
         self._state = None
         self._is_stateful = is_stateful
         self._samples = samples
         self._all_samples = all_samples
+        self._ancilla_samples = ancilla_samples
 
     @property
     def samples(self):
@@ -89,6 +90,20 @@ class Result:
             measurement outcomes
         """
         return self._all_samples
+    
+    @property
+    def ancilla_samples(self):
+        """All measurement samples.
+
+        Returns a dictionary which associates each mode (keys) with the
+        list of measurements outcomes (values) from all the ancilla-assisted
+        gates applied to that mode. 
+
+        Returns:
+            dict[int, list]: mode index associated with the list of ancilla
+            measurement outcomes
+        """
+        return self._ancilla_samples
 
     @property
     def state(self):

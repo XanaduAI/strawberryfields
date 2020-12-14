@@ -78,8 +78,8 @@ class BosonicBackend(BaseBosonic):
 
     def run_prog(self, prog, batches, **kwargs):
 
-        from strawberryfields.ops import (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
-
+        from strawberryfields.ops import (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket, mbSgate)
+        
         # Initialize the circuit.
         self.init_circuit(prog)
 
@@ -91,7 +91,36 @@ class BosonicBackend(BaseBosonic):
         all_samples = {}
         for cmd in prog.circuit:
             nongausspreps = (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
-            if type(cmd.op) not in nongausspreps:
+            ancilla_gates = (mbSgate,)
+            if type(cmd.op) in ancilla_gates:
+                try:
+                    # try to apply it to the backend and, if op is a measurement, store it in values
+                    val = cmd.op.apply(cmd.reg, self, **kwargs)
+                    if val is not None:
+                        for i, r in enumerate(cmd.reg):
+                            if r.ind not in self.ancillae_samples_dict.keys():
+                                self.ancillae_samples_dict[r.ind] = []
+                            if batches:
+                                self.ancillae_samples_dict[r.ind].append(val[:, :, i])                       
+                            else:
+                                self.ancillae_samples_dict[r.ind].append(val[:, i])
+
+                    applied.append(cmd)
+
+                except NotApplicableError:
+                    # command is not applicable to the current backend type
+                    raise NotApplicableError(
+                        "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    ) from None
+
+                except NotImplementedError:
+                    # command not directly supported by backend API
+                    raise NotImplementedError(
+                        "The operation {} has not been implemented in {} for the arguments {}.".format(
+                            cmd.op, self.backend, kwargs
+                        )
+                    ) from None
+            if type(cmd.op) not in (nongausspreps and ancilla_gates):
                 try:
                     # try to apply it to the backend and, if op is a measurement, store it in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
@@ -145,6 +174,7 @@ class BosonicBackend(BaseBosonic):
         )
 
         nmodes = prog.num_subsystems
+        self.ancillae_samples_dict = {}
         self.circuit = BosonicModes()
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
 
