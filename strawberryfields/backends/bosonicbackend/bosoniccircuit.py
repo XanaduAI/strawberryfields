@@ -84,7 +84,6 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
         self.active = list(np.arange(self.nlen, dtype=int))
 
-
         vac_weights = [1 / ngauss for i in range(ngauss)]
         vac_means = np.zeros((ngauss, 2 * nmodes)).tolist()
         vac_covs = [np.identity(2 * nmodes).tolist() for i in range(ngauss)]
@@ -104,7 +103,6 @@ class BosonicModes:
         self.weights = weights
         self.means = means
         self.covs = covs
-
 
     def del_mode(self, modes):
         """Delete modes modes from the circuit."""
@@ -186,26 +184,30 @@ class BosonicModes:
 
         if avg:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
-            Y = np.diag([(np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
-                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,])
-            Y *= self.hbar/2
+            Y = np.diag(
+                [
+                    (np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
+                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,
+                ]
+            )
+            Y *= self.hbar / 2
             X2, Y2 = self.expandXY([k], X, Y)
             self.apply_channel(X2, Y2)
 
         if not avg:
             self.add_mode()
-            new_mode = self.nlen-1
+            new_mode = self.nlen - 1
             self.squeeze(r_anc, 0, new_mode)
             self.beamsplitter(theta, 0, k, new_mode)
             self.loss(eta_anc, new_mode)
             self.phase_shift(np.pi / 2, new_mode)
             val = self.homodyne(new_mode)
-            print(self.means[0,1]/val[0][0])
+            print(self.means[0, 1] / val[0][0])
             print(np.tan(theta) / np.sqrt(eta_anc))
             self.del_mode(new_mode)
-            self.covs = np.delete(self.covs,[2 * new_mode, 2 * new_mode + 1], axis = 1)
-            self.covs = np.delete(self.covs,[2 * new_mode, 2 * new_mode + 1], axis = 2)
-            self.means = np.delete(self.means,[2 * new_mode, 2 * new_mode + 1], axis = 1)
+            self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=1)
+            self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=2)
+            self.means = np.delete(self.means, [2 * new_mode, 2 * new_mode + 1], axis=1)
             self.nlen = self.nlen - 1
             self.from_xp = from_xp(self.nlen)
             self.to_xp = to_xp(self.nlen)

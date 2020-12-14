@@ -78,8 +78,17 @@ class BosonicBackend(BaseBosonic):
 
     def run_prog(self, prog, batches, **kwargs):
 
-        from strawberryfields.ops import (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket, mbSgate)
-        
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            Comb,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            mbSgate,
+        )
+
         # Initialize the circuit.
         self.init_circuit(prog)
 
@@ -101,7 +110,7 @@ class BosonicBackend(BaseBosonic):
                             if r.ind not in self.ancillae_samples_dict.keys():
                                 self.ancillae_samples_dict[r.ind] = []
                             if batches:
-                                self.ancillae_samples_dict[r.ind].append(val[:, :, i])                       
+                                self.ancillae_samples_dict[r.ind].append(val[:, :, i])
                             else:
                                 self.ancillae_samples_dict[r.ind].append(val[:, i])
 
@@ -497,7 +506,6 @@ class BosonicBackend(BaseBosonic):
         # g_list = [arange(len(w)) for i in range(len(modes))]
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
-
 
         listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
 
