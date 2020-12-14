@@ -1322,8 +1322,9 @@ class mbSgate(Channel):
         if avg:
             backend.mbsqueeze(*reg, r, phi, r_anc, eta_anc, avg)
         if not avg:
+            s = np.sqrt(sf.hbar / 2)
             ancilla_val = backend.mbsqueeze(*reg, r, phi, r_anc, eta_anc, avg)
-            return ancilla_val
+            return ancilla_val / s
 
 
 # ====================================================================

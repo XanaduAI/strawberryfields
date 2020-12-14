@@ -159,7 +159,6 @@ class BosonicModes:
         """Displace mode i by the amount r*np.exp(1j*phi)."""
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
-
         self.means += symp.expand_vector(r * np.exp(1j * phi), i, self.nlen)[self.from_xp]
 
     def squeeze(self, r, phi, k):
@@ -189,6 +188,7 @@ class BosonicModes:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
             Y = np.diag([(np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
                     (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,])
+            Y *= self.hbar/2
             X2, Y2 = self.expandXY([k], X, Y)
             self.apply_channel(X2, Y2)
 
@@ -200,10 +200,18 @@ class BosonicModes:
             self.loss(eta_anc, new_mode)
             self.phase_shift(np.pi / 2, new_mode)
             val = self.homodyne(new_mode)
+            print(self.means[0,1]/val[0][0])
+            print(np.tan(theta) / np.sqrt(eta_anc))
             self.del_mode(new_mode)
+            self.covs = np.delete(self.covs,[2 * new_mode, 2 * new_mode + 1], axis = 1)
+            self.covs = np.delete(self.covs,[2 * new_mode, 2 * new_mode + 1], axis = 2)
+            self.means = np.delete(self.means,[2 * new_mode, 2 * new_mode + 1], axis = 1)
+            self.nlen = self.nlen - 1
+            self.from_xp = from_xp(self.nlen)
+            self.to_xp = to_xp(self.nlen)
+            self.active = self.active[:new_mode]
             prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
             self.displace(prefac * val[0][0], np.pi / 2, k)
-
         self.phase_shift(-phi / 2, k)
 
         if not avg:
@@ -391,7 +399,7 @@ class BosonicModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         X = np.sqrt(T) * np.identity(2)
-        Y = (1 - T) * np.identity(2)
+        Y = self.hbar * (1 - T) * np.identity(2) / 2
         X2, Y2 = self.expandXY([k], X, Y)
         self.apply_channel(X2, Y2)
 
@@ -402,7 +410,7 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
         X = np.sqrt(T) * np.identity(2)
-        Y = (1 - T) * nbar * np.identity(2)
+        Y = self.hbar * (1 - T) * nbar * np.identity(2) / 2
         X2, Y2 = self.expandXY([k], X, Y)
         self.apply_channel(X2, Y2)
 
