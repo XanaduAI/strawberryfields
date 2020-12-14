@@ -52,7 +52,8 @@ from numpy import (
     kron,
     any,
     ix_,
-    isin
+    isin,
+    conjugate
 )
 from scipy.special import comb
 from scipy.linalg import block_diag
@@ -303,7 +304,7 @@ class BosonicBackend(BaseBosonic):
 
         norm = exp(-absolute(alpha) ** 2) / (2 * (1 + exp(-2 * absolute(alpha) ** 2) * cos(phi)))
         rplus = sqrt(2 * self.circuit.hbar) * array([alpha.real, alpha.imag])
-        rminus = -replus
+        rminus = -rplus
         cov = 0.5 * identity(2)
 
         if desc == "complex":
