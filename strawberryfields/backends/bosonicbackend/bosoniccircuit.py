@@ -279,22 +279,17 @@ class BosonicModes:
         rows = np.reshape(modes, [-1, 1])
         cols = np.reshape(modes, [1, -1])
 
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate(
-                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])),
-                        axis=1,
-                    ),
-                    np.concatenate(
-                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])),
-                        axis=1,
-                    ),
+        sigmaq = np.concatenate(
+            (
+                np.concatenate(
+                    (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1,
                 ),
-                axis=0,
-            )
-            + np.identity(2 * len(modes))
-        )
+                np.concatenate(
+                    (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1,
+                ),
+            ),
+            axis=0,
+        ) + np.identity(2 * len(modes))
         return sigmaq
 
     def fidelity_coherent(self, alpha, modes=None):
@@ -322,16 +317,13 @@ class BosonicModes:
     def Amat(self):
         """ Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
-                    np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
-                ),
-                axis=0,
-            )
-            + np.identity(2 * self.nlen)
-        )
+        sigmaq = np.concatenate(
+            (
+                np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
+                np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
+            ),
+            axis=0,
+        ) + np.identity(2 * self.nlen)
         return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
