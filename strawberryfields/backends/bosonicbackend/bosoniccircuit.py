@@ -19,6 +19,7 @@ from thewalrus.quantum import Xmat
 import thewalrus.symplectic as symp
 
 import itertools as it
+from . import ops
 
 from ..shared_ops import changebasis
 
@@ -422,7 +423,6 @@ class BosonicModes:
         Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129
         """
-
         if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
@@ -433,11 +433,9 @@ class BosonicModes:
         print("Measurements implemened for real-valued Gaussians only.")
 
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-
         vals = np.zeros((shots, 2 * len(indices)))
-
-        pos_weights_ind = np.where(self.weights.real > 0)[0]
-        pos_weights = self.weights[pos_weights_ind].real
+        pos_weights_ind = np.where(np.array(self.weights).real > 0)[0]
+        pos_weights = np.array(self.weights)[pos_weights_ind].real
         pos_weights = pos_weights / np.sum(pos_weights)
 
         for i in range(shots):
@@ -456,7 +454,7 @@ class BosonicModes:
                     np.linalg.inv(self.covs[:, expind, :][:, :, expind] + covmat),
                     (peak_sample - self.means[:, expind]),
                 )
-                weighted_exp = self.weights * np.exp(-exp_arg)
+                weighted_exp = np.array(self.weights) * np.exp(-exp_arg)
                 prob_dist_val = np.sum(weighted_exp)
                 prob_upbnd = np.sum(weighted_exp[pos_weights_ind])
                 vertical_sample = np.random.random(size=1) * prob_upbnd
