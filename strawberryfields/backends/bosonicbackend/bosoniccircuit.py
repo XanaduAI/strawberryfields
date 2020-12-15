@@ -96,7 +96,7 @@ class BosonicModes:
         # Tensor product of the weights.
         weights = np.kron(self.weights, vac_weights)
         # De-nest the means iterator.
-        means = np.array([[a for b in tup for a in b] for tup in mean_combs])
+        means = np.array([[a for b in tup for a in b] for tup in mean_combs], dtype=object)
         # Stack covs appropriately.
         covs = np.array([block_diag(*tup) for tup in cov_combs])
 
