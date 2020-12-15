@@ -129,7 +129,7 @@ class BosonicBackend(BaseBosonic):
                             cmd.op, self.backend, kwargs
                         )
                     ) from None
-            if type(cmd.op) not in (nongausspreps and ancilla_gates):
+            if type(cmd.op) not in (nongausspreps + ancilla_gates):
                 try:
                     # try to apply it to the backend and, if op is a measurement, store it in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
