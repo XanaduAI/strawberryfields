@@ -1311,7 +1311,7 @@ class ThermalLossChannel(Channel):
         backend.thermal_loss(p[0], p[1], *reg)
 
 
-class mbSgate(Channel):
+class MbSgate(Channel):
     r"""Phase space measurement-based squeezing gate."""
 
     def __init__(self, r, phi=0.0, r_anc=10.0, eta_anc=1.0, avg=True):
