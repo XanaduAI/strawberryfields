@@ -86,7 +86,7 @@ class BosonicBackend(BaseBosonic):
             Fock,
             GKP,
             Ket,
-            mbSgate,
+            MbSgate,
         )
 
         # Initialize the circuit.
@@ -100,7 +100,7 @@ class BosonicBackend(BaseBosonic):
         all_samples = {}
         for cmd in prog.circuit:
             nongausspreps = (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
-            ancilla_gates = (mbSgate,)
+            ancilla_gates = (MbSgate,)
             if type(cmd.op) in ancilla_gates:
                 try:
                     # try to apply it to the backend and, if op is a measurement, store it in values
