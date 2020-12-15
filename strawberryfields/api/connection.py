@@ -96,9 +96,18 @@ class Connection:
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
-        self._headers = {"Authorization": self.token}
+        self._headers = {"Authorization": self.token, "Accept-Version": self.api_version}
 
         self.log = create_logger(__name__)
+
+    @property
+    def api_version(self) -> str:
+        """The platform API version to request.
+
+        Returns:
+            str
+        """
+        return "1.0.0"
 
     @property
     def token(self) -> str:
