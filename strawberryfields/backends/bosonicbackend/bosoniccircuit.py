@@ -560,8 +560,7 @@ class BosonicModes:
 
     def expandS(self, modes, S):
         """ Expands symplectic matrix for modes to symplectic matrix for the whole system. """
-        S2 = symp.expand(S, modes, self.nlen)
-        return S2
+        return symp.expand(S, modes, self.nlen)
 
     def expandXY(self, modes, X, Y):
         """ Expands X and Y matrices for modes to X and Y matrices for the whole system. """
