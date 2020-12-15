@@ -450,7 +450,7 @@ class BosonicModes:
 
         for i in range(shots):
             drawn = False
-            while drawn == False:
+            while not drawn:
                 peak_ind_sample = np.random.choice(pos_weights_ind, size=1, p=pos_weights)[0]
 
                 cov_meas = self.covs[peak_ind_sample, expind, :][:, expind] + covmat
