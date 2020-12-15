@@ -506,8 +506,7 @@ class BosonicModes:
         mp = self.scovmat()
         (A, B, C) = ops.chop_in_blocks_multi(mp, expind)
         V = A - B @ np.linalg.inv(C + covmat) @ B.transpose(0, 2, 1)
-        V1 = ops.reassemble_multi(V, expind)
-        self.covs = V1
+        self.covs = ops.reassemble_multi(V, expind)
 
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
