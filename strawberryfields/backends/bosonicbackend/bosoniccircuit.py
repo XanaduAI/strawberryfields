@@ -511,8 +511,7 @@ class BosonicModes:
         r = self.smean()
         (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
         va = va + np.einsum("...ij,...j", B @ np.linalg.inv(C + covmat), (vals - vc))
-        va = ops.reassemble_vector_multi(va, expind)
-        self.means = va
+        self.means = ops.reassemble_vector_multi(va, expind)
 
         reweights_exp_arg = np.einsum(
             "...j,...jk,...k", (vals - vc), np.linalg.inv(C + covmat), (vals - vc)
