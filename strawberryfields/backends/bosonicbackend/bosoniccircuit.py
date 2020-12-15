@@ -521,8 +521,8 @@ class BosonicModes:
         reweights = np.exp(-reweights_exp_arg) / (
             (np.pi ** len(indices) / 2) * np.sqrt(np.linalg.det(C + covmat))
         )
-        self.weights = self.weights * reweights
-        self.weights = self.weights / np.sum(self.weights)
+        self.weights *= reweights
+        self.weights /= np.sum(self.weights)
 
         return
 
