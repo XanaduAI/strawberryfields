@@ -2,6 +2,9 @@
 
 <h3>New features since last release</h3>
 
+* `Connection` objects now send versioned requests to the platform API.
+  [(#512)](https://github.com/XanaduAI/strawberryfields/pull/512)
+
 * `TDMProgram` objects can now be compiled and submitted via the API.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
