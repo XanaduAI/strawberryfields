@@ -485,8 +485,7 @@ class BosonicModes:
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
         covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
-        res = self.measure_dyne(covmat, [n], shots=shots)
-        return res
+        return self.measure_dyne(covmat, [n], shots=shots)
 
     def heterodyne(self, n, shots=1):
         """Performs a homodyne measurement by calling measure dyne an giving it the
