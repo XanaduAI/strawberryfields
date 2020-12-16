@@ -206,6 +206,7 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
     new_chart = generate_fock_chart(modes, photon_dists, mean, xlabels)
     pio.show(new_chart)
 
+
 def generate_fock_chart(modes, photon_dists, mean, xlabels):
     """Populates a chart dictionary with marginal Fock state probability
     distributions.
@@ -261,35 +262,33 @@ def generate_fock_chart(modes, photon_dists, mean, xlabels):
 
     return chart
 
+
 # Plot.ly default linechart JSON
 linechart_default = {
-    'data': [{
-        'type': 'scatter',
-        'x': [],
-        'y': []
-    }],
-    'layout': {
-        'width': 835,
-        'height': 500,
+    "data": [{"type": "scatter", "x": [], "y": []}],
+    "layout": {
+        "width": 835,
+        "height": 500,
         "margin": {"l": 100, "r": 100, "b": 100, "t": 100, "pad": 4},
-        'paper_bgcolor': 'white',
-        'plot_bgcolor': 'white',
-        'xaxis': {
-            'gridcolor': textcolor,
-            'autorange': True,
+        "paper_bgcolor": "white",
+        "plot_bgcolor": "white",
+        "xaxis": {
+            "gridcolor": textcolor,
+            "autorange": True,
             "title": "Quadrature value",
         },
-        'yaxis': {
-            'gridcolor': textcolor,
-            'autorange': True,
+        "yaxis": {
+            "gridcolor": textcolor,
+            "autorange": True,
             "title": "Probability",
-        }
+        },
     },
-    'config': {
-        'modeBarButtonsToRemove': ['lasso2d','select2d','toggleSpikelines'],
-        'displaylogo': False
-    }
+    "config": {
+        "modeBarButtonsToRemove": ["lasso2d", "select2d", "toggleSpikelines"],
+        "displaylogo": False,
+    },
 }
+
 
 def plot_quad(state, modes, xvec, pvec, renderer="browser"):
     """Plot the Wigner function with Plot.ly.
@@ -311,9 +310,10 @@ def plot_quad(state, modes, xvec, pvec, renderer="browser"):
         new_chart = generate_quad_chart(xvec, pvec, p_probs, x_probs, mode)
         pio.show(new_chart)
 
+
 def generate_quad_chart(p_probs, x_probs, xvec, pvec, mode):
     """Populates a chart dictionary with x and p reduced quadrature
-    probabilities. 
+    probabilities.
 
     Args:
         xvec (array): array of discretized :math:`x` quadrature values
@@ -327,33 +327,33 @@ def generate_quad_chart(p_probs, x_probs, xvec, pvec, mode):
         dict: a Plot.ly JSON-format line plot
     """
     chart = deepcopy(linechart_default)
-    data_dict = linechart_default['data'][0]
-    chart['data'] = [deepcopy(data_dict), deepcopy(data_dict)]
+    data_dict = linechart_default["data"][0]
+    chart["data"] = [deepcopy(data_dict), deepcopy(data_dict)]
 
-    if len(chart['data']) == 1:
-        chart['data'].append(copy(chart['data'][0]))
+    if len(chart["data"]) == 1:
+        chart["data"].append(copy(chart["data"][0]))
 
-    chart['data'][0]['x'] = xvec.tolist()
-    chart['data'][0]['y'] = x_probs
-    chart['data'][0]['mode'] = 'lines'
-    chart['data'][0]['type'] = 'scatter'
-    chart['data'][0]['name'] = 'x'
-    chart['data'][0]['line'] = {'color': '#1f9094'}
+    chart["data"][0]["x"] = xvec.tolist()
+    chart["data"][0]["y"] = x_probs
+    chart["data"][0]["mode"] = "lines"
+    chart["data"][0]["type"] = "scatter"
+    chart["data"][0]["name"] = "x"
+    chart["data"][0]["line"] = {"color": "#1f9094"}
 
-    chart['data'][1]['x'] = pvec.tolist()
-    chart['data'][1]['y'] = p_probs
-    chart['data'][1]['mode'] = 'lines'
-    chart['data'][1]['type'] = 'scatter'
-    chart['data'][1]['name'] = 'p'
-    chart['data'][1]['line'] = {'color': '#1F599A'}
+    chart["data"][1]["x"] = pvec.tolist()
+    chart["data"][1]["y"] = p_probs
+    chart["data"][1]["mode"] = "lines"
+    chart["data"][1]["type"] = "scatter"
+    chart["data"][1]["name"] = "p"
+    chart["data"][1]["line"] = {"color": "#1F599A"}
 
-    chart['layout']['paper_bgcolor'] = 'white'
-    chart['layout']['plot_bgcolor'] = 'white'
-    chart['layout']['font'] = {'color': textcolor}
+    chart["layout"]["paper_bgcolor"] = "white"
+    chart["layout"]["plot_bgcolor"] = "white"
+    chart["layout"]["font"] = {"color": textcolor}
 
-    for i in ['xaxis', 'yaxis']:
-        chart['layout'][i]['gridcolor'] = '#bbb'
-        chart['layout'][i]['color'] = textcolor
+    for i in ["xaxis", "yaxis"]:
+        chart["layout"][i]["gridcolor"] = "#bbb"
+        chart["layout"][i]["color"] = textcolor
 
     new_chart["layout"]["title"] = f"Mode {mode} quadrature probability distribution"
     return chart
