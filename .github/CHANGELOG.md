@@ -31,6 +31,9 @@
 
 <h3>Improvements</h3>
 
+* `Connection` objects now send versioned requests to the platform API.
+  [(#512)](https://github.com/XanaduAI/strawberryfields/pull/512)
+
 * The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
   copies of a TDM algorithm can now be set by passing the `shots` keyword argument to
   the `eng.run()` method.
@@ -92,7 +95,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
+Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
 
 # Release 0.16.0 (current release)
 
