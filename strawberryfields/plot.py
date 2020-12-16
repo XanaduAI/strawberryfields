@@ -17,6 +17,7 @@ ways using Plot.ly.
 """
 from copy import copy, deepcopy
 import numpy as np
+from strawberryfields.backends.states import BaseGaussianState
 
 plotly_error = (
     "Plot.ly required for using this function. It can be installed as follows:"
@@ -33,6 +34,8 @@ def _get_plotly():
         raise (plotly_error) from e
     return pio
 
+
+textcolor = "#787878"
 
 def plot_wigner(state, mode, xvec, pvec, renderer="browser", contours=True):
     """Plot the Wigner function with Plot.ly.
@@ -66,8 +69,6 @@ def generate_wigner_chart(data, xvec, pvec, contours=True):
     Returns:
         dict: a Plot.ly JSON-format surface plot
     """
-    textcolor = "#787878"
-
     chart = {
         "data": [
             {
@@ -121,8 +122,6 @@ def generate_wigner_chart(data, xvec, pvec, contours=True):
     chart["layout"]["scene"]["zaxis"]["title"] = "W(x,p)"
 
     return chart
-
-textcolor = '#787878'
 
 # Plot.ly default barchart JSON
 barchartDefault = {
@@ -182,17 +181,20 @@ barchartDefault = {
 
 def plot_fock(state, modes, cutoff=None, renderer="browser"):
     """Plot the Fock state probabilities with Plot.ly.
+
     Args:
         state (:class:`.BaseState`): the state used for plotting
         modes (list): list of modes to generate output for
         cutoff (int): the cutoff value determining the maximum Fock state to
-            get probabilities for
-        xvec (array): array of discretized :math:`x` quadrature values
-        pvec (array): array of discretized :math:`p` quadrature values
+            get probabilities for, required if state is a
+            :class:`~.BaseGaussianState`
         renderer (string): the renderer for plotting with Plot.ly
-        contours (bool): whether to show the contour lines in the plot
     """
     if cutoff is None:
+        if isinstance(state, BaseGaussianState):
+            raise ValueError(f"No cutoff specified for {state.__class__}.")
+
+        # BaseFockState has cutoff
         cutoff = state.cutoff_dim
 
     pio = _get_plotly()
@@ -202,11 +204,9 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
     # Reduced density matrices
     rho = [state.reduced_dm(n, cutoff=cutoff) for n in range(num_modes)]
-    print(rho)
     photonDists = np.array([np.real(np.diagonal(p)) for p in rho])
 
     n = np.arange(cutoff)
-    print(photonDists)
     mean = [np.sum(n*probs).real for probs in photonDists]
 
     xlabels = ["|{}>".format(i) for i in range(0, cutoff, 1)]
@@ -218,13 +218,15 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 def generate_fock_chart(chart, modes, photonDists, mean, xlabels):
     """Populates a chart dictionary with marginal Fock state probability
     distributions.
+
     Args:
         chart (dict): chart dictionary to be used for plotting
         modes (list): list of modes to generate Fock charts for
         photonDists (list): nested list containing marginal Fock probabilities
-            for each mode.
+            for each mode
         mean (list): mean photon number for each mode
         xlabels (list): x-axis tick labels
+
     Returns:
         dict: a Plot.ly JSON-format bar chart
     """

@@ -54,3 +54,26 @@ class TestWignerPlotting:
         with monkeypatch.context() as m:
             m.setattr(pio, "show", lambda x: None)
             plot_wigner(results.state, mode, xvec, pvec, renderer=renderer, contours=contours)
+
+
+class TestFockProbPlotting:
+    """Test the Fock state probabilities plotting function"""
+
+    def test_raises(self, monkeypatch):
+        """Test that an error is raised if not cutoff value is specified for a
+        Gaussian state."""
+        prog = sf.Program(1)
+        eng = sf.Engine('gaussian')
+
+        with prog.context as q:
+            gamma = 2
+            Sgate(gamma) | q[0]
+
+        state = eng.run(prog).state
+        modes = [0]
+
+        with monkeypatch.context() as m:
+            # Avoid plotting even if the test failed
+            m.setattr(pio, "show", lambda x: None)
+            with pytest.raises(ValueError, match="No cutoff specified for"):
+                sf.plot_fock(state, modes, renderer="browser")
