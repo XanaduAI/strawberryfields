@@ -14,13 +14,13 @@
 r"""
 Unit tests for strawberryfields.plot
 """
-import pytest
-
 import numpy as np
 import plotly.io as pio
+import pytest
+from scipy.special import factorial as fac
 
 import strawberryfields as sf
-from strawberryfields.ops import Sgate, BSgate, MeasureFock
+from strawberryfields.ops import BSgate, MeasureFock, Sgate
 from strawberryfields.plot import plot_wigner
 
 pytestmark = pytest.mark.frontend
@@ -59,15 +59,14 @@ class TestWignerPlotting:
 class TestFockProbPlotting:
     """Test the Fock state probabilities plotting function"""
 
-    def test_raises(self, monkeypatch):
+    def test_raises_gaussian_no_cutoff(self, monkeypatch):
         """Test that an error is raised if not cutoff value is specified for a
         Gaussian state."""
         prog = sf.Program(1)
         eng = sf.Engine('gaussian')
 
         with prog.context as q:
-            gamma = 2
-            Sgate(gamma) | q[0]
+            Sgate(2) | q[0]
 
         state = eng.run(prog).state
         modes = [0]
@@ -77,3 +76,51 @@ class TestFockProbPlotting:
             m.setattr(pio, "show", lambda x: None)
             with pytest.raises(ValueError, match="No cutoff specified for"):
                 sf.plot_fock(state, modes, renderer="browser")
+
+    @pytest.mark.parametrize("modes", [[0], [0,1]])
+    def test_expected_args_to_plot(self, monkeypatch, modes):
+        """Test that given a program the expected values would be plotted."""
+        num_subsystems = len(modes)
+
+        cutoff = 5
+        prog = sf.Program(1)
+        eng = sf.Engine('fock', backend_options={"cutoff_dim": cutoff})
+        backend = eng.backend
+
+        a = 0.3 + 0.1j
+
+        backend.begin_circuit(
+            num_subsystems=num_subsystems,
+            cutoff_dim=cutoff,
+            pure=True,
+            batch_size=1,
+        )
+        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
+
+        state = backend.state()
+
+        mean = [state.mean_photon(mode)[0] for mode in modes]
+        all_probs = state.all_fock_probs()
+
+        if num_subsystems > 1:
+            photon_dists = [np.sum(all_probs, i).tolist() for i in range(num_subsystems-1,-1, -1)]
+        else:
+            photon_dists = all_probs
+
+        arg_store = []
+        with monkeypatch.context() as m:
+            # Avoid plotting even if the test failed
+            m.setattr(pio, "show", lambda x: None)
+            m.setattr(sf.plot, "generate_fock_chart", lambda *args: arg_store.append(args))
+            sf.plot_fock(state, modes, cutoff=cutoff, renderer="browser")
+
+            assert len(arg_store) == 1
+
+            # Extract the stored args
+            _, modes_res, photon_dists_res, mean_res, xlabels_res = arg_store[0]
+
+            # Check the results to be plotted
+            assert np.allclose(mean_res, mean)
+            assert np.allclose(photon_dists_res, photon_dists)
+            assert modes_res == modes
+            assert xlabels_res == ['|0>', '|1>', '|2>', '|3>', '|4>']

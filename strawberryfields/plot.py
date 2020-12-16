@@ -204,25 +204,25 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
     # Reduced density matrices
     rho = [state.reduced_dm(n, cutoff=cutoff) for n in range(num_modes)]
-    photonDists = np.array([np.real(np.diagonal(p)) for p in rho])
+    photon_dists = np.array([np.real(np.diagonal(p)) for p in rho])
 
     n = np.arange(cutoff)
-    mean = [np.sum(n*probs).real for probs in photonDists]
+    mean = [np.sum(n*probs).real for probs in photon_dists]
 
     xlabels = ["|{}>".format(i) for i in range(0, cutoff, 1)]
 
     basic_chart = deepcopy(barchartDefault)
-    new_chart = generate_fock_chart(basic_chart, modes, photonDists, mean, xlabels)
+    new_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
     pio.show(new_chart)
 
-def generate_fock_chart(chart, modes, photonDists, mean, xlabels):
+def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):
     """Populates a chart dictionary with marginal Fock state probability
     distributions.
 
     Args:
         chart (dict): chart dictionary to be used for plotting
         modes (list): list of modes to generate Fock charts for
-        photonDists (list): nested list containing marginal Fock probabilities
+        photon_dists (list): nested list containing marginal Fock probabilities
             for each mode
         mean (list): mean photon number for each mode
         xlabels (list): x-axis tick labels
@@ -237,7 +237,7 @@ def generate_fock_chart(chart, modes, photonDists, mean, xlabels):
         chart['data'][idx]['type'] = 'bar'
         chart['data'][idx]['marker'] = {'color': '#1f9094'}
         chart['data'][idx]['x'] = xlabels
-        chart['data'][idx]['y'] = photonDists[n].tolist()
+        chart['data'][idx]['y'] = photon_dists[n].tolist()
 
         if idx == 0:
             Xax = ("xaxis", "x")
