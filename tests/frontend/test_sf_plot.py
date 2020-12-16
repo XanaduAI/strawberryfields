@@ -214,7 +214,7 @@ class TestFockProbPlotting:
         with monkeypatch.context() as m:
             m.setattr(pio, "show", lambda x: None)
             m.setattr(sf.plot, "generate_fock_chart", lambda *args: arg_store.append(args))
-            sf.plot_fock(state, modes, cutoff=cutoff, renderer="browser")
+            sf.plot_fock(state, modes, renderer="browser")
 
             assert len(arg_store) == 1
 
