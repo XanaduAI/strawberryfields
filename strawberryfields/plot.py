@@ -331,9 +331,6 @@ def generate_quad_chart(xvec, pvec, x_probs, p_probs, mode):
     data_dict = linechart_default["data"][0]
     chart["data"] = [deepcopy(data_dict), deepcopy(data_dict)]
 
-    if len(chart["data"]) == 1:
-        chart["data"].append(copy(chart["data"][0]))
-
     chart["data"][0]["x"] = xvec.tolist()
     chart["data"][0]["y"] = x_probs
     chart["data"][0]["mode"] = "lines"
