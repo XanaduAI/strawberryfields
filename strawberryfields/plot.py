@@ -37,6 +37,7 @@ def _get_plotly():
 
 textcolor = "#787878"
 
+
 def plot_wigner(state, mode, xvec, pvec, renderer="browser", contours=True):
     """Plot the Wigner function with Plot.ly.
 
@@ -123,61 +124,52 @@ def generate_wigner_chart(data, xvec, pvec, contours=True):
 
     return chart
 
+
 # Plot.ly default barchart JSON
 barchart_default = {
-    'data': [{
-        'y': [],
-        'x': [],
-        'type': "bar",
-        'name': "q[0]"
-    }],
-    'layout': {
-        'width': 835,
-        'height': 500,
-        'margin': {
-            'l': 100,
-            'r': 100,
-            'b': 100,
-            't': 100,
-            'pad': 4
+    "data": [{"y": [], "x": [], "type": "bar", "name": "q[0]"}],
+    "layout": {
+        "width": 835,
+        "height": 500,
+        "margin": {"l": 100, "r": 100, "b": 100, "t": 100, "pad": 4},
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "autosize": True,
+        "yaxis": {
+            "gridcolor": "#bbb",
+            "type": "linear",
+            "autorange": True,
+            "title": "Probability",
+            "fixedrange": True,
         },
-        'paper_bgcolor': 'rgba(0,0,0,0)',
-        'plot_bgcolor': 'rgba(0,0,0,0)',
-        'autosize': True,
-        'yaxis': {
-            'gridcolor': "#bbb",
-            'type': "linear",
-            'autorange': True,
-            'title': "Probability",
-            'fixedrange': True
+        "xaxis": {
+            "gridcolor": textcolor,
+            "type": "category",
+            "autorange": True,
+            "title": "q[0]",
+            "fixedrange": True,
         },
-        'xaxis': {
-            'gridcolor': textcolor,
-            'type': "category",
-            'autorange': True,
-            'title': "q[0]",
-            'fixedrange': True
-        },
-        'showlegend': False,
-        'annotations': [{
-            "showarrow": False,
-            "yanchor": "bottom",
-            "xref": "paper",
-            "xanchor": "center",
-            "yref": "paper",
-            "text": "",
-            "y": 1,
-            "x": 0,
-            "font": {
-                    "size": 16
+        "showlegend": False,
+        "annotations": [
+            {
+                "showarrow": False,
+                "yanchor": "bottom",
+                "xref": "paper",
+                "xanchor": "center",
+                "yref": "paper",
+                "text": "",
+                "y": 1,
+                "x": 0,
+                "font": {"size": 16},
             }
-        }]
+        ],
     },
-    'config': {
-        'modeBarButtonsToRemove': ['zoom2d','lasso2d','select2d','toggleSpikelines'],
-        'displaylogo': False
-    }
+    "config": {
+        "modeBarButtonsToRemove": ["zoom2d", "lasso2d", "select2d", "toggleSpikelines"],
+        "displaylogo": False,
+    },
 }
+
 
 def plot_fock(state, modes, cutoff=None, renderer="browser"):
     """Plot the Fock state probabilities with Plot.ly.
@@ -200,14 +192,14 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
     pio = _get_plotly()
     pio.renderers.default = renderer
 
-    num_modes= len(modes)
+    num_modes = len(modes)
 
     # Reduced density matrices
     rho = [state.reduced_dm(n, cutoff=cutoff) for n in range(num_modes)]
     photon_dists = np.array([np.real(np.diagonal(p)) for p in rho])
 
     n = np.arange(cutoff)
-    mean = [np.sum(n*probs).real for probs in photon_dists]
+    mean = [np.sum(n * probs).real for probs in photon_dists]
 
     xlabels = ["|{}>".format(i) for i in range(0, cutoff, 1)]
 
@@ -215,6 +207,7 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
     new_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
     print(new_chart)
     pio.show(new_chart)
+
 
 def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):
     """Populates a chart dictionary with marginal Fock state probability
@@ -232,41 +225,41 @@ def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):
         dict: a Plot.ly JSON-format bar chart
     """
     numplots = len(modes)
-    chart['data'] = [dict() for i in range(numplots)]
+    chart["data"] = [dict() for i in range(numplots)]
 
     for idx, n in enumerate(sorted(modes)):
-        chart['data'][idx]['type'] = 'bar'
-        chart['data'][idx]['marker'] = {'color': '#1f9094'}
-        chart['data'][idx]['x'] = xlabels
-        chart['data'][idx]['y'] = photon_dists[n].tolist()
+        chart["data"][idx]["type"] = "bar"
+        chart["data"][idx]["marker"] = {"color": "#1f9094"}
+        chart["data"][idx]["x"] = xlabels
+        chart["data"][idx]["y"] = photon_dists[n].tolist()
 
         if idx == 0:
             Xax = ("xaxis", "x")
         else:
-            chart['layout']['annotations'].append(copy(chart['layout']['annotations'][idx - 1]))
+            chart["layout"]["annotations"].append(copy(chart["layout"]["annotations"][idx - 1]))
             Xax = ("xaxis{}".format(idx + 1), "x{}".format(idx + 1))
 
-        chart['data'][idx]['xaxis'] = Xax[1]
-        chart['data'][idx]['yaxis'] = 'y'
-        chart['data'][idx]['name'] = ""
+        chart["data"][idx]["xaxis"] = Xax[1]
+        chart["data"][idx]["yaxis"] = "y"
+        chart["data"][idx]["name"] = ""
 
         dXa = 0.01 if idx != 0 else 0
         dXb = 0.01 if idx != numplots - 1 else 0
 
-        chart['layout'][Xax[0]] = {
-            'type': 'category',
-            'domain': [idx / numplots + dXa, (idx + 1) / numplots - dXb],
-            'title': "mode {}".format(n),
-            'fixedrange': True,
-            'gridcolor': 'rgba(0,0,0,0)'
+        chart["layout"][Xax[0]] = {
+            "type": "category",
+            "domain": [idx / numplots + dXa, (idx + 1) / numplots - dXb],
+            "title": "mode {}".format(n),
+            "fixedrange": True,
+            "gridcolor": "rgba(0,0,0,0)",
         }
 
-        chart['layout']['annotations'][idx]["text"] = "Mean: {:.3f}".format(mean[n])
-        chart['layout']['annotations'][idx]["x"] = idx / numplots + dXa +0.5/numplots
+        chart["layout"]["annotations"][idx]["text"] = "Mean: {:.3f}".format(mean[n])
+        chart["layout"]["annotations"][idx]["x"] = idx / numplots + dXa + 0.5 / numplots
 
-    chart['layout']['xaxis']['type'] = 'category'
-    chart['layout']['title'] = 'Marginal Fock state probabilities'
+    chart["layout"]["xaxis"]["type"] = "category"
+    chart["layout"]["title"] = "Marginal Fock state probabilities"
 
-    chart['layout']['font'] = {'color': textcolor}
+    chart["layout"]["font"] = {"color": textcolor}
 
     return chart
