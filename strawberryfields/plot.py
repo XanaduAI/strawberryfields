@@ -209,7 +209,7 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
 def generate_fock_chart(modes, photon_dists, mean, xlabels):
     """Populates a chart dictionary with marginal Fock state probability
-    distributions.
+    distributions for multiple modes.
 
     Args:
         modes (list): list of modes to generate Fock charts for
@@ -307,13 +307,13 @@ def plot_quad(state, modes, xvec, pvec, renderer="browser"):
         p_probs = state.p_quad_values(mode, xvec, pvec).tolist()
         x_probs = state.x_quad_values(mode, xvec, pvec).tolist()
 
-        new_chart = generate_quad_chart(xvec, pvec, p_probs, x_probs, mode)
+        new_chart = generate_quad_chart(xvec, pvec, x_probs, p_probs, mode)
         pio.show(new_chart)
 
 
-def generate_quad_chart(p_probs, x_probs, xvec, pvec, mode):
+def generate_quad_chart(xvec, pvec, x_probs, p_probs, mode):
     """Populates a chart dictionary with x and p reduced quadrature
-    probabilities.
+    probabilities for a single mode.
 
     Args:
         xvec (array): array of discretized :math:`x` quadrature values
@@ -323,6 +323,7 @@ def generate_quad_chart(p_probs, x_probs, xvec, pvec, mode):
         p_probs (list): a list containing reduced p-quadrature
             probability values for a specified range of x and p.
         mode (int): the mode for which quadrature probabilities are obtained
+
     Returns:
         dict: a Plot.ly JSON-format line plot
     """
@@ -355,5 +356,5 @@ def generate_quad_chart(p_probs, x_probs, xvec, pvec, mode):
         chart["layout"][i]["gridcolor"] = "#bbb"
         chart["layout"][i]["color"] = textcolor
 
-    new_chart["layout"]["title"] = f"Mode {mode} quadrature probability distribution"
+    chart["layout"]["title"] = f"Mode {mode} quadrature probability distribution"
     return chart
