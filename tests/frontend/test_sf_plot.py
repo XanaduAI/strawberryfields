@@ -60,15 +60,28 @@ class TestWignerPlotting:
 
 
 def create_example_fock_chart(chart, modes, photon_dists, mean, xlabels):
-    """Test chart used to plot the Fock state probabilities of a one mode
+    """Test chart used to plot the Fock state probabilities of a two-mode
     system."""
+    first_x = 0.25
+    second_x = 0.76
+    domain = [0.0, 0.49]
+    domain2 = [0.51, 1.0]
     data = [
         {
             "type": "bar",
             "marker": {"color": "#1f9094"},
             "x": xlabels,
-            "y": np.squeeze(photon_dists).tolist(),
+            "y": photon_dists[0].tolist(),
             "xaxis": "x",
+            "yaxis": "y",
+            "name": "",
+        },
+        {
+            "type": "bar",
+            "marker": {"color": "#1f9094"},
+            "x": xlabels,
+            "y": photon_dists[1].tolist(),
+            "xaxis": "x2",
             "yaxis": "y",
             "name": "",
         },
@@ -82,8 +95,15 @@ def create_example_fock_chart(chart, modes, photon_dists, mean, xlabels):
     }
     xaxis = {
         "type": "category",
-        "domain": [0.0, 1.0],
+        "domain": domain,
         "title": "mode 0",
+        "fixedrange": True,
+        "gridcolor": "rgba(0,0,0,0)",
+    }
+    xaxis2 = {
+        "type": "category",
+        "domain": domain2,
+        "title": "mode 1",
         "fixedrange": True,
         "gridcolor": "rgba(0,0,0,0)",
     }
@@ -96,7 +116,18 @@ def create_example_fock_chart(chart, modes, photon_dists, mean, xlabels):
             "yref": "paper",
             "text": "Mean: {:.3f}".format(mean[0]),
             "y": 1,
-            "x": 0.5,
+            "x": first_x,
+            "font": {"size": 16},
+        },
+        {
+            "showarrow": False,
+            "yanchor": "bottom",
+            "xref": "paper",
+            "xanchor": "center",
+            "yref": "paper",
+            "text": "Mean: {:.3f}".format(mean[1]),
+            "y": 1,
+            "x": second_x,
             "font": {"size": 16},
         },
     ]
@@ -109,6 +140,7 @@ def create_example_fock_chart(chart, modes, photon_dists, mean, xlabels):
         "autosize": True,
         "yaxis": yaxis,
         "xaxis": xaxis,
+        "xaxis2": xaxis2,
         "showlegend": False,
         "annotations": annotations,
         "title": "Marginal Fock state probabilities",
@@ -196,12 +228,12 @@ class TestFockProbPlotting:
             assert xlabels_res == ["|0>", "|1>", "|2>", "|3>", "|4>"]
 
     def test_generate_fock_chart(self):
-        """Test the chart generated for a single-mode system when plotting the
+        """Test the chart generated for a two-mode system when plotting the
         Fock state probabilities."""
         basic_chart = deepcopy(barchart_default)
-        modes = [0]
-        photon_dists = np.array([[1, 0, 0, 0, 0]])
-        mean = [0]
+        modes = [0, 1]
+        photon_dists = np.array([[1, 0, 0, 0, 0], [1, 0, 0, 0, 0]])
+        mean = [0, 0]
         xlabels = ["|0>", "|1>", "|2>", "|3>", "|4>"]
         res_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
         exp_chat = create_example_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
