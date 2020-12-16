@@ -216,7 +216,7 @@ def create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode):
 
 
 class TestFockProbPlotting:
-    """Test the Fock state probabilities plotting function"""
+    """Test the Fock state probabilities plotting function."""
 
     def test_raises_gaussian_no_cutoff(self, monkeypatch):
         """Test that an error is raised if not cutoff value is specified for a
