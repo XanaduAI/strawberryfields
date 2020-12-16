@@ -180,7 +180,6 @@ class TestFockProbPlotting:
 
         arg_store = []
         with monkeypatch.context() as m:
-            # Avoid plotting even if the test failed
             m.setattr(pio, "show", lambda x: None)
             m.setattr(sf.plot, "generate_fock_chart", lambda *args: arg_store.append(args))
             sf.plot_fock(state, modes, cutoff=cutoff, renderer="browser")
