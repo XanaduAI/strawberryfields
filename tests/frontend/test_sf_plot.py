@@ -22,7 +22,12 @@ from scipy.special import factorial as fac
 
 import strawberryfields as sf
 from strawberryfields.ops import BSgate, MeasureFock, Sgate
-from strawberryfields.plot import plot_wigner, generate_fock_chart, barchart_default
+from strawberryfields.plot import (
+    plot_wigner,
+    generate_fock_chart,
+    generate_quad_chart,
+    barchart_default,
+)
 
 pytestmark = pytest.mark.frontend
 
@@ -147,7 +152,7 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
         "title": "Marginal Fock state probabilities",
         "font": {"color": "#787878"},
     }
-    expected = {
+    fock_chart = {
         "data": data,
         "layout": layout,
         "config": {
@@ -155,7 +160,59 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
             "displaylogo": False,
         },
     }
-    return expected
+    return fock_chart
+
+
+def create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode):
+    """Test chart used to plot the quadrature probabilities of a one-mode
+    system."""
+    xlist = xvec.tolist()
+    plist = pvec.tolist()
+    data = [
+        {
+            "type": "scatter",
+            "x": xlist,
+            "y": x_probs,
+            "mode": "lines",
+            "name": "x",
+            "line": {"color": "#1f9094"},
+        },
+        {
+            "type": "scatter",
+            "x": plist,
+            "y": p_probs,
+            "mode": "lines",
+            "name": "p",
+            "line": {"color": "#1F599A"},
+        },
+    ]
+    layout = {
+        "width": 835,
+        "height": 500,
+        "margin": {"l": 100, "r": 100, "b": 100, "t": 100, "pad": 4},
+        "paper_bgcolor": "white",
+        "plot_bgcolor": "white",
+        "xaxis": {
+            "gridcolor": "#bbb",
+            "autorange": True,
+            "title": "Quadrature value",
+            "color": "#787878",
+        },
+        "yaxis": {
+            "gridcolor": "#bbb",
+            "autorange": True,
+            "title": "Probability",
+            "color": "#787878",
+        },
+        "font": {"color": "#787878"},
+        "title": f"Mode {mode} quadrature probability distribution",
+    }
+    config = {
+        "modeBarButtonsToRemove": ["lasso2d", "select2d", "toggleSpikelines"],
+        "displaylogo": False,
+    }
+    quad_chart = {"data": data, "layout": layout, "config": config}
+    return quad_chart
 
 
 class TestFockProbPlotting:
@@ -241,11 +298,12 @@ class TestFockProbPlotting:
         assert res_chart["layout"] == exp_chat["layout"]
         assert res_chart["config"] == exp_chat["config"]
 
+
 class TestQuadProbPlotting:
     """Test the quadrature probabilities plotting function"""
 
     @pytest.mark.parametrize("renderer", ["png", "json", "browser"])
-    @pytest.mark.parametrize("modes", [[0], [0,1]])
+    @pytest.mark.parametrize("modes", [[0], [0, 1]])
     def test_no_errors(self, modes, renderer, prog, monkeypatch):
         """Test that no errors are thrown when calling the `plot_quad`
         function"""
@@ -257,3 +315,18 @@ class TestQuadProbPlotting:
         with monkeypatch.context() as m:
             m.setattr(pio, "show", lambda x: None)
             sf.plot_quad(results.state, modes, xvec, pvec, renderer=renderer)
+
+    @pytest.mark.parametrize("mode", [0, 1])
+    def test_generate_quad_chart(self, mode):
+        """Test the chart generated for a one-mode system when plotting the
+        quadrature probabilities."""
+        modes = [0]
+        xvec = np.arange(0, 2, 1)
+        pvec = np.arange(0, 2, 1)
+        x_probs = [1, 0]
+        p_probs = [1, 0]
+        res_chart = generate_quad_chart(xvec, pvec, x_probs, p_probs, mode)
+        exp_chat = create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode)
+        assert res_chart["data"] == exp_chat["data"]
+        assert res_chart["layout"] == exp_chat["layout"]
+        assert res_chart["config"] == exp_chat["config"]
