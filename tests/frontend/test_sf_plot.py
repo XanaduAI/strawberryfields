@@ -205,7 +205,7 @@ def create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode):
             "color": "#787878",
         },
         "font": {"color": "#787878"},
-        "title": f"Mode {mode} quadrature probability distribution",
+        "title": f"Position and momentum quadrature probabilities for mode {mode}",
     }
     config = {
         "modeBarButtonsToRemove": ["lasso2d", "select2d", "toggleSpikelines"],

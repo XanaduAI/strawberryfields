@@ -353,5 +353,5 @@ def generate_quad_chart(xvec, pvec, x_probs, p_probs, mode):
         chart["layout"][i]["gridcolor"] = "#bbb"
         chart["layout"][i]["color"] = textcolor
 
-    chart["layout"]["title"] = f"Mode {mode} quadrature probability distribution"
+    chart["layout"]["title"] = f"Position and momentum quadrature probabilities for mode {mode}"
     return chart
