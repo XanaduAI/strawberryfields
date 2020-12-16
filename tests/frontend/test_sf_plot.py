@@ -59,9 +59,10 @@ class TestWignerPlotting:
             plot_wigner(results.state, mode, xvec, pvec, renderer=renderer, contours=contours)
 
 
-def create_example_fock_chart(chart, modes, photon_dists, mean, xlabels):
+def create_example_fock_chart(modes, photon_dists, mean, xlabels):
     """Test chart used to plot the Fock state probabilities of a two-mode
     system."""
+    chart = deepcopy(barchart_default)
     first_x = 0.25
     second_x = 0.76
     domain = [0.0, 0.49]
@@ -219,7 +220,7 @@ class TestFockProbPlotting:
             assert len(arg_store) == 1
 
             # Extract the stored args
-            _, modes_res, photon_dists_res, mean_res, xlabels_res = arg_store[0]
+            modes_res, photon_dists_res, mean_res, xlabels_res = arg_store[0]
 
             # Check the results to be plotted
             assert np.allclose(mean_res, mean)
@@ -230,13 +231,12 @@ class TestFockProbPlotting:
     def test_generate_fock_chart(self):
         """Test the chart generated for a two-mode system when plotting the
         Fock state probabilities."""
-        basic_chart = deepcopy(barchart_default)
         modes = [0, 1]
         photon_dists = np.array([[1, 0, 0, 0, 0], [1, 0, 0, 0, 0]])
         mean = [0, 0]
         xlabels = ["|0>", "|1>", "|2>", "|3>", "|4>"]
-        res_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
-        exp_chat = create_example_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
+        res_chart = generate_fock_chart(modes, photon_dists, mean, xlabels)
+        exp_chat = create_example_fock_chart(modes, photon_dists, mean, xlabels)
         assert res_chart["data"] == exp_chat["data"]
         assert res_chart["layout"] == exp_chat["layout"]
         assert res_chart["config"] == exp_chat["config"]

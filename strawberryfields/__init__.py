@@ -30,7 +30,7 @@ from .io import load, save
 from .parameters import par_funcs as math
 from .program import Program
 from .tdm import TDMProgram
-from .plot import plot_wigner, plot_fock
+from .plot import plot_wigner, plot_fock, plot_quad
 from . import tdm
 
 __all__ = [

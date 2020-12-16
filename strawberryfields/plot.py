@@ -203,18 +203,14 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
     xlabels = ["|{}>".format(i) for i in range(0, cutoff, 1)]
 
-    basic_chart = deepcopy(barchart_default)
-    new_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
-    print(new_chart)
+    new_chart = generate_fock_chart(modes, photon_dists, mean, xlabels)
     pio.show(new_chart)
 
-
-def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):
+def generate_fock_chart(modes, photon_dists, mean, xlabels):
     """Populates a chart dictionary with marginal Fock state probability
     distributions.
 
     Args:
-        chart (dict): chart dictionary to be used for plotting
         modes (list): list of modes to generate Fock charts for
         photon_dists (list): nested list containing marginal Fock probabilities
             for each mode
@@ -225,6 +221,7 @@ def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):
         dict: a Plot.ly JSON-format bar chart
     """
     numplots = len(modes)
+    chart = deepcopy(barchart_default)
     chart["data"] = [dict() for i in range(numplots)]
 
     for idx, n in enumerate(sorted(modes)):
@@ -262,4 +259,101 @@ def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):
 
     chart["layout"]["font"] = {"color": textcolor}
 
+    return chart
+
+# Plot.ly default linechart JSON
+linechart_default = {
+    'data': [{
+        'type': 'scatter',
+        'x': [],
+        'y': []
+    }],
+    'layout': {
+        'width': 835,
+        'height': 500,
+        "margin": {"l": 100, "r": 100, "b": 100, "t": 100, "pad": 4},
+        'paper_bgcolor': 'white',
+        'plot_bgcolor': 'white',
+        'xaxis': {
+            'gridcolor': textcolor,
+            'autorange': True,
+            "title": "Quadrature value",
+        },
+        'yaxis': {
+            'gridcolor': textcolor,
+            'autorange': True,
+            "title": "Probability",
+        }
+    },
+    'config': {
+        'modeBarButtonsToRemove': ['lasso2d','select2d','toggleSpikelines'],
+        'displaylogo': False
+    }
+}
+
+def plot_quad(state, modes, xvec, pvec, renderer="browser"):
+    """Plot the Wigner function with Plot.ly.
+
+    Args:
+        state (:class:`.BaseState`): the state used for plotting
+        mode (int): mode used to calculate the reduced Wigner function
+        xvec (array): array of discretized :math:`x` quadrature values
+        pvec (array): array of discretized :math:`p` quadrature values
+        renderer (string): the renderer for plotting with Plot.ly
+    """
+    pio = _get_plotly()
+    pio.renderers.default = renderer
+
+    for mode in modes:
+        p_probs = state.p_quad_values(mode, xvec, pvec).tolist()
+        x_probs = state.x_quad_values(mode, xvec, pvec).tolist()
+
+        new_chart = generate_quad_chart(xvec, pvec, p_probs, x_probs, mode)
+        pio.show(new_chart)
+
+def generate_quad_chart(p_probs, x_probs, xvec, pvec, mode):
+    """Populates a chart dictionary with x and p reduced quadrature
+    probabilities. 
+
+    Args:
+        xvec (array): array of discretized :math:`x` quadrature values
+        pvec (array): array of discretized :math:`p` quadrature values
+        x_probs (list): a list containing reduced x-quadrature
+            probability values for a specified range of x and p.
+        p_probs (list): a list containing reduced p-quadrature
+            probability values for a specified range of x and p.
+        mode (int): the mode for which quadrature probabilities are obtained
+    Returns:
+        dict: a Plot.ly JSON-format line plot
+    """
+    chart = deepcopy(linechart_default)
+    data_dict = linechart_default['data'][0]
+    chart['data'] = [deepcopy(data_dict), deepcopy(data_dict)]
+
+    if len(chart['data']) == 1:
+        chart['data'].append(copy(chart['data'][0]))
+
+    chart['data'][0]['x'] = xvec.tolist()
+    chart['data'][0]['y'] = x_probs
+    chart['data'][0]['mode'] = 'lines'
+    chart['data'][0]['type'] = 'scatter'
+    chart['data'][0]['name'] = 'x'
+    chart['data'][0]['line'] = {'color': '#1f9094'}
+
+    chart['data'][1]['x'] = pvec.tolist()
+    chart['data'][1]['y'] = p_probs
+    chart['data'][1]['mode'] = 'lines'
+    chart['data'][1]['type'] = 'scatter'
+    chart['data'][1]['name'] = 'p'
+    chart['data'][1]['line'] = {'color': '#1F599A'}
+
+    chart['layout']['paper_bgcolor'] = 'white'
+    chart['layout']['plot_bgcolor'] = 'white'
+    chart['layout']['font'] = {'color': textcolor}
+
+    for i in ['xaxis', 'yaxis']:
+        chart['layout'][i]['gridcolor'] = '#bbb'
+        chart['layout'][i]['color'] = textcolor
+
+    new_chart["layout"]["title"] = f"Mode {mode} quadrature probability distribution"
     return chart
