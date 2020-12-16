@@ -124,7 +124,7 @@ def generate_wigner_chart(data, xvec, pvec, contours=True):
     return chart
 
 # Plot.ly default barchart JSON
-barchartDefault = {
+barchart_default = {
     'data': [{
         'y': [],
         'x': [],
@@ -211,8 +211,9 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
     xlabels = ["|{}>".format(i) for i in range(0, cutoff, 1)]
 
-    basic_chart = deepcopy(barchartDefault)
+    basic_chart = deepcopy(barchart_default)
     new_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
+    print(new_chart)
     pio.show(new_chart)
 
 def generate_fock_chart(chart, modes, photon_dists, mean, xlabels):

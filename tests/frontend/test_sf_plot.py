@@ -15,15 +15,17 @@ r"""
 Unit tests for strawberryfields.plot
 """
 import numpy as np
+from copy import deepcopy
 import plotly.io as pio
 import pytest
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
 from strawberryfields.ops import BSgate, MeasureFock, Sgate
-from strawberryfields.plot import plot_wigner
+from strawberryfields.plot import plot_wigner, generate_fock_chart, barchart_default
 
 pytestmark = pytest.mark.frontend
+
 
 @pytest.fixture(scope="module")
 def prog():
@@ -37,6 +39,7 @@ def prog():
         MeasureFock() | q
 
     return program
+
 
 class TestWignerPlotting:
     """Test the Wigner plotting function"""
@@ -56,6 +59,72 @@ class TestWignerPlotting:
             plot_wigner(results.state, mode, xvec, pvec, renderer=renderer, contours=contours)
 
 
+def create_example_fock_chart(chart, modes, photon_dists, mean, xlabels):
+    """Test chart used to plot the Fock state probabilities of a one mode
+    system."""
+    data = [
+        {
+            "type": "bar",
+            "marker": {"color": "#1f9094"},
+            "x": xlabels,
+            "y": np.squeeze(photon_dists).tolist(),
+            "xaxis": "x",
+            "yaxis": "y",
+            "name": "",
+        },
+    ]
+    yaxis = {
+        "gridcolor": "#bbb",
+        "type": "linear",
+        "autorange": True,
+        "title": "Probability",
+        "fixedrange": True,
+    }
+    xaxis = {
+        "type": "category",
+        "domain": [0.0, 1.0],
+        "title": "mode 0",
+        "fixedrange": True,
+        "gridcolor": "rgba(0,0,0,0)",
+    }
+    annotations = [
+        {
+            "showarrow": False,
+            "yanchor": "bottom",
+            "xref": "paper",
+            "xanchor": "center",
+            "yref": "paper",
+            "text": "Mean: {:.3f}".format(mean[0]),
+            "y": 1,
+            "x": 0.5,
+            "font": {"size": 16},
+        },
+    ]
+    layout = {
+        "width": 835,
+        "height": 500,
+        "margin": {"l": 100, "r": 100, "b": 100, "t": 100, "pad": 4},
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "autosize": True,
+        "yaxis": yaxis,
+        "xaxis": xaxis,
+        "showlegend": False,
+        "annotations": annotations,
+        "title": "Marginal Fock state probabilities",
+        "font": {"color": "#787878"},
+    }
+    expected = {
+        "data": data,
+        "layout": layout,
+        "config": {
+            "modeBarButtonsToRemove": ["zoom2d", "lasso2d", "select2d", "toggleSpikelines"],
+            "displaylogo": False,
+        },
+    }
+    return expected
+
+
 class TestFockProbPlotting:
     """Test the Fock state probabilities plotting function"""
 
@@ -63,7 +132,7 @@ class TestFockProbPlotting:
         """Test that an error is raised if not cutoff value is specified for a
         Gaussian state."""
         prog = sf.Program(1)
-        eng = sf.Engine('gaussian')
+        eng = sf.Engine("gaussian")
 
         with prog.context as q:
             Sgate(2) | q[0]
@@ -77,14 +146,14 @@ class TestFockProbPlotting:
             with pytest.raises(ValueError, match="No cutoff specified for"):
                 sf.plot_fock(state, modes, renderer="browser")
 
-    @pytest.mark.parametrize("modes", [[0], [0,1]])
+    @pytest.mark.parametrize("modes", [[0], [0, 1]])
     def test_expected_args_to_plot(self, monkeypatch, modes):
         """Test that given a program the expected values would be plotted."""
         num_subsystems = len(modes)
 
         cutoff = 5
         prog = sf.Program(1)
-        eng = sf.Engine('fock', backend_options={"cutoff_dim": cutoff})
+        eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
         backend = eng.backend
 
         a = 0.3 + 0.1j
@@ -103,7 +172,9 @@ class TestFockProbPlotting:
         all_probs = state.all_fock_probs()
 
         if num_subsystems > 1:
-            photon_dists = [np.sum(all_probs, i).tolist() for i in range(num_subsystems-1,-1, -1)]
+            photon_dists = [
+                np.sum(all_probs, i).tolist() for i in range(num_subsystems - 1, -1, -1)
+            ]
         else:
             photon_dists = all_probs
 
@@ -123,4 +194,18 @@ class TestFockProbPlotting:
             assert np.allclose(mean_res, mean)
             assert np.allclose(photon_dists_res, photon_dists)
             assert modes_res == modes
-            assert xlabels_res == ['|0>', '|1>', '|2>', '|3>', '|4>']
+            assert xlabels_res == ["|0>", "|1>", "|2>", "|3>", "|4>"]
+
+    def test_generate_fock_chart(self):
+        """Test the chart generated for a single-mode system when plotting the
+        Fock state probabilities."""
+        basic_chart = deepcopy(barchart_default)
+        modes = [0]
+        photon_dists = np.array([[1, 0, 0, 0, 0]])
+        mean = [0]
+        xlabels = ["|0>", "|1>", "|2>", "|3>", "|4>"]
+        res_chart = generate_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
+        exp_chat = create_example_fock_chart(basic_chart, modes, photon_dists, mean, xlabels)
+        assert res_chart["data"] == exp_chat["data"]
+        assert res_chart["layout"] == exp_chat["layout"]
+        assert res_chart["config"] == exp_chat["config"]
