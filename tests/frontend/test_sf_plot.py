@@ -300,13 +300,13 @@ class TestFockProbPlotting:
 
 
 class TestQuadProbPlotting:
-    """Test the quadrature probabilities plotting function"""
+    """Test the quadrature probabilities plotting function."""
 
     @pytest.mark.parametrize("renderer", ["png", "json", "browser"])
     @pytest.mark.parametrize("modes", [[0], [0, 1]])
     def test_no_errors(self, modes, renderer, prog, monkeypatch):
         """Test that no errors are thrown when calling the `plot_quad`
-        function"""
+        function."""
         eng = sf.Engine("gaussian")
         results = eng.run(prog)
 
