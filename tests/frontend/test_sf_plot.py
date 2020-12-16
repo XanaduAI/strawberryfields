@@ -240,3 +240,20 @@ class TestFockProbPlotting:
         assert res_chart["data"] == exp_chat["data"]
         assert res_chart["layout"] == exp_chat["layout"]
         assert res_chart["config"] == exp_chat["config"]
+
+class TestQuadProbPlotting:
+    """Test the quadrature probabilities plotting function"""
+
+    @pytest.mark.parametrize("renderer", ["png", "json", "browser"])
+    @pytest.mark.parametrize("modes", [[0], [0,1]])
+    def test_no_errors(self, modes, renderer, prog, monkeypatch):
+        """Test that no errors are thrown when calling the `plot_quad`
+        function"""
+        eng = sf.Engine("gaussian")
+        results = eng.run(prog)
+
+        xvec = np.arange(-4, 4, 0.1)
+        pvec = np.arange(-4, 4, 0.1)
+        with monkeypatch.context() as m:
+            m.setattr(pio, "show", lambda x: None)
+            sf.plot_quad(results.state, modes, xvec, pvec, renderer=renderer)
