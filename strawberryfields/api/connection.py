@@ -102,11 +102,7 @@ class Connection:
 
     @property
     def api_version(self) -> str:
-        """The platform API version to request.
-
-        Returns:
-            str
-        """
+        """str: The platform API version to request."""
         return "1.0.0"
 
     @property
