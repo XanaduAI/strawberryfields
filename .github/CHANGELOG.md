@@ -25,8 +25,8 @@
   sf.plot_wigner(state, mode, xvec, pvec, renderer="browser")
   ```
 
-* Fock state probabilities can be plotted directly via Strawberry Fields using
-  Plot.ly.
+* Fock state marginal probabilities can be plotted directly via Strawberry
+  Fields using Plot.ly.
   [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
 
   ```python
