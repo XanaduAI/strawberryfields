@@ -201,7 +201,7 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
     n = np.arange(cutoff)
     mean = [np.sum(n * probs).real for probs in photon_dists]
 
-    xlabels = ["|{}>".format(i) for i in range(0, cutoff, 1)]
+    xlabels = [fr"$|{i}\rangle$" for i in range(0, cutoff, 1)]
 
     new_chart = generate_fock_chart(modes, photon_dists, mean, xlabels)
     pio.show(new_chart)
