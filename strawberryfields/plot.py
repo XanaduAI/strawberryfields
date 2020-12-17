@@ -194,6 +194,24 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
     pio = _get_plotly()
     pio.renderers.default = renderer
 
+    new_chart = generate_fock_chart(state, modes, cutoff)
+    pio.show(new_chart)
+
+
+def generate_fock_chart(state, modes, cutoff):
+    """Populates a chart dictionary with marginal Fock state probability
+    distributions for multiple modes.
+
+    Args:
+        state (.BaseState): the state used for plotting
+        modes (list): list of modes to generate Fock charts for
+        cutoff (int): The cutoff value determining the maximum Fock state to
+            get probabilities for. Only required if state is a
+            :class:`~.BaseGaussianState`.
+
+    Returns:
+        dict: a Plot.ly JSON-format bar chart
+    """
     num_modes = len(modes)
 
     # Reduced density matrices
@@ -205,27 +223,9 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
     xlabels = [fr"$|{i}\rangle$" for i in range(0, cutoff, 1)]
 
-    new_chart = generate_fock_chart(modes, photon_dists, mean, xlabels)
-    pio.show(new_chart)
-
-
-def generate_fock_chart(modes, photon_dists, mean, xlabels):
-    """Populates a chart dictionary with marginal Fock state probability
-    distributions for multiple modes.
-
-    Args:
-        modes (list): list of modes to generate Fock charts for
-        photon_dists (list): nested list containing marginal Fock probabilities
-            for each mode
-        mean (list): mean photon number for each mode
-        xlabels (list): x-axis tick labels
-
-    Returns:
-        dict: a Plot.ly JSON-format bar chart
-    """
-    numplots = len(modes)
+    num_modes = len(modes)
     chart = deepcopy(barchart_default)
-    chart["data"] = [dict() for i in range(numplots)]
+    chart["data"] = [dict() for i in range(num_modes)]
 
     for idx, n in enumerate(sorted(modes)):
         chart["data"][idx]["type"] = "bar"
@@ -244,11 +244,11 @@ def generate_fock_chart(modes, photon_dists, mean, xlabels):
         chart["data"][idx]["name"] = ""
 
         dXa = 0.01 if idx != 0 else 0
-        dXb = 0.01 if idx != numplots - 1 else 0
+        dXb = 0.01 if idx != num_modes - 1 else 0
 
         chart["layout"][Xax[0]] = {
             "type": "category",
-            "domain": [idx / numplots + dXa, (idx + 1) / numplots - dXb],
+            "domain": [idx / num_modes + dXa, (idx + 1) / num_modes - dXb],
             "title": "mode {}".format(n),
             "fixedrange": True,
             "gridcolor": "rgba(0,0,0,0)",
@@ -256,7 +256,7 @@ def generate_fock_chart(modes, photon_dists, mean, xlabels):
         val_mean_photon = str(np.round(mean[n], 3))
         expr_mean_photon = r"$\langle \hat{n} \rangle=" + val_mean_photon + "$"
         chart["layout"]["annotations"][idx]["text"] = expr_mean_photon
-        chart["layout"]["annotations"][idx]["x"] = idx / numplots + dXa + 0.5 / numplots
+        chart["layout"]["annotations"][idx]["x"] = idx / num_modes + dXa + 0.5 / num_modes
 
     chart["layout"]["xaxis"]["type"] = "category"
     chart["layout"]["title"] = "Marginal Fock state probabilities"

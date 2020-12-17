@@ -21,7 +21,7 @@ import pytest
 from scipy.special import factorial as fac
 
 import strawberryfields as sf
-from strawberryfields.ops import BSgate, MeasureFock, Sgate
+from strawberryfields.ops import BSgate, MeasureFock, Sgate, Vac
 from strawberryfields.plot import (
     plot_wigner,
     generate_fock_chart,
@@ -64,14 +64,21 @@ class TestWignerPlotting:
             plot_wigner(results.state, mode, xvec, pvec, renderer=renderer, contours=contours)
 
 
-def create_example_fock_chart(modes, photon_dists, mean, xlabels):
+def create_example_fock_chart(state, modes, cutoff):
     """Test chart used to plot the Fock state probabilities of a two-mode
     system."""
+    all_probs = state.all_fock_probs()
+    photon_dists_0 = np.sum(all_probs, 1)
+    photon_dists_1 = np.sum(all_probs, 0)
+    mean = [state.mean_photon(0)[0], state.mean_photon(1)[0]]
+
     chart = deepcopy(barchart_default)
     first_x = 0.25
     second_x = 0.76
     domain = [0.0, 0.49]
     domain2 = [0.51, 1.0]
+    xlabels = [fr"$|{i}\rangle$" for i in range(0, cutoff, 1)]
+
     # mean photon as latex
     mean_photon_text1 = '$\\langle \\hat{n} \\rangle=' + f"{mean[0]}" + '$'
     mean_photon_text2 = '$\\langle \\hat{n} \\rangle=' + f"{mean[1]}" + '$'
@@ -80,7 +87,7 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
             "type": "bar",
             "marker": {"color": "#1f9094"},
             "x": xlabels,
-            "y": photon_dists[0].tolist(),
+            "y": photon_dists_0.tolist(),
             "xaxis": "x",
             "yaxis": "y",
             "name": "",
@@ -89,7 +96,7 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
             "type": "bar",
             "marker": {"color": "#1f9094"},
             "x": xlabels,
-            "y": photon_dists[1].tolist(),
+            "y": photon_dists_1.tolist(),
             "xaxis": "x2",
             "yaxis": "y",
             "name": "",
@@ -217,6 +224,22 @@ def create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode):
     quad_chart = {"data": data, "layout": layout, "config": config}
     return quad_chart
 
+def get_example_state(num_subsystems, cutoff):
+    """Creates an example state used in tests."""
+    prog = sf.Program(num_subsystems)
+    eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
+    backend = eng.backend
+
+    a = 0.3 + 0.1j
+
+    backend.begin_circuit(
+        num_subsystems=num_subsystems,
+        cutoff_dim=cutoff,
+        pure=True,
+        batch_size=1,
+    )
+    backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
+    return backend.state()
 
 class TestFockProbPlotting:
     """Test the Fock state probabilities plotting function."""
@@ -239,37 +262,54 @@ class TestFockProbPlotting:
             with pytest.raises(ValueError, match="No cutoff specified for"):
                 sf.plot_fock(state, modes, renderer="browser")
 
-    @pytest.mark.parametrize("modes", [[0], [0, 1]])
-    def test_expected_args_to_plot(self, monkeypatch, modes):
-        """Test that given a program the expected values would be plotted."""
+    def test_expected_args_to_plot_single_mode(self, monkeypatch):
+        """Test that given a program the expected values would be plotted with
+        plot_fock."""
+        modes = [0]
         num_subsystems = len(modes)
 
         cutoff = 5
-        prog = sf.Program(1)
-        eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
-        backend = eng.backend
+        state = get_example_state(num_subsystems, cutoff)
 
-        a = 0.3 + 0.1j
+        mean = state.mean_photon(modes[0])[0]
+        all_probs = state.all_fock_probs()
 
-        backend.begin_circuit(
-            num_subsystems=num_subsystems,
-            cutoff_dim=cutoff,
-            pure=True,
-            batch_size=1,
-        )
-        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
+        photon_dists = all_probs
 
-        state = backend.state()
+        arg_store = []
+        with monkeypatch.context() as m:
+            m.setattr(pio, "show", lambda x: None)
+            m.setattr(sf.plot, "generate_fock_chart", lambda *args: arg_store.append(args))
+
+            sf.plot_fock(state, modes, renderer="browser")
+            assert len(arg_store) == 1
+
+            # Extract the stored args
+            state_res, modes_res, cutoff_res = arg_store[0]
+
+            # Check the results to be plotted
+            mean_res = state_res.mean_photon(modes_res[0])[0]
+            photon_dists_res = state_res.all_fock_probs()
+            assert np.allclose(mean_res, mean)
+            assert np.allclose(photon_dists_res, photon_dists)
+            assert modes_res == modes
+            assert cutoff_res == cutoff
+
+    def test_expected_args_to_plot_two_modes(self, monkeypatch):
+        """Test that given a program the expected values would be plotted for
+        two modes."""
+        modes = [0,1]
+        num_subsystems = len(modes)
+
+        cutoff = 5
+        state = get_example_state(num_subsystems, cutoff)
 
         mean = [state.mean_photon(mode)[0] for mode in modes]
         all_probs = state.all_fock_probs()
 
-        if num_subsystems > 1:
-            photon_dists = [
-                np.sum(all_probs, i).tolist() for i in range(num_subsystems - 1, -1, -1)
-            ]
-        else:
-            photon_dists = all_probs
+        photon_dists = [
+            np.sum(all_probs, i).tolist() for i in range(num_subsystems - 1, -1, -1)
+        ]
 
         arg_store = []
         with monkeypatch.context() as m:
@@ -280,25 +320,33 @@ class TestFockProbPlotting:
             assert len(arg_store) == 1
 
             # Extract the stored args
-            modes_res, photon_dists_res, mean_res, xlabels_res = arg_store[0]
+            state_res, modes_res, cutoff_res = arg_store[0]
+
+            mean_res = [state_res.mean_photon(mode)[0] for mode in modes]
+            all_probs_res = state_res.all_fock_probs()
+            photon_dists_res = [np.sum(all_probs_res, mode).tolist() for mode in reversed(modes_res)]
 
             # Check the results to be plotted
             assert np.allclose(mean_res, mean)
             assert np.allclose(photon_dists_res, photon_dists)
             assert modes_res == modes
-
-            # Expecting kets as latex
-            assert xlabels_res == ['$|0\\rangle$', '$|1\\rangle$', '$|2\\rangle$', '$|3\\rangle$', '$|4\\rangle$']
+            assert cutoff_res == cutoff
 
     def test_generate_fock_chart(self):
         """Test the chart generated for a two-mode system when plotting the
         Fock state probabilities."""
+        prog = sf.Program(2)
+        eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+        with prog.context as q:
+            Vac | q[0]
+            Vac | q[1]
+
+        state = eng.run(prog).state
+
         modes = [0, 1]
-        photon_dists = np.array([[1, 0, 0, 0, 0], [1, 0, 0, 0, 0]])
-        mean = [0, 0]
-        xlabels = ["|0>", "|1>", "|2>", "|3>", "|4>"]
-        res_chart = generate_fock_chart(modes, photon_dists, mean, xlabels)
-        exp_chat = create_example_fock_chart(modes, photon_dists, mean, xlabels)
+        res_chart = generate_fock_chart(state, modes, state.cutoff_dim)
+        exp_chat = create_example_fock_chart(state, modes, state.cutoff_dim)
         assert res_chart["data"] == exp_chat["data"]
         assert res_chart["layout"] == exp_chat["layout"]
         assert res_chart["config"] == exp_chat["config"]
