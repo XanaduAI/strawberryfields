@@ -307,29 +307,26 @@ def plot_quad(state, modes, xvec, pvec, renderer="browser"):
     pio.renderers.default = renderer
 
     for mode in modes:
-        p_probs = state.p_quad_values(mode, xvec, pvec).tolist()
-        x_probs = state.x_quad_values(mode, xvec, pvec).tolist()
-
-        new_chart = generate_quad_chart(xvec, pvec, x_probs, p_probs, mode)
+        new_chart = generate_quad_chart(state, mode, xvec, pvec)
         pio.show(new_chart)
 
 
-def generate_quad_chart(xvec, pvec, x_probs, p_probs, mode):
+def generate_quad_chart(state, mode, xvec, pvec):
     """Populates a chart dictionary with x and p reduced quadrature
     probabilities for a single mode.
 
     Args:
+        state (.BaseState): the state used for plotting
+        mode (int): the mode for which quadrature probabilities are obtained
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
-        x_probs (list): a list containing reduced x-quadrature
-            probability values for a specified range of x and p.
-        p_probs (list): a list containing reduced p-quadrature
-            probability values for a specified range of x and p.
-        mode (int): the mode for which quadrature probabilities are obtained
 
     Returns:
         dict: a Plot.ly JSON-format line plot
     """
+    p_probs = state.p_quad_values(mode, xvec, pvec).tolist()
+    x_probs = state.x_quad_values(mode, xvec, pvec).tolist()
+
     chart = deepcopy(linechart_default)
     data_dict = linechart_default["data"][0]
     chart["data"] = [deepcopy(data_dict), deepcopy(data_dict)]

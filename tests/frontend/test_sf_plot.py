@@ -173,11 +173,13 @@ def create_example_fock_chart(state, modes, cutoff):
     return fock_chart
 
 
-def create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode):
+def create_example_quad_chart(state, mode, xvec, pvec):
     """Test chart used to plot the quadrature probabilities of a one-mode
     system."""
     xlist = xvec.tolist()
     plist = pvec.tolist()
+    x_probs = state.x_quad_values(mode, xvec, pvec).tolist()
+    p_probs = state.p_quad_values(mode, xvec, pvec).tolist()
     data = [
         {
             "type": "scatter",
@@ -373,13 +375,13 @@ class TestQuadProbPlotting:
     def test_generate_quad_chart(self, mode):
         """Test the chart generated for a one-mode system when plotting the
         quadrature probabilities."""
-        modes = [0]
+        num_subsystems = 2
+        cutoff = 5
+        state = get_example_state(num_subsystems, cutoff)
         xvec = np.arange(0, 2, 1)
         pvec = np.arange(0, 2, 1)
-        x_probs = [1, 0]
-        p_probs = [1, 0]
-        res_chart = generate_quad_chart(xvec, pvec, x_probs, p_probs, mode)
-        exp_chat = create_example_quad_chart(xvec, pvec, x_probs, p_probs, mode)
+        res_chart = generate_quad_chart(state, mode, xvec, pvec)
+        exp_chat = create_example_quad_chart(state, mode, xvec, pvec)
         assert res_chart["data"] == exp_chat["data"]
         assert res_chart["layout"] == exp_chat["layout"]
         assert res_chart["config"] == exp_chat["config"]
