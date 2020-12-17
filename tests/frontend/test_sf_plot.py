@@ -373,8 +373,8 @@ class TestQuadProbPlotting:
 
     @pytest.mark.parametrize("mode", [0, 1])
     def test_generate_quad_chart(self, mode):
-        """Test the chart generated for a one-mode system when plotting the
-        quadrature probabilities."""
+        """Test the chart generated for a single mode of a two-mode system when
+        plotting the quadrature probabilities."""
         num_subsystems = 2
         cutoff = 5
         state = get_example_state(num_subsystems, cutoff)
