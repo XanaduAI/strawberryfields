@@ -172,7 +172,7 @@ barchart_default = {
 
 
 def plot_fock(state, modes, cutoff=None, renderer="browser"):
-    """Plot the Fock state probabilities with Plot.ly.
+    """Plot the (marginal) Fock state probabilities with Plot.ly.
 
     Args:
         state (:class:`.BaseState`): the state used for plotting
