@@ -175,7 +175,7 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
     """Plot the (marginal) Fock state probabilities with Plot.ly.
 
     Args:
-        state (.BaseState): the state used for plotting
+        state (:class:`.BaseState`): the state used for plotting
         modes (list): List of modes to generate output for. If more than one mode
             is provided, then the reduced state is computed for each mode, and marginal
             Fock probabilities plotted per mode.
