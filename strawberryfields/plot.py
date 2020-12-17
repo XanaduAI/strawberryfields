@@ -176,7 +176,9 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
 
     Args:
         state (:class:`.BaseState`): the state used for plotting
-        modes (list): list of modes to generate output for
+        modes (list): List of modes to generate output for. If more than one mode
+            is provided, then the reduced state is computed for each mode, and marginal
+            Fock probabilities plotted per mode.
         cutoff (int): the cutoff value determining the maximum Fock state to
             get probabilities for, required if state is a
             :class:`~.BaseGaussianState`
