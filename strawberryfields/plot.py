@@ -297,7 +297,7 @@ def plot_quad(state, modes, xvec, pvec, renderer="browser"):
     """Plot the Wigner function with Plot.ly.
 
     Args:
-        state (:class:`.BaseState`): the state used for plotting
+        state (.BaseState): the state used for plotting
         mode (int): mode used to calculate the reduced Wigner function
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
