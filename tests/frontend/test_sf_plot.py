@@ -72,6 +72,9 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
     second_x = 0.76
     domain = [0.0, 0.49]
     domain2 = [0.51, 1.0]
+    # mean photon as latex
+    mean_photon_text1 = '$\\langle \\hat{n} \\rangle=' + f"{mean[0]}" + '$'
+    mean_photon_text2 = '$\\langle \\hat{n} \\rangle=' + f"{mean[1]}" + '$'
     data = [
         {
             "type": "bar",
@@ -120,7 +123,7 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
             "xref": "paper",
             "xanchor": "center",
             "yref": "paper",
-            "text": "Mean: {:.3f}".format(mean[0]),
+            "text": mean_photon_text1,
             "y": 1,
             "x": first_x,
             "font": {"size": 16},
@@ -131,7 +134,7 @@ def create_example_fock_chart(modes, photon_dists, mean, xlabels):
             "xref": "paper",
             "xanchor": "center",
             "yref": "paper",
-            "text": "Mean: {:.3f}".format(mean[1]),
+            "text": mean_photon_text2,
             "y": 1,
             "x": second_x,
             "font": {"size": 16},
@@ -283,7 +286,9 @@ class TestFockProbPlotting:
             assert np.allclose(mean_res, mean)
             assert np.allclose(photon_dists_res, photon_dists)
             assert modes_res == modes
-            assert xlabels_res == ["|0>", "|1>", "|2>", "|3>", "|4>"]
+
+            # Expecting kets as latex
+            assert xlabels_res == ['$|0\\rangle$', '$|1\\rangle$', '$|2\\rangle$', '$|3\\rangle$', '$|4\\rangle$']
 
     def test_generate_fock_chart(self):
         """Test the chart generated for a two-mode system when plotting the
