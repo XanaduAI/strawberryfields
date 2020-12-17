@@ -251,8 +251,9 @@ def generate_fock_chart(modes, photon_dists, mean, xlabels):
             "fixedrange": True,
             "gridcolor": "rgba(0,0,0,0)",
         }
-
-        chart["layout"]["annotations"][idx]["text"] = "Mean: {:.3f}".format(mean[n])
+        val_mean_photon = str(np.round(mean[n], 3))
+        expr_mean_photon = r"$\langle \hat{n} \rangle=" + val_mean_photon + "$"
+        chart["layout"]["annotations"][idx]["text"] = expr_mean_photon
         chart["layout"]["annotations"][idx]["x"] = idx / numplots + dXa + 0.5 / numplots
 
     chart["layout"]["xaxis"]["type"] = "category"
