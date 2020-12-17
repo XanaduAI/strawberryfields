@@ -181,7 +181,7 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
             Fock probabilities plotted per mode.
         cutoff (int): The cutoff value determining the maximum Fock state to
             get probabilities for. Only required if state is a
-            :class:`~.BaseGaussianState`
+            :class:`~.BaseGaussianState`.
         renderer (string): the renderer for plotting with Plot.ly
     """
     if cutoff is None:
