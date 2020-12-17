@@ -179,8 +179,8 @@ def plot_fock(state, modes, cutoff=None, renderer="browser"):
         modes (list): List of modes to generate output for. If more than one mode
             is provided, then the reduced state is computed for each mode, and marginal
             Fock probabilities plotted per mode.
-        cutoff (int): the cutoff value determining the maximum Fock state to
-            get probabilities for, required if state is a
+        cutoff (int): The cutoff value determining the maximum Fock state to
+            get probabilities for. Only required if state is a
             :class:`~.BaseGaussianState`
         renderer (string): the renderer for plotting with Plot.ly
     """
