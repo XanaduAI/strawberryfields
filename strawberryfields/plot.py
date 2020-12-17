@@ -61,6 +61,7 @@ def generate_wigner_chart(state, mode, xvec, pvec, contours=True):
 
     Args:
         state (:class:`.BaseState`): the state used for plotting
+        mode (int): mode used to calculate the reduced Wigner function
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
         contours (bool): whether to show the contour lines in the plot
