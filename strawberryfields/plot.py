@@ -294,7 +294,7 @@ linechart_default = {
 
 
 def plot_quad(state, modes, xvec, pvec, renderer="browser"):
-    """Plot the Wigner function with Plot.ly.
+    """Plot the x and p-quadrature probability distributions with Plot.ly.
 
     Args:
         state (.BaseState): the state used for plotting
