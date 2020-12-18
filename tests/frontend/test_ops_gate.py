@@ -243,7 +243,7 @@ def test_tf_batch_in_gates_previously_supporting_complex(gate):
 
 @pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
 def test_tf_batch_complex_raise(gate):
-    """Test if an error is raised if complex TF tensors are input with a batch dimension for gates
+    """Test if an error is raised if complex TF tensors with a batch dimension are input for gates
     that previously accepted complex arguments"""
     tf = pytest.importorskip("tensorflow")
 
