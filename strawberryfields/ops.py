@@ -595,7 +595,7 @@ class Coherent(Preparation):
         phi = par_evaluate(self.p[1])
 
         np_args = [arg.numpy() if hasattr(arg, "numpy") else arg for arg in [r, phi]]
-        is_complex = any([np.iscomplexobj(arg) for arg in np_args])
+        is_complex = any([np.iscomplexobj(np.real_if_close(arg)) for arg in np_args])
 
         if is_complex:
             raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
@@ -724,7 +724,7 @@ class DisplacedSqueezed(Preparation):
         p = par_evaluate(self.p)
 
         np_args = [arg.numpy() if hasattr(arg, "numpy") else arg for arg in p]
-        is_complex = any([np.iscomplexobj(arg) for arg in np_args])
+        is_complex = any([np.iscomplexobj(np.real_if_close(arg)) for arg in np_args])
 
         if is_complex:
             raise ValueError(
@@ -1338,7 +1338,7 @@ class Dgate(Gate):
         r, phi = par_evaluate(self.p)
 
         np_args = [arg.numpy() if hasattr(arg, "numpy") else arg for arg in [r, phi]]
-        is_complex = any([np.iscomplexobj(arg) for arg in np_args])
+        is_complex = any([np.iscomplexobj(np.real_if_close(arg)) for arg in np_args])
 
         if is_complex:
             raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
