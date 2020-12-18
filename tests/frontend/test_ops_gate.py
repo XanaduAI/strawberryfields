@@ -229,9 +229,11 @@ def test_merge_measured_pars():
         assert D.merge(G)
 
 
+@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
 @pytest.mark.skipif(not tf_available, reason="Test only works if TF is installed")
-def test_tf_batch_in_dgate():
-    """Test if the Dgate supports TF tensors in batch form"""
+def test_tf_batch_in_gates_previously_supporting_complex(gate):
+    """Test if gates that previously accepted complex arguments support the input of TF tensors in
+    batch form"""
     batch_size = 2
     prog = Program(1)
     eng = Engine(backend="tf", backend_options={"cutoff_dim": 3, "batch_size": batch_size})
@@ -240,6 +242,6 @@ def test_tf_batch_in_dgate():
     _theta = tf.Variable([0.1] * batch_size)
 
     with prog.context as q:
-        ops.Dgate(theta) | q[0]
+        gate(theta) | q[0]
 
     eng.run(prog, args={"theta": _theta})

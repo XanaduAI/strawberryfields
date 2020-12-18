@@ -594,7 +594,10 @@ class Coherent(Preparation):
         r = par_evaluate(self.p[0])
         phi = par_evaluate(self.p[1])
 
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [r, phi])
+        tf_complex = any(
+            hasattr(arg, "numpy") and np.any(np.iscomplex(arg.numpy().flatten()))
+            for arg in [r, phi]
+        )
 
         if (np.iscomplex([r, phi])).any() or tf_complex:
             raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
@@ -723,7 +726,8 @@ class DisplacedSqueezed(Preparation):
         p = par_evaluate(self.p)
 
         tf_complex = any(
-            hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [p[0], p[1], p[2], p[3]]
+            hasattr(arg, "numpy") and np.any(np.iscomplex(arg.numpy().flatten()))
+            for arg in [p[0], p[1], p[2], p[3]]
         )
 
         if (np.iscomplex([p[0], p[1], p[2], p[3]])).any() or tf_complex:
