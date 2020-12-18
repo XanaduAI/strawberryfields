@@ -5,11 +5,34 @@
 * `TDMProgram` objects can now be compiled and submitted via the API.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
+* Wigner functions can be plotted directly via Strawberry Fields using Plot.ly.
+  [(#495)](https://github.com/XanaduAI/strawberryfields/pull/495)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim": 10})
+
+  with prog.context as q:
+    gamma = 2
+    Vgate(gamma) | q[0]
+
+  state = eng.run(prog).state
+
+  xvec = np.arange(-4, 4, 0.01)
+  pvec = np.arange(-4, 4, 0.01)
+  mode = 0
+
+  sf.plot_wigner(state, mode, xvec, pvec, renderer="browser")
+  ```
+
 * Strawberry Fields code can be generated from a program (and an engine) by
   calling `sf.io.generate_code(program, eng=engine)`.
   [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
 
 <h3>Improvements</h3>
+
+* `Connection` objects now send versioned requests to the platform API.
+  [(#512)](https://github.com/XanaduAI/strawberryfields/pull/512)
 
 * The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
   copies of a TDM algorithm can now be set by passing the `shots` keyword argument to
@@ -76,7 +99,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
+Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
 
 # Release 0.16.0 (current release)
 
