@@ -203,7 +203,7 @@ def generate_fock_chart(state, modes, cutoff):
     distributions for multiple modes.
 
     Args:
-        state (.BaseState): the state used for plotting
+        state (:class:`.BaseState`): the state used for plotting
         modes (list): list of modes to generate Fock charts for
         cutoff (int): The cutoff value determining the maximum Fock state to
             get probabilities for. Only required if state is a
@@ -297,7 +297,7 @@ def plot_quad(state, modes, xvec, pvec, renderer="browser"):
     """Plot the x and p-quadrature probability distributions with Plot.ly.
 
     Args:
-        state (.BaseState): the state used for plotting
+        state (:class:`.BaseState`): the state used for plotting
         mode (int): mode used to calculate the reduced Wigner function
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
@@ -316,7 +316,7 @@ def generate_quad_chart(state, mode, xvec, pvec):
     probabilities for a single mode.
 
     Args:
-        state (.BaseState): the state used for plotting
+        state (:class:`.BaseState`): the state used for plotting
         mode (int): the mode for which quadrature probabilities are obtained
         xvec (array): array of discretized :math:`x` quadrature values
         pvec (array): array of discretized :math:`p` quadrature values
