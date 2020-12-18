@@ -69,8 +69,8 @@
 
 <h3>Bug fixes</h3>
 
-* Fixes a bug where the `Dgate` does not support TensorFlow tensors if the tensor has an added
-  dimension due to the existence of batching.
+* Fixes a bug where `Dgate`, `Coherent` and `DisplacedSqueezed` do not support TensorFlow tensors
+  if the tensor has an added dimension due to the existence of batching.
   [(#507)](https://github.com/XanaduAI/strawberryfields/pull/507)
 
 * Fixed issue with `reshape_samples` where the samples were sometimes
