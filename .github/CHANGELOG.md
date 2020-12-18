@@ -25,6 +25,45 @@
   sf.plot_wigner(state, mode, xvec, pvec, renderer="browser")
   ```
 
+* Fock state marginal probabilities can be plotted directly via Strawberry
+  Fields using Plot.ly.
+  [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+  with prog.context as q:
+      Sgate(0.5) | q[0]
+
+  state = eng.run(prog).state
+  state.all_fock_probs()
+
+  modes = [0]
+
+  sf.plot_fock(state, modes, cutoff=5, renderer="browser")
+  ```
+
+* Position and momentum quadrature probabilities can be plotted directly via
+  Strawberry Fields using Plot.ly.
+  [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+  with prog.context as q:
+      Sgate(0.5) | q[0]
+
+  state = eng.run(prog).state
+
+  modes = [0]
+  xvec = np.arange(-4, 4, 0.1)
+  pvec = np.arange(-4, 4, 0.1)
+
+  sf.plot_quad(state, modes, xvec, pvec, renderer="browser")
+  ```
+
 * Strawberry Fields code can be generated from a program (and an engine) by
   calling `sf.io.generate_code(program, eng=engine)`.
   [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
