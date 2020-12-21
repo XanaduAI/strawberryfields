@@ -14,47 +14,8 @@
 # pylint: disable=too-many-public-methods
 """Bosonic backend"""
 import warnings
+import numpy as np
 
-from numpy import (
-    empty,
-    concatenate,
-    arange,
-    array,
-    identity,
-    arctan2,
-    angle,
-    sqrt,
-    vstack,
-    zeros_like,
-    allclose,
-    ix_,
-    zeros,
-    ones,
-    shape,
-    cos,
-    sin,
-    exp,
-    zeros,
-    logical_and,
-    logical_or,
-    log,
-    isclose,
-    linalg,
-    empty_like,
-    ceil,
-    absolute,
-    concatenate,
-    pi,
-    reshape,
-    repeat,
-    fromiter,
-    sum,
-    kron,
-    any,
-    ix_,
-    isin,
-    conjugate,
-)
 from scipy.special import comb
 from scipy.linalg import block_diag
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
@@ -77,7 +38,7 @@ def to_xp(n):
     Returns:
         list[int]: the permutation of of mode indices.
     """
-    return concatenate((arange(0, 2 * n, 2), arange(0, 2 * n, 2) + 1))
+    return np.concatenate((np.arange(0, 2 * n, 2), np.arange(0, 2 * n, 2) + 1))
 
 
 def from_xp(n):
@@ -98,7 +59,7 @@ def kron_list(l):
     """Take Kronecker products of a list of lists."""
     if len(l) == 1:
         return l[0]
-    return kron(l[0], kron_list(l[1:]))
+    return np.kron(l[0], kron_list(l[1:]))
 
 
 class BosonicBackend(BaseBosonic):
@@ -186,8 +147,8 @@ class BosonicBackend(BaseBosonic):
         self.circuit = BosonicModes()
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
 
-        vac_means = zeros((1, 2), dtype=float)  # .tolist()
-        vac_covs = array([[[0.5, 0], [0, 0.5]]])  # .tolist()
+        vac_means = np.zeros((1, 2), dtype=float)  # .tolist()
+        vac_covs = np.array([[[0.5, 0], [0, 0.5]]])  # .tolist()
 
         # List of modes that have been traversed through
         reg_list = []
@@ -196,8 +157,8 @@ class BosonicBackend(BaseBosonic):
         for cmd in prog.circuit:
             # Check if an operation has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
-            isitnew = 1 - isin(labels, reg_list)
-            if any(isitnew):
+            isitnew = 1 - np.isin(labels, reg_list)
+            if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
                 for reg in labels:
@@ -225,7 +186,7 @@ class BosonicBackend(BaseBosonic):
                     # directly by asking preparation methods below for
                     # the right weights, means, covs.
                     else:
-                        w, m, c = array([1]), vac_means, vac_covs
+                        w, m, c = np.array([1]), vac_means, vac_covs
 
                     init_weights[reg] = w
                     init_means[reg] = m
@@ -235,7 +196,7 @@ class BosonicBackend(BaseBosonic):
 
         # Assume unused modes in the circuit are vacua.
         for i in set(range(nmodes)).difference(reg_list):
-            init_weights[i], init_means[i], init_covs[i] = array([1]), vac_means, vac_covs
+            init_weights[i], init_means[i], init_covs[i] = np.array([1]), vac_means, vac_covs
 
         # Find all possible combinations of means and combs of the
         # Gaussians between the modes.
@@ -245,15 +206,15 @@ class BosonicBackend(BaseBosonic):
         # Tensor product of the weights.
         weights = kron_list(init_weights)
         # De-nest the means iterator.
-        means = array([[a for b in tup for a in b] for tup in mean_combs], dtype=object)
+        means = np.array([[a for b in tup for a in b] for tup in mean_combs], dtype=object)
         # Stack covs appropriately.
-        covs = array([block_diag(*tup) for tup in cov_combs])
+        covs = np.array([block_diag(*tup) for tup in cov_combs])
 
         # Declare circuit attributes.
         self.circuit.nlen = nmodes
         self.circuit.to_xp = to_xp(nmodes)
         self.circuit.from_xp = from_xp(nmodes)
-        self.circuit.active = list(arange(nmodes, dtype=int))
+        self.circuit.active = list(np.arange(nmodes, dtype=int))
 
         self.circuit.weights = weights
         self.circuit.means = means
@@ -299,185 +260,99 @@ class BosonicBackend(BaseBosonic):
         # self.circuit.displace(r_d, phi_d, mode)
         pass
 
-    def prepare_cat(self, alpha, phi, cutoff=1e-8, desc="real"):
+    def prepare_cat(self, alpha, phi, cutoff, desc="real"):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
-        norm = exp(-absolute(alpha) ** 2) / (2 * (1 + exp(-2 * absolute(alpha) ** 2) * cos(phi)))
-        rplus = sqrt(2 * self.circuit.hbar) * array([alpha.real, alpha.imag])
-        rminus = -rplus
+        # case alpha = 0 -> prepare vacuum
+        if np.isclose(np.absolute(alpha), 0):
+            return [np.array([1], dtype=float), np.array([0, 0], dtype=float), 0.5 * np.identity(2)]
+
+        norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
 
         if desc == "complex":
-            cplx_coef = exp(-2 * absolute(alpha) ** 2 - 1j * phi)
-            rcomplex = sqrt(2 * self.circuit.hbar) * array([1j * alpha.imag, -1j * alpha.real])
-            weights = norm * array([1, 1, cplx_coef, conjugate(cplx_coef)])
-            weights /= sum(weights)
-            means = array([rplus, rminus, rcomplex, conjugate(rcomplex)])
-            cov = 0.5 * identity(2, dtype=float)
-            cov = repeat(cov[None, :], weights.size, axis=0)
+            rplus = np.sqrt(2 * self.circuit.hbar) * np.array([alpha.real, alpha.imag])
+            cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
+            rcomplex = np.sqrt(2 * self.circuit.hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
+            weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
+            weights /= np.sum(weights)
+            means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
+            cov = 0.5 * np.identity(2, dtype=float)
+            cov = np.repeat(cov[None, :], weights.size, axis=0)
             return weights, means, cov
 
         elif desc == "real":
+            # Defining useful constants
             D = 2
-            if (not isclose(alpha.imag, 0)) and (not isclose(alpha.real, 0)):
-                # most general case
-                # First setting some constants
-                V = 0.5 * self.circuit.hbar * identity(2)
-                E = (
-                    pi ** 2
-                    * self.circuit.hbar
-                    * D
-                    / 1
-                    * array([[alpha.imag ** (-2), 0], [0, alpha.real ** (-2)]])
+            a = np.absolute(alpha)
+            phase = np.angle(alpha)
+            E = np.pi ** 2 * D * self.circuit.hbar / ( 16 * a ** 2 )
+            v = self.circuit.hbar / 2
+            num_mean = 8 * a / (np.pi * D * np.sqrt(2))
+            denom_mean = 16 * a ** 2 /  (np.pi ** 2 * D) + 2
+            coef_sigma = np.pi ** 2 * self.circuit.hbar / (8 * a ** 2 * (E + v))
+            prefac = np.sqrt(np.pi * self.circuit.hbar) * np.exp(0.25 * np.pi**2 * D) / (4 * a) / ( np.sqrt( np.pi**2 * self.circuit.hbar * D / (16 * a ** 2) + self.circuit.hbar / 2) )
+            z_max = int(
+                np.ceil(
+                    2
+                    * np.sqrt(2)
+                    * a
+                    / (np.pi * np.sqrt(self.circuit.hbar))
+                    * np.sqrt((-2 * (E + v) * np.log(cutoff/prefac)))
                 )
-                cov = (V + E) * linalg.inv(V * E)
-                prefac = (
-                    exp(0.5 * pi ** 2 * D)
-                    * sqrt(linalg.det(cov))
-                    / (pi * 2 * D * self.circuit.hbar)
-                )
-                cov /= self.circuit.hbar
-                norm = exp(-(absolute(alpha) ** 2)) / (
-                    2 * (1 + exp(-2 * absolute(alpha) ** 2)) * cos(phi)
-                )
-                # Setting the domain for the peaks
-                alpha_min = alpha.real if alpha.real ** 2 < alpha.imag ** 2 else alpha.imag
-                z_max = int(
-                    ceil(sqrt(-(pi ** 2 * D + 16 * alpha_min ** 2) / pi ** 2 * log(cutoff)))
-                )
-                # Creating the means
-                lattice_pts = array(
-                    list(
-                        it.product(fromiter(range(-2 * z_max, 2 * z_max + 1), dtype=int), repeat=2)
-                    )
-                )
+            )
+            
+            x_means = np.zeros(4 * z_max + 1, dtype=float)
+            p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
 
-                means = 0.5 * pi * sqrt(self.circuit.hbar) / (2 * sqrt(2)) * lattice_pts
-                means[:, 0] /= alpha.imag
-                means[:, 1] /= alpha.real
-                # Filtering the array of means and lattice pts, keeping only terms big enough in memory
-                inv = linalg.inv(E + V)
-                filt = (
-                    exp(-0.5 * (means[:, 0] ** 2 * inv[0][0] + means[:, 1] ** 2 * inv[1][1]))
-                    > cutoff / prefac
-                )
-                means = means[filt]
-                lattice_pts = lattice_pts[filt]
-                # Computing the weights
-                weights = empty_like(means[:, 0])
-                odd_terms = lattice_pts % 2
-                even_terms = (odd_terms + 1) % 2
-                weights = (
-                    cos(phi)
-                    * (-1.0) ** (0.5 * (lattice_pts[:, 0] + lattice_pts[:, 1]))
-                    * (even_terms[:, 0] * even_terms[:, 1] + odd_terms[:, 0] * odd_terms[:, 1])
-                )
-                weights += (
-                    sin(phi)
-                    * (-1.0) ** ((lattice_pts[:, 0] + lattice_pts[:, 1]) // 2)
-                    * (even_terms[:, 0] * odd_terms[:, 1] + odd_terms[:, 0] * even_terms[:, 1])
-                )
-                weights *= prefac * exp(
-                    -0.5 * (means[:, 0] ** 2 * inv[0][0] + means[:, 1] ** 2 * inv[1][1])
-                )
-                # Completing means calculation for oscillating terms
-                means = (linalg.inv(E) * linalg.inv(linalg.inv(E) + linalg.inv(V)) @ means.T).T
-                # Completing cov calculation for oscillating terms
-                cov = repeat(cov[None, :], weights.size, axis=0)
-                # adding the weights for the real terms
-                weights_real = ones(2, dtype=float)
-                weights = norm * concatenate((weights_real, weights))
-                weights /= sum(weights)
-                # adding the means for the real terms
-                means_real = sqrt(2 * self.circuit.hbar) * array(
-                    [[alpha.real, alpha.imag], [-alpha.real, -alpha.imag]], dtype=float
-                )
-                means = concatenate((means_real, means))
-                # adding the covs for the real terms
-                cov_real = array([[[0.5, 0], [0, 0.5]], [[0.5, 0], [0, 0.5]]])
-                cov = concatenate((cov_real, cov))
+            # Creating and calculating the weigths array for oscillating terms
+            odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
+            even_terms = (odd_terms + 1) % 2
+            even_phases = (-1) ** (
+                (np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2
+            )
+            odd_phases = (-1) ** (
+                1 + ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
+            )
+            weights = np.cos(phi) * even_terms * even_phases * np.exp(
+                -0.5 * coef_sigma * p_means ** 2
+            ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
+            weights *= prefac
+            weights_real = np.ones(2, dtype=float)
+            weights = norm * np.concatenate((weights_real, weights))
 
-                return weights, means, cov
+            # making sure the state is properly normalized
+            weights /= np.sum(weights)
 
-            elif isclose(absolute(alpha), 0):
-                # alpha = 0 case -> prepare is_vacuum
-                return [
-                    array([1], dtype=float),
-                    array([0, 0], dtype=float),
-                    0.5 * identity(2),
-                ]
+            # computing the means array
+            means = np.concatenate(
+                    (np.reshape(x_means, (-1, 1)), np.reshape(p_means, (-1, 1)),), axis=1,
+            )
+            means *= num_mean / denom_mean
+            means_real = (
+                np.sqrt(2 * self.circuit.hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
+            )
+            means = np.concatenate((means_real, means))
 
-            else:
+            # computing the covariance array
+            cov = np.array([[0.5, 0], [0, (E + v) / (E * v * self.circuit.hbar ** 2)]])
+            cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
+            cov_real = 0.5 * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+            cov = np.concatenate((cov_real, cov))
 
-                # Defining useful constants
-                E = pi ** 2 * D * self.circuit.hbar / (16 * absolute(alpha) ** 2)
-                v = self.circuit.hbar / 2
-                z_max = int(
-                    ceil(
-                        4
-                        * sqrt(2)
-                        * absolute(alpha)
-                        / (pi * sqrt(self.circuit.hbar))
-                        * sqrt((-2 * (E + v) * log(cutoff)))
-                    )
-                )
-                if isclose(alpha.imag, 0):
-                    alpha = alpha.real
-                    x_means = zeros(4 * z_max + 1, dtype=float)
-                    p_means = 0.5 * array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
-                    cov = array([[0.5, 0], [0, (E + v) / (E * v * self.circuit.hbar ** 2)]])
-                else:
-                    alpha = alpha.imag
-                    phi *= -1
-                    x_means = 0.5 * array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
-                    p_means = zeros(4 * z_max + 1, dtype=float)
-                    cov = array([[0, (E + v) / (E * v * self.circuit.hbar ** 2)], [0.5, 0]])
+            # filter out 0 components
+            filt = ~np.isclose(weights, 0)
+            weights = weights[filt]
+            means = means[filt]
+            cov = cov[filt]
 
-                norm = exp(-(alpha ** 2)) / (2 * (1 + exp(-2 * alpha ** 2)) * cos(phi))
-                num_mean = 8 * alpha / (pi * D * sqrt(2))
-                denom_mean = 16 * alpha ** 2 / (pi ** 2 * D) + 2
-                coef_sigma = pi ** 2 * self.circuit.hbar / (32 * alpha ** 2 * (E + v))
-                prefac = (
-                    exp(0.5 * pi ** 2 * D)
-                    / (v * sqrt(D) * pi ** 1.5)
-                    * (
-                        pi
-                        * self.circuit.hbar
-                        * sqrt(1 + 32 * alpha ** 2 / (self.circuit.hbar ** 2 * pi ** 2 * D))
-                    )
-                )
-                means = concatenate(
-                    (reshape(x_means, (-1, 1)), reshape(p_means, (-1, 1)),), axis=1,
-                )
-                means *= num_mean / denom_mean
-                # Creating the weigths array for oscillating terms
-                odd_terms = array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
-                even_terms = (odd_terms + 1) % 2
-                even_phases = (-1) ** (
-                    (array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2
-                )
-                odd_phases = (-1) ** (
-                    ((array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
-                )
-                weights = cos(phi) * even_terms * even_phases * exp(
-                    -0.5 * coef_sigma * p_means ** 2
-                ) - sin(phi) * odd_terms * odd_phases * exp(-0.5 * coef_sigma * p_means ** 2)
-                weights *= prefac
-                # Creating the cov array for oscillating terms
-                cov = repeat(cov[None, :], 4 * z_max + 1, axis=0)
-                # adding the weights for the real terms
-                weights_real = ones(2, dtype=float)
-                weights = concatenate((weights_real, weights))
-                weights *= norm / sum(weights)
-                # adding the means for the real terms
-                means_real = (
-                    sqrt(2 * self.circuit.hbar) * alpha * array([[1, 0], [-1, 0]], dtype=float)
-                )
-                means = concatenate((means_real, means))
-                # adding the covs for the real terms
-                cov_real = 0.5 * array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
-                cov = concatenate((cov_real, cov))
+            # applying a rotation if necessary
+            if not np.isclose(phase, 0):
+                S = np.array([[np.cos(phase), -np.sin(phase)],[np.sin(phase), np.cos(phase)]])
+                means = np.dot(S, means.T).T
+                cov = S @ cov @ S.T
 
-                return weights, means, cov
+            return weights, means, cov
+
         else:
             raise ValueError('desc accept only "real" or "complex" arguments')
 
@@ -491,71 +366,67 @@ class BosonicBackend(BaseBosonic):
 
                 def coef(arr):
                     l, m = arr[:, 0], arr[:, 1]
-                    t = zeros(arr.shape[0], dtype=float)
-                    t += logical_and(l % 2 == 0, m % 2 == 0) * (
-                        cos(0.5 * theta) ** 2 + sin(0.5 * theta) ** 2
+                    t = np.zeros(arr.shape[0], dtype=float)
+                    t += np.logical_and(l % 2 == 0, m % 2 == 0)
+                    t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
+                        np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
                     )
-                    t += logical_and(l % 4 == 0, m % 2 == 1) * (
-                        cos(0.5 * theta) ** 2 - sin(0.5 * theta) ** 2
+                    t += np.logical_and(l % 4 == 2, m % 2 == 1) * (
+                        np.sin(0.5 * theta) ** 2 - np.cos(0.5 * theta) ** 2
                     )
-                    t += logical_and(l % 4 == 2, m % 2 == 1) * (
-                        sin(0.5 * theta) ** 2 - cos(0.5 * theta) ** 2
-                    )
-                    t += logical_and(l % 4 % 2 == 1, m % 4 == 0) * sin(theta) * cos(phi)
-                    t -= logical_and(l % 4 % 2 == 1, m % 4 == 2) * sin(theta) * cos(phi)
-                    t -= logical_and(l % 4 == 3, m % 4 == 3) * sin(theta) * sin(phi)
+                    t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
+                    t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
+                    t -= np.logical_or(np.logical_and(l % 4 == 3, m % 4 == 3), np.logical_and(l % 4 == 1, m % 4 == 1)) * np.sin(theta) * np.sin(phi)
                     t += (
-                        logical_or(
-                            logical_and(l % 4 == 3, m % 4 == 1),
-                            logical_and(l % 4 == 1, m % 4 == 3),
+                        np.logical_or(
+                            np.logical_and(l % 4 == 3, m % 4 == 1),
+                            np.logical_and(l % 4 == 1, m % 4 == 3),
                         )
-                        * sin(theta)
-                        * sin(phi)
+                        * np.sin(theta)
+                        * np.sin(phi)
                     )
 
-                    return t * exp(
-                        -pi
+                    return t * np.exp(
+                        -np.pi
                         * 0.25
-                        / self.circuit.hbar
                         * (l ** 2 + m ** 2)
-                        * (1 - exp(-2 * epsilon))
-                        / (1 + exp(-2 * epsilon))
+                        * (1 - np.exp(-2 * epsilon))
+                        / (1 + np.exp(-2 * epsilon))
                     )
 
                 z_max = int(
-                    ceil(
-                        sqrt(
+                    np.ceil(
+                        np.sqrt(
                             -4
-                            * self.circuit.hbar
-                            * log(cutoff)
-                            * (1 + exp(-2 * epsilon))
-                            / (1 - exp(-2 * epsilon))
+                            / np.pi
+                            * np.log(cutoff)
+                            * (1 + np.exp(-2 * epsilon))
+                            / (1 - np.exp(-2 * epsilon))
                         )
                     )
                 )
-                damping = 2 * exp(-epsilon) / (1 + exp(-2 * epsilon))
+                print("z_max = {}".format(z_max))
+                damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
 
-                means_large_gen = it.starmap(
-                    lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
+                means_gen = it.tee(it.starmap(
+                    lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)), 2
                 )
-                means_gen = it.tee(
-                    it.filterfalse(
-                        lambda x: (exp(-0.25 * pi * absolute(x) ** 2) < cutoff), means_large_gen,
-                    ),
-                    2,
-                )
-                means = concatenate(
+                means = np.concatenate(
                     (
-                        reshape(fromiter(means_gen[0], complex), (-1, 1)).real,
-                        reshape(fromiter(means_gen[1], complex), (-1, 1)).imag,
+                        np.reshape(np.fromiter(means_gen[0], complex, count=(2*z_max+1)**2), (-1, 1)).real,
+                        np.reshape(np.fromiter(means_gen[1], complex, count=(2*z_max+1)**2), (-1, 1)).imag,
                     ),
                     axis=1,
                 )
+
                 weights = coef(means)
-                weights /= sum(weights)
-                means *= 0.5 * damping * sqrt(pi * self.circuit.hbar)
-                cov = 2 * (1 + exp(-2 * epsilon)) / (1 - exp(-2 * epsilon)) * identity(2)
-                cov = repeat(cov[None, :], weights.size, axis=0)
+                filt = weights > cutoff
+                weights = weights[filt]
+                means = means[filt]
+                weights /= np.sum(weights)
+                means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
+                cov = 0.5 * self.circuit.hbar * (1 - np.exp(-2 * epsilon)) / (1 + np.exp(-2 * epsilon)) * np.identity(2)
+                cov = np.repeat(cov[None, :], weights.size, axis=0)
 
                 return weights, means, cov
 
@@ -571,24 +442,18 @@ class BosonicBackend(BaseBosonic):
         # A simple function to calculate the parity
         parity = lambda n: 1 if n % 2 == 0 else -1
         # All the means are zero
-        means = zeros([n + 1, 2])
-        # covs = array(
-        # [
-        # 0.5 * self.circuit.hbar * identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
-        # for j in range(n + 1)
-        # ]
-        # )
+        means = np.zeros([n + 1, 2])
         covs = [
-            0.5 * self.circuit.hbar * identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
+            0.5 * self.circuit.hbar * np.identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
             for j in range(n + 1)
         ]
-        weights = array(
+        weights = np.array(
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
             ]
         )
-        weights = weights / sum(weights)
+        weights = weights / np.sum(weights)
         return weights, means, covs
 
     def prepare_comb(self, n, d, r, cutoff):
@@ -638,11 +503,11 @@ class BosonicBackend(BaseBosonic):
         if select is None:
             qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
         else:
-            val = select * 2 / sqrt(2 * self.circuit.hbar)
+            val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
 
         # `qs` will always be a single value since multiple shots is not supported
-        return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
+        return np.array([[qs * np.sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
@@ -659,31 +524,31 @@ class BosonicBackend(BaseBosonic):
             )
 
         if select is None:
-            m = identity(2)
+            m = np.identity(2)
             res = 0.5 * self.circuit.measure_dyne(m, [mode], shots=shots)
-            return array([[res[0, 0] + 1j * res[0, 1]]])
+            return np.array([[res[0, 0] + 1j * res[0, 1]]])
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
 
         # `res` will always be a single value since multiple shots is not supported
-        return array([[res]])
+        return np.array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
-        if isinstance(modes, int):
+        if np.isinstance(modes, int):
             modes = [modes]
 
-        # make sure number of modes matches shape of r and V
+        # make sure number of modes matches np.shape of r and V
         N = len(modes)
         if len(r) != 2 * N:
             raise ValueError("Length of means vector must be twice the number of modes.")
-        if V.shape != (2 * N, 2 * N):
+        if V.np.shape != (2 * N, 2 * N):
             raise ValueError(
-                "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
+                "np.shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
 
         # convert xp-ordering to symmetric ordering
-        means = vstack([r[:N], r[N:]]).reshape(-1, order="F")
+        means = np.vstack([r[:N], r[N:]]).np.reshape(-1, order="F")
         C = changebasis(N)
         cov = C @ V @ C.T
 
@@ -714,14 +579,14 @@ class BosonicBackend(BaseBosonic):
         mean = self.circuit.smeanxp()
         cov = self.circuit.scovmatxp()
 
-        x_idxs = array(modes)
+        x_idxs = np.array(modes)
         p_idxs = x_idxs + len(mu)
-        modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        modes_idxs = np.concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         reduced_mean = mean[modes_idxs]
 
         # check we are sampling from a gaussian state with zero mean
-        if allclose(mu, zeros_like(mu)):
+        if np.allclose(mu, np.np.zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
@@ -742,14 +607,14 @@ class BosonicBackend(BaseBosonic):
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
-        if not allclose(mu, zeros_like(mu)):
+        if not np.allclose(mu, np.np.zeros_like(mu)):
             raise NotImplementedError(
                 "Threshold measurement is only supported for " "Gaussian states with zero mean"
             )
-        x_idxs = array(modes)
+        x_idxs = np.array(modes)
         p_idxs = x_idxs + len(mu)
-        modes_idxs = concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
+        modes_idxs = np.concatenate([x_idxs, p_idxs])
+        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
         samples = torontonian_sample_state(reduced_cov, shots)
 
         return samples
@@ -771,12 +636,12 @@ class BosonicBackend(BaseBosonic):
         # where the subscript denotes the mode, and the corresponding index
         # in the cov object.
         # if peaks is None:
-        #     peaks = tuple(zeros(len(modes)))
-        # g_list = [arange(len(w)) for i in range(len(modes))]
+        #     peaks = tuple(np.zeros(len(modes)))
+        # g_list = [np.arange(len(w)) for i in range(len(modes))]
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        listmodes = list(concatenate((2 * array(modes), 2 * array(modes) + 1)))
+        listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
 
         covmat = self.circuit.covs
         means = self.circuit.means
@@ -784,16 +649,16 @@ class BosonicBackend(BaseBosonic):
             m = covmat[0]
             r = means[0]
 
-            covmat = empty((2 * len(modes), 2 * len(modes)))
+            covmat = np.empty((2 * len(modes), 2 * len(modes)))
             means = r[listmodes]
 
             for i, ii in enumerate(listmodes):
                 for j, jj in enumerate(listmodes):
                     covmat[i, j] = m[ii, jj]
 
-            means *= sqrt(2 * self.circuit.hbar) / 2
+            means *= np.sqrt(2 * self.circuit.hbar) / 2
             covmat *= self.circuit.hbar / 2
 
-        mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
+        mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
         num_w = len(w)
         return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)
