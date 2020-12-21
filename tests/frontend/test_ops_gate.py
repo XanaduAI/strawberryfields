@@ -220,3 +220,42 @@ def test_merge_measured_pars():
     # gates that have different p[1] parameters
     with pytest.raises(MergeFailure, match="Don't know how to merge these gates."):
         assert D.merge(G)
+
+
+@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
+def test_tf_batch_in_gates_previously_supporting_complex(gate):
+    """Test if gates that previously accepted complex arguments support the input of TF tensors in
+    batch form"""
+    tf = pytest.importorskip("tensorflow")
+
+    batch_size = 2
+    prog = Program(1)
+    eng = Engine(backend="tf", backend_options={"cutoff_dim": 3, "batch_size": batch_size})
+
+    theta = prog.params("theta")
+    _theta = tf.Variable([0.1] * batch_size)
+
+    with prog.context as q:
+        gate(theta) | q[0]
+
+    eng.run(prog, args={"theta": _theta})
+
+
+@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
+def test_tf_batch_complex_raise(gate):
+    """Test if an error is raised if complex TF tensors with a batch dimension are input for gates
+    that previously accepted complex arguments"""
+    tf = pytest.importorskip("tensorflow")
+
+    batch_size = 2
+    prog = Program(1)
+    eng = Engine(backend="tf", backend_options={"cutoff_dim": 3, "batch_size": batch_size})
+
+    theta = prog.params("theta")
+    _theta = tf.Variable([0.1j] * batch_size)
+
+    with prog.context as q:
+        gate(theta) | q[0]
+
+    with pytest.raises(ValueError, match="cannot be complex"):
+        eng.run(prog, args={"theta": _theta})

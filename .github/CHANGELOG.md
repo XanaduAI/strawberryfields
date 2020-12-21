@@ -108,6 +108,10 @@
 
 <h3>Bug fixes</h3>
 
+* Fixes a bug where `Dgate`, `Coherent`, and `DisplacedSqueezed` do not support TensorFlow tensors
+  if the tensor has an added dimension due to the existence of batching.
+  [(#507)](https://github.com/XanaduAI/strawberryfields/pull/507)
+
 * Fixed issue with `reshape_samples` where the samples were sometimes
   reshaped in the wrong way.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
@@ -134,7 +138,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
+Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada,
+Antal Száva.
 
 # Release 0.16.0 (current release)
 
