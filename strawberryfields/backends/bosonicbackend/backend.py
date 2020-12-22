@@ -272,7 +272,9 @@ class BosonicBackend(BaseBosonic):
         if desc == "complex":
             rplus = np.sqrt(2 * self.circuit.hbar) * np.array([alpha.real, alpha.imag])
             cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
-            rcomplex = np.sqrt(2 * self.circuit.hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
+            rcomplex = np.sqrt(2 * self.circuit.hbar) * np.array(
+                [1j * alpha.imag, -1j * alpha.real]
+            )
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             weights /= np.sum(weights)
             means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
@@ -285,31 +287,38 @@ class BosonicBackend(BaseBosonic):
             D = 2
             a = np.absolute(alpha)
             phase = np.angle(alpha)
-            E = np.pi ** 2 * D * self.circuit.hbar / ( 16 * a ** 2 )
+            E = np.pi ** 2 * D * self.circuit.hbar / (16 * a ** 2)
             v = self.circuit.hbar / 2
             num_mean = 8 * a / (np.pi * D * np.sqrt(2))
-            denom_mean = 16 * a ** 2 /  (np.pi ** 2 * D) + 2
+            denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
             coef_sigma = np.pi ** 2 * self.circuit.hbar / (8 * a ** 2 * (E + v))
-            prefac = np.sqrt(np.pi * self.circuit.hbar) * np.exp(0.25 * np.pi**2 * D) / (4 * a) / ( np.sqrt( np.pi**2 * self.circuit.hbar * D / (16 * a ** 2) + self.circuit.hbar / 2) )
+            prefac = (
+                np.sqrt(np.pi * self.circuit.hbar)
+                * np.exp(0.25 * np.pi ** 2 * D)
+                / (4 * a)
+                / (
+                    np.sqrt(
+                        np.pi ** 2 * self.circuit.hbar * D / (16 * a ** 2) + self.circuit.hbar / 2
+                    )
+                )
+            )
             z_max = int(
                 np.ceil(
                     2
                     * np.sqrt(2)
                     * a
                     / (np.pi * np.sqrt(self.circuit.hbar))
-                    * np.sqrt((-2 * (E + v) * np.log(cutoff/prefac)))
+                    * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
                 )
             )
-            
+
             x_means = np.zeros(4 * z_max + 1, dtype=float)
             p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
 
             # Creating and calculating the weigths array for oscillating terms
             odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
             even_terms = (odd_terms + 1) % 2
-            even_phases = (-1) ** (
-                (np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2
-            )
+            even_phases = (-1) ** ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2)
             odd_phases = (-1) ** (
                 1 + ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
             )
@@ -325,12 +334,10 @@ class BosonicBackend(BaseBosonic):
 
             # computing the means array
             means = np.concatenate(
-                    (np.reshape(x_means, (-1, 1)), np.reshape(p_means, (-1, 1)),), axis=1,
+                (np.reshape(x_means, (-1, 1)), np.reshape(p_means, (-1, 1)),), axis=1,
             )
             means *= num_mean / denom_mean
-            means_real = (
-                np.sqrt(2 * self.circuit.hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
-            )
+            means_real = np.sqrt(2 * self.circuit.hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
             means = np.concatenate((means_real, means))
 
             # computing the covariance array
@@ -347,7 +354,7 @@ class BosonicBackend(BaseBosonic):
 
             # applying a rotation if necessary
             if not np.isclose(phase, 0):
-                S = np.array([[np.cos(phase), -np.sin(phase)],[np.sin(phase), np.cos(phase)]])
+                S = np.array([[np.cos(phase), -np.sin(phase)], [np.sin(phase), np.cos(phase)]])
                 means = np.dot(S, means.T).T
                 cov = S @ cov @ S.T
 
@@ -376,7 +383,14 @@ class BosonicBackend(BaseBosonic):
                     )
                     t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
                     t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
-                    t -= np.logical_or(np.logical_and(l % 4 == 3, m % 4 == 3), np.logical_and(l % 4 == 1, m % 4 == 1)) * np.sin(theta) * np.sin(phi)
+                    t -= (
+                        np.logical_or(
+                            np.logical_and(l % 4 == 3, m % 4 == 3),
+                            np.logical_and(l % 4 == 1, m % 4 == 1),
+                        )
+                        * np.sin(theta)
+                        * np.sin(phi)
+                    )
                     t += (
                         np.logical_or(
                             np.logical_and(l % 4 == 3, m % 4 == 1),
@@ -405,16 +419,22 @@ class BosonicBackend(BaseBosonic):
                         )
                     )
                 )
-                print("z_max = {}".format(z_max))
                 damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
 
-                means_gen = it.tee(it.starmap(
-                    lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)), 2
+                means_gen = it.tee(
+                    it.starmap(
+                        lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
+                    ),
+                    2,
                 )
                 means = np.concatenate(
                     (
-                        np.reshape(np.fromiter(means_gen[0], complex, count=(2*z_max+1)**2), (-1, 1)).real,
-                        np.reshape(np.fromiter(means_gen[1], complex, count=(2*z_max+1)**2), (-1, 1)).imag,
+                        np.reshape(
+                            np.fromiter(means_gen[0], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                        ).real,
+                        np.reshape(
+                            np.fromiter(means_gen[1], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                        ).imag,
                     ),
                     axis=1,
                 )
@@ -425,7 +445,13 @@ class BosonicBackend(BaseBosonic):
                 means = means[filt]
                 weights /= np.sum(weights)
                 means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
-                cov = 0.5 * self.circuit.hbar * (1 - np.exp(-2 * epsilon)) / (1 + np.exp(-2 * epsilon)) * np.identity(2)
+                cov = (
+                    0.5
+                    * self.circuit.hbar
+                    * (1 - np.exp(-2 * epsilon))
+                    / (1 + np.exp(-2 * epsilon))
+                    * np.identity(2)
+                )
                 cov = np.repeat(cov[None, :], weights.size, axis=0)
 
                 return weights, means, cov
@@ -444,7 +470,11 @@ class BosonicBackend(BaseBosonic):
         # All the means are zero
         means = np.zeros([n + 1, 2])
         covs = [
-            0.5 * self.circuit.hbar * np.identity(2) * (1 + (n - j) * r ** 2) / (1 - (n - j) * r ** 2)
+            0.5
+            * self.circuit.hbar
+            * np.identity(2)
+            * (1 + (n - j) * r ** 2)
+            / (1 - (n - j) * r ** 2)
             for j in range(n + 1)
         ]
         weights = np.array(
