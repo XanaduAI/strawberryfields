@@ -374,7 +374,11 @@ class BosonicBackend(BaseBosonic):
 
             # computing the means array
             means = np.concatenate(
-                (np.reshape(x_means, (-1, 1)), np.reshape(p_means, (-1, 1)),), axis=1,
+                (
+                    np.reshape(x_means, (-1, 1)),
+                    np.reshape(p_means, (-1, 1)),
+                ),
+                axis=1,
             )
             means *= num_mean / denom_mean
             means_real = np.sqrt(2 * self.circuit.hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
