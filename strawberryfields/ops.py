@@ -1312,6 +1312,22 @@ class ThermalLossChannel(Channel):
         backend.thermal_loss(p[0], p[1], *reg)
 
 
+class MbSgate(Channel):
+    r"""Phase space measurement-based squeezing gate."""
+
+    def __init__(self, r, phi=0.0, r_anc=10.0, eta_anc=1.0, avg=True):
+        super().__init__([r, phi, r_anc, eta_anc, avg])
+
+    def _apply(self, reg, backend, **kwargs):
+        r, phi, r_anc, eta_anc, avg = par_evaluate(self.p)
+        if avg:
+            backend.mbsqueeze(*reg, r, phi, r_anc, eta_anc, avg)
+        if not avg:
+            s = np.sqrt(sf.hbar / 2)
+            ancilla_val = backend.mbsqueeze(*reg, r, phi, r_anc, eta_anc, avg)
+            return ancilla_val / s
+
+
 # ====================================================================
 # Unitary gates
 # ====================================================================

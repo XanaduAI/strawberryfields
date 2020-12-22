@@ -14,6 +14,7 @@
 # pylint: disable=too-many-public-methods
 """Bosonic backend"""
 import warnings
+
 import numpy as np
 
 from scipy.special import comb
@@ -77,7 +78,16 @@ class BosonicBackend(BaseBosonic):
 
     def run_prog(self, prog, batches, **kwargs):
 
-        from strawberryfields.ops import Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            Comb,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            MbSgate,
+        )
 
         # Initialize the circuit.
         self.init_circuit(prog)
@@ -90,7 +100,36 @@ class BosonicBackend(BaseBosonic):
         all_samples = {}
         for cmd in prog.circuit:
             nongausspreps = (Bosonic, Catstate, Comb, DensityMatrix, Fock, GKP, Ket)
-            if type(cmd.op) not in nongausspreps:
+            ancilla_gates = (MbSgate,)
+            if type(cmd.op) in ancilla_gates:
+                try:
+                    # try to apply it to the backend and, if op is a measurement, store it in values
+                    val = cmd.op.apply(cmd.reg, self, **kwargs)
+                    if val is not None:
+                        for i, r in enumerate(cmd.reg):
+                            if r.ind not in self.ancillae_samples_dict.keys():
+                                self.ancillae_samples_dict[r.ind] = []
+                            if batches:
+                                self.ancillae_samples_dict[r.ind].append(val[:, :, i])
+                            else:
+                                self.ancillae_samples_dict[r.ind].append(val[:, i])
+
+                    applied.append(cmd)
+
+                except NotApplicableError:
+                    # command is not applicable to the current backend type
+                    raise NotApplicableError(
+                        "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    ) from None
+
+                except NotImplementedError:
+                    # command not directly supported by backend API
+                    raise NotImplementedError(
+                        "The operation {} has not been implemented in {} for the arguments {}.".format(
+                            cmd.op, self.backend, kwargs
+                        )
+                    ) from None
+            if type(cmd.op) not in (nongausspreps + ancilla_gates):
                 try:
                     # try to apply it to the backend and, if op is a measurement, store it in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
@@ -144,6 +183,7 @@ class BosonicBackend(BaseBosonic):
         )
 
         nmodes = prog.num_subsystems
+        self.ancillae_samples_dict = {}
         self.circuit = BosonicModes()
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
 
@@ -499,8 +539,23 @@ class BosonicBackend(BaseBosonic):
     def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
 
+    def mbsqueeze(self, mode, r, phi, r_anc, eta_anc, avg):
+        if avg:
+            self.circuit.mbsqueeze(mode, r, phi, r_anc, eta_anc, avg)
+        if not avg:
+            ancilla_val = self.circuit.mbsqueeze(mode, r, phi, r_anc, eta_anc, avg)
+            return ancilla_val
+
     def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
+
+    def gaussian_cptp(self, modes, X, Y):
+        if not isinstance(Y, int):
+            X2, Y2 = self.circuit.expandXY(modes, X, Y)
+            self.circuit.apply_channel(X2, Y2)
+        else:
+            X2 = self.circuit.expandS(modes, X)
+            self.circuit.apply_channel(X, 0)
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         r"""Measure a :ref:`phase space quadrature <homodyne>` of the given mode.
