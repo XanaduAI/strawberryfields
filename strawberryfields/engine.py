@@ -805,5 +805,6 @@ class BosonicEngine(LocalEngine):
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
             result._state = self.backend.state(**temp_run_options)
+            result._ancilla_samples = self.backend.ancillae_samples_dict
 
         return result
