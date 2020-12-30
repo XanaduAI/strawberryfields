@@ -301,8 +301,8 @@ class BosonicModes:
         """ Returns a function that evaluates the Q function of the given state """
         if modes is None:
             modes = list(range(self.nlen))
-        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
-        alpha_mean = np.append(alpha.real, alpha.imag)
+        mode_ind = np.append(2 * np.array(modes), 2 * np.array(modes) + 1)
+        alpha_mean = np.append(alpha.real, alpha.imag) * np.sqrt(2 * self.hbar)
         deltas = self.means[:, mode_ind] - alpha_mean
         cov_sum = (
             self.covs[:, mode_ind, :][:, :, mode_ind] + self.hbar * np.eye((len(mode_ind))) / 2
