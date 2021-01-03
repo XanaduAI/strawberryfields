@@ -308,7 +308,12 @@ class BosonicModes:
             self.covs[:, mode_ind, :][:, :, mode_ind] + self.hbar * np.eye((len(mode_ind))) / 2
         )
         exp_arg = np.einsum("...j,...jk,...k", deltas, np.linalg.inv(cov_sum), deltas)
-        weighted_exp = np.array(self.weights) * np.exp(-exp_arg)
+        weighted_exp = (
+            np.array(self.weights)
+            * self.hbar ** len(modes)
+            * np.exp(-0.5 * exp_arg)
+            / np.sqrt(np.linalg.det(cov_sum))
+        )
         fidelity = np.sum(weighted_exp)
         return fidelity
 
