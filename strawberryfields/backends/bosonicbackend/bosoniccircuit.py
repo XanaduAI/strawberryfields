@@ -84,7 +84,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
         self.active = list(np.arange(self.nlen, dtype=int))
 
-        vac_weights = [1 / ngauss for i in range(ngauss)]
+        vac_weights = np.array([1 / ngauss for i in range(ngauss)], dtype=complex)
         vac_means = np.zeros((ngauss, 2 * nmodes)).tolist()
         vac_covs = [np.identity(2 * nmodes).tolist() for i in range(ngauss)]
 
@@ -96,7 +96,7 @@ class BosonicModes:
         # Tensor product of the weights.
         weights = np.kron(self.weights, vac_weights)
         # De-nest the means iterator.
-        means = np.array([[a for b in tup for a in b] for tup in mean_combs], dtype=object)
+        means = np.array([[a for b in tup for a in b] for tup in mean_combs])
         # Stack covs appropriately.
         covs = np.array([block_diag(*tup) for tup in cov_combs])
 
@@ -202,8 +202,6 @@ class BosonicModes:
             self.loss(eta_anc, new_mode)
             self.phase_shift(np.pi / 2, new_mode)
             val = self.homodyne(new_mode)
-            print(self.means[0, 1] / val[0][0])
-            print(np.tan(theta) / np.sqrt(eta_anc))
             self.del_mode(new_mode)
             self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=1)
             self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=2)
@@ -436,48 +434,112 @@ class BosonicModes:
         if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
+        if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(indices)):
+            raise ValueError("Measurement covariance matrix is unphysical.")
+
+        if self.covs.imag.any():
+            raise NotImplementedError("Covariance matrices must be real")
+
         for i in indices:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
 
-        print("Measurements implemened for real-valued Gaussians only.")
-
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         vals = np.zeros((shots, 2 * len(indices)))
-        pos_weights_ind = np.where(np.array(self.weights).real > 0)[0]
-        pos_weights = np.array(self.weights)[pos_weights_ind].real
-        pos_weights = pos_weights / np.sum(pos_weights)
+        imag_means_ind = np.where(self.means[:, expind].imag.any(axis=1))[0]
+        nonneg_weights_ind = np.where(np.angle(self.weights) != np.pi)[0]
+        ub_ind = np.union1d(imag_means_ind, nonneg_weights_ind)
+        ub_weights = np.abs(np.array(self.weights))
+        if len(imag_means_ind) > 0:
+            ub_weights[imag_means_ind] *= np.exp(
+                0.5
+                * np.einsum(
+                    "...j,...jk,...k",
+                    (self.means[imag_means_ind, :][:, expind].imag),
+                    np.linalg.inv(
+                        self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real + covmat
+                    ),
+                    (self.means[imag_means_ind, :][:, expind].imag),
+                )
+            )
+        ub_weights = ub_weights[ub_ind]
+        ub_weights_prob = ub_weights / np.sum(ub_weights)
 
         for i in range(shots):
             drawn = False
             while not drawn:
-                peak_ind_sample = np.random.choice(pos_weights_ind, size=1, p=pos_weights)[0]
+                peak_ind_sample = np.random.choice(ub_ind, size=1, p=ub_weights_prob)[0]
 
-                cov_meas = self.covs[peak_ind_sample, expind, :][:, expind] + covmat
+                cov_meas = self.covs[peak_ind_sample, expind, :][:, expind].real + covmat
                 peak_sample = np.random.multivariate_normal(
-                    self.means[peak_ind_sample, expind].real, cov_meas.real
+                    self.means[peak_ind_sample, expind].real, cov_meas
                 )
 
                 exp_arg = np.einsum(
                     "...j,...jk,...k",
                     (peak_sample - self.means[:, expind]),
-                    np.linalg.inv(self.covs[:, expind, :][:, :, expind] + covmat),
+                    np.linalg.inv(self.covs[:, expind, :][:, :, expind].real + covmat),
                     (peak_sample - self.means[:, expind]),
                 )
-                weighted_exp = np.array(self.weights) * np.exp(-exp_arg)
-                prob_dist_val = np.sum(weighted_exp)
-                prob_upbnd = np.sum(weighted_exp[pos_weights_ind])
+                ub_exp_arg = np.copy(exp_arg)
+                if len(imag_means_ind) > 0:
+                    ub_exp_arg[imag_means_ind] = np.einsum(
+                        "...j,...jk,...k",
+                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
+                        np.linalg.inv(
+                            self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real
+                            + covmat
+                        ),
+                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
+                    )
+                prob_dist_val = np.real_if_close(
+                    np.sum(
+                        (
+                            np.array(self.weights)
+                            / np.sqrt(
+                                np.linalg.det(
+                                    2
+                                    * np.pi
+                                    * (self.covs[:, expind, :][:, :, expind].real + covmat)
+                                )
+                            )
+                        )
+                        * np.exp(-0.5 * exp_arg)
+                    )
+                )
+                prob_upbnd = np.real_if_close(
+                    np.sum(
+                        (
+                            ub_weights
+                            / np.sqrt(
+                                np.linalg.det(
+                                    2
+                                    * np.pi
+                                    * (
+                                        self.covs[ub_ind, :, :][:, expind, :][:, :, expind].real
+                                        + covmat
+                                    )
+                                )
+                            )
+                        )
+                        * np.exp(-0.5 * ub_exp_arg[ub_ind])
+                    )
+                )
                 vertical_sample = np.random.random(size=1) * prob_upbnd
                 if vertical_sample < prob_dist_val:
                     drawn = True
                     vals[i] = peak_sample
                 if drawn == True:
                     break
-
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
         if len(indices) < len(self.active):
             self.post_select_generaldyne(covmat, indices, vals[0])
+
+        # If all modes are measured, set them to vacuum
+        if len(indices) == len(self.active):
+            for i in indices:
+                self.loss(0, i)
 
         return vals
 
