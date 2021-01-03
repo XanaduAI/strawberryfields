@@ -84,7 +84,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
         self.active = list(np.arange(self.nlen, dtype=int))
 
-        vac_weights = np.array([1 / ngauss for i in range(ngauss)],dtype=complex)
+        vac_weights = np.array([1 / ngauss for i in range(ngauss)], dtype=complex)
         vac_means = np.zeros((ngauss, 2 * nmodes)).tolist()
         vac_covs = [np.identity(2 * nmodes).tolist() for i in range(ngauss)]
 
@@ -433,10 +433,10 @@ class BosonicModes:
         """
         if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
-            
-        if np.linalg.det(covmat) < (self.hbar/2)**(2*len(indices)):
+
+        if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(indices)):
             raise ValueError("Measurement covariance matrix is unphysical.")
-            
+
         if self.covs.imag.any():
             raise NotImplementedError("Covariance matrices must be real")
 
@@ -444,23 +444,27 @@ class BosonicModes:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
 
-
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         vals = np.zeros((shots, 2 * len(indices)))
-        imag_means_ind = np.where(self.means[:,expind].imag.any(axis=1))[0]
-        nonneg_weights_ind = np.where(np.angle(self.weights)!=np.pi)[0]
-        ub_ind = np.union1d(imag_means_ind,nonneg_weights_ind)
+        imag_means_ind = np.where(self.means[:, expind].imag.any(axis=1))[0]
+        nonneg_weights_ind = np.where(np.angle(self.weights) != np.pi)[0]
+        ub_ind = np.union1d(imag_means_ind, nonneg_weights_ind)
         ub_weights = np.abs(np.array(self.weights))
         if len(imag_means_ind) > 0:
-            ub_weights[imag_means_ind] *= np.exp(0.5*np.einsum(
-                        "...j,...jk,...k",
-                        (self.means[imag_means_ind,:][:,expind].imag),
-                        np.linalg.inv(self.covs[imag_means_ind,:,:][:, expind, :][:, :, expind].real + covmat),
-                        (self.means[imag_means_ind,:][:,expind].imag),
-                    ))
+            ub_weights[imag_means_ind] *= np.exp(
+                0.5
+                * np.einsum(
+                    "...j,...jk,...k",
+                    (self.means[imag_means_ind, :][:, expind].imag),
+                    np.linalg.inv(
+                        self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real + covmat
+                    ),
+                    (self.means[imag_means_ind, :][:, expind].imag),
+                )
+            )
         ub_weights = ub_weights[ub_ind]
-        ub_weights_prob = ub_weights/np.sum(ub_weights)
-        
+        ub_weights_prob = ub_weights / np.sum(ub_weights)
+
         for i in range(shots):
             drawn = False
             while not drawn:
@@ -481,14 +485,46 @@ class BosonicModes:
                 if len(imag_means_ind) > 0:
                     ub_exp_arg[imag_means_ind] = np.einsum(
                         "...j,...jk,...k",
-                        (peak_sample - self.means[imag_means_ind,:][:,expind].real),
-                        np.linalg.inv(self.covs[imag_means_ind,:,:][:, expind, :][:, :, expind].real + covmat),
-                        (peak_sample - self.means[imag_means_ind,:][:,expind].real),
+                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
+                        np.linalg.inv(
+                            self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real
+                            + covmat
+                        ),
+                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
                     )
-                prob_dist_val = np.real_if_close(np.sum((np.array(self.weights)/np.sqrt(np.linalg.det(2*np.pi*(self.covs[:, expind, :][:, :, expind].real + covmat)))) * np.exp(-0.5*exp_arg)))
-                prob_upbnd = np.real_if_close(np.sum((ub_weights/\
-                                    np.sqrt(np.linalg.det(2*np.pi*(self.covs[ub_ind,:,:][:, expind, :][:, :, expind].real + covmat))))\
-                                    * np.exp(-0.5*ub_exp_arg[ub_ind])))
+                prob_dist_val = np.real_if_close(
+                    np.sum(
+                        (
+                            np.array(self.weights)
+                            / np.sqrt(
+                                np.linalg.det(
+                                    2
+                                    * np.pi
+                                    * (self.covs[:, expind, :][:, :, expind].real + covmat)
+                                )
+                            )
+                        )
+                        * np.exp(-0.5 * exp_arg)
+                    )
+                )
+                prob_upbnd = np.real_if_close(
+                    np.sum(
+                        (
+                            ub_weights
+                            / np.sqrt(
+                                np.linalg.det(
+                                    2
+                                    * np.pi
+                                    * (
+                                        self.covs[ub_ind, :, :][:, expind, :][:, :, expind].real
+                                        + covmat
+                                    )
+                                )
+                            )
+                        )
+                        * np.exp(-0.5 * ub_exp_arg[ub_ind])
+                    )
+                )
                 vertical_sample = np.random.random(size=1) * prob_upbnd
                 if vertical_sample < prob_dist_val:
                     drawn = True
@@ -499,12 +535,12 @@ class BosonicModes:
         # should still work if shots = 1
         if len(indices) < len(self.active):
             self.post_select_generaldyne(covmat, indices, vals[0])
-        
-        #If all modes are measured, set them to vacuum
+
+        # If all modes are measured, set them to vacuum
         if len(indices) == len(self.active):
             for i in indices:
-                self.loss(0,i)
-        
+                self.loss(0, i)
+
         return vals
 
     def homodyne(self, n, shots=1, eps=0.0002):
