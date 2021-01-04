@@ -323,7 +323,7 @@ class BosonicBackend(BaseBosonic):
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             weights /= np.sum(weights)
             means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
-            cov = 0.5 * np.identity(2, dtype=float)
+            cov = 0.5 * self.circuit.hbar * np.identity(2, dtype=float)
             cov = np.repeat(cov[None, :], weights.size, axis=0)
             return weights, means, cov
 
