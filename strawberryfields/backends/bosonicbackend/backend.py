@@ -300,12 +300,12 @@ class BosonicBackend(BaseBosonic):
         # self.circuit.displace(r_d, phi_d, mode)
         pass
 
-    def prepare_cat(self, alpha, phi, cutoff, desc="real"):
+    def prepare_cat(self, alpha, phi, cutoff, desc, D):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
         # case alpha = 0 -> prepare vacuum
         if np.isclose(np.absolute(alpha), 0):
-            return [np.array([1], dtype=float), np.array([0, 0], dtype=float), 0.5 * np.identity(2)]
+            return np.array([[1]], dtype=complex), np.array([[0, 0]], dtype=complex), np.array([[[.5, 0], [0, .5]]])
 
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
         phi = np.pi * phi
@@ -319,13 +319,12 @@ class BosonicBackend(BaseBosonic):
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             weights /= np.sum(weights)
             means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
-            cov = 0.5 * self.circuit.hbar * np.identity(2, dtype=float)
+            cov = 0.5 * np.identity(2, dtype=float)
             cov = np.repeat(cov[None, :], weights.size, axis=0)
             return weights, means, cov
 
         elif desc == "real":
             # Defining useful constants
-            D = 2
             a = np.absolute(alpha)
             phase = np.angle(alpha)
             E = np.pi ** 2 * D * self.circuit.hbar / (16 * a ** 2)
@@ -418,7 +417,7 @@ class BosonicBackend(BaseBosonic):
 
                 def coef(arr):
                     l, m = arr[:, 0], arr[:, 1]
-                    t = np.zeros(arr.shape[0], dtype=float)
+                    t = np.zeros(arr.shape[0], dtype=complex)
                     t += np.logical_and(l % 2 == 0, m % 2 == 0)
                     t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
                         np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
@@ -485,7 +484,7 @@ class BosonicBackend(BaseBosonic):
                 )
 
                 weights = coef(means)
-                filt = weights > cutoff
+                filt = np.absolute(weights) > cutoff
                 weights = weights[filt]
                 means = means[filt]
                 weights /= np.sum(weights)
