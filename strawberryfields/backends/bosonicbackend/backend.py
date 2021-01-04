@@ -514,14 +514,16 @@ class BosonicBackend(BaseBosonic):
         parity = lambda n: 1 if n % 2 == 0 else -1
         # All the means are zero
         means = np.zeros([n + 1, 2])
-        covs = np.array([
-            0.5
-            * self.circuit.hbar
-            * np.identity(2)
-            * (1 + (n - j) * r ** 2)
-            / (1 - (n - j) * r ** 2)
-            for j in range(n + 1)
-        ])
+        covs = np.array(
+            [
+                0.5
+                * self.circuit.hbar
+                * np.identity(2)
+                * (1 + (n - j) * r ** 2)
+                / (1 - (n - j) * r ** 2)
+                for j in range(n + 1)
+            ]
+        )
         weights = np.array(
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
