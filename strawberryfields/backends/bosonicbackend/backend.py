@@ -485,7 +485,7 @@ class BosonicBackend(BaseBosonic):
                 )
 
                 weights = coef(means)
-                filt = weights > cutoff
+                filt = abs(weights) > cutoff
                 weights = weights[filt]
                 means = means[filt]
                 weights /= np.sum(weights)
