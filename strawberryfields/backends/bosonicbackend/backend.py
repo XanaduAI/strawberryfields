@@ -305,7 +305,11 @@ class BosonicBackend(BaseBosonic):
 
         # case alpha = 0 -> prepare vacuum
         if np.isclose(np.absolute(alpha), 0):
-            return np.array([[1]], dtype=complex), np.array([[0, 0]], dtype=complex), np.array([[[.5, 0], [0, .5]]])
+            return (
+                np.array([[1]], dtype=complex),
+                np.array([[0, 0]], dtype=complex),
+                np.array([[[0.5, 0], [0, 0.5]]]),
+            )
 
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
         phi = np.pi * phi
