@@ -325,6 +325,25 @@ class BosonicModes:
         fidelity = self.fidelity_coherent(alpha, modes=modes)
         return fidelity
 
+    def parity_val(self, modes=None):
+        """Expectation value of the parity operator"""
+        if modes is None:
+            modes = list(range(self.nlen))
+        mode_ind = np.append(2 * np.array(modes), 2 * np.array(modes) + 1)
+        exp_arg = np.einsum(
+            "...j,...jk,...k",
+            self.means[:, mode_ind],
+            np.linalg.inv(self.covs[:, mode_ind, :][:, :, mode_ind]),
+            self.means[:, mode_ind],
+        )
+        weighted_exp = (
+            np.array(self.weights)
+            * np.exp(-0.5 * exp_arg)
+            / np.sqrt(np.linalg.det(self.covs[:, mode_ind, :][:, :, mode_ind]))
+        )
+        parity = np.sum(weighted_exp)
+        return parity
+
     def Amat(self):
         """ Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
