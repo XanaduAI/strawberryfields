@@ -508,13 +508,7 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_fock(self, n, r=0.0001):
         """ Prepares the arrays of weights, means and covs of a Fock state"""
-        if n == 0:
-        	means = np.zeros([1, 2])
-        	covs = [0.5 * self.circuit.hbar * np.identity(2)]
-        	weights = np.array([1.0])
-        	return weights, means, covs
-
-        if r ** 2 > 1 / n:
+        if r ** 2 > 1 / n and n > 0:
             raise ValueError("The parameter r**2={} is larger than n={}".format(r ** 2, n))
         # A simple function to calculate the parity
         parity = lambda n: 1 if n % 2 == 0 else -1
