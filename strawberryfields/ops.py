@@ -876,7 +876,9 @@ class Catstate(Preparation):
 
 class GKP(Preparation):
     r"""Prepare a mode in a GKP state."""
-    pass
+
+    def __init__(self, state=[0, 0], epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):
+        super().__init__([state, epsilon, cutoff, desc, shape])
 
 
 class Comb(Preparation):
