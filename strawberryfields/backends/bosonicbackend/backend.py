@@ -188,7 +188,7 @@ class BosonicBackend(BaseBosonic):
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
 
         vac_means = np.zeros((1, 2), dtype=complex)  # .tolist()
-        vac_covs = np.array([0.5 * self.circuit.hbar * np.identity(2)])  
+        vac_covs = np.array([0.5 * self.circuit.hbar * np.identity(2)])
 
         # List of modes that have been traversed through
         reg_list = []
@@ -431,7 +431,9 @@ class BosonicBackend(BaseBosonic):
     def prepare_fock(self, n, r=0.0001):
         """ Prepares the arrays of weights, means and covs of a Fock state"""
         if 1 / r ** 2 < n:
-            raise ValueError("The parameter 1 / r ** 2={} is smaller than n={}".format(1 / r ** 2, n))
+            raise ValueError(
+                "The parameter 1 / r ** 2={} is smaller than n={}".format(1 / r ** 2, n)
+            )
         # A simple function to calculate the parity
         parity = lambda n: 1 if n % 2 == 0 else -1
         # All the means are zero
