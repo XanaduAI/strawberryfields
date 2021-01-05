@@ -308,7 +308,8 @@ class BosonicBackend(BaseBosonic):
             return (
                 np.array([[1]], dtype=complex),
                 np.array([[0, 0]], dtype=complex),
-                np.array([0.5 * self.circuit.hbar * np.identity(2)])
+                np.array([0.5 * self.circuit.hbar * np.identity(2)]),
+            )
 
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
         phi = np.pi * phi
