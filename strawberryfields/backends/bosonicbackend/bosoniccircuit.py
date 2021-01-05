@@ -14,8 +14,12 @@
 """Bosonic circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
+from scipy.linalg import block_diag
 from thewalrus.quantum import Xmat
 import thewalrus.symplectic as symp
+
+import itertools as it
+from . import ops
 
 from ..shared_ops import changebasis
 
@@ -69,31 +73,36 @@ class BosonicModes:
         self.hbar = 2
         # self.reset(num_subsystems, num_weights)
 
-    def add_mode(self, n=1):
-        """Add n modes to the circuit."""
-        self.nlen += n
+    def add_mode(self, peak_list=[1]):
+        """Add len(peak_list) modes to the circuit with number of weights specified by peak_list."""
+        nmodes = len(peak_list)
+        ngauss = np.prod(peak_list)
+        self.nlen += nmodes
 
         # Updated mode index permutation list
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
+        self.active = list(np.arange(self.nlen, dtype=int))
 
-        new_weights = np.ones(w_shape(self.nlen, self._trunc)) / (self._trunc ** self.nlen)
-        new_weights[: self._trunc ** self.nlen] = self.weights
-        self.weights = new_weights
+        vac_weights = np.array([1 / ngauss for i in range(ngauss)], dtype=complex)
+        vac_means = np.zeros((ngauss, 2 * nmodes)).tolist()
+        vac_covs = [np.identity(2 * nmodes).tolist() for i in range(ngauss)]
 
-        rows = np.arange(self._trunc ** self.nlen)
-        cols = np.arange(2 * self.nlen)
+        # Find all possible combinations of means and combs of the
+        # Gaussians between the modes.
+        mean_combs = it.product(self.means.tolist(), vac_means)
+        cov_combs = it.product(self.covs.tolist(), vac_covs)
 
-        new_means = np.zeros(m_shape(self.nlen, self._trunc))
-        new_means[np.ix_(rows, cols)] = self.means
-        self.means = new_means
+        # Tensor product of the weights.
+        weights = np.kron(self.weights, vac_weights)
+        # De-nest the means iterator.
+        means = np.array([[a for b in tup for a in b] for tup in mean_combs])
+        # Stack covs appropriately.
+        covs = np.array([block_diag(*tup) for tup in cov_combs])
 
-        id_covs = [
-            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
-        ]
-        new_covs = np.array(id_covs)
-        new_covs[np.ix_(rows, cols, cols)] = self.covs
-        self.covs = new_covs
+        self.weights = weights
+        self.means = means
+        self.covs = covs
 
     def del_mode(self, modes):
         """Delete modes modes from the circuit."""
@@ -148,7 +157,6 @@ class BosonicModes:
         """Displace mode i by the amount r*np.exp(1j*phi)."""
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
-
         self.means += symp.expand_vector(r * np.exp(1j * phi), i, self.nlen)[self.from_xp]
 
     def squeeze(self, r, phi, k):
@@ -159,6 +167,55 @@ class BosonicModes:
         sq = symp.expand(symp.squeezing(r, phi), k, self.nlen)
         self.means = update_means(self.means, sq, self.from_xp)
         self.covs = update_covs(self.covs, sq, self.from_xp)
+
+    def mbsqueeze(self, k, r, phi, r_anc, eta_anc, avg):
+        """Squeeze mode k by the amount r*exp(1j*phi) using measurement-based squeezing.
+        The squeezing of the ancilla resource is r_anc, and the detection efficiency of
+        the homodyne on the ancilla mode is eta_anc. Average map or single shot map
+        can be applied."""
+
+        if self.active[k] is None:
+            raise ValueError("Cannot squeeze mode, mode does not exist")
+
+        phi = phi + (1 - np.sign(r)) * np.pi / 2
+        r = np.abs(r)
+        theta = np.arccos(np.exp(-r))
+        self.phase_shift(phi / 2, k)
+
+        if avg:
+            X = np.diag([np.cos(theta), 1 / np.cos(theta)])
+            Y = np.diag(
+                [
+                    (np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
+                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,
+                ]
+            )
+            Y *= self.hbar / 2
+            X2, Y2 = self.expandXY([k], X, Y)
+            self.apply_channel(X2, Y2)
+
+        if not avg:
+            self.add_mode()
+            new_mode = self.nlen - 1
+            self.squeeze(r_anc, 0, new_mode)
+            self.beamsplitter(theta, 0, k, new_mode)
+            self.loss(eta_anc, new_mode)
+            self.phase_shift(np.pi / 2, new_mode)
+            val = self.homodyne(new_mode)
+            self.del_mode(new_mode)
+            self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=1)
+            self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=2)
+            self.means = np.delete(self.means, [2 * new_mode, 2 * new_mode + 1], axis=1)
+            self.nlen = self.nlen - 1
+            self.from_xp = from_xp(self.nlen)
+            self.to_xp = to_xp(self.nlen)
+            self.active = self.active[:new_mode]
+            prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
+            self.displace(prefac * val[0][0], np.pi / 2, k)
+        self.phase_shift(-phi / 2, k)
+
+        if not avg:
+            return val
 
     def phase_shift(self, phi, k):
         """Implement a phase shift in mode k by the amount phi."""
@@ -366,10 +423,10 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
-        X = symp.expand(np.sqrt(T) * np.identity(2), k, self.nlen)
-        Y = symp.expand((1 - T) * np.identity(2), k, self.nlen)
-        self.means = update_means(self.means, X, self.from_xp)
-        self.covs = update_covs(self.covs, X, self.from_xp, Y)
+        X = np.sqrt(T) * np.identity(2)
+        Y = self.hbar * (1 - T) * np.identity(2) / 2
+        X2, Y2 = self.expandXY([k], X, Y)
+        self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
         r"""Implements the thermal loss channel in mode k by amplitude loss amount \sqrt{T}
@@ -377,12 +434,10 @@ class BosonicModes:
         beam splitter is prepared in a thermal state with mean photon number nth"""
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
-
-        self.loss(T, k)
-        Y = symp.expand((1 - T) * nbar * np.identity(2), k, self.nlen)[:, self.from_xp][
-            self.from_xp, :
-        ]
-        self.covs += Y
+        X = np.sqrt(T) * np.identity(2)
+        Y = self.hbar * (1 - T) * nbar * np.identity(2) / 2
+        X2, Y2 = self.expandXY([k], X, Y)
+        self.apply_channel(X2, Y2)
 
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
@@ -401,57 +456,168 @@ class BosonicModes:
         Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129
         """
-        # if covmat.shape != (2 * len(indices), 2 * len(indices)):
-        #     raise ValueError("Covariance matrix size does not match indices provided")
+        if covmat.shape != (2 * len(indices), 2 * len(indices)):
+            raise ValueError("Covariance matrix size does not match indices provided")
 
-        # for i in indices:
-        #     if self.active[i] is None:
-        #         raise ValueError("Cannot apply homodyne measurement, mode does not exist")
+        if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(indices)):
+            raise ValueError("Measurement covariance matrix is unphysical.")
 
-        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        # mp = self.scovmat()
-        # (A, B, C) = ops.chop_in_blocks(mp, expind)
-        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        # V1 = ops.reassemble(V, expind)
-        # self.fromscovmat(V1)
+        if self.covs.imag.any():
+            raise NotImplementedError("Covariance matrices must be real")
 
-        # r = self.smean()
-        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        # vm = np.random.multivariate_normal(vc, C, size=shots)
-        # # The next line is a hack in that it only updates conditioned on the first samples value
-        # # should still work if shots = 1
-        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm[0] - vc)
-        # va = ops.reassemble_vector(va, expind)
-        # self.fromsmean(va)
-        return
+        for i in indices:
+            if self.active[i] is None:
+                raise ValueError("Cannot apply measurement, mode does not exist")
+
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+        vals = np.zeros((shots, 2 * len(indices)))
+        imag_means_ind = np.where(self.means[:, expind].imag.any(axis=1))[0]
+        nonneg_weights_ind = np.where(np.angle(self.weights) != np.pi)[0]
+        ub_ind = np.union1d(imag_means_ind, nonneg_weights_ind)
+        ub_weights = np.abs(np.array(self.weights))
+        if len(imag_means_ind):
+            ub_weights[imag_means_ind] *= np.exp(
+                0.5
+                * np.einsum(
+                    "...j,...jk,...k",
+                    (self.means[imag_means_ind, :][:, expind].imag),
+                    np.linalg.inv(
+                        self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real + covmat
+                    ),
+                    (self.means[imag_means_ind, :][:, expind].imag),
+                )
+            )
+        ub_weights = ub_weights[ub_ind]
+        ub_weights_prob = ub_weights / np.sum(ub_weights)
+
+        for i in range(shots):
+            drawn = False
+            while not drawn:
+                peak_ind_sample = np.random.choice(ub_ind, size=1, p=ub_weights_prob)[0]
+
+                cov_meas = self.covs[peak_ind_sample, expind, :][:, expind].real + covmat
+                peak_sample = np.random.multivariate_normal(
+                    self.means[peak_ind_sample, expind].real, cov_meas
+                )
+
+                exp_arg = np.einsum(
+                    "...j,...jk,...k",
+                    (peak_sample - self.means[:, expind]),
+                    np.linalg.inv(self.covs[:, expind, :][:, :, expind].real + covmat),
+                    (peak_sample - self.means[:, expind]),
+                )
+                ub_exp_arg = np.copy(exp_arg)
+                if len(imag_means_ind):
+                    ub_exp_arg[imag_means_ind] = np.einsum(
+                        "...j,...jk,...k",
+                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
+                        np.linalg.inv(
+                            self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real
+                            + covmat
+                        ),
+                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
+                    )
+                prob_dist_val = np.real_if_close(
+                    np.sum(
+                        (
+                            np.array(self.weights)
+                            / np.sqrt(
+                                np.linalg.det(
+                                    2
+                                    * np.pi
+                                    * (self.covs[:, expind, :][:, :, expind].real + covmat)
+                                )
+                            )
+                        )
+                        * np.exp(-0.5 * exp_arg)
+                    )
+                )
+                prob_upbnd = np.real_if_close(
+                    np.sum(
+                        (
+                            ub_weights
+                            / np.sqrt(
+                                np.linalg.det(
+                                    2
+                                    * np.pi
+                                    * (
+                                        self.covs[ub_ind, :, :][:, expind, :][:, :, expind].real
+                                        + covmat
+                                    )
+                                )
+                            )
+                        )
+                        * np.exp(-0.5 * ub_exp_arg[ub_ind])
+                    )
+                )
+                vertical_sample = np.random.random(size=1) * prob_upbnd
+                if vertical_sample < prob_dist_val:
+                    drawn = True
+                    vals[i] = peak_sample
+        # The next line is a hack in that it only updates conditioned on the first samples value
+        # should still work if shots = 1
+        if len(indices) < len(self.active):
+            self.post_select_generaldyne(covmat, indices, vals[0])
+
+        # If all modes are measured, set them to vacuum
+        if len(indices) == len(self.active):
+            for i in indices:
+                self.loss(0, i)
+
+        return vals
 
     def homodyne(self, n, shots=1, eps=0.0002):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        # covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
-        # res = self.measure_dyne(covmat, [n], shots=shots)
+        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
+        return self.measure_dyne(covmat, [n], shots=shots)
+
+    def heterodyne(self, n, shots=1):
+        """Performs a homodyne measurement by calling measure dyne an giving it the
+        covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
+        covmat = self.hbar * np.eye(2) / 2
+        return self.measure_dyne(covmat, [n], shots=shots)
+
+    def post_select_generaldyne(self, covmat, indices, vals):
+        """ Performs a generaldyne measurement but postelecting on the value vals for modes n """
+        if covmat.shape != (2 * len(indices), 2 * len(indices)):
+            raise ValueError("Covariance matrix size does not match indices provided")
+
+        for i in indices:
+            if self.active[i] is None:
+                raise ValueError("Cannot apply measurement, mode does not exist")
+
+        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
+        mp = self.scovmat()
+        (A, B, C) = ops.chop_in_blocks_multi(mp, expind)
+        V = A - B @ np.linalg.inv(C + covmat) @ B.transpose(0, 2, 1)
+        self.covs = ops.reassemble_multi(V, expind)
+
+        r = self.smean()
+        (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
+        va = va + np.einsum("...ij,...j", B @ np.linalg.inv(C + covmat), (vals - vc))
+        self.means = ops.reassemble_vector_multi(va, expind)
+
+        reweights_exp_arg = np.einsum(
+            "...j,...jk,...k", (vals - vc), np.linalg.inv(C + covmat), (vals - vc)
+        )
+        reweights = np.exp(-reweights_exp_arg) / (
+            (np.pi ** len(indices) / 2) * np.sqrt(np.linalg.det(C + covmat))
+        )
+        self.weights *= reweights
+        self.weights /= np.sum(self.weights)
+
         return
 
-    def post_select_homodyne(self, n, val, eps=0.0002):
+    def post_select_homodyne(self, n, val, eps=0.0002, phi=0):
         """ Performs a homodyne measurement but postelecting on the value vals for mode n """
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        # covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
-        # indices = [n]
-        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        # mp = self.scovmat()
-        # (A, B, C) = ops.chop_in_blocks(mp, expind)
-        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        # V1 = ops.reassemble(V, expind)
-        # self.fromscovmat(V1)
-
-        # r = self.smean()
-        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        # vm1 = np.random.normal(vc[1], np.sqrt(C[1][1]))
-        # vm = np.array([val, vm1])
-        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
-        # va = ops.reassemble_vector(va, expind)
-        # self.fromsmean(va)
+        self.phase_shift(phi, n)
+        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
+        indices = [n]
+        vals = np.array([val, 0])
+        self.post_select_generaldyne(covmat, indices, vals)
         return
 
     def post_select_heterodyne(self, n, alpha_val):
@@ -459,21 +625,10 @@ class BosonicModes:
         if self.active[n] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
-        # covmat = np.identity(2)
-        # indices = [n]
-        # expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        # mp = self.scovmat()
-        # (A, B, C) = ops.chop_in_blocks(mp, expind)
-        # V = A - np.dot(np.dot(B, np.linalg.inv(C + covmat)), np.transpose(B))
-        # V1 = ops.reassemble(V, expind)
-        # self.fromscovmat(V1)
-
-        # r = self.smean()
-        # (va, vc) = ops.chop_in_blocks_vector(r, expind)
-        # vm = 2.0 * np.array([np.real(alpha_val), np.imag(alpha_val)])
-        # va = va + np.dot(np.dot(B, np.linalg.inv(C + covmat)), vm - vc)
-        # va = ops.reassemble_vector(va, expind)
-        # self.fromsmean(va)
+        covmat = self.hbar * np.identity(2) / 2
+        indices = [n]
+        vals = np.array(alpha_val.real, alpha_val.imag)
+        self.post_select_generaldyne(covmat, indices, vals)
         return
 
     def apply_u(self, U):
@@ -483,5 +638,23 @@ class BosonicModes:
         self.covs = update_covs(self.covs, Us, self.from_xp)
 
     def apply_channel(self, X, Y):
-        self.means = update_means(self.means, X, self.from_xp, Y)
+        self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
+
+    def expandS(self, modes, S):
+        """ Expands symplectic matrix for modes to symplectic matrix for the whole system. """
+        return symp.expand(S, modes, self.nlen)
+
+    def expandXY(self, modes, X, Y):
+        """ Expands X and Y matrices for modes to X and Y matrices for the whole system. """
+        X2 = symp.expand(X, modes, self.nlen)
+        M = len(Y) // 2
+        Y2 = np.zeros((2 * self.nlen, 2 * self.nlen), dtype=Y.dtype)
+        w = np.array(modes)
+
+        Y2[w.reshape(-1, 1), w.reshape(1, -1)] = Y[:M, :M].copy()
+        Y2[(w + self.nlen).reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[M:, M:].copy()
+        Y2[w.reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[:M, M:].copy()
+        Y2[(w + self.nlen).reshape(-1, 1), w.reshape(1, -1)] = Y[M:, :M].copy()
+
+        return X2, Y2
