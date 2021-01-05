@@ -333,18 +333,14 @@ class BosonicBackend(BaseBosonic):
             phase = np.angle(alpha)
             E = np.pi ** 2 * D * self.circuit.hbar / (16 * a ** 2)
             v = self.circuit.hbar / 2
-            num_mean = 8 * a / (np.pi * D * np.sqrt(2))
+            num_mean = 8 * a * np.sqrt(self.circuit.hbar) / (np.pi * D * np.sqrt(2))
             denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
             coef_sigma = np.pi ** 2 * self.circuit.hbar / (8 * a ** 2 * (E + v))
             prefac = (
                 np.sqrt(np.pi * self.circuit.hbar)
                 * np.exp(0.25 * np.pi ** 2 * D)
                 / (4 * a)
-                / (
-                    np.sqrt(
-                        np.pi ** 2 * self.circuit.hbar * D / (16 * a ** 2) + self.circuit.hbar / 2
-                    )
-                )
+                / (np.sqrt(E + v))
             )
             z_max = int(
                 np.ceil(
@@ -389,9 +385,13 @@ class BosonicBackend(BaseBosonic):
             means = np.concatenate((means_real, means))
 
             # computing the covariance array
-            cov = np.array([[0.5, 0], [0, (E + v) / (E * v * self.circuit.hbar ** 2)]])
+            cov = np.array([[0.5 * self.circuit.hbar, 0], [0, (E * v) / (E + v)]])
             cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
-            cov_real = 0.5 * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+            cov_real = (
+                0.5
+                * self.circuit.hbar
+                * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+            )
             cov = np.concatenate((cov_real, cov))
 
             # filter out 0 components
