@@ -450,7 +450,7 @@ class BosonicModes:
         nonneg_weights_ind = np.where(np.angle(self.weights) != np.pi)[0]
         ub_ind = np.union1d(imag_means_ind, nonneg_weights_ind)
         ub_weights = np.abs(np.array(self.weights))
-        if len(imag_means_ind) :
+        if len(imag_means_ind):
             ub_weights[imag_means_ind] *= np.exp(
                 0.5
                 * np.einsum(
@@ -482,7 +482,7 @@ class BosonicModes:
                     (peak_sample - self.means[:, expind]),
                 )
                 ub_exp_arg = np.copy(exp_arg)
-                if len(imag_means_ind) :
+                if len(imag_means_ind):
                     ub_exp_arg[imag_means_ind] = np.einsum(
                         "...j,...jk,...k",
                         (peak_sample - self.means[imag_means_ind, :][:, expind].real),
