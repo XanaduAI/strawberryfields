@@ -187,8 +187,10 @@ class BosonicBackend(BaseBosonic):
         self.circuit = BosonicModes()
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
 
-        vac_means = np.zeros((1, 2), dtype=float)  # .tolist()
-        vac_covs = np.array([[[0.5, 0], [0, 0.5]]])  # .tolist()
+        vac_means = np.zeros((1, 2), dtype=complex)  # .tolist()
+        vac_covs = np.array(
+            [[[0.5 * self.circuit.hbar, 0], [0, 0.5 * self.circuit.hbar]]]
+        )  # .tolist()
 
         # List of modes that have been traversed through
         reg_list = []
@@ -300,7 +302,7 @@ class BosonicBackend(BaseBosonic):
         # self.circuit.displace(r_d, phi_d, mode)
         pass
 
-    def prepare_cat(self, alpha, phi, cutoff, desc):
+    def prepare_cat(self, alpha, phi, desc="complex"):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
         # case alpha = 0 -> prepare vacuum
