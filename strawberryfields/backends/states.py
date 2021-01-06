@@ -1429,104 +1429,111 @@ class BaseBosonicState(BaseState):
         self._data = state_data
         self.num_weights = num_weights
         # vector of means and covariance matrix, using frontend x,p scaling
-        if num_weights == 1:
-            self._mu = self._data[0] * np.sqrt(self._hbar / 2)
-            self._cov = self._data[1] * (self._hbar / 2)
-            self._weights = self._data[2]
-            # complex displacements of the Gaussian state
-            self._alpha = self._mu[: self._modes] + 1j * self._mu[self._modes :]
-            self._alpha /= np.sqrt(2 * self._hbar)
+        self._mus = self._data[0] * np.sqrt(self._hbar / 2)
+        self._covs = self._data[1] * (self._hbar / 2)
+        self._weights = self._data[2]
+        # complex displacements of the Gaussian state
+        # self._alphas = self._mus[:,::2] + 1j * self._mus[:,1::2]
+        # self._alphas /= np.sqrt(2 * self._hbar)
 
-            self._pure = (
-                np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
-                < self.EQ_TOLERANCE
-            )
+        # self._pure = abs(1 - self.purity()) < self.EQ_TOLERANCE
 
-        self._basis = "gaussian"
+        self._basis = "bosonic"
         self._str = "<BosonicState: num_modes={}, num_weights={}, pure={}, hbar={}>".format(
             self.num_modes, self.num_weights, self._pure, self._hbar
         )
 
     def __eq__(self, other):
-        """Equality operator for BaseGaussianState.
+        """Equality operator for BaseBosonicState.
 
-        Returns True if other BaseGaussianState is close to self.
-        This is done by comparing the means vector and cov matrix.
+        Returns True if other BaseBosonicState is close to self.
+        This is done by comparing the weights, means vectors and covs matrices.
         If both are within the EQ_TOLERANCE, True is returned.
 
         Args:
             other (BaseGaussianState): BaseGaussianState to compare against.
         """
         # pylint: disable=protected-access
+        # TODO: check equality for two different representations of the same state.
+        # This only checks if they have equal representations.
         if not isinstance(other, type(self)):
             return False
 
         if self.num_modes != other.num_modes:
             return False
 
-        if np.allclose(self._mu, other._mu, atol=self.EQ_TOLERANCE, rtol=0) and np.allclose(
-            self._cov, other._cov, atol=self.EQ_TOLERANCE, rtol=0
+        if self.num_weights != other.num_weights:
+            return False
+
+        if (
+            np.allclose(self._mus, other._mus, atol=self.EQ_TOLERANCE, rtol=0)
+            and np.allclose(self._covs, other._covs, atol=self.EQ_TOLERANCE, rtol=0)
+            and np.allclose(self._weights, other._weights, atol=self.EQ_TOLERANCE, rtol=0)
         ):
             return True
 
         return False
 
     def means(self):
-        r"""The vector of means describing the Gaussian state.
-
-        For a :math:`N` mode state, this has the form
-
-        .. math::
-            \bar{\mathbf{r}} = \left(\bar{x}_0,\dots,\bar{x}_{N-1},\bar{p}_0,\dots,\bar{p}_{N-1}\right)
-
-        where :math:`\bar{x}_i` and :math:`\bar{p}_i` refer to the mean
-        position and momentum quadrature of mode :math:`i` respectively.
+        r"""The vectors of means describing the Bosonic state.
 
         Returns:
-          array: a length :math:`2N` array containing the vector of means.
+          array: a num_weights by :math:`2N` array.
         """
-        return self._mu
+        return self._mus
 
-    def cov(self):
-        r"""The covariance matrix describing the Gaussian state.
-
-        The diagonal elements of the covariance matrix correspond to the
-        variance in the position and momentum quadratures:
-
-        .. math::
-            \mathbf{V}_{ii} = \begin{cases}
-                (\Delta x_i)^2, & 0\leq i\leq N-1\\
-                (\Delta p_{i-N})^2, & N\leq i\leq 2(N-1)
-            \end{cases}
-
-        where :math:`\Delta x_i` and :math:`\Delta p_i` refer to the
-        position and momentum quadrature variance of mode :math:`i` respectively.
-
-        Note that if the covariance matrix is purely diagonal, then this
-        corresponds to squeezing :math:`z=re^{i\phi}` where :math:`\phi=0`,
-        and :math:`\Delta x_i = e^{-2r}`, :math:`\Delta p_i = e^{2r}`.
+    def covs(self):
+        r"""Thes covariance matrices describing the Bosonic state.
 
         Returns:
-          array: the :math:`2N\times 2N` covariance matrix.
+          array: a num_weights by :math:`2N\times 2N` array.
         """
-        return self._cov
+        return self._covs
 
     def weights(self):
+        r"""The weights describing the Bosonic state.
+
+        Returns:
+          array: an array of length num_weights.
+        """
         return self._weights
 
-    def reduced_gaussian(self, modes):
-        r"""Returns the vector of means and the covariance matrix of the specified modes.
+    def purity(self):
+        r"""Calculates the purity of the state."""
+
+        pur = 0
+        for i in range(len(self._weights)):
+            exp_arg = np.einsum(
+                "...j,...jk,...k",
+                (self._mus[i] - self._mus),
+                np.linalg.inv(self._covs + self._covs[i]),
+                (self._mus[i] - self._mus),
+            )
+            pur += np.sum(
+                (
+                    self._weights
+                    * self._weights[i]
+                    * sf.hbar ** self.num_modes
+                    / (np.sqrt(np.linalg.det((self._covs + self._covs[i]))))
+                )
+                * np.exp(-0.5 * exp_arg)
+            )
+
+        return pur
+
+    def reduced_bosonic(self, modes):
+        r"""Returns the weights, vectors of means and the covariance matrices of the specified modes.
 
         Args:
             modes (int of Sequence[int]): indices of the requested modes
 
         Returns:
-            tuple (means, cov): where means is an array containing the vector of means,
-            and cov is a square array containing the covariance matrix.
+            tuple (weights, means, cov): where means is an array containing the vectors of means,
+            and covs is an array containing the covariance matrices.
         """
         if modes == list(range(self._modes)):
             # reduced state is full state
-            return self._mu, self._cov
+            return self._weights, self._mus, self._covs
 
         # reduce rho down to specified subsystems
         if isinstance(modes, int):
@@ -1540,14 +1547,12 @@ class BaseBosonicState(BaseState):
                 "The number of specified modes cannot " "be larger than the number of subsystems."
             )
 
-        ind = np.concatenate([np.array(modes), np.array(modes) + self._modes])
-        rows = ind.reshape(-1, 1)
-        cols = ind.reshape(1, -1)
+        ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
 
-        mu = self._mu[ind]
-        cov = self._cov[rows, cols]
+        mu = self._mus[:, ind]
+        cov = self._covs[:, ind, :][:, :, ind]
 
-        return mu, cov
+        return self._weights, mu, cov
 
     def is_coherent(self, mode, tol=1e-10):
         r"""Returns True if the Gaussian state of a particular mode is a coherent state.
@@ -1577,8 +1582,13 @@ class BaseBosonicState(BaseState):
             modes = list(range(self._modes))
         elif isinstance(modes, int):  # pragma: no cover
             modes = [modes]
-
-        return self._alpha[list(modes)]
+        ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
+        avg_mu = np.real_if_close(self._weights @ self._mus[:, ind])
+        if avg_mu.imag.any():
+            raise ValueError("State mean is complex valued.")
+        alpha = avg_mu[::2] + 1j * avg_mu[1::2]
+        alpha /= np.sqrt(2 * self._hbar)
+        return alpha
 
     def is_squeezed(self, mode, tol=1e-6):
         r"""Returns True if the Gaussian state of a particular mode is a squeezed state.
@@ -1630,15 +1640,30 @@ class BaseBosonicState(BaseState):
     # the following methods are overwritten from BaseState
 
     def wigner(self, mode, xvec, pvec):
-        mu, cov = self.reduced_gaussian([mode])
+        if not isinstance(mode, int):
+            raise ValueError("Please select one mode indexed by an integer.")
 
-        X, P = np.meshgrid(xvec, pvec)
-        grid = np.empty(X.shape + (2,))
-        grid[:, :, 0] = X
-        grid[:, :, 1] = P
-        mvn = multivariate_normal(mu, cov, allow_singular=True)
+        if mode > self._modes:
+            raise ValueError(
+                "The number of specified modes cannot " "be larger than the number of subsystems."
+            )
 
-        return mvn.pdf(grid)
+        weights, means, covs = self.reduced_bosonic([mode])
+
+        X, P = np.meshgrid(xvec, pvec, sparse=True)
+
+        wigner = 0
+        for i in range(len(weights)):
+            wigner += (weights[i] / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))) * np.exp(
+                -0.5
+                * (
+                    np.array([X - means[i, 0], P - means[i, 1]])
+                    @ np.linalg.inv(covs[i])
+                    @ np.array([X - means[i, 0], P - means[i, 1]])
+                )
+            )
+
+        return wigner
 
     def quad_expectation(self, mode, phi=0, **kwargs):
         # pylint: disable=unused-argument
@@ -1793,9 +1818,45 @@ class BaseBosonicState(BaseState):
         return twq.density_matrix(mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff)
 
     def mean_photon(self, mode, **kwargs):
-        mu, cov = self.reduced_gaussian([mode])
-        mean = (np.trace(cov) + mu.T @ mu) / (2 * self._hbar) - 1 / 2
-        var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar ** 2) - 1 / 4
+        # mu, cov = self.reduced_gaussian([mode])
+        # mean = (np.trace(cov) + mu.T @ mu) / (2 * self._hbar) - 1 / 2
+        # var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar ** 2) - 1 / 4
+        weights, mus, covs = self.reduced_bosonic([mode])
+        mean = (
+            np.sum(
+                weights
+                * (
+                    np.matrix.trace(covs, axis1=1, axis2=2)
+                    + np.einsum(
+                        "...j,...j",
+                        mus,
+                        mus,
+                    )
+                )
+            )
+            / (2 * self._hbar)
+            - 0.5
+        )
+        var = (
+            np.sum(
+                weights
+                * (
+                    np.matrix.trace(covs@covs, axis1=1, axis2=2)
+                    + 2 * np.einsum(
+                        "...j,...jk,...k",
+                        mus,
+                        covs,
+                        mus,
+                    )
+                )
+            )
+            / (2 * self._hbar ** 2)
+            - 0.25
+        )
+        mean = np.real_if_close(mean)
+        var = np.real_if_close(var)
+        if mean.imag != 0 or var.imag != 0:
+            raise ValueError("Mean or variance of photon number is complex.")
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
