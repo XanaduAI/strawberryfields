@@ -641,7 +641,7 @@ class BosonicBackend(BaseBosonic):
             raise ValueError("Length of means vector must be twice the number of modes.")
         if V.shape != (2 * N, 2 * N):
             raise ValueError(
-                "np.shape of covariance matrix must be [2N, 2N], where N is the number of modes."
+                "shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
 
         # convert xp-ordering to symmetric ordering
