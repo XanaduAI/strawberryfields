@@ -632,20 +632,20 @@ class BosonicBackend(BaseBosonic):
         return np.array([[res]])
 
     def prepare_gaussian_state(self, r, V, modes):
-        if np.isinstance(modes, int):
+        if isinstance(modes, int):
             modes = [modes]
 
         # make sure number of modes matches np.shape of r and V
         N = len(modes)
         if len(r) != 2 * N:
             raise ValueError("Length of means vector must be twice the number of modes.")
-        if V.np.shape != (2 * N, 2 * N):
+        if V.shape != (2 * N, 2 * N):
             raise ValueError(
                 "np.shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
 
         # convert xp-ordering to symmetric ordering
-        means = np.vstack([r[:N], r[N:]]).np.reshape(-1, order="F")
+        means = np.vstack([r[:N], r[N:]]).reshape(-1, order="F")
         C = changebasis(N)
         cov = C @ V @ C.T
 
@@ -683,7 +683,7 @@ class BosonicBackend(BaseBosonic):
         reduced_mean = mean[modes_idxs]
 
         # check we are sampling from a gaussian state with zero mean
-        if np.allclose(mu, np.np.zeros_like(mu)):
+        if np.allclose(mu, np.zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
@@ -704,7 +704,7 @@ class BosonicBackend(BaseBosonic):
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
-        if not np.allclose(mu, np.np.zeros_like(mu)):
+        if not np.allclose(mu, np.zeros_like(mu)):
             raise NotImplementedError(
                 "Threshold measurement is only supported for " "Gaussian states with zero mean"
             )
