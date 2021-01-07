@@ -51,10 +51,10 @@ using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_
 import copy
 import numbers
 import warnings
+import networkx as nx
 
 import blackbird as bb
 from blackbird.utils import match_template
-import networkx as nx
 
 import strawberryfields as sf
 
