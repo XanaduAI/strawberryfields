@@ -260,7 +260,7 @@ class TDMProgram(sf.Program):
     time domain program using the Python-embedded Blackbird syntax.
 
     Once created, time domain programs can be executed on Strawberry Fields'
-    suite of built-in simulators in an efficient manner, or submitted
+    Gaussian backend in an efficient manner, or submitted
     to be executed on compatible hardware.
 
     Args:
