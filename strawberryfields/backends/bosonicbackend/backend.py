@@ -395,7 +395,7 @@ class BosonicBackend(BaseBosonic):
             cov = np.concatenate((cov_real, cov))
 
             # filter out 0 components
-            filt = ~np.isclose(weights, 0)
+            filt = ~np.isclose(weights, 0, atol=cutoff)
             weights = weights[filt]
             means = means[filt]
             cov = cov[filt]
