@@ -843,8 +843,8 @@ class Catstate(Preparation):
         the squeezed single photon state :math:`S\ket{1}`.
     """
 
-    def __init__(self, alpha=0, p=0):
-        super().__init__([alpha, p])
+    def __init__(self, alpha=0, p=0, cutoff=1e-12, desc="real", D=2):
+        super().__init__([alpha, p, cutoff, desc, D])
 
     def _apply(self, reg, backend, **kwargs):
         alpha = self.p[0]
@@ -876,7 +876,9 @@ class Catstate(Preparation):
 
 class GKP(Preparation):
     r"""Prepare a mode in a GKP state."""
-    pass
+
+    def __init__(self, state=[0, 0], epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):
+        super().__init__([state, epsilon, cutoff, desc, shape])
 
 
 class Comb(Preparation):
