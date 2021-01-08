@@ -300,7 +300,7 @@ class BosonicBackend(BaseBosonic):
         # self.circuit.displace(r_d, phi_d, mode)
         pass
 
-    def prepare_cat(self, alpha, phi, desc="complex"):
+    def prepare_cat(self, alpha, phi, cutoff, desc, D):
         """ Prepares the arrays of weights, means and covs for a cat state"""
 
         # case alpha = 0 -> prepare vacuum
@@ -327,8 +327,89 @@ class BosonicBackend(BaseBosonic):
             cov = np.repeat(cov[None, :], weights.size, axis=0)
             return weights, means, cov
 
+        elif desc == "real":
+            # Defining useful constants
+            a = np.absolute(alpha)
+            phase = np.angle(alpha)
+            E = np.pi ** 2 * D * self.circuit.hbar / (16 * a ** 2)
+            v = self.circuit.hbar / 2
+            num_mean = 8 * a * np.sqrt(self.circuit.hbar) / (np.pi * D * np.sqrt(2))
+            denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
+            coef_sigma = np.pi ** 2 * self.circuit.hbar / (8 * a ** 2 * (E + v))
+            prefac = (
+                np.sqrt(np.pi * self.circuit.hbar)
+                * np.exp(0.25 * np.pi ** 2 * D)
+                / (4 * a)
+                / (np.sqrt(E + v))
+            )
+            z_max = int(
+                np.ceil(
+                    2
+                    * np.sqrt(2)
+                    * a
+                    / (np.pi * np.sqrt(self.circuit.hbar))
+                    * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
+                )
+            )
+
+            x_means = np.zeros(4 * z_max + 1, dtype=float)
+            p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
+
+            # Creating and calculating the weigths array for oscillating terms
+            odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
+            even_terms = (odd_terms + 1) % 2
+            even_phases = (-1) ** ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2)
+            odd_phases = (-1) ** (
+                1 + ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
+            )
+            weights = np.cos(phi) * even_terms * even_phases * np.exp(
+                -0.5 * coef_sigma * p_means ** 2
+            ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
+            weights *= prefac
+            weights_real = np.ones(2, dtype=float)
+            weights = norm * np.concatenate((weights_real, weights))
+
+            # making sure the state is properly normalized
+            weights /= np.sum(weights)
+
+            # computing the means array
+            means = np.concatenate(
+                (
+                    np.reshape(x_means, (-1, 1)),
+                    np.reshape(p_means, (-1, 1)),
+                ),
+                axis=1,
+            )
+            means *= num_mean / denom_mean
+            means_real = np.sqrt(2 * self.circuit.hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
+            means = np.concatenate((means_real, means))
+
+            # computing the covariance array
+            cov = np.array([[0.5 * self.circuit.hbar, 0], [0, (E * v) / (E + v)]])
+            cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
+            cov_real = (
+                0.5
+                * self.circuit.hbar
+                * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+            )
+            cov = np.concatenate((cov_real, cov))
+
+            # filter out 0 components
+            filt = ~np.isclose(weights, 0, atol=cutoff)
+            weights = weights[filt]
+            means = means[filt]
+            cov = cov[filt]
+
+            # applying a rotation if necessary
+            if not np.isclose(phase, 0):
+                S = np.array([[np.cos(phase), -np.sin(phase)], [np.sin(phase), np.cos(phase)]])
+                means = np.dot(S, means.T).T
+                cov = S @ cov @ S.T
+
+            return weights, means, cov
+
         else:
-            raise ValueError('desc accepts only "complex" as argument')
+            raise ValueError('desc accept only "real" or "complex" arguments')
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
         """ Prepares the arrays of weights, means and covs for a gkp state """
