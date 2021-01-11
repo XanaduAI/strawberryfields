@@ -1584,7 +1584,7 @@ class BaseBosonicState(BaseState):
         elif isinstance(modes, int):  # pragma: no cover
             modes = [modes]
         ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
-        avg_mu = np.real_if_close(np.sum(self._weights[:,None] * self._mus[:, ind],axis=0))
+        avg_mu = np.real_if_close(np.sum(self._weights[:, None] * self._mus[:, ind], axis=0))
         if avg_mu.imag.any():
             raise ValueError("State mean is complex valued.")
         alpha = avg_mu[::2] + 1j * avg_mu[1::2]
@@ -1677,11 +1677,11 @@ class BaseBosonicState(BaseState):
         # covphi = rot.T @ cov @ rot
         weights, mus, covs = self.reduced_bosonic([mode])
         muphis = (rot.T @ mus.T).T
-        muphi = np.real_if_close(np.sum(weights[:,None] * muphis,axis=0))
+        muphi = np.real_if_close(np.sum(weights[:, None] * muphis, axis=0))
         covphis = rot.T @ covs @ rot
-        covphi = np.real_if_close(np.sum(weights[:,None,None]*covphis,axis=0))[0,0]
-        covphi += np.real_if_close(np.sum(weights * muphis[:,0]**2))
-        covphi -= muphi[0]**2
+        covphi = np.real_if_close(np.sum(weights[:, None, None] * covphis, axis=0))[0, 0]
+        covphi += np.real_if_close(np.sum(weights * muphis[:, 0] ** 2))
+        covphi -= muphi[0] ** 2
         return (muphi[0], covphi)
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
@@ -1767,7 +1767,6 @@ class BaseBosonicState(BaseState):
         # return mean, var
         pass
 
-
     def parity_expectation(self, modes):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
@@ -1835,9 +1834,11 @@ class BaseBosonicState(BaseState):
         #     )
         #     rho = np.outer(psi, psi.conj())
         #     return rho
-        rho=0
+        rho = 0
         for i in range(self.num_weights):
-            rho += weights[i]*twq.density_matrix(mus[i],covs[i],hbar = self._hbar,normalize=False,cutoff = cutoff)
+            rho += weights[i] * twq.density_matrix(
+                mus[i], covs[i], hbar=self._hbar, normalize=False, cutoff=cutoff
+            )
         return rho
 
     def mean_photon(self, mode, **kwargs):
@@ -1864,8 +1865,9 @@ class BaseBosonicState(BaseState):
             np.sum(
                 weights
                 * (
-                    np.matrix.trace(covs@covs, axis1=1, axis2=2)
-                    + 2 * np.einsum(
+                    np.matrix.trace(covs @ covs, axis1=1, axis2=2)
+                    + 2
+                    * np.einsum(
                         "...j,...jk,...k",
                         mus,
                         covs,
@@ -1889,7 +1891,7 @@ class BaseBosonicState(BaseState):
         # weights1, mu1, cov1 = other_state
         # weights2, mu2, cov2 = self.reduced_bosonic(mode)
         # return twq.fidelity(mu1, cov1, mu2, cov2, hbar=self._hbar)
-        
+
         # COMMENT: Uhlmann fidelity is a non-linear function of the density matrix
         # so it is not clear how to evaluate it in terms of the Wigner function.
         # We could consider instead the overlap between two Wigner functions?
@@ -1946,7 +1948,9 @@ class BaseBosonicState(BaseState):
         #     )
         prob = 0
         for i in range(self.num_weights):
-            prob += self._weights[i]*twq.density_matrix_element(self._mus[i],self._covs[i],n,n,hbar = self._hbar)
+            prob += self._weights[i] * twq.density_matrix_element(
+                self._mus[i], self._covs[i], n, n, hbar=self._hbar
+            )
         return prob.real
 
     def all_fock_probs(self, **kwargs):
