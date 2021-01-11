@@ -1564,9 +1564,10 @@ class BaseBosonicState(BaseState):
         Returns:
             bool: True if and only if the state is a coherent state.
         """
-        mu, cov = self.reduced_gaussian([mode])  # pylint: disable=unused-variable
-        cov /= self._hbar / 2
-        return np.allclose(cov, np.identity(2), atol=tol, rtol=0)
+        # mu, cov = self.reduced_gaussian([mode])  # pylint: disable=unused-variable
+        # cov /= self._hbar / 2
+        # return np.allclose(cov, np.identity(2), atol=tol, rtol=0)
+        pass
 
     def displacement(self, modes=None):
         r"""Returns the displacement parameter :math:`\alpha` of the modes specified.
@@ -1583,7 +1584,7 @@ class BaseBosonicState(BaseState):
         elif isinstance(modes, int):  # pragma: no cover
             modes = [modes]
         ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
-        avg_mu = np.real_if_close(self._weights @ self._mus[:, ind])
+        avg_mu = np.real_if_close(np.sum(self._weights[:,None] * self._mus[:, ind],axis=0))
         if avg_mu.imag.any():
             raise ValueError("State mean is complex valued.")
         alpha = avg_mu[::2] + 1j * avg_mu[1::2]
@@ -1600,9 +1601,10 @@ class BaseBosonicState(BaseState):
         Returns:
            bool: True if and only if the state is a squeezed state.
         """
-        mu, cov = self.reduced_gaussian([mode])  # pylint: disable=unused-variable
-        cov /= self._hbar / 2
-        return np.any(np.abs(cov - np.identity(2)) > tol)
+        # mu, cov = self.reduced_gaussian([mode])  # pylint: disable=unused-variable
+        # cov /= self._hbar / 2
+        # return np.any(np.abs(cov - np.identity(2)) > tol)
+        pass
 
     def squeezing(self, modes=None):
         r"""Returns the squeezing parameters :math:`(r,\phi)` of the modes specified.
@@ -1614,27 +1616,28 @@ class BaseBosonicState(BaseState):
             List[(float, float)]: sequence of tuples containing the squeezing
             parameters :math:`(r,\phi)` of the specified modes.
         """
-        if modes is None:
-            modes = list(range(self._modes))
-        elif isinstance(modes, int):  # pragma: no cover
-            modes = [modes]
+        # if modes is None:
+        #     modes = list(range(self._modes))
+        # elif isinstance(modes, int):  # pragma: no cover
+        #     modes = [modes]
 
-        res = []
-        for i in modes:
-            mu, cov = self.reduced_gaussian([i])  # pylint: disable=unused-variable
-            cov /= self._hbar / 2
-            tr = np.trace(cov)
+        # res = []
+        # for i in modes:
+        #     mu, cov = self.reduced_gaussian([i])  # pylint: disable=unused-variable
+        #     cov /= self._hbar / 2
+        #     tr = np.trace(cov)
 
-            r = np.arccosh(tr / 2) / 2
+        #     r = np.arccosh(tr / 2) / 2
 
-            if cov[0, 1] == 0.0:
-                phi = 0
-            else:
-                phi = -np.arcsin(2 * cov[0, 1] / np.sqrt((tr - 2) * (tr + 2)))
+        #     if cov[0, 1] == 0.0:
+        #         phi = 0
+        #     else:
+        #         phi = -np.arcsin(2 * cov[0, 1] / np.sqrt((tr - 2) * (tr + 2)))
 
-            res.append((r, phi))
+        #     res.append((r, phi))
 
-        return res
+        # return res
+        pass
 
     # =====================================================
     # the following methods are overwritten from BaseState
@@ -1667,122 +1670,140 @@ class BaseBosonicState(BaseState):
 
     def quad_expectation(self, mode, phi=0, **kwargs):
         # pylint: disable=unused-argument
-        mu, cov = self.reduced_gaussian([mode])
+        # mu, cov = self.reduced_gaussian([mode])
         rot = _R(phi)
 
-        muphi = rot.T @ mu
-        covphi = rot.T @ cov @ rot
-        return (muphi[0], covphi[0, 0])
+        # muphi = rot.T @ mu
+        # covphi = rot.T @ cov @ rot
+        weights, mus, covs = self.reduced_bosonic([mode])
+        muphis = (rot.T @ mus.T).T
+        muphi = np.real_if_close(np.sum(weights[:,None] * muphis,axis=0))
+        covphis = rot.T @ covs @ rot
+        covphi = np.real_if_close(np.sum(weights[:,None,None]*covphis,axis=0))[0,0]
+        covphi += np.real_if_close(np.sum(weights * muphis[:,0]**2))
+        covphi -= muphi[0]**2
+        return (muphi[0], covphi)
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
-        if A is None:
-            A = np.zeros([2 * self._modes, 2 * self._modes])
+        # if A is None:
+        #     A = np.zeros([2 * self._modes, 2 * self._modes])
 
-        if A.shape != (2 * self._modes, 2 * self._modes):
-            raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
+        # if A.shape != (2 * self._modes, 2 * self._modes):
+        #     raise ValueError("Matrix of quadratic coefficients A must be of size 2Nx2N.")
 
-        if not np.allclose(A.T, A):
-            raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
+        # if not np.allclose(A.T, A):
+        #     raise ValueError("Matrix of quadratic coefficients A must be symmetric.")
 
-        if d is not None:
-            if d.shape != (2 * self._modes,):
-                raise ValueError("Vector of linear coefficients d must be of length 2N.")
-        else:
-            d = np.zeros([2 * self._modes])
+        # if d is not None:
+        #     if d.shape != (2 * self._modes,):
+        #         raise ValueError("Vector of linear coefficients d must be of length 2N.")
+        # else:
+        #     d = np.zeros([2 * self._modes])
 
-        # determine modes with quadratic expectation values
-        nonzero = np.concatenate(
-            [np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)]
-        )
-        ex_modes = list(set(nonzero))
+        # # determine modes with quadratic expectation values
+        # nonzero = np.concatenate(
+        #     [np.mod(A.nonzero()[0], self._modes), np.mod(d.nonzero()[0], self._modes)]
+        # )
+        # ex_modes = list(set(nonzero))
 
-        # reduce the size of A so that we only consider modes
-        # which we need to calculate the expectation value for
-        rows = ex_modes + [i + self._modes for i in ex_modes]
-        num_modes = len(ex_modes)
-        quad_coeffs = A[:, rows][rows]
+        # # reduce the size of A so that we only consider modes
+        # # which we need to calculate the expectation value for
+        # rows = ex_modes + [i + self._modes for i in ex_modes]
+        # num_modes = len(ex_modes)
+        # quad_coeffs = A[:, rows][rows]
 
-        if not ex_modes:
-            # only a constant term was provided
-            return k, 0.0
+        # if not ex_modes:
+        #     # only a constant term was provided
+        #     return k, 0.0
 
-        mu = self._mu
-        cov = self._cov
+        # mu = self._mu
+        # cov = self._cov
 
-        if phi != 0:
-            # rotate all modes of the covariance matrix and vector of means
-            R = _R(phi)
-            C = changebasis(self._modes)
-            rot = C.T @ block_diag(*([R] * self._modes)) @ C
+        # if phi != 0:
+        #     # rotate all modes of the covariance matrix and vector of means
+        #     R = _R(phi)
+        #     C = changebasis(self._modes)
+        #     rot = C.T @ block_diag(*([R] * self._modes)) @ C
 
-            mu = rot.T @ mu
-            cov = rot.T @ cov @ rot
+        #     mu = rot.T @ mu
+        #     cov = rot.T @ cov @ rot
 
-        # transform to the expectation of a quadratic on a normal distribution with zero mean
-        # E[P(r)]_(mu,cov) = E(Q(r+mu)]_(0,cov)
-        #                  = E[rT.A.r + rT.(2A.mu+d) + (muT.A.mu+muT.d+cI)]_(0,cov)
-        #                  = E[rT.A.r + rT.d' + k']_(0,cov)
-        d2 = 2 * A @ mu + d
-        k2 = mu.T @ A @ mu + mu.T @ d + k
+        # # transform to the expectation of a quadratic on a normal distribution with zero mean
+        # # E[P(r)]_(mu,cov) = E(Q(r+mu)]_(0,cov)
+        # #                  = E[rT.A.r + rT.(2A.mu+d) + (muT.A.mu+muT.d+cI)]_(0,cov)
+        # #                  = E[rT.A.r + rT.d' + k']_(0,cov)
+        # d2 = 2 * A @ mu + d
+        # k2 = mu.T @ A @ mu + mu.T @ d + k
 
-        # expectation value E[P(r)]_{mu=0} = tr(A.cov) + muT.A.mu + muT.d + k|_{mu=0}
-        #                                  = tr(A.cov) + k
-        mean = np.trace(A @ cov) + k2
-        # variance Var[P(r)]_{mu=0} = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d|_{mu=0}
-        #                           = 2tr(A.cov.A.cov) + dT.cov.d
-        var = 2 * np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2
+        # # expectation value E[P(r)]_{mu=0} = tr(A.cov) + muT.A.mu + muT.d + k|_{mu=0}
+        # #                                  = tr(A.cov) + k
+        # mean = np.trace(A @ cov) + k2
+        # # variance Var[P(r)]_{mu=0} = 2tr(A.cov.A.cov) + 4*muT.A.cov.A.mu + dT.cov.d|_{mu=0}
+        # #                           = 2tr(A.cov.A.cov) + dT.cov.d
+        # var = 2 * np.trace(A @ cov @ A @ cov) + d2.T @ cov @ d2
 
-        # Correction term to account for incorrect symmetric ordering in the variance.
-        # This occurs because Var[S(P(r))] = Var[P(r)] - Σ_{m1, m2} |hbar*A_{(m1, m1+N),(m2, m2+N)}|,
-        # where m1, m2 are all possible mode numbers, and N is the total number of modes.
-        # Therefore, the correction term is the sum of the determinants of 2x2 submatrices of A.
-        modes = np.arange(2 * num_modes).reshape(2, -1).T
-        var -= np.sum(
-            [np.linalg.det(self._hbar * quad_coeffs[:, m][n]) for m in modes for n in modes]
-        )
+        # # Correction term to account for incorrect symmetric ordering in the variance.
+        # # This occurs because Var[S(P(r))] = Var[P(r)] - Σ_{m1, m2} |hbar*A_{(m1, m1+N),(m2, m2+N)}|,
+        # # where m1, m2 are all possible mode numbers, and N is the total number of modes.
+        # # Therefore, the correction term is the sum of the determinants of 2x2 submatrices of A.
+        # modes = np.arange(2 * num_modes).reshape(2, -1).T
+        # var -= np.sum(
+        #     [np.linalg.det(self._hbar * quad_coeffs[:, m][n]) for m in modes for n in modes]
+        # )
 
-        return mean, var
+        # return mean, var
+        pass
 
     def number_expectation(self, modes):
-        if len(modes) != len(set(modes)):
-            raise ValueError("There can be no duplicates in the modes specified.")
+        # if len(modes) != len(set(modes)):
+        #     raise ValueError("There can be no duplicates in the modes specified.")
 
-        mu = self._mu
-        cov = self._cov
+        # mu = self._mu
+        # cov = self._cov
 
-        mean = twq.photon_number_expectation(mu, cov, modes, hbar=self._hbar).real
-        mean2 = twq.photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar).real
-        var = mean2 - mean ** 2
+        # mean = twq.photon_number_expectation(mu, cov, modes, hbar=self._hbar).real
+        # mean2 = twq.photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar).real
+        # var = mean2 - mean ** 2
+        # return mean, var
+        pass
 
-        return mean, var
 
     def parity_expectation(self, modes):
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
-
-        mu = self.means()
-        cov = self.cov()
-        num = np.exp(-(0.5) * (mu @ (np.linalg.inv(cov) @ mu)))
-        parity = ((self.hbar / 2) ** len(modes)) * num / (np.sqrt(np.linalg.det(cov)))
-
+        # Sort by (q1,p1,q2,p2,...)
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
+        exp_arg = np.einsum(
+            "...j,...jk,...k",
+            self._mus[:, mode_ind],
+            np.linalg.inv(self._covs[:, mode_ind, :][:, :, mode_ind]),
+            self._mus[:, mode_ind],
+        )
+        weighted_exp = (
+            np.array(self._weights)
+            * np.exp(-0.5 * exp_arg)
+            / np.sqrt(np.linalg.det(self._covs[:, mode_ind, :][:, :, mode_ind]))
+        )
+        parity = np.sum(weighted_exp)
         return parity
 
     def ket(self, **kwargs):
-        cutoff = kwargs.get("cutoff", 10)
-        mu = self._mu
-        cov = self._cov
+        # cutoff = kwargs.get("cutoff", 10)
+        # mu = self._mu
+        # cov = self._cov
 
-        if self._pure:
-            return twq.state_vector(
-                mu,
-                cov,
-                hbar=self._hbar,
-                normalize=True,
-                cutoff=cutoff,
-                check_purity=False,
-            )
+        # if self._pure:
+        #     return twq.state_vector(
+        #         mu,
+        #         cov,
+        #         hbar=self._hbar,
+        #         normalize=True,
+        #         cutoff=cutoff,
+        #         check_purity=False,
+        #     )
 
-        return None  # pragma: no cover
+        # return None  # pragma: no cover
+        pass
 
     def dm(self, **kwargs):
         cutoff = kwargs.get("cutoff", 10)
@@ -1801,21 +1822,23 @@ class BaseBosonicState(BaseState):
             )
 
         cutoff = kwargs.get("cutoff", 10)
-        mu, cov = self.reduced_gaussian(modes)  # pylint: disable=unused-variable
+        weights, mus, covs = self.reduced_bosonic(modes)  # pylint: disable=unused-variable
 
-        if self.is_pure:
-            psi = twq.state_vector(
-                mu,
-                cov,
-                hbar=self._hbar,
-                normalize=True,
-                cutoff=cutoff,
-                check_purity=False,
-            )
-            rho = np.outer(psi, psi.conj())
-            return rho
-
-        return twq.density_matrix(mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff)
+        # if self.is_pure:
+        #     psi = twq.state_vector(
+        #         mu,
+        #         cov,
+        #         hbar=self._hbar,
+        #         normalize=True,
+        #         cutoff=cutoff,
+        #         check_purity=False,
+        #     )
+        #     rho = np.outer(psi, psi.conj())
+        #     return rho
+        rho=0
+        for i in range(self.num_weights):
+            rho += weights[i]*twq.density_matrix(mus[i],covs[i],hbar = self._hbar,normalize=False,cutoff = cutoff)
+        return rho
 
     def mean_photon(self, mode, **kwargs):
         # mu, cov = self.reduced_gaussian([mode])
@@ -1860,15 +1883,20 @@ class BaseBosonicState(BaseState):
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
-        if isinstance(mode, int):
-            mode = [mode]
+        # if isinstance(mode, int):
+        #     mode = [mode]
 
-        mu1, cov1 = other_state
-        mu2, cov2 = self.reduced_gaussian(mode)
-        return twq.fidelity(mu1, cov1, mu2, cov2, hbar=self._hbar)
+        # weights1, mu1, cov1 = other_state
+        # weights2, mu2, cov2 = self.reduced_bosonic(mode)
+        # return twq.fidelity(mu1, cov1, mu2, cov2, hbar=self._hbar)
+        
+        # COMMENT: Uhlmann fidelity is a non-linear function of the density matrix
+        # so it is not clear how to evaluate it in terms of the Wigner function.
+        # We could consider instead the overlap between two Wigner functions?
+        pass
 
     def fidelity_vacuum(self, **kwargs):
-        alpha = np.zeros(len(self._alpha))
+        alpha = np.zeros(self._modes)
         return self.fidelity_coherent(alpha)
 
     def fidelity_coherent(self, alpha_list, **kwargs):
@@ -1878,9 +1906,26 @@ class BaseBosonicState(BaseState):
         if not isinstance(alpha_list, np.ndarray):
             alpha_list = np.array(alpha_list)
 
-        mu = np.concatenate([alpha_list.real, alpha_list.imag]) * np.sqrt(2 * self._hbar)
-        cov = np.identity(2 * self._modes) * self._hbar / 2
-        return self.fidelity([mu, cov], list(range(self._modes)))
+        modes = list(range(self._modes))
+        # Sort by (q1,p1,q2,p2,...)
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
+        alpha_mean = np.array([])
+        for i in range(len(modes)):
+            alpha_mean = np.append(alpha_mean, alpha_list.real[i] * np.sqrt(2 * self._hbar))
+            alpha_mean = np.append(alpha_mean, alpha_list.imag[i] * np.sqrt(2 * self._hbar))
+        deltas = self._mus[:, mode_ind] - alpha_mean
+        cov_sum = (
+            self._covs[:, mode_ind, :][:, :, mode_ind] + self._hbar * np.eye((len(mode_ind))) / 2
+        )
+        exp_arg = np.einsum("...j,...jk,...k", deltas, np.linalg.inv(cov_sum), deltas)
+        weighted_exp = (
+            np.array(self._weights)
+            * self._hbar ** len(modes)
+            * np.exp(-0.5 * exp_arg)
+            / np.sqrt(np.linalg.det(cov_sum))
+        )
+        fidelity = np.sum(weighted_exp)
+        return fidelity
 
     def fock_prob(self, n, **kwargs):
         if len(n) != self._modes:
@@ -1890,20 +1935,23 @@ class BaseBosonicState(BaseState):
         if sum(n) >= cutoff:
             raise ValueError("Cutoff argument must be larger than the sum of photon numbers")
 
-        if self.is_pure:
-            return (
-                np.abs(
-                    twq.pure_state_amplitude(
-                        self._mu, self._cov, n, hbar=self._hbar, check_purity=False
-                    )
-                )
-                ** 2
-            )
-
-        return twq.density_matrix_element(self._mu, self._cov, n, n, hbar=self._hbar).real
+        # if self.is_pure:
+        #     return (
+        #         np.abs(
+        #             twq.pure_state_amplitude(
+        #                 self._mu, self._cov, n, hbar=self._hbar, check_purity=False
+        #             )
+        #         )
+        #         ** 2
+        #     )
+        prob = 0
+        for i in range(self.num_weights):
+            prob += self._weights[i]*twq.density_matrix_element(self._mus[i],self._covs[i],n,n,hbar = self._hbar)
+        return prob.real
 
     def all_fock_probs(self, **kwargs):
-        cutoff = kwargs.get("cutoff", 10)
-        mu = self._mu
-        cov = self._cov
-        return twq.probabilities(mu, cov, cutoff, hbar=self._hbar)
+        # cutoff = kwargs.get("cutoff", 10)
+        # mu = self._mu
+        # cov = self._cov
+        # return twq.probabilities(mu, cov, cutoff, hbar=self._hbar)
+        pass

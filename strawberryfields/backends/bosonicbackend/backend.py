@@ -306,7 +306,7 @@ class BosonicBackend(BaseBosonic):
         # case alpha = 0 -> prepare vacuum
         if np.isclose(np.absolute(alpha), 0):
             return (
-                np.array([[1]], dtype=complex),
+                np.array([1], dtype=complex),
                 np.array([[0, 0]], dtype=complex),
                 np.array([0.5 * self.circuit.hbar * np.identity(2)]),
             )
