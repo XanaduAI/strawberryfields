@@ -315,7 +315,7 @@ class Connection:
         """ Use the offline token to request a new access token """
         self._headers.pop("Authorization", None)
         # TODO: Make sure this is the right path
-        path = "/auth/token"
+        path = "/auth/realms/platform/protocol/openid-connect/token"
         headers = {**self._headers}
         response = self._request("POST", self._url(path), headers=headers, data={
             'grant_type': 'refresh_token',
@@ -323,7 +323,7 @@ class Connection:
             'client_id': 'public',
         })
         if response.status_code == 200:
-            self._headers["Authorization"] = "Bearer {}".format(response.cookies["access_token"])
+            self._headers["Authorization"] = "Bearer {}".format(response.json().get('access_token'))
         else:
             raise RequestFailedError(
                 "Authorization failed for request"
@@ -334,7 +334,7 @@ class Connection:
         from the initial request.
         """
         request_headers = {**headers, **self._headers}
-        response = requests.request(method, self._url(path), headers=request_headers, **kwargs)
+        response = requests.request(method, path, headers=request_headers, **kwargs)
         if response.status_code == 401:
             # Refresh the access_token and retry the request
             self._refresh_access_token()
