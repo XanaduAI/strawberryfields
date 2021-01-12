@@ -332,7 +332,9 @@ class Connection:
             access_token = response.json().get("access_token")
             self._headers["Authorization"] = f"Bearer {access_token}"
         else:
-            raise RequestFailedError("Authorization failed for request, please check your token provided.")
+            raise RequestFailedError(
+                "Authorization failed for request, please check your token provided."
+            )
 
     def _request(self, method: str, path: str, headers: Dict = None, **kwargs):
         """Wrap all API requests with an authentication token refresh if a 401 status
