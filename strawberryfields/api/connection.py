@@ -89,7 +89,6 @@ class Connection:
     ):
         default_config = load_config()
 
-        print(token)
         self._token = token or default_config["api"]["authentication_token"]
         self._host = host or default_config["api"]["hostname"]
         self._port = port or default_config["api"]["port"]
