@@ -738,23 +738,12 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        # listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
 
         covmats = self.circuit.covs
         means = self.circuit.means
-        # if len(w) == 1:
-        #     m = covmat[0]
-        #     r = means[0]
 
-        #     covmat = np.empty((2 * len(modes), 2 * len(modes)))
-        #     means = r[listmodes]
 
-        #     for i, ii in enumerate(listmodes):
-        #         for j, jj in enumerate(listmodes):
-        #             covmat[i, j] = m[ii, jj]
 
-        #     means *= np.sqrt(2 * self.circuit.hbar) / 2
-        #     covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
 

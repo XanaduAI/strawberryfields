@@ -1432,11 +1432,7 @@ class BaseBosonicState(BaseState):
         self._mus = self._data[0] * np.sqrt(self._hbar / 2)
         self._covs = self._data[1] * (self._hbar / 2)
         self._weights = self._data[2]
-        # complex displacements of the Gaussian state
-        # self._alphas = self._mus[:,::2] + 1j * self._mus[:,1::2]
-        # self._alphas /= np.sqrt(2 * self._hbar)
 
-        # self._pure = abs(1 - self.purity()) < self.EQ_TOLERANCE
 
         self._basis = "bosonic"
         self._str = "<BosonicState: num_modes={}, num_weights={}, pure={}, hbar={}>".format(
@@ -1483,7 +1479,7 @@ class BaseBosonicState(BaseState):
         return self._mus
 
     def covs(self):
-        r"""Thes covariance matrices describing the Bosonic state.
+        r"""The covariance matrices describing the Bosonic state.
 
         Returns:
           array: a num_weights by :math:`2N\times 2N` array.
@@ -1670,11 +1666,8 @@ class BaseBosonicState(BaseState):
 
     def quad_expectation(self, mode, phi=0, **kwargs):
         # pylint: disable=unused-argument
-        # mu, cov = self.reduced_gaussian([mode])
         rot = _R(phi)
 
-        # muphi = rot.T @ mu
-        # covphi = rot.T @ cov @ rot
         weights, mus, covs = self.reduced_bosonic([mode])
         muphis = (rot.T @ mus.T).T
         muphi = np.real_if_close(np.sum(weights[:, None] * muphis, axis=0))
@@ -1823,17 +1816,6 @@ class BaseBosonicState(BaseState):
         cutoff = kwargs.get("cutoff", 10)
         weights, mus, covs = self.reduced_bosonic(modes)  # pylint: disable=unused-variable
 
-        # if self.is_pure:
-        #     psi = twq.state_vector(
-        #         mu,
-        #         cov,
-        #         hbar=self._hbar,
-        #         normalize=True,
-        #         cutoff=cutoff,
-        #         check_purity=False,
-        #     )
-        #     rho = np.outer(psi, psi.conj())
-        #     return rho
         rho = 0
         for i in range(self.num_weights):
             rho += weights[i] * twq.density_matrix(
@@ -1842,9 +1824,6 @@ class BaseBosonicState(BaseState):
         return rho
 
     def mean_photon(self, mode, **kwargs):
-        # mu, cov = self.reduced_gaussian([mode])
-        # mean = (np.trace(cov) + mu.T @ mu) / (2 * self._hbar) - 1 / 2
-        # var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar ** 2) - 1 / 4
         weights, mus, covs = self.reduced_bosonic([mode])
         mean = (
             np.sum(
@@ -1937,15 +1916,6 @@ class BaseBosonicState(BaseState):
         if sum(n) >= cutoff:
             raise ValueError("Cutoff argument must be larger than the sum of photon numbers")
 
-        # if self.is_pure:
-        #     return (
-        #         np.abs(
-        #             twq.pure_state_amplitude(
-        #                 self._mu, self._cov, n, hbar=self._hbar, check_purity=False
-        #             )
-        #         )
-        #         ** 2
-        #     )
         prob = 0
         for i in range(self.num_weights):
             prob += self._weights[i] * twq.density_matrix_element(
