@@ -334,7 +334,7 @@ class Connection:
         else:
             raise RequestFailedError("Authorization failed for request")
 
-    def _request(self, method: str, path: str, headers: Dict = {}, **kwargs):
+    def _request(self, method: str, path: str, headers: Dict = None, **kwargs):
         """Wrap all API requests with an authentication token refresh if a 401 status
         is received from the initial request.
 
@@ -346,6 +346,7 @@ class Connection:
         Returns:
             requests.Response: the response received for the sent request
         """
+        headers = headers or {}
         request_headers = {**headers, **self._headers}
         response = requests.request(method, path, headers=request_headers, **kwargs)
         if response.status_code == 401:
