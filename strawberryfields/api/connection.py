@@ -312,9 +312,8 @@ class Connection:
         return self._base_url + path
 
     def _refresh_access_token(self):
-        """ Use the offline token to request a new access token """
+        """Use the offline token to request a new access token."""
         self._headers.pop("Authorization", None)
-        # TODO: Make sure this is the right path
         path = "/auth/realms/platform/protocol/openid-connect/token"
         headers = {**self._headers}
         response = self._request("POST", self._url(path), headers=headers, data={
@@ -330,8 +329,16 @@ class Connection:
             )
 
     def _request(self, method: str, path: str, headers: Dict = {}, **kwargs ):
-        """ Wrap all API requests with an auth token refresh if a 401 is recevied
-        from the initial request.
+        """Wrap all API requests with an authentication token refresh if a 401 status
+        is received from the initial request.
+        
+        Args:
+            method (str): the HTTP request method to use
+            path (str): path of the endpoint to use
+            headers (dict): dictionary containing the headers of the request
+
+        Returns:
+            requests.Response: the response received for the sent request
         """
         request_headers = {**headers, **self._headers}
         response = requests.request(method, path, headers=request_headers, **kwargs)
