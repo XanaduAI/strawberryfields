@@ -314,12 +314,12 @@ class TestConnection:
             Connection(token=test_token, host=test_host)
 
     def test_wrapped_request_refreshes(self, mocker, monkeypatch):
-        """Test that a wrapped request refreshes the access token when getting
-        a 401 response."""
-        # Mock post used while refreshing
+        """Test that the _request method refreshes the access token when
+        getting a 401 response."""
+        # Mock post function used while refreshing
         monkeypatch.setattr(requests, "post", mock_return(MockResponse(200, {})))
 
-        # Mock request used for general requests
+        # Mock request function used for general requests
         monkeypatch.setattr(requests, "request", mock_return(MockResponse(401, {})))
 
         conn = Connection(token=test_token, host=test_host)
