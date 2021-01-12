@@ -738,12 +738,8 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-
         covmats = self.circuit.covs
         means = self.circuit.means
-
-
-
 
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
 

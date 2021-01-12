@@ -1433,7 +1433,6 @@ class BaseBosonicState(BaseState):
         self._covs = self._data[1] * (self._hbar / 2)
         self._weights = self._data[2]
 
-
         self._basis = "bosonic"
         self._str = "<BosonicState: num_modes={}, num_weights={}, pure={}, hbar={}>".format(
             self.num_modes, self.num_weights, self._pure, self._hbar
