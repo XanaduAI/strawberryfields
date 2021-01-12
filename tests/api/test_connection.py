@@ -299,21 +299,53 @@ class TestConnection:
         }
 
         monkeypatch.delenv("SF_API_AUTHENTICATION_TOKEN", raising=False)
-        monkeypatch.setattr(requests, "request", mock_return(MockResponse(200, {})))
-        spy = mocker.spy(requests, "request")
+        monkeypatch.setattr(requests, "post", mock_return(MockResponse(200, {})))
+        spy = mocker.spy(requests, "post")
 
         conn = Connection(token=token, host=host)
         expected_headers = {'Accept-Version': conn.api_version}
         expected_url = f"https://{host}:443{path}"
-        spy.assert_called_once_with("POST", expected_url, headers=expected_headers, data=data)
+        spy.assert_called_once_with(expected_url, headers=expected_headers, data=data)
 
     def test_refresh_access_token_raises(self, monkeypatch):
         """Test that an error is raised when the access token could not be
         generated while creating the Connection object."""
         monkeypatch.delenv("SF_API_AUTHENTICATION_TOKEN", raising=False)
-        monkeypatch.setattr(requests, "request", mock_return(MockResponse(500, {})))
+        monkeypatch.setattr(requests, "post", mock_return(MockResponse(500, {})))
         with pytest.raises(RequestFailedError, match="Authorization failed for request"):
             Connection(token="SomeToken", host="SomeHost")
+
+    def test_wrapped_request(self, monkeypatch):
+        """Test that the access token is created by passing the expected headers."""
+        def mock_request():
+            count = []
+            def func(*args, **kwargs):
+                if len(count) > 2:
+                    return MockResponse(401, {})
+
+                count.append(1)
+                return MockResponse(201, {})
+            return func
+
+        monkeypatch.delenv("SF_API_AUTHENTICATION_TOKEN", raising=False)
+        monkeypatch.setattr(requests, "request", mock_request())
+        host = "SomeHost"
+        path = "/auth/realms/platform/protocol/openid-connect/token"
+        token = "SomeToken"
+
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": token,
+            "client_id": "public",
+        }
+        expected_url = f"https://{host}:443{path}"
+
+        conn = Connection(token=token, host=host)
+        expected_headers = {'Accept-Version': conn.api_version}
+
+        spy = mocker.spy(conn, "_refresh_access_token")
+        conn._request("SomeRequestMethod", "SomePath")
+        spy.assert_called_once_with("POST", expected_url, headers=expected_headers, data=data)
 
 
 class TestConnectionIntegration:

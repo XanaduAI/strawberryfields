@@ -319,8 +319,7 @@ class Connection:
         self._headers.pop("Authorization", None)
         path = "/auth/realms/platform/protocol/openid-connect/token"
         headers = {**self._headers}
-        response = self._request(
-            "POST",
+        response = requests.post(
             self._url(path),
             headers=headers,
             data={
