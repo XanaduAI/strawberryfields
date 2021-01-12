@@ -330,9 +330,10 @@ class Connection:
             },
         )
         if response.status_code == 200:
-            self._headers["Authorization"] = "Bearer {}".format(response.json().get("access_token"))
+            access_token = response.json().get("access_token")
+            self._headers["Authorization"] = f"Bearer {access_token}"
         else:
-            raise RequestFailedError("Authorization failed for request")
+            raise RequestFailedError("Authorization failed for request.")
 
     def _request(self, method: str, path: str, headers: Dict = None, **kwargs):
         """Wrap all API requests with an authentication token refresh if a 401 status
@@ -353,7 +354,7 @@ class Connection:
             # Refresh the access_token and retry the request
             self._refresh_access_token()
             request_headers = {**headers, **self._headers}
-            response = requests.request(method, self._url(path), headers=request_headers, **kwargs)
+            response = requests.request(method, path, headers=request_headers, **kwargs)
         return response
 
     @staticmethod
