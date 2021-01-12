@@ -279,6 +279,42 @@ class TestConnection:
 
         assert not connection.ping()
 
+    def test_refresh_access_token_called(self, mocker, monkeypatch):
+        """Test that an access token is granted once a Connection object is created."""
+        monkeypatch.delenv("SF_API_AUTHENTICATION_TOKEN", raising=False)
+        spy = mocker.spy(Connection, "_refresh_access_token")
+        conn = Connection()
+        spy.assert_called_once_with(conn)
+
+    def test_refresh_access_token(self, mocker, monkeypatch):
+        """Test that the access token is created by passing the expected headers."""
+        host = "SomeHost"
+        path = "/auth/realms/platform/protocol/openid-connect/token"
+
+        token = "SomeToken"
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": token,
+            "client_id": "public",
+        }
+
+        monkeypatch.delenv("SF_API_AUTHENTICATION_TOKEN", raising=False)
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(200, {})))
+        spy = mocker.spy(requests, "request")
+
+        conn = Connection(token=token, host=host)
+        expected_headers = {'Accept-Version': conn.api_version}
+        expected_url = f"https://{host}:443{path}"
+        spy.assert_called_once_with("POST", expected_url, headers=expected_headers, data=data)
+
+    def test_refresh_access_token_raises(self, monkeypatch):
+        """Test that an error is raised when the access token could not be
+        generated while creating the Connection object."""
+        monkeypatch.delenv("SF_API_AUTHENTICATION_TOKEN", raising=False)
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(500, {})))
+        with pytest.raises(RequestFailedError, match="Authorization failed for request"):
+            Connection(token="SomeToken", host="SomeHost")
+
 
 class TestConnectionIntegration:
     """Integration tests for using instances of the Connection."""

@@ -89,6 +89,7 @@ class Connection:
     ):
         default_config = load_config()
 
+        print(token)
         self._token = token or default_config["api"]["authentication_token"]
         self._host = host or default_config["api"]["hostname"]
         self._port = port or default_config["api"]["port"]
@@ -333,7 +334,7 @@ class Connection:
             access_token = response.json().get("access_token")
             self._headers["Authorization"] = f"Bearer {access_token}"
         else:
-            raise RequestFailedError("Authorization failed for request.")
+            raise RequestFailedError("Authorization failed for request, please check your token provided.")
 
     def _request(self, method: str, path: str, headers: Dict = None, **kwargs):
         """Wrap all API requests with an authentication token refresh if a 401 status
