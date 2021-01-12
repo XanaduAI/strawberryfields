@@ -314,8 +314,7 @@ class Connection:
     def _refresh_access_token(self):
         """Use the offline token to request a new access token."""
         self._headers.pop("Authorization", None)
-        # TODO: Make sure this is the right path
-        path = "/auth/token"
+        path = "/auth/realms/platform/protocol/openid-connect/token"
         headers = {**self._headers}
         response = self._request("POST", self._url(path), headers=headers, data={
             'grant_type': 'refresh_token',
