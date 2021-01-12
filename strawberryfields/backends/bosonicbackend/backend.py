@@ -306,7 +306,7 @@ class BosonicBackend(BaseBosonic):
         # case alpha = 0 -> prepare vacuum
         if np.isclose(np.absolute(alpha), 0):
             return (
-                np.array([[1]], dtype=complex),
+                np.array([1], dtype=complex),
                 np.array([[0, 0]], dtype=complex),
                 np.array([0.5 * self.circuit.hbar * np.identity(2)]),
             )
@@ -727,7 +727,7 @@ class BosonicBackend(BaseBosonic):
         if modes is None:
             modes = list(range(len(self.get_modes())))
 
-        w = self.circuit.weights
+        weights = self.circuit.weights
 
         # Generate dictionary between tuples of the form (peek_0, ... peek_i)
         # where the subscript denotes the mode, and the corresponding index
@@ -738,24 +738,11 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        listmodes = list(np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1)))
-
-        covmat = self.circuit.covs
+        covmats = self.circuit.covs
         means = self.circuit.means
-        if len(w) == 1:
-            m = covmat[0]
-            r = means[0]
-
-            covmat = np.empty((2 * len(modes), 2 * len(modes)))
-            means = r[listmodes]
-
-            for i, ii in enumerate(listmodes):
-                for j, jj in enumerate(listmodes):
-                    covmat[i, j] = m[ii, jj]
-
-            means *= np.sqrt(2 * self.circuit.hbar) / 2
-            covmat *= self.circuit.hbar / 2
 
         mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
-        num_w = len(w)
-        return BaseBosonicState((means, covmat, w), len(modes), num_w, mode_names=mode_names)
+
+        return BaseBosonicState(
+            (means, covmats, weights), len(modes), len(weights), mode_names=mode_names
+        )
