@@ -187,7 +187,9 @@ class Connection:
         circuit = bb.serialize()
 
         path = "/jobs"
-        response = self._request("POST", self._url(path), headers=self._headers, json={"circuit": circuit})
+        response = self._request(
+            "POST", self._url(path), headers=self._headers, json={"circuit": circuit}
+        )
         if response.status_code == 201:
             job_id = response.json()["id"]
             if self._verbose:
@@ -257,8 +259,7 @@ class Connection:
         """
         path = "/jobs/{}/result".format(job_id)
         response = self._request(
-            "GET", self._url(path),
-            headers={"Accept": "application/x-numpy", **self._headers}
+            "GET", self._url(path), headers={"Accept": "application/x-numpy", **self._headers}
         )
         if response.status_code == 200:
             # Read the numpy binary data in the payload into memory
@@ -287,8 +288,10 @@ class Connection:
         """
         path = "/jobs/{}".format(job_id)
         response = self._request(
-            "PATCH", self._url(path),
-            headers=self._headers, json={"status": JobStatus.CANCELLED.value}
+            "PATCH",
+            self._url(path),
+            headers=self._headers,
+            json={"status": JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             if self._verbose:
@@ -316,22 +319,25 @@ class Connection:
         self._headers.pop("Authorization", None)
         path = "/auth/realms/platform/protocol/openid-connect/token"
         headers = {**self._headers}
-        response = self._request("POST", self._url(path), headers=headers, data={
-            'grant_type': 'refresh_token',
-            'refresh_token': self._token,
-            'client_id': 'public',
-        })
+        response = self._request(
+            "POST",
+            self._url(path),
+            headers=headers,
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": self._token,
+                "client_id": "public",
+            },
+        )
         if response.status_code == 200:
-            self._headers["Authorization"] = "Bearer {}".format(response.json().get('access_token'))
+            self._headers["Authorization"] = "Bearer {}".format(response.json().get("access_token"))
         else:
-            raise RequestFailedError(
-                "Authorization failed for request"
-            )
+            raise RequestFailedError("Authorization failed for request")
 
-    def _request(self, method: str, path: str, headers: Dict = {}, **kwargs ):
+    def _request(self, method: str, path: str, headers: Dict = {}, **kwargs):
         """Wrap all API requests with an authentication token refresh if a 401 status
         is received from the initial request.
-        
+
         Args:
             method (str): the HTTP request method to use
             path (str): path of the endpoint to use
