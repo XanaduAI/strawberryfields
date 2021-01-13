@@ -77,8 +77,6 @@ class TestConnection:
     def test_init(self):
         """Tests that a ``Connection`` is initialized correctly."""
         token, host, port, use_ssl = "token", "host", 123, True
-
-        monkeypatch.setattr(requests, "request", mock_return(MockResponse(200, {})))
         connection = Connection(token, host, port, use_ssl)
 
         assert connection.token == token
