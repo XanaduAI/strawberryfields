@@ -98,7 +98,6 @@ class Connection:
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
 
         self._headers = {"Accept-Version": self.api_version}
-        self._refresh_access_token()
 
         self.log = create_logger(__name__)
 
