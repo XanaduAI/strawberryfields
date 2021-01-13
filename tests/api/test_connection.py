@@ -74,7 +74,7 @@ class MockResponse:
 class TestConnection:
     """Tests for the ``Connection`` class."""
 
-    def test_init(self, monkeypatch):
+    def test_init(self):
         """Tests that a ``Connection`` is initialized correctly."""
         token, host, port, use_ssl = "token", "host", 123, True
 
