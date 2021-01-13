@@ -103,7 +103,6 @@ class TestConnection:
                 {"layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": [[0, 1]]}}
             )),
         )
-        monkeypatch.setattr(connection, "_refresh_access_token", lambda: None)
 
         device_spec = connection.get_device_spec(target)
 
