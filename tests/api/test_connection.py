@@ -305,7 +305,7 @@ class TestConnection:
         generated while creating the Connection object."""
         monkeypatch.setattr(requests, "post", mock_return(MockResponse(500, {})))
         conn = Connection(token=test_token, host=test_host)
-        with pytest.raises(RequestFailedError, match="Authorization failed for request"):
+        with pytest.raises(RequestFailedError, match="Could not retrieve access token"):
             conn._refresh_access_token()
 
     def test_wrapped_request_refreshes(self, mocker, monkeypatch):
