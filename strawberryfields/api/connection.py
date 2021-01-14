@@ -332,7 +332,7 @@ class Connection:
             self._headers["Authorization"] = f"Bearer {access_token}"
         else:
             raise RequestFailedError(
-                "Authorization failed for request, please check your token provided."
+                "Could not retrieve access token. Please check that your API key is correct."
             )
 
     def _request(self, method: str, path: str, headers: Dict = None, **kwargs):
