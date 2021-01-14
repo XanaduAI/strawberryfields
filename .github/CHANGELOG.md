@@ -104,7 +104,11 @@
 * `TDMProgram` objects can now be serialized into Blackbird scripts, and vice versa.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
-<h3>Breaking changes</h3>
+<h3>Breaking Changes</h3>
+
+* Jobs are submitted to the Xanadu Quantum Cloud through a new OAuth based
+  authentication flow using offline refresh tokens and access tokens.
+  [(#520)](https://github.com/XanaduAI/strawberryfields/pull/520)
 
 <h3>Bug fixes</h3>
 
@@ -138,8 +142,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada,
-Antal Száva.
+Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Tim Leisti,
+Nicolas Quesada, Antal Száva.
 
 # Release 0.16.0 (current release)
 
