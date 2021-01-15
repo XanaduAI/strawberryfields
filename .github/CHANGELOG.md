@@ -1,3 +1,17 @@
+# Release 0.18.0 (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
 # Release 0.17.0 (current release)
 
 <h3>New features since last release</h3>
