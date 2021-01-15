@@ -87,8 +87,8 @@ def about():
         Scipy version:             1.4.1
         SymPy version:             1.5.1
         NetworkX version:          2.4
-        The Walrus version:        0.15.0-dev
-        Blackbird version:         0.3.1-dev
+        The Walrus version:        0.14.0
+        Blackbird version:         0.3.0
         TensorFlow version:        2.4.0
     """
     # pylint: disable=import-outside-toplevel
