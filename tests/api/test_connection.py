@@ -50,6 +50,8 @@ use_ssl = true
 port = 443
 """
 
+test_host = "SomeHost"
+test_token = "SomeToken"
 
 class MockResponse:
     """A mock response with a JSON or binary body."""
@@ -95,7 +97,7 @@ class TestConnection:
 
         monkeypatch.setattr(
             requests,
-            "get",
+            "request",
             mock_return(MockResponse(
                 200,
                 {"layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": [[0, 1]]}}
@@ -114,7 +116,7 @@ class TestConnection:
 
     def test_get_device_spec_error(self, connection, monkeypatch):
         """Tests a failed device spec request."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to get device specifications"):
             connection.get_device_spec("123")
@@ -124,7 +126,7 @@ class TestConnection:
         id_, status = "123", JobStatus.QUEUED
 
         monkeypatch.setattr(
-            requests, "post", mock_return(MockResponse(201, {"id": id_, "status": status})),
+            requests, "request", mock_return(MockResponse(201, {"id": id_, "status": status})),
         )
 
         job = connection.create_job("X8_01", prog, {"shots": 1})
@@ -134,7 +136,7 @@ class TestConnection:
 
     def test_create_job_error(self, prog, connection, monkeypatch):
         """Tests a failed job creation flow."""
-        monkeypatch.setattr(requests, "post", mock_return(MockResponse(400, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(400, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to create job"):
             connection.create_job("X8_01", prog, {"shots": 1})
@@ -151,7 +153,7 @@ class TestConnection:
             for i in range(1, 10)
         ]
         monkeypatch.setattr(
-            requests, "get", mock_return(MockResponse(200, {"data": jobs})),
+            requests, "request", mock_return(MockResponse(200, {"data": jobs})),
         )
 
         jobs = connection.get_all_jobs(after=datetime(2020, 1, 5))
@@ -161,7 +163,7 @@ class TestConnection:
     @pytest.mark.xfail(reason="method not yet implemented")
     def test_get_all_jobs_error(self, connection, monkeypatch):
         """Tests a failed job list request."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to get all jobs"):
             connection.get_all_jobs()
@@ -172,7 +174,7 @@ class TestConnection:
 
         monkeypatch.setattr(
             requests,
-            "get",
+            "request",
             mock_return(MockResponse(200, {"id": id_, "status": status.value, "meta": meta})),
         )
 
@@ -184,7 +186,7 @@ class TestConnection:
 
     def test_get_job_error(self, connection, monkeypatch):
         """Tests a failed job request."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to get job"):
             connection.get_job("123")
@@ -195,7 +197,7 @@ class TestConnection:
 
         monkeypatch.setattr(
             requests,
-            "get",
+            "request",
             mock_return(MockResponse(200, {"id": id_, "status": status.value, "meta": {}})),
         )
 
@@ -203,7 +205,7 @@ class TestConnection:
 
     def test_get_job_status_error(self, connection, monkeypatch):
         """Tests a failed job status request."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to get job"):
             connection.get_job_status("123")
@@ -231,7 +233,7 @@ class TestConnection:
             np.save(buf, result_samples)
             buf.seek(0)
             monkeypatch.setattr(
-                requests, "get", mock_return(MockResponse(200, binary_body=buf.getvalue())),
+                requests, "request", mock_return(MockResponse(200, binary_body=buf.getvalue())),
             )
 
         result = connection.get_job_result("123")
@@ -240,7 +242,7 @@ class TestConnection:
 
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(404, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to get job result"):
             connection.get_job_result("123")
@@ -255,29 +257,71 @@ class TestConnection:
 
             return function
 
-        monkeypatch.setattr(requests, "patch", _mock_return(MockResponse(204, {})))
+        monkeypatch.setattr(requests, "request", _mock_return(MockResponse(204, {})))
 
         # A successful cancellation does not raise an exception
         connection.cancel_job("123")
 
     def test_cancel_job_error(self, connection, monkeypatch):
         """Tests a failed job cancellation request."""
-        monkeypatch.setattr(requests, "patch", mock_return(MockResponse(404, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))
 
         with pytest.raises(RequestFailedError, match="Failed to cancel job"):
             connection.cancel_job("123")
 
     def test_ping_success(self, connection, monkeypatch):
         """Tests a successful ping to the remote host."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(200, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(200, {})))
 
         assert connection.ping()
 
     def test_ping_failure(self, connection, monkeypatch):
         """Tests a failed ping to the remote host."""
-        monkeypatch.setattr(requests, "get", mock_return(MockResponse(500, {})))
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(500, {})))
 
         assert not connection.ping()
+
+    def test_refresh_access_token(self, mocker, monkeypatch):
+        """Test that the access token is created by passing the expected headers."""
+        path = "/auth/realms/platform/protocol/openid-connect/token"
+
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": test_token,
+            "client_id": "public",
+        }
+
+        monkeypatch.setattr(requests, "post", mock_return(MockResponse(200, {})))
+        spy = mocker.spy(requests, "post")
+
+        conn = Connection(token=test_token, host=test_host)
+        conn._refresh_access_token()
+        expected_headers = {'Accept-Version': conn.api_version}
+        expected_url = f"https://{test_host}:443{path}"
+        spy.assert_called_once_with(expected_url, headers=expected_headers, data=data)
+
+    def test_refresh_access_token_raises(self, monkeypatch):
+        """Test that an error is raised when the access token could not be
+        generated while creating the Connection object."""
+        monkeypatch.setattr(requests, "post", mock_return(MockResponse(500, {})))
+        conn = Connection(token=test_token, host=test_host)
+        with pytest.raises(RequestFailedError, match="Could not retrieve access token"):
+            conn._refresh_access_token()
+
+    def test_wrapped_request_refreshes(self, mocker, monkeypatch):
+        """Test that the _request method refreshes the access token when
+        getting a 401 response."""
+        # Mock post function used while refreshing
+        monkeypatch.setattr(requests, "post", mock_return(MockResponse(200, {})))
+
+        # Mock request function used for general requests
+        monkeypatch.setattr(requests, "request", mock_return(MockResponse(401, {})))
+
+        conn = Connection(token=test_token, host=test_host)
+
+        spy = mocker.spy(conn, "_refresh_access_token")
+        conn._request("SomeRequestMethod", "SomePath")
+        spy.assert_called_once_with()
 
 
 class TestConnectionIntegration:
