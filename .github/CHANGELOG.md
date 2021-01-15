@@ -104,7 +104,7 @@
   potentially crop out the final shots containing these measurements.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
-* `pytest-randomly` is added to the SF tests
+* `pytest-randomly` is added to the SF tests.
   [(#480)](https://github.com/XanaduAI/strawberryfields/pull/480)
 
 * `TDMProgram` objects can now be serialized into Blackbird scripts, and vice versa.
@@ -122,7 +122,7 @@
   if the tensor has an added dimension due to the existence of batching.
   [(#507)](https://github.com/XanaduAI/strawberryfields/pull/507)
 
-* Fixed issue with `reshape_samples` where the samples were sometimes
+* Fixes an issue with `reshape_samples` where the samples were sometimes
   reshaped in the wrong way.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
@@ -135,7 +135,7 @@
   information about the results.
   [(#493)](https://github.com/XanaduAI/strawberryfields/pull/493)
 
-* Removes the antlr4 requirement due to version conflicts.
+* Removes the `antlr4` requirement due to version conflicts.
   [(#494)](https://github.com/XanaduAI/strawberryfields/pull/494)
 
 * `TDMProgram.run_options` is now correctly used when running a TDM program.
