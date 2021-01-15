@@ -160,7 +160,7 @@ This release contains contributions from (in alphabetical order):
 Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Tim Leisti,
 Nicolas Quesada, Antal Száva.
 
-# Release 0.16.0 (current release)
+# Release 0.16.0
 
 <h3>New features since last release</h3>
 
