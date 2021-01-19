@@ -16,7 +16,7 @@ This module provides an interface to a remote program execution backend.
 """
 import io
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 import requests
@@ -96,9 +96,15 @@ class Connection:
         self._verbose = verbose
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
-        self._headers = {"Authorization": self.token}
+
+        self._headers = {"Accept-Version": self.api_version}
 
         self.log = create_logger(__name__)
+
+    @property
+    def api_version(self) -> str:
+        """str: The platform API version to request."""
+        return "1.0.0"
 
     @property
     def token(self) -> str:
@@ -151,7 +157,7 @@ class Connection:
     def _get_device_dict(self, target: str) -> dict:
         """Returns the device specifications as a dictionary"""
         path = f"/devices/{target}/specifications"
-        response = requests.get(self._url(path), headers=self._headers)
+        response = self._request("GET", self._url(path), headers=self._headers)
 
         if response.status_code == 200:
             self.log.info("The device spec %s has been successfully retrieved.", target)
@@ -180,7 +186,9 @@ class Connection:
         circuit = bb.serialize()
 
         path = "/jobs"
-        response = requests.post(self._url(path), headers=self._headers, json={"circuit": circuit})
+        response = self._request(
+            "POST", self._url(path), headers=self._headers, json={"circuit": circuit}
+        )
         if response.status_code == 201:
             job_id = response.json()["id"]
             if self._verbose:
@@ -216,7 +224,7 @@ class Connection:
             strawberryfields.api.Job: the job
         """
         path = "/jobs/{}".format(job_id)
-        response = requests.get(self._url(path), headers=self._headers)
+        response = self._request("GET", self._url(path), headers=self._headers)
         if response.status_code == 200:
             return Job(
                 id_=response.json()["id"],
@@ -249,8 +257,8 @@ class Connection:
             strawberryfields.api.Result: the job result
         """
         path = "/jobs/{}/result".format(job_id)
-        response = requests.get(
-            self._url(path), headers={"Accept": "application/x-numpy", **self._headers}
+        response = self._request(
+            "GET", self._url(path), headers={"Accept": "application/x-numpy", **self._headers}
         )
         if response.status_code == 200:
             # Read the numpy binary data in the payload into memory
@@ -278,8 +286,11 @@ class Connection:
             job_id (str): the job ID
         """
         path = "/jobs/{}".format(job_id)
-        response = requests.patch(
-            self._url(path), headers=self._headers, json={"status": JobStatus.CANCELLED.value}
+        response = self._request(
+            "PATCH",
+            self._url(path),
+            headers=self._headers,
+            json={"status": JobStatus.CANCELLED.value},
         )
         if response.status_code == 204:
             if self._verbose:
@@ -296,11 +307,55 @@ class Connection:
             bool: ``True`` if the connection is successful, and ``False`` otherwise
         """
         path = "/healthz"
-        response = requests.get(self._url(path), headers=self._headers)
+        response = self._request("GET", self._url(path), headers=self._headers)
         return response.status_code == 200
 
     def _url(self, path: str) -> str:
         return self._base_url + path
+
+    def _refresh_access_token(self):
+        """Use the offline token to request a new access token."""
+        self._headers.pop("Authorization", None)
+        path = "/auth/realms/platform/protocol/openid-connect/token"
+        headers = {**self._headers}
+        response = requests.post(
+            self._url(path),
+            headers=headers,
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": self._token,
+                "client_id": "public",
+            },
+        )
+        if response.status_code == 200:
+            access_token = response.json().get("access_token")
+            self._headers["Authorization"] = f"Bearer {access_token}"
+        else:
+            raise RequestFailedError(
+                "Could not retrieve access token. Please check that your API key is correct."
+            )
+
+    def _request(self, method: str, path: str, headers: Dict = None, **kwargs):
+        """Wrap all API requests with an authentication token refresh if a 401 status
+        is received from the initial request.
+
+        Args:
+            method (str): the HTTP request method to use
+            path (str): path of the endpoint to use
+            headers (dict): dictionary containing the headers of the request
+
+        Returns:
+            requests.Response: the response received for the sent request
+        """
+        headers = headers or {}
+        request_headers = {**headers, **self._headers}
+        response = requests.request(method, path, headers=request_headers, **kwargs)
+        if response.status_code == 401:
+            # Refresh the access_token and retry the request
+            self._refresh_access_token()
+            request_headers = {**headers, **self._headers}
+            response = requests.request(method, path, headers=request_headers, **kwargs)
+        return response
 
     @staticmethod
     def _format_error_message(response: requests.Response) -> str:

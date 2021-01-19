@@ -30,6 +30,7 @@ from .io import load, save
 from .parameters import par_funcs as math
 from .program import Program
 from .tdm import TDMProgram
+from .plot import plot_wigner, plot_fock, plot_quad
 from . import tdm
 
 __all__ = [
@@ -78,17 +79,17 @@ def about():
         Strawberry Fields: a Python library for continuous-variable quantum circuits.
         Copyright 2018-2020 Xanadu Quantum Technologies Inc.
 
-        Python version:            3.6.8
-        Platform info:             Linux-5.0.0-36-generic-x86_64-with-debian-buster-sid
-        Installation path:         /home/josh/Dropbox/Work/Xanadu/sf_cloud/strawberryfields
-        Strawberry Fields version: 0.12.0-dev
-        Numpy version:             1.17.4
-        Scipy version:             1.3.0
-        Sympy version:             1.5
+        Python version:            3.6.10
+        Platform info:             Linux-5.8.18-1-MANJARO-x86_64-with-arch-Manjaro-Linux
+        Installation path:         /home/strawberryfields/
+        Strawberry Fields version: 0.17.0
+        Numpy version:             1.19.5
+        Scipy version:             1.4.1
+        SymPy version:             1.5.1
         NetworkX version:          2.4
-        The Walrus version:        0.10.0
-        Blackbird version:         0.2.1
-        TensorFlow version:        2.0.0
+        The Walrus version:        0.14.0
+        Blackbird version:         0.3.0
+        TensorFlow version:        2.4.0
     """
     # pylint: disable=import-outside-toplevel
     import sys

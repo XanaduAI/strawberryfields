@@ -1,13 +1,96 @@
-# Release 0.17.0 (development release)
+# Release 0.18.0 (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+# Release 0.17.0 (current release)
 
 <h3>New features since last release</h3>
 
 * `TDMProgram` objects can now be compiled and submitted via the API.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
+* Wigner functions can be plotted directly via Strawberry Fields using Plot.ly.
+  [(#495)](https://github.com/XanaduAI/strawberryfields/pull/495)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim": 10})
+
+  with prog.context as q:
+      gamma = 2
+      Vgate(gamma) | q[0]
+
+  state = eng.run(prog).state
+
+  xvec = np.arange(-4, 4, 0.01)
+  pvec = np.arange(-4, 4, 0.01)
+  mode = 0
+
+  sf.plot_wigner(state, mode, xvec, pvec, renderer="browser")
+  ```
+
+* Fock state marginal probabilities can be plotted directly via Strawberry
+  Fields using Plot.ly.
+  [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+  with prog.context as q:
+      Sgate(0.5) | q[0]
+
+  state = eng.run(prog).state
+  state.all_fock_probs()
+
+  modes = [0]
+
+  sf.plot_fock(state, modes, cutoff=5, renderer="browser")
+  ```
+
+* Position and momentum quadrature probabilities can be plotted directly via
+  Strawberry Fields using Plot.ly.
+  [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+  with prog.context as q:
+      Sgate(0.5) | q[0]
+
+  state = eng.run(prog).state
+
+  modes = [0]
+  xvec = np.arange(-4, 4, 0.1)
+  pvec = np.arange(-4, 4, 0.1)
+
+  sf.plot_quad(state, modes, xvec, pvec, renderer="browser")
+  ```
+
+* Strawberry Fields code can be generated from a program (and an engine) by
+  calling `sf.io.generate_code(program, eng=engine)`.
+  [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
+
 <h3>Improvements</h3>
 
-* The `copies` option when constructing a `TDMProgram` have been removed. Instead, the number of
+* `Connection` objects now send versioned requests to the platform API.
+  [(#512)](https://github.com/XanaduAI/strawberryfields/pull/512)
+
+* `TDMProgram` allows application of gates with more than one symbolic parameter.
+  [#492](https://github.com/XanaduAI/strawberryfields/pull/492)
+
+* The `copies` option, when constructing a `TDMProgram`, has been removed. Instead, the number of
   copies of a TDM algorithm can now be set by passing the `shots` keyword argument to
   the `eng.run()` method.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
@@ -35,14 +118,25 @@
   potentially crop out the final shots containing these measurements.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
+* `pytest-randomly` is added to the SF tests.
+  [(#480)](https://github.com/XanaduAI/strawberryfields/pull/480)
+
 * `TDMProgram` objects can now be serialized into Blackbird scripts, and vice versa.
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
-<h3>Breaking changes</h3>
+<h3>Breaking Changes</h3>
+
+* Jobs are submitted to the Xanadu Quantum Cloud through a new OAuth based
+  authentication flow using offline refresh tokens and access tokens.
+  [(#520)](https://github.com/XanaduAI/strawberryfields/pull/520)
 
 <h3>Bug fixes</h3>
 
-* Fixed issue with `reshape_samples` where the samples were sometimes
+* Fixes a bug where `Dgate`, `Coherent`, and `DisplacedSqueezed` do not support TensorFlow tensors
+  if the tensor has an added dimension due to the existence of batching.
+  [(#507)](https://github.com/XanaduAI/strawberryfields/pull/507)
+
+* Fixes an issue with `reshape_samples` where the samples were sometimes
   reshaped in the wrong way.
   [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
 
@@ -51,19 +145,36 @@
   [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
 
 * Fixes a bug where printing the `Result` object containing samples from a time-domain
-  experiment would result in an error. Printing the result object now correctly displays
+  job would result in an error. Printing the result object now correctly displays
   information about the results.
   [(#493)](https://github.com/XanaduAI/strawberryfields/pull/493)
 
+* Removes the `antlr4` requirement due to version conflicts.
+  [(#494)](https://github.com/XanaduAI/strawberryfields/pull/494)
+
+* `TDMProgram.run_options` is now correctly used when running a TDM program.
+  [(#500)](https://github.com/XanaduAI/strawberryfields/pull/500)
+
+* Fixes a bug where a single parameter list passed to the `TDMProgram`
+  context results in an error.
+  [(#503)](https://github.com/XanaduAI/strawberryfields/pull/503)
+
 <h3>Documentation</h3>
+
+* `TDMProgram` docstring is updated to make it clear that only Gaussian programs are allowed.
+  [(#519)](https://github.com/XanaduAI/strawberryfields/pull/519)
+
+* Clarifies special cases for the `MZgate` in the docstring.
+  [(#479)](https://github.com/XanaduAI/strawberryfields/pull/479)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Nicolas Quesada, Antal Száva.
+Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Tim Leisti,
+Nicolas Quesada, Antal Száva.
 
-# Release 0.16.0 (current release)
+# Release 0.16.0
 
 <h3>New features since last release</h3>
 

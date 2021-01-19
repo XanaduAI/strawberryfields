@@ -435,8 +435,9 @@ class LocalEngine(BaseEngine):
             not isinstance(program, collections.abc.Sequence) and program.type == "tdm"
         )
         if valid_tdm_program:
+            # priority order for the shots value should be kwargs > run_options > 1
+            shots = kwargs.get("shots", program.run_options.get("shots", 1))
 
-            shots = kwargs.get("shots", 1)
             program.unroll(shots=shots)
             # Shots >1 for a TDM program simply corresponds to creating
             # multiple copies of the program, and appending them to run sequentially.

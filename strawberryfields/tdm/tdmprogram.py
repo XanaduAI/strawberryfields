@@ -19,6 +19,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 
 from operator import itemgetter
 from math import ceil
+from collections.abc import Iterable
 
 import numpy as np
 import blackbird as bb
@@ -259,7 +260,7 @@ class TDMProgram(sf.Program):
     time domain program using the Python-embedded Blackbird syntax.
 
     Once created, time domain programs can be executed on Strawberry Fields'
-    suite of built-in simulators in an efficient manner, or submitted
+    Gaussian backend in an efficient manner, or submitted
     to be executed on compatible hardware.
 
     Args:
@@ -408,6 +409,10 @@ class TDMProgram(sf.Program):
         self.tdm_params = args
         self.shift = shift
         self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
+        # if a single parameter list is supplied, only a single free
+        # parameter will be created; turn it into a list
+        if not isinstance(self.loop_vars, Iterable):
+            self.loop_vars = [self.loop_vars]
         return self
 
     # pylint: disable=too-many-branches

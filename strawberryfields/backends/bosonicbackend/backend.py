@@ -266,7 +266,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.reset(num_subsystems, 1)
 
     def add_mode(self, n=1):
-        self.circuit.add_mode(n)
+        self.circuit.add_mode([n])
 
     def del_mode(self, modes):
         self.circuit.del_mode(modes)
@@ -278,28 +278,23 @@ class BosonicBackend(BaseBosonic):
         self.circuit.reset(self._init_modes)
 
     def prepare_thermal_state(self, nbar, mode):
-        # self.circuit.init_thermal(nbar, mode)
-        pass
+        self.circuit.init_thermal(nbar, mode)
 
     def prepare_vacuum_state(self, mode):
-        # self.circuit.loss(0.0, mode)
-        pass
+        self.circuit.loss(0.0, mode)
 
     def prepare_coherent_state(self, r, phi, mode):
-        # self.circuit.loss(0.0, mode)
-        # self.circuit.displace(r, phi, mode)
-        pass
+        self.circuit.loss(0.0, mode)
+        self.circuit.displace(r, phi, mode)
 
     def prepare_squeezed_state(self, r, phi, mode):
-        # self.circuit.loss(0.0, mode)
-        # self.circuit.squeeze(r, phi, mode)
-        pass
+        self.circuit.loss(0.0, mode)
+        self.circuit.squeeze(r, phi, mode)
 
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
-        # self.circuit.loss(0.0, mode)
-        # self.circuit.squeeze(r_s, phi_s, mode)
-        # self.circuit.displace(r_d, phi_d, mode)
-        pass
+        self.circuit.loss(0.0, mode)
+        self.circuit.squeeze(r_s, phi_s, mode)
+        self.circuit.displace(r_d, phi_d, mode)
 
     def prepare_cat(self, alpha, phi, cutoff, desc, D):
         """ Prepares the arrays of weights, means and covs for a cat state"""
@@ -599,13 +594,13 @@ class BosonicBackend(BaseBosonic):
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
+            val = self.circuit.homodyne(mode, **kwargs)[0, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
-            qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
+            self.circuit.post_select_homodyne(mode, val, **kwargs)
 
         # `qs` will always be a single value since multiple shots is not supported
-        return np.array([[qs * np.sqrt(2 * self.circuit.hbar) / 2]])
+        return np.array([[val * np.sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None):
 
@@ -664,59 +659,65 @@ class BosonicBackend(BaseBosonic):
         self.circuit.thermal_loss(T, nbar, mode)
 
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
-        if select is not None:
-            raise NotImplementedError(
-                "Gaussian backend currently does not support " "postselection"
-            )
-        if shots != 1:
-            warnings.warn(
-                "Cannot simulate non-Gaussian states. "
-                "Conditional state after Fock measurement has not been updated."
-            )
+        # if select is not None:
+        #     raise NotImplementedError(
+        #         "Gaussian backend currently does not support " "postselection"
+        #     )
+        # if shots != 1:
+        #     warnings.warn(
+        #         "Cannot simulate non-Gaussian states. "
+        #         "Conditional state after Fock measurement has not been updated."
+        #     )
 
-        mu = self.circuit.mean
-        mean = self.circuit.smeanxp()
-        cov = self.circuit.scovmatxp()
+        # mu = self.circuit.mean
+        # mean = self.circuit.smeanxp()
+        # cov = self.circuit.scovmatxp()
 
-        x_idxs = np.array(modes)
-        p_idxs = x_idxs + len(mu)
-        modes_idxs = np.concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
-        reduced_mean = mean[modes_idxs]
+        # x_idxs = np.array(modes)
+        # p_idxs = x_idxs + len(mu)
+        # modes_idxs = np.concatenate([x_idxs, p_idxs])
+        # reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
+        # reduced_mean = mean[modes_idxs]
 
-        # check we are sampling from a gaussian state with zero mean
-        if np.allclose(mu, np.zeros_like(mu)):
-            samples = hafnian_sample_state(reduced_cov, shots)
-        else:
-            samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
+        # # check we are sampling from a gaussian state with zero mean
+        # if np.allclose(mu, np.zeros_like(mu)):
+        #     samples = hafnian_sample_state(reduced_cov, shots)
+        # else:
+        #     samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
 
-        return samples
+        # return samples
+
+        # TODO
+        pass
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        if shots != 1:
-            if select is not None:
-                raise NotImplementedError(
-                    "Gaussian backend currently does not support " "postselection"
-                )
-            warnings.warn(
-                "Cannot simulate non-Gaussian states. "
-                "Conditional state after Threshold measurement has not been updated."
-            )
+        # if shots != 1:
+        #     if select is not None:
+        #         raise NotImplementedError(
+        #             "Gaussian backend currently does not support " "postselection"
+        #         )
+        #     warnings.warn(
+        #         "Cannot simulate non-Gaussian states. "
+        #         "Conditional state after Threshold measurement has not been updated."
+        #     )
 
-        mu = self.circuit.mean
-        cov = self.circuit.scovmatxp()
-        # check we are sampling from a gaussian state with zero mean
-        if not np.allclose(mu, np.zeros_like(mu)):
-            raise NotImplementedError(
-                "Threshold measurement is only supported for " "Gaussian states with zero mean"
-            )
-        x_idxs = np.array(modes)
-        p_idxs = x_idxs + len(mu)
-        modes_idxs = np.concatenate([x_idxs, p_idxs])
-        reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
-        samples = torontonian_sample_state(reduced_cov, shots)
+        # mu = self.circuit.mean
+        # cov = self.circuit.scovmatxp()
+        # # check we are sampling from a gaussian state with zero mean
+        # if not np.allclose(mu, np.zeros_like(mu)):
+        #     raise NotImplementedError(
+        #         "Threshold measurement is only supported for " "Gaussian states with zero mean"
+        #     )
+        # x_idxs = np.array(modes)
+        # p_idxs = x_idxs + len(mu)
+        # modes_idxs = np.concatenate([x_idxs, p_idxs])
+        # reduced_cov = cov[np.ix_(modes_idxs, modes_idxs)]
+        # samples = torontonian_sample_state(reduced_cov, shots)
 
-        return samples
+        # return samples
+
+        # TODO
+        pass
 
     def state(self, modes=None, peaks=None, **kwargs):
         """Returns the state of the quantum simulation.
