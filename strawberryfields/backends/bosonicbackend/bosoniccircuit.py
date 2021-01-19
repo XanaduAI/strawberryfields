@@ -177,10 +177,11 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
 
-        phi = phi + (1 - np.sign(r)) * np.pi / 2
+        if r < 0:
+            phi += np.pi
         r = np.abs(r)
         theta = np.arccos(np.exp(-r))
-        self.phase_shift(phi / 2, k)
+        self.phase_shift(-phi / 2, k)
 
         if avg:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
@@ -212,7 +213,7 @@ class BosonicModes:
             self.active = self.active[:new_mode]
             prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
             self.displace(prefac * val[0][0], np.pi / 2, k)
-        self.phase_shift(-phi / 2, k)
+        self.phase_shift(phi / 2, k)
 
         if not avg:
             return val
@@ -281,12 +282,11 @@ class BosonicModes:
             r (array): vector of means in :math:`(x_1,p_1,x_2,p_2,\dots)` ordering
             modes (Sequence): sequence of modes corresponding to the vector of means
         """
-        mode_list = modes
         if modes is None:
-            mode_list = range(self.nlen)
+            modes = range(self.nlen)
 
-        for idx, mode in enumerate(mode_list):
-            self.mean[mode] = 0.5 * (r[2 * idx] + 1j * r[2 * idx + 1])
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
+        self.means[:, mode_ind] = r
 
     def fromscovmat(self, V, modes=None):
         r"""Updates the circuit's state when a standard covariance matrix is provided.
@@ -309,50 +309,12 @@ class BosonicModes:
             if n > self.nlen:
                 raise ValueError("Covariance matrix is larger than the number of subsystems.")
 
-        # convert to xp ordering
-        rotmat = changebasis(n)
-        VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
-
-        A = VV[0:n, 0:n]
-        B = VV[0:n, n : 2 * n]
-        C = VV[n : 2 * n, n : 2 * n]
-        Bt = np.transpose(B)
-
-        if n < self.nlen:
-            # reset modes to be prepared back to the vacuum state
-            for mode in modes:
-                self.loss(0.0, mode)
-
-        rows = modes.reshape(-1, 1)
-        cols = modes.reshape(1, -1)
-        self.nmat[rows, cols] = 0.25 * (A + C + 1j * (B - Bt) - 2 * np.identity(n))
-        self.mmat[rows, cols] = 0.25 * (A - C + 1j * (B + Bt))
-
-    def qmat(self, modes=None):
-        """ Construct the covariance matrix for the Q function"""
-        if modes is None:
-            modes = list(range(self.nlen))
-
-        rows = np.reshape(modes, [-1, 1])
-        cols = np.reshape(modes, [1, -1])
-
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate(
-                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])),
-                        axis=1,
-                    ),
-                    np.concatenate(
-                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])),
-                        axis=1,
-                    ),
-                ),
-                axis=0,
-            )
-            + np.identity(2 * len(modes))
-        )
-        return sigmaq
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
+        # Delete current entries of covariance and any correlations to other modes
+        self.covs[:, mode_ind, :] = 0
+        self.covs[:, :, mode_ind] = 0
+        # Set new covariance elements
+        self.covs[np.ix_(np.arange(self.covs.shape[0], dtype=int), mode_ind, mode_ind)] = V
 
     def fidelity_coherent(self, alpha, modes=None):
         """ Returns a function that evaluates the Q function of the given state """
@@ -406,21 +368,6 @@ class BosonicModes:
         parity = np.sum(weighted_exp)
         return parity
 
-    def Amat(self):
-        """ Constructs the A matrix from Hamilton's paper"""
-        ######### this needs to be conjugated
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
-                    np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
-                ),
-                axis=0,
-            )
-            + np.identity(2 * self.nlen)
-        )
-        return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
-
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
         (energy loss amount T)"""
@@ -440,14 +387,13 @@ class BosonicModes:
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
         X = np.sqrt(T) * np.identity(2)
-        Y = self.hbar * (1 - T) * nbar * np.identity(2) / 2
+        Y = self.hbar * (1 - T) * (2 * nbar + 1) * np.identity(2) / 2
         X2, Y2 = self.expandXY([k], X, Y)
         self.apply_channel(X2, Y2)
 
-    def init_thermal(self, population, mode):
+    def init_thermal(self, nbar, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
-        # self.loss(0.0, mode)
-        # self.nmat[mode][mode] = population
+        self.thermal_loss(0.0, nbar, mode)
 
     def is_vacuum(self, tol=0.0):
         """ Checks if the state is vacuum by calculating its fidelity with vacuum """
@@ -632,7 +578,7 @@ class BosonicModes:
 
         covmat = self.hbar * np.identity(2) / 2
         indices = [n]
-        vals = np.array(alpha_val.real, alpha_val.imag)
+        vals = np.array([alpha_val.real, alpha_val.imag])
         self.post_select_generaldyne(covmat, indices, vals)
         return
 
