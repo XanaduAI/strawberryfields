@@ -316,7 +316,6 @@ class BosonicModes:
         # Set new covariance elements
         self.covs[np.ix_(np.arange(self.covs.shape[0], dtype=int), mode_ind, mode_ind)] = V
 
-
     def fidelity_coherent(self, alpha, modes=None):
         """ Returns a function that evaluates the Q function of the given state """
         if modes is None:
@@ -368,7 +367,6 @@ class BosonicModes:
         )
         parity = np.sum(weighted_exp)
         return parity
-
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
