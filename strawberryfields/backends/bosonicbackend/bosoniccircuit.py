@@ -369,8 +369,6 @@ class BosonicModes:
         parity = np.sum(weighted_exp)
         return parity
 
-        """ Constructs the A matrix from Hamilton's paper"""
-        ######### this needs to be conjugated
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
