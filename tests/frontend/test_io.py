@@ -644,6 +644,155 @@ class TestBlackbirdToSFConversion:
         with pytest.raises(NameError, match="operation np not defined"):
             io.to_program(bb)
 
+
+prog_txt = textwrap.dedent('''\
+    import strawberryfields as sf
+    from strawberryfields import ops
+
+    prog = sf.Program(3)
+    eng = sf.Engine({engine_args})
+
+    with prog.context as q:
+        ops.Sgate(0.54, 0) | q[0]
+        ops.BSgate(0.45, np.pi/2) | (q[0], q[2])
+        ops.Sgate(3*np.pi/2, 0) | q[1]
+        ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
+        ops.MeasureFock() | q[0]
+
+    results = eng.run(prog)
+''')
+
+prog_txt_no_engine = textwrap.dedent('''\
+    import strawberryfields as sf
+    from strawberryfields import ops
+
+    prog = sf.Program(3)
+
+    with prog.context as q:
+        ops.Sgate(0.54, 0) | q[0]
+        ops.BSgate(0.45, np.pi/2) | (q[0], q[2])
+        ops.Sgate(3*np.pi/2, 0) | q[1]
+        ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
+        ops.MeasureFock() | q[0]
+''')
+
+prog_txt_tdm = textwrap.dedent('''\
+    import strawberryfields as sf
+    from strawberryfields import ops
+
+    prog = sf.TDMProgram(N=[2, 3])
+    eng = sf.Engine("gaussian")
+
+    with prog.context([np.pi, 3*np.pi/2, 0], [1, 0.5, np.pi], [0, 0, 0]) as (p, q):
+        ops.Sgate(0.123, np.pi/4) | q[2]
+        ops.BSgate(p[0], 0.0) | (q[1], q[2])
+        ops.Rgate(p[1]) | q[2]
+        ops.MeasureHomodyne(p[0]) | q[0]
+        ops.MeasureHomodyne(p[2]) | q[2]
+
+    results = eng.run(prog)
+''')
+
+class TestGenerateCode:
+    """Tests for the generate_code function"""
+
+    def test_generate_code_no_engine(self):
+        """Test generating code for a regular program with no engine"""
+        prog = sf.Program(3)
+
+        with prog.context as q:
+            ops.Sgate(0.54, 0) | q[0]
+            ops.BSgate(0.45, np.pi/2) | (q[0], q[2])
+            ops.Sgate(3*np.pi/2, 0) | q[1]
+            ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
+            ops.MeasureFock() | q[0]
+
+        code = io.generate_code(prog)
+
+        code_list = code.split("\n")
+        expected = prog_txt_no_engine.split("\n")
+
+        for i, row in enumerate(code_list):
+            assert row == expected[i]
+
+    @pytest.mark.parametrize("engine_kwargs", [
+        {"backend": "fock", "backend_options": {"cutoff_dim": 5}},
+        {"backend": "gaussian"},
+    ])
+    def test_generate_code_with_engine(self, engine_kwargs):
+        """Test generating code for a regular program with an engine"""
+        prog = sf.Program(3)
+        eng = sf.Engine(**engine_kwargs)
+
+        with prog.context as q:
+            ops.Sgate(0.54, 0) | q[0]
+            ops.BSgate(0.45, np.pi/2) | (q[0], q[2])
+            ops.Sgate(3*np.pi/2, 0) | q[1]
+            ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
+            ops.MeasureFock() | q[0]
+
+        results = eng.run(prog)
+
+        code = io.generate_code(prog, eng)
+
+        code_list = code.split("\n")
+        formatting_str = f"\"{engine_kwargs['backend']}\""
+        if "backend_options" in engine_kwargs:
+            formatting_str += (
+                ", backend_options="
+                f'{{"cutoff_dim": {engine_kwargs["backend_options"]["cutoff_dim"]}}}'
+            )
+        expected = prog_txt.format(engine_args=formatting_str).split("\n")
+
+        for i, row in enumerate(code_list):
+            assert row == expected[i]
+
+
+    def test_generate_code_tdm(self):
+        """Test generating code for a TDM program with an engine"""
+        prog = sf.TDMProgram(N=[2, 3])
+        eng = sf.Engine("gaussian")
+
+        with prog.context([np.pi, 3*np.pi/2, 0], [1, 0.5, np.pi], [0, 0, 0]) as (p, q):
+            ops.Sgate(0.123, np.pi/4) | q[2]
+            ops.BSgate(p[0]) | (q[1], q[2])
+            ops.Rgate(p[1]) | q[2]
+            ops.MeasureHomodyne(p[0]) | q[0]
+            ops.MeasureHomodyne(p[2]) | q[2]
+
+        results = eng.run(prog)
+
+        code = io.generate_code(prog, eng)
+
+        code_list = code.split("\n")
+        expected = prog_txt_tdm.split("\n")
+
+        for i, row in enumerate(code_list):
+            assert row == expected[i]
+
+    @pytest.mark.parametrize(
+        "value", [
+            "np.pi", "np.pi/2", "np.pi/12", "2*np.pi", "2*np.pi/3",
+            "0", "42", "9.87", "-0.2", "no_number", "{p3}"
+        ],
+    )
+    def test_factor_out_pi(self, value):
+        """Test that the factor_out_pi function is able to convert floats
+        that are equal to a pi expression, to strings containing a pi
+        expression.
+
+        For example, the float 6.28318530718 should be converted to the string "2*np.pi"
+        """
+        try:
+            val = eval(value)
+        except NameError:
+            val = value
+        res = sf.io._factor_out_pi([val])
+        expected = value
+
+        assert res == expected
+
+
 class DummyResults:
     """Dummy results object"""
 

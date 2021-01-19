@@ -13,8 +13,11 @@
 # limitations under the License.
 r"""Unit tests for tdmprogram.py"""
 import copy
+from collections.abc import Iterable
+
 import pytest
 import numpy as np
+
 import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
@@ -59,7 +62,6 @@ class TestTDMErrorRaising:
     def test_gates_equal_length(self):
         """Checks gate list parameters have same length"""
         sq_r = 1.0
-        N = 3
         c = 4
         shots = 10
         alpha = [0, np.pi / 4] * c
@@ -75,19 +77,18 @@ class TestTDMErrorRaising:
         shots = 1
         alpha = [0] * 4
         phi = [0] * 4
-        prog = tdmprogram.TDMProgram(N=3)
+        prog = tdmprogram.TDMProgram(N=N)
         with pytest.raises(ValueError, match="Must be at least one measurement."):
             with prog.context(alpha, phi, shift="default") as (p, q):
                 ops.Sgate(sq_r, 0) | q[2]
                 ops.BSgate(p[0]) | (q[1], q[2])
                 ops.Rgate(p[1]) | q[2]
             eng = sf.Engine("gaussian")
-            result = eng.run(prog, shots=shots)
+            eng.run(prog, shots=shots)
 
     def test_spatial_modes_number_of_measurements_match(self):
         """Checks number of spatial modes matches number of measurements"""
         sq_r = 1.0
-        N = 3
         shots = 1
         alpha = [0] * 4
         phi = [0] * 4
@@ -118,7 +119,7 @@ class TestTDMErrorRaising:
         with pytest.raises(
             NotImplementedError, match="Lists of TDM programs are not currently supported"
         ):
-            result = eng.run([prog, prog])
+            eng.run([prog, prog])
 
 
 def test_shift_by_specified_amount():
@@ -126,7 +127,6 @@ def test_shift_by_specified_amount():
     with one spatial mode"""
     np.random.seed(42)
     sq_r = 1.0
-    N = 3
     shots = 1
     alpha = [0] * 4
     phi = [0] * 4
@@ -142,6 +142,21 @@ def test_str_tdm_method():
     """Testing the string method"""
     prog = tdmprogram.TDMProgram(N=1)
     assert prog.__str__() == "<TDMProgram: concurrent modes=1, time bins=0, spatial modes=0>"
+
+
+def test_single_parameter_list_program():
+    """Test that a TDMProgram with a single parameter list works."""
+    prog = sf.TDMProgram(2)
+    eng = sf.Engine("gaussian")
+
+    with prog.context([1, 2]) as (p, q):
+        ops.Sgate(p[0]) | q[0]
+        ops.MeasureHomodyne(p[0]) | q[0]
+
+    eng.run(prog)
+
+    assert isinstance(prog.loop_vars, Iterable)
+    assert prog.parameters == {'p0': [1, 2]}
 
 
 class TestSingleLoopNullifier:
@@ -196,7 +211,6 @@ class TestSingleLoopNullifier:
         np.random.seed(42)
         vac_modes = 1
         n = 4
-        vac_modes = 1
         shots = 100
         sq_r = 5
         alpha = [np.arccos(np.sqrt(1 / (n - i + 1))) if i != n + 1 else 0 for i in range(n)]
@@ -221,8 +235,7 @@ class TestSingleLoopNullifier:
         assert np.allclose(val_nullifier_X, sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots))
 
         # We will check that the sum of all the p is equal to zero
-        nullifier_P = lambda sample: np.sum(sample)
-        val_nullifier_P = np.var([nullifier_P(p[0]) for p in reshaped_samples_P], axis=0)
+        val_nullifier_P = np.var([np.sum(p[0]) for p in reshaped_samples_P], axis=0)
         assert np.allclose(
             val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots)
         )
@@ -262,8 +275,6 @@ def test_one_dimensional_cluster_tokyo():
     """
     np.random.seed(42)
     sq_r = 5
-    N = 3  # concurrent modes
-    vac_modes = 2
 
     n = 10  # for an n-mode cluster state
     shots = 3
@@ -271,8 +282,6 @@ def test_one_dimensional_cluster_tokyo():
     # first half of cluster state measured in X, second half in P
     theta1 = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta2 = theta1  # measurement angles for detector B
-
-    timebins_per_shot = len(theta1)
 
     prog = tdmprogram.TDMProgram(N=[1, 2])
     with prog.context(theta1, theta2, shift="default") as (p, q):
@@ -316,12 +325,10 @@ def test_two_dimensional_cluster_denmark():
     delay2 = 12  # number of timebins in the long delay line
     n = 200  # number of timebins
     shots = 10
-    vac_modes = delay1 + delay2 - 13
     # first half of cluster state measured in X, second half in P
 
     theta_A = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta_B = theta_A  # measurement angles for detector B
-    timebins_per_shot = len(theta_A)
 
     # 2D cluster
     prog = tdmprogram.TDMProgram([1, delay2 + delay1 + 1])
@@ -706,3 +713,46 @@ class TestTDMProgramFunctions:
         res = move_vac_modes(samples, N, crop=crop)
 
         assert np.all(res == expected)
+
+class TestEngineTDMProgramInteraction:
+    """Test the Engine class and its interaction with TDMProgram instances."""
+
+    def test_shots_default(self):
+        """Test that default shots (1) is used"""
+        prog = sf.TDMProgram(2)
+        eng = sf.Engine("gaussian")
+
+        with prog.context([1,2], [3,4]) as (p, q):
+            ops.Sgate(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        results = eng.run(prog)
+        assert results.samples.shape[0] == 1
+
+    def test_shots_run_options(self):
+        """Test that run_options takes precedence over default"""
+        prog = sf.TDMProgram(2)
+        eng = sf.Engine("gaussian")
+
+        with prog.context([1,2], [3,4]) as (p, q):
+            ops.Sgate(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        prog.run_options = {"shots": 5}
+        results = eng.run(prog)
+        assert results.samples.shape[0] == 5
+
+    def test_shots_passed(self):
+        """Test that shots supplied via eng.run takes precedence over
+        run_options and that run_options isn't changed"""
+        prog = sf.TDMProgram(2)
+        eng = sf.Engine("gaussian")
+
+        with prog.context([1,2], [3,4]) as (p, q):
+            ops.Sgate(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[0]
+
+        prog.run_options = {"shots": 5}
+        results = eng.run(prog, shots=2)
+        assert results.samples.shape[0] == 2
+        assert prog.run_options["shots"] == 5

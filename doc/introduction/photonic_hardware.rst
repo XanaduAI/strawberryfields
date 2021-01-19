@@ -10,7 +10,7 @@ to be executed on photonic hardware using the Xanadu cloud platform.
     following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
 
     If you do not have an authentication token, you can request hardware access `via the sign up
-    form on the Xanadu website <https://xanadu.ai/request-access>`__.
+    form on the Xanadu website <https://xanadu.ai/access>`__.
 
 Configuring your account
 ------------------------
