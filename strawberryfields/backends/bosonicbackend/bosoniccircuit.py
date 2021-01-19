@@ -316,34 +316,6 @@ class BosonicModes:
         # Set new covariance elements
         self.covs[np.ix_(np.arange(self.covs.shape[0], dtype=int), mode_ind, mode_ind)] = V
 
-    def qmat(self, modes=None):
-        # """ Construct the covariance matrix for the Q function"""
-        # if modes is None:
-        #     modes = list(range(self.nlen))
-
-        # rows = np.reshape(modes, [-1, 1])
-        # cols = np.reshape(modes, [1, -1])
-
-        # sigmaq = (
-        #     np.concatenate(
-        #         (
-        #             np.concatenate(
-        #                 (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])),
-        #                 axis=1,
-        #             ),
-        #             np.concatenate(
-        #                 (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])),
-        #                 axis=1,
-        #             ),
-        #         ),
-        #         axis=0,
-        #     )
-        #     + np.identity(2 * len(modes))
-        # )
-        # return sigmaq
-
-        # TODO if needed later
-        pass
 
     def fidelity_coherent(self, alpha, modes=None):
         """ Returns a function that evaluates the Q function of the given state """
@@ -397,23 +369,8 @@ class BosonicModes:
         parity = np.sum(weighted_exp)
         return parity
 
-    def Amat(self):
         """ Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
-        # sigmaq = (
-        #     np.concatenate(
-        #         (
-        #             np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
-        #             np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
-        #         ),
-        #         axis=0,
-        #     )
-        #     + np.identity(2 * self.nlen)
-        # )
-        # return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
-
-        # TODO if needed later
-        pass
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k by amplitude loss amount \sqrt{T}
