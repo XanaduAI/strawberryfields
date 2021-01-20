@@ -26,13 +26,13 @@ def test_homodyne(setup_backend, tol):
     backend = setup_backend(2)
     backend.squeeze(r, 0, 0)
     backend.squeeze(-r, 0, 1)
-    backend.beamsplitter(np.pi/4, 0, 0, 1)
+    backend.beamsplitter(np.pi / 4, 0, 0, 1)
 
     res = backend.measure_homodyne(0, mode=0, select=0.2)
     assert np.allclose(res, x, atol=tol, rtol=0)
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian", "bosonic")
 def test_heterodyne(setup_backend, tol):
     """Test that heterodyne detection on a TMS state
     returns post-selected value."""
@@ -42,7 +42,7 @@ def test_heterodyne(setup_backend, tol):
     backend = setup_backend(2)
     backend.squeeze(r, 0, 0)
     backend.squeeze(-r, 0, 1)
-    backend.beamsplitter(np.pi/4, 0, 0, 1)
+    backend.beamsplitter(np.pi / 4, 0, 0, 1)
 
     res = backend.measure_heterodyne(mode=0, select=alpha)
     assert np.allclose(res, alpha, atol=tol, rtol=0)
@@ -52,7 +52,7 @@ def test_heterodyne(setup_backend, tol):
 def test_measure_fock(setup_backend, cutoff, batch_size):
     """Test that Fock post-selection on Fock states
     exiting one arm of a beamsplitter results in conservation
-    of photon number in the other. """
+    of photon number in the other."""
     backend = setup_backend(2)
 
     for n in range(cutoff - 1):
@@ -60,7 +60,7 @@ def test_measure_fock(setup_backend, cutoff, batch_size):
 
         backend.prepare_fock_state(n, 0)
         backend.prepare_fock_state(total_photons - n, 1)
-        backend.beamsplitter(np.pi/4, 0, 0, 1)
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
         res1 = backend.measure_fock([0], select=[cutoff // 2])
         res2 = backend.measure_fock([1])
 

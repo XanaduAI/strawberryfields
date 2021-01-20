@@ -135,12 +135,16 @@ class TestBaseStateMeanPhotonNumber:
         magnitude_squared = np.abs(a) ** 2
 
         mean_ex = magnitude_squared + np.sinh(r) ** 2
-        var_ex = - magnitude_squared + magnitude_squared ** 2 + 2 *\
-            magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
-            np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
-            np.cosh(r)*np.sinh(r) + np.sinh(r)**4 - (magnitude_squared +\
-                    np.conj(np.sinh(r))*np.sinh(r)) ** 2 +\
-            np.cosh(r)*np.sinh(r)*np.sinh(2*r)
+        var_ex = (
+            -magnitude_squared
+            + magnitude_squared ** 2
+            + 2 * magnitude_squared * np.cosh(2 * r)
+            - np.exp(-1j * phi) * a ** 2 * np.cosh(r) * np.sinh(r)
+            - np.exp(1j * phi) * np.conj(a) ** 2 * np.cosh(r) * np.sinh(r)
+            + np.sinh(r) ** 4
+            - (magnitude_squared + np.conj(np.sinh(r)) * np.sinh(r)) ** 2
+            + np.cosh(r) * np.sinh(r) * np.sinh(2 * r)
+        )
 
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
@@ -164,6 +168,7 @@ class TestBaseStateMeanPhotonNumber:
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
 
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestBaseFockKetDensityMatrix:
     """Tests for the ket, dm, and reduced density matrix function."""
 
@@ -320,6 +325,7 @@ class TestQuadratureExpectations:
         assert np.allclose(res.flatten(), res_exact.flatten(), atol=tol, rtol=0)
 
 
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
@@ -356,10 +362,14 @@ class TestNumberExpectation:
 
         def squared_term(a, r, phi):
             magnitude_squared = np.abs(a) ** 2
-            squared_term = - magnitude_squared + magnitude_squared ** 2 + 2 *\
-                magnitude_squared*np.cosh(2*r) - 2 * np.real(np.exp(-1j*phi) *\
-                a ** 2 * np.cosh(r)*np.sinh(r)) + np.sinh(r)**4 +\
-                np.cosh(r)*np.sinh(r)*np.sinh(2*r)
+            squared_term = (
+                -magnitude_squared
+                + magnitude_squared ** 2
+                + 2 * magnitude_squared * np.cosh(2 * r)
+                - 2 * np.real(np.exp(-1j * phi) * a ** 2 * np.cosh(r) * np.sinh(r))
+                + np.sinh(r) ** 4
+                + np.cosh(r) * np.sinh(r) * np.sinh(2 * r)
+            )
             return squared_term
 
         res = state.number_expectation([0, 1])
@@ -394,7 +404,7 @@ class TestNumberExpectation:
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(-r, phi, 2)
-        backend.beamsplitter(np.pi/4, np.pi, 0, 2)
+        backend.beamsplitter(np.pi / 4, np.pi, 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
 
@@ -459,21 +469,30 @@ class TestNumberExpectation:
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(r, phi + np.pi, 1)
-        backend.beamsplitter(np.pi/4, np.pi, 0, 1)
+        backend.beamsplitter(np.pi / 4, np.pi, 0, 1)
         backend.prepare_squeezed_state(r, phi, 2)
         backend.prepare_squeezed_state(r, phi + np.pi, 3)
-        backend.beamsplitter(np.pi/4, np.pi, 2, 3)
+        backend.beamsplitter(np.pi / 4, np.pi, 2, 3)
 
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
-            state.number_expectation([0, 1, 2, 3])[0], (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0,
+            state.number_expectation([0, 1, 2, 3])[0],
+            (2 * nbar ** 2 + nbar) ** 2,
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([0, 1, 3])[0], nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
+            state.number_expectation([0, 1, 3])[0],
+            nbar * (2 * nbar ** 2 + nbar),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([3, 1, 2])[0], nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
+            state.number_expectation([3, 1, 2])[0],
+            nbar * (2 * nbar ** 2 + nbar),
+            atol=tol,
+            rtol=0,
         )
 
 
@@ -489,7 +508,7 @@ class TestParityExpectation:
         n2 = 2
         backend.prepare_fock_state(n1, 0)
         backend.prepare_fock_state(n2, 1)
-        backend.beamsplitter(np.pi/4, 0, 0, 1)
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
@@ -566,6 +585,7 @@ class TestParityExpectation:
         assert np.allclose(state.parity_expectation([0]), (1 / ((2 * m) + 1)), atol=tol, rtol=0)
 
 
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestFidelities:
     """Fidelity tests."""
 
@@ -581,7 +601,9 @@ class TestFidelities:
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.coherent_state(np.abs(a), np.angle(a), basis="fock", fock_dim=cutoff, hbar=hbar)
+            in_state = utils.coherent_state(
+                np.abs(a), np.angle(a), basis="fock", fock_dim=cutoff, hbar=hbar
+            )
         else:
             in_state = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
 
@@ -611,9 +633,13 @@ class TestFidelities:
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
+            in_state = utils.displaced_squeezed_state(
+                np.abs(a), np.angle(a), r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+            )
         else:
-            in_state = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
+            in_state = utils.displaced_squeezed_state(
+                np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar
+            )
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)

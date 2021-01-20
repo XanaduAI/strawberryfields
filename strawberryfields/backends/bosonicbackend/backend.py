@@ -555,7 +555,7 @@ class BosonicBackend(BaseBosonic):
             return ancilla_val
 
     def beamsplitter(self, theta, phi, mode1, mode2):
-        self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
+        self.circuit.beamsplitter(theta, phi, mode1, mode2)
 
     def gaussian_cptp(self, modes, X, Y):
         if not isinstance(Y, int):
@@ -639,6 +639,10 @@ class BosonicBackend(BaseBosonic):
             raise ValueError(
                 "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
+            
+        ordering = np.append(np.argsort(modes),np.argsort(modes)+len(modes))
+        V = V[ordering,:][:,ordering]
+        r = r[ordering]
 
         # convert xp-ordering to symmetric ordering
         means = np.vstack([r[:N], r[N:]]).reshape(-1, order="F")
@@ -648,7 +652,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.fromscovmat(cov, modes)
         self.circuit.fromsmean(means, modes)
 
-    def is_vacuum(self, tol=0.0, **kwargs):
+    def is_vacuum(self, tol=1e-12, **kwargs):
         fid = self.state().fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
@@ -727,9 +731,20 @@ class BosonicBackend(BaseBosonic):
         Returns:
             BosonicState: state description
         """
+        if isinstance(modes,int):
+            modes = [modes]
+            
         if modes is None:
-            modes = list(range(len(self.get_modes())))
-
+            modes = self.get_modes()
+            
+        mode_names = ["q[{}]".format(i) for i in modes]        
+        
+        if len(modes) == 0:
+            return BaseBosonicState(
+            (np.array([[]]), np.array([[]]), np.array([])), len(modes), 0, mode_names=mode_names)
+               
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
+        
         weights = self.circuit.weights
 
         # Generate dictionary between tuples of the form (peek_0, ... peek_i)
@@ -741,10 +756,10 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        covmats = self.circuit.covs
-        means = self.circuit.means
+        covmats = self.circuit.covs[:,mode_ind,:][:,:,mode_ind]
+        means = self.circuit.means[:,mode_ind]
 
-        mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
+
 
         return BaseBosonicState(
             (means, covmats, weights), len(modes), len(weights), mode_names=mode_names

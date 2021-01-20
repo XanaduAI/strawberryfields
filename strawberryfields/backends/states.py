@@ -1775,7 +1775,7 @@ class BaseBosonicState(BaseState):
             * np.exp(-0.5 * exp_arg)
             / np.sqrt(np.linalg.det(self._covs[:, mode_ind, :][:, :, mode_ind]))
         )
-        parity = np.sum(weighted_exp)
+        parity = np.sum(weighted_exp) * (self._hbar / 2) ** len(modes)
         return parity
 
     def ket(self, **kwargs):
@@ -1887,6 +1887,12 @@ class BaseBosonicState(BaseState):
             alpha_list = np.array(alpha_list)
 
         modes = list(range(self._modes))
+        
+        #shortcut if there are no active modes. only allowable alpha is of length zero [],
+        #which is the vacuum.
+        if len(modes) == 0:
+            return 1.0
+        
         # Sort by (q1,p1,q2,p2,...)
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
         alpha_mean = np.array([])
