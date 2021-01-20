@@ -30,14 +30,14 @@ from strawberryfields.backends.fockbackend import FockBackend
 from strawberryfields.backends.gaussianbackend import GaussianBackend
 from strawberryfields.backends.bosonicbackend import BosonicBackend
 
-# try:
-#     import tensorflow as tf
-# except (ImportError, ModuleNotFoundError) as e:
-#     tf_available = False
-#     tf_version = False
-# else:
-#     tf_available = True
-#     tf_version = tf.__version__
+try:
+    import tensorflow as tf
+except (ImportError, ModuleNotFoundError) as e:
+    tf_available = False
+    tf_version = False
+else:
+    tf_available = True
+    tf_version = tf.__version__
 
 
 backend_params = [
@@ -54,15 +54,13 @@ eng_backend_params = [
 ]
 
 
-# if tf_available and tf.__version__[:2] == "2.":
-#     from strawberryfields.backends.tfbackend import TFBackend
+if tf_available and tf.__version__[:2] == "2.":
+    from strawberryfields.backends.tfbackend import TFBackend
 
-#     backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
-#     eng_backend_params.append(pytest.param("tf", marks=pytest.mark.tf))
-# else:
-#     tf_available = False
-
-tf_available = False
+    backend_params.append(pytest.param(TFBackend, marks=pytest.mark.tf))
+    eng_backend_params.append(pytest.param("tf", marks=pytest.mark.tf))
+else:
+    tf_available = False
 
 # defaults
 TOL = 1e-3
