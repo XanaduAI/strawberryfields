@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+r"""
+Unit tests for backends.bosonicbackend.ops file.
+"""
+
 import numpy as np
 import strawberryfields.backends.bosonicbackend.ops as ops
 

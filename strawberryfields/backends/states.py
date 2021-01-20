@@ -1888,8 +1888,8 @@ class BaseBosonicState(BaseState):
 
         modes = list(range(self._modes))
 
-        # shortcut if there are no active modes. only allowable alpha is of length zero [],
-        # which is the vacuum.
+        # Shortcut if there are no active modes. Only allowable alpha is of length zero [],
+        # which is the vacuum, so its fidelity to the state will be 1.
         if len(modes) == 0:
             return 1.0
 

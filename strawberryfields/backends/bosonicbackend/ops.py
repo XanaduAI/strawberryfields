@@ -32,8 +32,8 @@ def chop_in_blocks_multi(m, idtodelete):
 
 def chop_in_blocks_vector_multi(v, idtodelete):
     """
-    Splits an array of vector into two arrays of vectors, where
-    idtodelete specifies which elements go into vb
+    Splits an array of vectors into two arrays of vectors, where
+    idtodelete specifies which elements of the vectors go into vb
     """
     idtokeep = np.sort(list(set(np.arange(len(v[0]))) - set(idtodelete)))
     va = v[:, idtokeep]
@@ -56,7 +56,7 @@ def reassemble_multi(A, idtodelete):
 
 
 def reassemble_vector_multi(va, idtodelete):
-    r"""Creates an array of vector with zeros indices idtodelete
+    r"""Creates an array of vectors with zeros at indices idtodelete
     and everywhere else it puts the entries of va
     """
     nweights = len(va[:, 0])

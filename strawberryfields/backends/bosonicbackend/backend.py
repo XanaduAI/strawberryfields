@@ -639,6 +639,7 @@ class BosonicBackend(BaseBosonic):
                 "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
 
+        # Include these lines to accomodate out of order modes, e.g.[1,0]
         ordering = np.append(np.argsort(modes), np.argsort(modes) + len(modes))
         V = V[ordering, :][:, ordering]
         r = r[ordering]
