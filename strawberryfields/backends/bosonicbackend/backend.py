@@ -14,7 +14,6 @@
 # pylint: disable=too-many-public-methods
 """Bosonic backend"""
 import warnings
-
 import numpy as np
 
 from scipy.special import comb
