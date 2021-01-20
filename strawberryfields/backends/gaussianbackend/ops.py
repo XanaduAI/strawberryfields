@@ -38,7 +38,7 @@ def chop_in_blocks_vector(v, idtodelete):
     Splits a vector into two vectors, where idtodelete specifies
     which elements go into vb
     """
-    idtokeep = list(set(np.arange(len(v))) - set(idtodelete))
+    idtokeep = list(set(np.arange(len(v))) - set(idtodelete)).sort()
     va = v[idtokeep]
     vb = v[idtodelete]
     return (va, vb)
@@ -51,7 +51,7 @@ def reassemble(A, idtodelete):
     The empty space are filled with zeros (offdiagonal) and ones (diagonals)
     """
     ntot = len(A) + len(idtodelete)
-    ind = set(np.arange(ntot)) - set(idtodelete)
+    ind = list(set(np.arange(ntot)) - set(idtodelete)).sort()
     newmat = np.zeros((ntot, ntot))
     for i, i1 in enumerate(ind):
         for j, j1 in enumerate(ind):
@@ -67,7 +67,7 @@ def reassemble_vector(va, idtodelete):
     and everywhere else it puts the entries of va
     """
     ntot = len(va) + len(idtodelete)
-    ind = set(np.arange(ntot)) - set(idtodelete)
+    ind = list(set(np.arange(ntot)) - set(idtodelete)).sort()
     newv = np.zeros(ntot)
     for j, j1 in enumerate(ind):
         newv[j1] = va[j]
