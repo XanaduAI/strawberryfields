@@ -639,9 +639,9 @@ class BosonicBackend(BaseBosonic):
             raise ValueError(
                 "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
-            
-        ordering = np.append(np.argsort(modes),np.argsort(modes)+len(modes))
-        V = V[ordering,:][:,ordering]
+
+        ordering = np.append(np.argsort(modes), np.argsort(modes) + len(modes))
+        V = V[ordering, :][:, ordering]
         r = r[ordering]
 
         # convert xp-ordering to symmetric ordering
@@ -731,20 +731,21 @@ class BosonicBackend(BaseBosonic):
         Returns:
             BosonicState: state description
         """
-        if isinstance(modes,int):
+        if isinstance(modes, int):
             modes = [modes]
-            
+
         if modes is None:
             modes = self.get_modes()
-            
-        mode_names = ["q[{}]".format(i) for i in modes]        
-        
+
+        mode_names = ["q[{}]".format(i) for i in modes]
+
         if len(modes) == 0:
             return BaseBosonicState(
-            (np.array([[]]), np.array([[]]), np.array([])), len(modes), 0, mode_names=mode_names)
-               
+                (np.array([[]]), np.array([[]]), np.array([])), len(modes), 0, mode_names=mode_names
+            )
+
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
-        
+
         weights = self.circuit.weights
 
         # Generate dictionary between tuples of the form (peek_0, ... peek_i)
@@ -756,10 +757,8 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        covmats = self.circuit.covs[:,mode_ind,:][:,:,mode_ind]
-        means = self.circuit.means[:,mode_ind]
-
-
+        covmats = self.circuit.covs[:, mode_ind, :][:, :, mode_ind]
+        means = self.circuit.means[:, mode_ind]
 
         return BaseBosonicState(
             (means, covmats, weights), len(modes), len(weights), mode_names=mode_names
