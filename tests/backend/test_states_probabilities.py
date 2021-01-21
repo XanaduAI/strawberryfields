@@ -31,6 +31,7 @@ PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 class TestFockProbabilities:
     """Tests for the fock_prob state method"""
 
+    @pytest.mark.backends("fock", "tf", "gaussian")
     def test_gaussian(self, a, phi, setup_backend, cutoff, tol):
         """Tests that probabilities of particular Fock states
         |n> are correct for a gaussian state."""
@@ -70,6 +71,7 @@ class TestFockProbabilities:
 
 @pytest.mark.parametrize("a", MAG_ALPHAS)
 @pytest.mark.parametrize("phi", PHASE_ALPHAS)
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestAllFockProbs:
     """Tests for the all_fock_probs state method"""
 
@@ -108,9 +110,7 @@ class TestAllFockProbs:
 
         n = np.arange(cutoff)
         ref_state1 = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
-        ref_state2 = (
-            np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(fac(n))
-        )
+        ref_state2 = np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(fac(n))
 
         ref_state = np.outer(ref_state1, ref_state2)
         ref_probs = np.abs(np.reshape(ref_state ** 2, -1))
@@ -119,7 +119,7 @@ class TestAllFockProbs:
             ref_probs = np.tile(ref_probs, batch_size)
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
-        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha)+np.pi, 1)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha) + np.pi, 1)
         state = backend.state()
 
         for n in range(cutoff):

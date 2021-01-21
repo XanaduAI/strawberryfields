@@ -261,7 +261,8 @@ class BosonicBackend(BaseBosonic):
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
-        self.circuit = BosonicModes(num_subsystems)
+        self.circuit = BosonicModes()
+        self.circuit.reset(num_subsystems, 1)
 
     def add_mode(self, n=1):
         self.circuit.add_mode([n])
@@ -553,7 +554,7 @@ class BosonicBackend(BaseBosonic):
             return ancilla_val
 
     def beamsplitter(self, theta, phi, mode1, mode2):
-        self.circuit.beamsplitter(-theta, -phi, mode1, mode2)
+        self.circuit.beamsplitter(theta, phi, mode1, mode2)
 
     def gaussian_cptp(self, modes, X, Y):
         if not isinstance(Y, int):
@@ -638,6 +639,11 @@ class BosonicBackend(BaseBosonic):
                 "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
             )
 
+        # Include these lines to accomodate out of order modes, e.g.[1,0]
+        ordering = np.append(np.argsort(modes), np.argsort(modes) + len(modes))
+        V = V[ordering, :][:, ordering]
+        r = r[ordering]
+
         # convert xp-ordering to symmetric ordering
         means = np.vstack([r[:N], r[N:]]).reshape(-1, order="F")
         C = changebasis(N)
@@ -646,8 +652,9 @@ class BosonicBackend(BaseBosonic):
         self.circuit.fromscovmat(cov, modes)
         self.circuit.fromsmean(means, modes)
 
-    def is_vacuum(self, tol=0.0, **kwargs):
-        return self.circuit.is_vacuum(tol)
+    def is_vacuum(self, tol=1e-12, **kwargs):
+        fid = self.state().fidelity_vacuum()
+        return np.abs(fid - 1) <= tol
 
     def loss(self, T, mode):
         self.circuit.loss(T, mode)
@@ -724,8 +731,20 @@ class BosonicBackend(BaseBosonic):
         Returns:
             BosonicState: state description
         """
+        if isinstance(modes, int):
+            modes = [modes]
+
         if modes is None:
-            modes = list(range(len(self.get_modes())))
+            modes = self.get_modes()
+
+        mode_names = ["q[{}]".format(i) for i in modes]
+
+        if len(modes) == 0:
+            return BaseBosonicState(
+                (np.array([[]]), np.array([[]]), np.array([])), len(modes), 0, mode_names=mode_names
+            )
+
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
 
         weights = self.circuit.weights
 
@@ -738,10 +757,8 @@ class BosonicBackend(BaseBosonic):
         # combs = it.product(*g_list)
         # covs_dict = {tuple: index for (index, tuple) in enumerate(combs)}
 
-        covmats = self.circuit.covs
-        means = self.circuit.means
-
-        mode_names = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
+        covmats = self.circuit.covs[:, mode_ind, :][:, :, mode_ind]
+        means = self.circuit.means[:, mode_ind]
 
         return BaseBosonicState(
             (means, covmats, weights), len(modes), len(weights), mode_names=mode_names

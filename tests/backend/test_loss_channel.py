@@ -43,9 +43,7 @@ class TestRepresentationIndependent:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_full_loss_channel_on_coherent_states(
-        self, setup_backend, mag_alpha, phase_alpha, tol
-    ):
+    def test_full_loss_channel_on_coherent_states(self, setup_backend, mag_alpha, phase_alpha, tol):
         """Tests the full-loss channel on various states (result should be vacuum)."""
 
         T = 0.0
@@ -107,9 +105,7 @@ class TestThermalLossChannel:
 
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("nbar", MAG_ALPHAS)
-    def test_thermal_loss_channel_on_squeezed_state(
-        self, nbar, T, setup_backend, pure, tol, hbar
-    ):
+    def test_thermal_loss_channel_on_squeezed_state(self, nbar, T, setup_backend, pure, tol, hbar):
         """Tests thermal loss channel on a squeezed state"""
         backend = setup_backend(1)
         r = 0.432
@@ -118,12 +114,90 @@ class TestThermalLossChannel:
         state = backend.state()
 
         res = state.cov()
-        exp = np.diag(
-            [
-                T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
-                T * np.exp(2 * r) + (1 - T) * (2 * nbar + 1),
-            ]
-        )*hbar/2
+        exp = (
+            np.diag(
+                [
+                    T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
+                    T * np.exp(2 * r) + (1 - T) * (2 * nbar + 1),
+                ]
+            )
+            * hbar
+            / 2
+        )
+
+        print(res, exp)
+
+        assert np.allclose(res, exp, atol=tol, rtol=0)
+
+
+@pytest.mark.backends("bosonic")
+class TestThermalLossChannelBosonic:
+    """Tests that make use of the Bosonic representation to test
+    thermal loss channels."""
+
+    @pytest.mark.parametrize("T", LOSS_TS)
+    def test_thermal_loss_channel_with_vacuum(self, T, setup_backend, pure, tol):
+        """Tests thermal loss channel with nbar=0 (should be same as loss channel)."""
+        backend = setup_backend(1)
+        z = 0.432 * np.exp(1j * 0.534)
+        alpha = 0.654 + 1j * 0.239
+        nbar = 0.0
+
+        backend.squeeze(np.abs(z), np.angle(z), 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
+        backend.loss(T, 0)
+        state1 = backend.state()
+
+        backend.reset(pure=pure)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
+        backend.thermal_loss(T, nbar, 0)
+        state2 = backend.state()
+
+        assert np.allclose(state1.means(), state2.means(), atol=tol, rtol=0)
+        assert np.allclose(state1.covs(), state2.covs(), atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("nbar", MAG_ALPHAS)
+    def test_full_thermal_loss_channel(self, nbar, setup_backend, pure, tol):
+        """Tests thermal loss channel with T=0 (should produce a thermal state)."""
+        backend = setup_backend(1)
+        z = 0.432 * np.exp(1j * 0.534)
+        alpha = 0.654 + 1j * 0.239
+        T = 0
+
+        backend.prepare_thermal_state(nbar, 0)
+        state1 = backend.state()
+
+        backend.reset(pure=pure)
+        backend.squeeze(np.abs(z), np.angle(z), 0)
+        backend.displacement(np.abs(alpha), np.angle(alpha), 0)
+        backend.thermal_loss(T, nbar, 0)
+        state2 = backend.state()
+
+        assert np.allclose(state1.means(), state2.means(), atol=tol, rtol=0)
+        assert np.allclose(state1.covs(), state2.covs(), atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("T", LOSS_TS)
+    @pytest.mark.parametrize("nbar", MAG_ALPHAS)
+    def test_thermal_loss_channel_on_squeezed_state(self, nbar, T, setup_backend, pure, tol, hbar):
+        """Tests thermal loss channel on a squeezed state"""
+        backend = setup_backend(1)
+        r = 0.432
+        backend.squeeze(r, 0, 0)
+        backend.thermal_loss(T, nbar, 0)
+        state = backend.state()
+
+        res = state.covs()
+        exp = (
+            np.diag(
+                [
+                    T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
+                    T * np.exp(2 * r) + (1 - T) * (2 * nbar + 1),
+                ]
+            )
+            * hbar
+            / 2
+        )
 
         print(res, exp)
 
@@ -151,9 +225,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("n", range(MAX_FOCK))
-    def test_normalized_after_loss_channel_on_fock_state(
-        self, setup_backend, T, n, tol
-    ):
+    def test_normalized_after_loss_channel_on_fock_state(self, setup_backend, T, n, tol):
         """Tests if a range of loss states are normalized."""
 
         backend = setup_backend(1)
@@ -196,9 +268,7 @@ class TestFockRepresentation:
             numer_state = s.dm()
         n = np.arange(cutoff)
         ref_state = (
-            np.exp(-0.5 * np.abs(rootT_alpha) ** 2)
-            * rootT_alpha ** n
-            / np.sqrt(factorial(n))
+            np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha ** n / np.sqrt(factorial(n))
         )
         ref_state = np.outer(ref_state, np.conj(ref_state))
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)

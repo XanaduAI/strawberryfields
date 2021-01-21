@@ -28,6 +28,7 @@ from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
 from strawberryfields.backends.fockbackend import FockBackend
 from strawberryfields.backends.gaussianbackend import GaussianBackend
+from strawberryfields.backends.bosonicbackend import BosonicBackend
 
 try:
     import tensorflow as tf
@@ -42,12 +43,14 @@ else:
 backend_params = [
     pytest.param(FockBackend, marks=pytest.mark.fock),
     pytest.param(GaussianBackend, marks=pytest.mark.gaussian),
+    pytest.param(BosonicBackend, marks=pytest.mark.bosonic),
 ]
 
 
 eng_backend_params = [
     pytest.param("fock", marks=pytest.mark.fock),
     pytest.param("gaussian", marks=pytest.mark.gaussian),
+    pytest.param("bosonic", marks=pytest.mark.bosonic),
 ]
 
 
@@ -58,7 +61,6 @@ if tf_available and tf.__version__[:2] == "2.":
     eng_backend_params.append(pytest.param("tf", marks=pytest.mark.tf))
 else:
     tf_available = False
-
 
 # defaults
 TOL = 1e-3
@@ -135,7 +137,9 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "squeeze", lambda r, phi, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
-        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]]))
+        m.setattr(
+            dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]])
+        )
         m.setattr(dummy_backend, "state", lambda modes, shots: None)
         m.setattr(dummy_backend, "reset", lambda: None)
         dummy_backend.two_mode_squeeze = lambda r, phi, mode1, mode2: None
@@ -154,9 +158,7 @@ def print_fixtures(cutoff, hbar, batch_size):
 
 
 @pytest.fixture(params=backend_params)
-def setup_backend(
-    request, cutoff, pure, batch_size
-):  # pylint: disable=redefined-outer-name
+def setup_backend(request, cutoff, pure, batch_size):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes.
 
     This fixture should only be used in backend tests, as it bypasses Engine and
@@ -185,9 +187,7 @@ def setup_backend(
 
 
 @pytest.fixture(params=eng_backend_params)
-def setup_backend_pars(
-    request, cutoff, pure, batch_size
-):  # pylint: disable=redefined-outer-name
+def setup_backend_pars(request, cutoff, pure, batch_size):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, a container for the backend parameters.
 
     Every test that uses this fixture, or a fixture that depends on it
@@ -214,12 +214,13 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
 
     return _setup_eng
 
+
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""
     if tf_available:
-        allowed_backends = {"gaussian", "tf", "fock"}
+        allowed_backends = {"gaussian", "tf", "fock", "bosonic"}
     else:
-        allowed_backends = {"gaussian", "fock"}
+        allowed_backends = {"gaussian", "fock", "bosonic"}
 
     # load the marker specifying what the backend is
     marks = {mark.name for mark in item.iter_markers() if mark.name in allowed_backends}
