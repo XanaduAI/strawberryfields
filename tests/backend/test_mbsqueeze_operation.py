@@ -38,7 +38,7 @@ class TestBosonicRepresentation:
         backend = setup_backend(2)
         backend.mbsqueeze(0, 0, 0, r_anc, eta, True)
         backend.squeeze(0, 0, 1)
-        assert np.all(abs(backend.circuit.covs[0, :2, :2] - backend.circuit.covs[0, 2:, 2:]) < tol)
+        assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("phi", PHASE)
@@ -48,7 +48,7 @@ class TestBosonicRepresentation:
         backend = setup_backend(2)
         backend.mbsqueeze(0, r, phi, 9, 1.0, True)
         backend.squeeze(r, phi, 1)
-        assert np.all(abs(backend.circuit.covs[0, :2, :2] - backend.circuit.covs[0, 2:, 2:]) < tol)
+        assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)
 
     @pytest.mark.parametrize("r_anc", ANCMAG)
     @pytest.mark.parametrize("eta", ETA)
@@ -58,7 +58,7 @@ class TestBosonicRepresentation:
         backend = setup_backend(2)
         backend.mbsqueeze(0, 0, 0, r_anc, eta, False)
         backend.squeeze(0, 0, 1)
-        assert np.all(abs(backend.circuit.covs[0, :2, :2] - backend.circuit.covs[0, 2:, 2:]) < tol)
+        assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)
 
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("phi", PHASE)
@@ -68,4 +68,4 @@ class TestBosonicRepresentation:
         backend = setup_backend(2)
         backend.mbsqueeze(0, r, phi, 9, 1.0, False)
         backend.squeeze(r, phi, 1)
-        assert np.all(abs(backend.circuit.covs[0, :2, :2] - backend.circuit.covs[0, 2:, 2:]) < tol)
+        assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)

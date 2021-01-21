@@ -261,7 +261,8 @@ class BosonicBackend(BaseBosonic):
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
-        self.circuit = BosonicModes(num_subsystems)
+        self.circuit = BosonicModes()
+        self.circuit.reset(num_subsystems, 1)
 
     def add_mode(self, n=1):
         self.circuit.add_mode([n])
