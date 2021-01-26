@@ -13,21 +13,24 @@
 # limitations under the License.
 
 r"""
-Unit tests for backends.bosonicbackend.ops file.
+Unit tests for backends.bosonicbackend.ops.py .
 """
+
+import pytest
 
 import numpy as np
 import strawberryfields.backends.bosonicbackend.ops as ops
 
 
-def test_chop_in_blocks_multi():
+@pytest.mark.parametrize("reps", [1, 2, 5, 10])
+def test_chop_in_blocks_multi(reps):
+    """Checks that ops.chop_in_block_multi partitions arrays of matrices correctly"""
     # Create submatrices
     A = np.random.rand(2, 2)
     B = np.random.rand(2, 3)
     C = np.random.rand(3, 3)
 
     # Repeat them in an array
-    reps = np.random.randint(1, 10)
     Atile = np.tile(A, [reps, 1, 1])
     Btile = np.tile(B, [reps, 1, 1])
     Ctile = np.tile(C, [reps, 1, 1])
@@ -37,22 +40,24 @@ def test_chop_in_blocks_multi():
     m = np.tile(m, [reps, 1, 1])
 
     # Choose to delete the indices corresponding to C
-    idtodelete = np.arange(2, 5, dtype=int)
+    id_to_delete = np.arange(2, 5, dtype=int)
 
-    A2, B2, C2 = ops.chop_in_blocks_multi(m, idtodelete)
+    A2, B2, C2 = ops.chop_in_blocks_multi(m, id_to_delete)
 
     assert np.allclose(A2, Atile)
     assert np.allclose(B2, Btile)
     assert np.allclose(C2, Ctile)
 
 
-def test_chop_in_blocks_vector_multi():
+@pytest.mark.parametrize("reps", [1, 2, 5, 10])
+def test_chop_in_blocks_vector_multi(reps):
+    """Checks that ops.chop_in_block_vector_multi partitions arrays of vectors correctly"""
+
     # Create vectors
     va = np.random.rand(6)
     vb = np.random.rand(4)
 
     # Repeat them in an array
-    reps = np.random.randint(1, 10)
     vatile = np.tile(va, [reps, 1])
     vbtile = np.tile(vb, [reps, 1])
 
@@ -61,23 +66,26 @@ def test_chop_in_blocks_vector_multi():
     v = np.tile(v, [reps, 1])
 
     # Choose to delete the indices corresponding to C
-    idtodelete = np.arange(6, 10, dtype=int)
+    id_to_delete = np.arange(6, 10, dtype=int)
 
-    va2, vb2 = ops.chop_in_blocks_vector_multi(v, idtodelete)
+    va2, vb2 = ops.chop_in_blocks_vector_multi(v, id_to_delete)
 
     assert np.allclose(va2, vatile)
     assert np.allclose(vb2, vbtile)
 
 
+
 def test_reassemble_multi():
+    """Checks that ops.test_reassemble_multi generates the correct output"""
+
     # Create matrix
     A = np.random.rand(2, 2)
     reps = np.random.randint(1, 10)
     Atile = np.tile(A, [reps, 1, 1])
     # Create indices
-    idtodelete = [0, 2, 4, 5]
-    m = ops.reassemble_multi(Atile, idtodelete)
-    dim = len(A) + len(idtodelete)
+    id_to_delete = [0, 2, 4, 5]
+    m = ops.reassemble_multi(Atile, id_to_delete)
+    dim = len(A) + len(id_to_delete)
 
     assert m.shape == (reps, dim, dim)
 
@@ -87,15 +95,18 @@ def test_reassemble_multi():
     assert np.allclose(A2, np.tile(np.eye(4), [reps, 1, 1]))
 
 
-def test_reassemble_vector_multi():
+@pytest.mark.parametrize(
+    "id_to_delete", [[0], [0, 0, 1], [2, 0, 1], [0, 2, 4, 5], [0, 2, 3, 5, 7, 9, 10]]
+)
+def test_reassemble_vector_multi(id_to_delete):
     # Create matrix
     v = np.random.rand(4)
     reps = np.random.randint(1, 10)
     vtile = np.tile(v, [reps, 1])
     # Create indices
-    idtodelete = [0, 2, 3, 5, 7, 9, 10]
-    m = ops.reassemble_vector_multi(vtile, idtodelete)
-    dim = len(v) + len(idtodelete)
+    id_to_delete = [0, 2, 3, 5, 7, 9, 10]
+    m = ops.reassemble_vector_multi(vtile, id_to_delete)
+    dim = len(v) + len(id_to_delete)
 
     assert m.shape == (reps, dim)
 
