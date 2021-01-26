@@ -95,10 +95,7 @@ def test_reassemble_multi():
     assert np.allclose(A2, np.tile(np.eye(4), [reps, 1, 1]))
 
 
-@pytest.mark.parametrize(
-    "id_to_delete", [[0], [0, 0, 1], [2, 0, 1], [0, 2, 4, 5], [0, 2, 3, 5, 7, 9, 10]]
-)
-def test_reassemble_vector_multi(id_to_delete):
+def test_reassemble_vector_multi():
     # Create matrix
     v = np.random.rand(4)
     reps = np.random.randint(1, 10)
