@@ -21,6 +21,7 @@ import pytest
 import numpy as np
 import strawberryfields.backends.bosonicbackend.ops as ops
 
+pytestmark = pytest.mark.bosonic
 
 class TestOpsFunctions:
     r"""Tests all the functions inside backends.bosonicbackend.ops.py"""
