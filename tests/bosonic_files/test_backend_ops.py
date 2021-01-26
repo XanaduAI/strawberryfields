@@ -74,8 +74,8 @@ def test_chop_in_blocks_vector_multi(reps):
     assert np.allclose(vb2, vbtile)
 
 
-
-def test_reassemble_multi():
+@pytest.mark.parametrize("id_to_delete", [[0], [0,1], [2,0,1], [0, 2, 4, 5] ])
+def test_reassemble_multi(id_to_delete):
     """Checks that ops.test_reassemble_multi generates the correct output"""
 
     # Create matrix
@@ -83,30 +83,30 @@ def test_reassemble_multi():
     reps = np.random.randint(1, 10)
     Atile = np.tile(A, [reps, 1, 1])
     # Create indices
-    id_to_delete = [0, 2, 4, 5]
     m = ops.reassemble_multi(Atile, id_to_delete)
     dim = len(A) + len(id_to_delete)
-
+    id_to_keep = list(set(range(dim))-set(id_to_delete))
+    id_to_keep.sort()
     assert m.shape == (reps, dim, dim)
 
-    A2, B2, C2 = ops.chop_in_blocks_multi(m, [1, 3])
+    A2, B2, C2 = ops.chop_in_blocks_multi(m, id_to_keep)
     assert np.allclose(C2, Atile)
     assert np.allclose(B2, 0)
-    assert np.allclose(A2, np.tile(np.eye(4), [reps, 1, 1]))
+    assert np.allclose(A2, np.tile(np.eye(len(id_to_delete)), [reps, 1, 1]))
 
-
-def test_reassemble_vector_multi():
+@pytest.mark.parametrize("id_to_delete", [[0], [0,1], [2,0,1], [0, 2, 4, 5] ])
+def test_reassemble_vector_multi(id_to_delete):
     # Create matrix
     v = np.random.rand(4)
     reps = np.random.randint(1, 10)
     vtile = np.tile(v, [reps, 1])
     # Create indices
-    id_to_delete = [0, 2, 3, 5, 7, 9, 10]
     m = ops.reassemble_vector_multi(vtile, id_to_delete)
     dim = len(v) + len(id_to_delete)
-
+    id_to_keep = list(set(range(dim))-set(id_to_delete))
+    id_to_keep.sort()
     assert m.shape == (reps, dim)
 
-    va2, vb2 = ops.chop_in_blocks_vector_multi(m, [1, 4, 6, 8])
+    va2, vb2 = ops.chop_in_blocks_vector_multi(m, id_to_keep)
     assert np.allclose(vb2, vtile)
     assert np.allclose(va2, 0)
