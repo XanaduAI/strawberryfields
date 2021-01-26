@@ -24,7 +24,7 @@ import strawberryfields.backends.bosonicbackend.ops as ops
 
 @pytest.mark.parametrize("reps", [1, 2, 5, 10])
 def test_chop_in_blocks_multi(reps):
-    """Checks that ops.chop_in_block_multi partitions arrays of matrices correctly"""
+    r"""Checks that ops.chop_in_block_multi partitions arrays of matrices correctly"""
     # Create submatrices
     A = np.random.rand(2, 2)
     B = np.random.rand(2, 3)
@@ -51,7 +51,7 @@ def test_chop_in_blocks_multi(reps):
 
 @pytest.mark.parametrize("reps", [1, 2, 5, 10])
 def test_chop_in_blocks_vector_multi(reps):
-    """Checks that ops.chop_in_block_vector_multi partitions arrays of vectors correctly"""
+    r"""Checks that ops.chop_in_block_vector_multi partitions arrays of vectors correctly"""
 
     # Create vectors
     va = np.random.rand(6)
@@ -74,9 +74,9 @@ def test_chop_in_blocks_vector_multi(reps):
     assert np.allclose(vb2, vbtile)
 
 
-@pytest.mark.parametrize("id_to_delete", [[0], [0,1], [2,0,1], [0, 2, 4, 5] ])
+@pytest.mark.parametrize("id_to_delete", [[0], [0, 1], [2, 0, 1], [0, 2, 4, 5]])
 def test_reassemble_multi(id_to_delete):
-    """Checks that ops.test_reassemble_multi generates the correct output"""
+    r"""Checks that ops.reassemble_multi generates the correct output"""
 
     # Create matrix
     A = np.random.rand(2, 2)
@@ -85,7 +85,7 @@ def test_reassemble_multi(id_to_delete):
     # Create indices
     m = ops.reassemble_multi(Atile, id_to_delete)
     dim = len(A) + len(id_to_delete)
-    id_to_keep = list(set(range(dim))-set(id_to_delete))
+    id_to_keep = list(set(range(dim)) - set(id_to_delete))
     id_to_keep.sort()
     assert m.shape == (reps, dim, dim)
 
@@ -94,8 +94,10 @@ def test_reassemble_multi(id_to_delete):
     assert np.allclose(B2, 0)
     assert np.allclose(A2, np.tile(np.eye(len(id_to_delete)), [reps, 1, 1]))
 
-@pytest.mark.parametrize("id_to_delete", [[0], [0,1], [2,0,1], [0, 2, 4, 5] ])
+
+@pytest.mark.parametrize("id_to_delete", [[0], [0, 1], [2, 0, 1], [0, 2, 4, 5]])
 def test_reassemble_vector_multi(id_to_delete):
+    r"""Checks that ops.reassemble_vector_multi generates the correct output"""
     # Create matrix
     v = np.random.rand(4)
     reps = np.random.randint(1, 10)
@@ -103,7 +105,7 @@ def test_reassemble_vector_multi(id_to_delete):
     # Create indices
     m = ops.reassemble_vector_multi(vtile, id_to_delete)
     dim = len(v) + len(id_to_delete)
-    id_to_keep = list(set(range(dim))-set(id_to_delete))
+    id_to_keep = list(set(range(dim)) - set(id_to_delete))
     id_to_keep.sort()
     assert m.shape == (reps, dim)
 
