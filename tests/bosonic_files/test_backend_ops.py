@@ -23,7 +23,7 @@ import strawberryfields.backends.bosonicbackend.ops as ops
 
 
 class TestOpsFunctions:
-    r"""Tests all the functions insice backends.bosonicbackend.ops.py"""
+    r"""Tests all the functions inside backends.bosonicbackend.ops.py"""
 
     @pytest.mark.parametrize("reps", [1, 2, 5, 10])
     def test_chop_in_blocks_multi(self, reps):
