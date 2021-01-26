@@ -111,10 +111,10 @@ def update_means(means, X, perm_out):
 
 
 def update_covs(covs, X, perm_out, Y=0):
-    r"""Apply a linear transformation parametrized by ``(X,Y)`` to the 
-    array of covariance matrices. The  quadrature ordering can be specified 
+    r"""Apply a linear transformation parametrized by ``(X,Y)`` to the
+    array of covariance matrices. The  quadrature ordering can be specified
     by ``perm_out`` to match ordering of ``(X,Y)`` to the covariance matrices.
-    
+
     If Y is not specified, it defaults to 0.
 
     Args:
@@ -127,7 +127,7 @@ def update_covs(covs, X, perm_out, Y=0):
         array: transformed array of covariance matrices
     """
     X_perm = X[:, perm_out][perm_out, :]
-    if Y != 0:
+    if not isinstance(Y, int):
         Y = Y[:, perm_out][perm_out, :]
     return (X_perm @ covs @ X_perm.T) + Y
 
@@ -141,14 +141,14 @@ class BosonicModes:
         self.hbar = 2
 
     def add_mode(self, peak_list=[1]):
-        r"""Add len(peak_list) modes to the circuit. Each mode has a number of 
+        r"""Add len(peak_list) modes to the circuit. Each mode has a number of
         weights specified by peak_list, and the means and covariances are set
         to vacuum.
-        
+
         Args:
             peak_list (list): list of weights per mode.
         """
-        
+
         num_modes = len(peak_list)
         num_gauss = np.prod(peak_list)
         self.nlen += num_modes
@@ -156,13 +156,15 @@ class BosonicModes:
         # Updated mode index permutation list
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
-        self.active.append(self.nlen-1)
-        
+        self.active.append(self.nlen - 1)
+
         # Weights are set equal to each other and normalized
         vac_weights = np.array([1 / num_gauss for i in range(num_gauss)], dtype=complex)
         # New mode means and covs set to vacuum
         vac_means = np.zeros((num_gauss, 2 * num_modes)).tolist()
-        vac_covs = [(self.hbar / 2) * np.identity(2 * num_modes).tolist() for i in range(num_gauss)]
+        vac_covs = [
+            ((self.hbar / 2) * np.identity(2 * num_modes)).tolist() for i in range(num_gauss)
+        ]
 
         # Find all possible combinations of means and combs of the
         # Gaussians between the modes.
@@ -182,7 +184,7 @@ class BosonicModes:
 
     def del_mode(self, modes):
         r"""Delete modes from the circuit.
-        
+
         Args:
             modes (int or list): modes to be deleted.
         """
@@ -235,7 +237,7 @@ class BosonicModes:
 
     def displace(self, r, phi, i):
         r"""Displace mode ``i`` by the amount ``r*np.exp(1j*phi)``.
-        
+
         Args:
             r (float): displacement magnitude
             phi (float): displacement phase
@@ -246,8 +248,8 @@ class BosonicModes:
         self.means += symp.expand_vector(r * np.exp(1j * phi), i, self.nlen)[self.from_xp]
 
     def squeeze(self, r, phi, k):
-        r"""Squeeze mode ``k`` by the amount ``r*exp(1j*phi)``.        
-        
+        r"""Squeeze mode ``k`` by the amount ``r*exp(1j*phi)``.
+
         Args:
             r (float): squeezing magnitude
             phi (float): squeezing phase
@@ -262,10 +264,10 @@ class BosonicModes:
 
     def mbsqueeze(self, k, r, phi, r_anc, eta_anc, avg):
         r"""Squeeze mode ``k`` by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
-        
-        Either the average map, described by a Gaussian CPTP transformation, or a single-shot map 
+
+        Either the average map, described by a Gaussian CPTP transformation, or a single-shot map
         with ancillary measurement outcomes can be simulated.
-        
+
         Args:
             k (int): mode to be squeezed
             r (float): target squeezing magnitude
@@ -279,7 +281,7 @@ class BosonicModes:
 
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
-        
+
         # antisqueezing corresponds to an extra phase shift
         if r < 0:
             phi += np.pi
@@ -287,7 +289,7 @@ class BosonicModes:
         # beamsplitter angle
         theta = np.arccos(np.exp(-r))
         self.phase_shift(-phi / 2, k)
-        
+
         # Construct (X,Y) for Gaussian CPTP of average map
         if avg:
             X = np.diag([np.cos(theta), 1 / np.cos(theta)])
@@ -300,9 +302,9 @@ class BosonicModes:
             Y *= self.hbar / 2
             X2, Y2 = self.expandXY([k], X, Y)
             self.apply_channel(X2, Y2)
-        
-        #Add new ancilla mode, interfere it and measure it
-        #Delete ancilla mode from active list
+
+        # Add new ancilla mode, interfere it and measure it
+        # Delete ancilla mode from active list
         if not avg:
             self.add_mode()
             new_mode = self.nlen - 1
@@ -328,10 +330,10 @@ class BosonicModes:
 
     def phase_shift(self, phi, k):
         r"""Implement a phase shift in mode k.
-        
-         Args:
-            phi (float): phase
-            k (int): mode to be phase shifted
+
+        Args:
+           phi (float): phase
+           k (int): mode to be phase shifted
         """
         if self.active[k] is None:
             raise ValueError("Cannot phase shift mode, mode does not exist")
@@ -342,7 +344,7 @@ class BosonicModes:
 
     def beamsplitter(self, theta, phi, k, l):
         r"""Implement a beam splitter operation between modes k and l.
-        
+
         Args:
             theta (float): real beamsplitter angle
             phi (float): complex beamsplitter angle
@@ -361,25 +363,25 @@ class BosonicModes:
         self.covs = update_covs(self.covs, bs, self.from_xp)
 
     def scovmatxp(self):
-        r"""Returns the symmetric ordered array of covariance matrices 
+        r"""Returns the symmetric ordered array of covariance matrices
         in the :math:`q_1,...,q_n,p_1,...,p_n` ordering.
         """
         return self.covs[:, self.to_xp][..., self.to_xp]
 
     def smeanxp(self):
-        r"""Returns the symmetric ordered array of means in the 
+        r"""Returns the symmetric ordered array of means in the
         :math:`q_1,...,q_n,p_1,...,p_n` ordering.
         """
         return self.means.T[self.to_xp].T
 
     def scovmat(self):
-        r"""Returns the symmetric ordered array of covariance matrices 
+        r"""Returns the symmetric ordered array of covariance matrices
         in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.covs
 
     def smean(self):
-        r"""Returns the symmetric ordered array of means 
+        r"""Returns the symmetric ordered array of means
         in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.means
@@ -390,7 +392,7 @@ class BosonicModes:
 
     def fromsmean(self, r, modes=None):
         r"""Populates the array of means from a provided array of means.
-        
+
         The input must already have performed the scaling of the means by self.hbar,
         and must be sorted in ascending order.
 
@@ -406,7 +408,7 @@ class BosonicModes:
 
     def fromscovmat(self, V, modes=None):
         r"""Populates the array of covariance matrices from a provided array of covariance matrices.
-        
+
         The input must already have performed the scaling of the means by self.hbar,
         and must be sorted in ascending order.
 
@@ -436,8 +438,8 @@ class BosonicModes:
         self.covs[np.ix_(np.arange(self.covs.shape[0], dtype=int), mode_ind, mode_ind)] = V
 
     def fidelity_coherent(self, alpha, modes=None):
-        r""" Returns the fidelity to a coherent state.
-        
+        r"""Returns the fidelity to a coherent state.
+
         Args:
             alpha (array): amplitudes for coherent states
             modes (list or None): modes to use for fidelity calculation
@@ -469,8 +471,8 @@ class BosonicModes:
         return fidelity
 
     def fidelity_vacuum(self, modes=None):
-        r""" Returns the fidelity to the vacuum.
-        
+        r"""Returns the fidelity to the vacuum.
+
         Args:
             modes (list or None): modes to use for fidelity calculation
         """
@@ -481,9 +483,9 @@ class BosonicModes:
         return fidelity
 
     def parity_val(self, modes=None):
-        r""" Returns the expectation value of the parity operator, which is the
+        r"""Returns the expectation value of the parity operator, which is the
         value of the Wigner function at the origin.
-        
+
         Args:
             modes (list or None): modes to use for parity calculation
         """
@@ -507,7 +509,7 @@ class BosonicModes:
 
     def loss(self, T, k):
         r"""Implements a loss channel in mode k.
-        
+
         Args:
             T (float between 0 and 1): loss amount is \sqrt{T}
             k (int): mode that loses energy
@@ -522,8 +524,8 @@ class BosonicModes:
         self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
-        r"""Implements the thermal loss channel in mode k.       
-        
+        r"""Implements the thermal loss channel in mode k.
+
         Args:
             T (float between 0 and 1): loss amount is \sqrt{T}
             nbar (float): mean photon number of the thermal bath
@@ -537,8 +539,8 @@ class BosonicModes:
         self.apply_channel(X2, Y2)
 
     def init_thermal(self, nbar, mode):
-        r""" Initializes a state of mode in a thermal state with the given population.
-        
+        r"""Initializes a state of mode in a thermal state with the given population.
+
         Args:
             nbar (float): mean photon number of the thermal state
             mode (int): mode that get initialized
@@ -546,8 +548,8 @@ class BosonicModes:
         self.thermal_loss(0.0, nbar, mode)
 
     def is_vacuum(self, tol=0.0):
-        r""" Checks if the state is vacuum by calculating its fidelity with vacuum.
-        
+        r"""Checks if the state is vacuum by calculating its fidelity with vacuum.
+
         Args:
             tol (float): the closeness tolerance to fidelity of 1
         """
@@ -556,15 +558,15 @@ class BosonicModes:
 
     def measure_dyne(self, covmat, indices, shots=1):
         r"""Performs general-dyne measurements on a set of modes.
-        
+
         For more information see Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129.
-        
+
         Args:
             covmat (array): covariance matrix of the generaldyne measurement
             indices (list): modes to be measured
             shots (int): how many measurements are performed
-        
+
         Returns:
             array: measurement outcome corresponding to a point in phase space
         """
@@ -681,12 +683,12 @@ class BosonicModes:
     def homodyne(self, n, shots=1, eps=0.0002):
         r"""Performs an x-homodyne measurement on a mode, simulated by a generaldyne
         onto a highly squeezed state.
-        
+
         Args:
             n (int): mode to be measured
             shots (int): how many measurements are performed
             eps (int): squeezing of the measurement state
-        
+
         Returns:
             array: homodyne outcome
         """
@@ -696,11 +698,11 @@ class BosonicModes:
     def heterodyne(self, n, shots=1):
         r"""Performs a heterodyne measurement on a mode, simulated by a generaldyne
         onto a coherent state.
-        
+
         Args:
             n (int): mode to be measured
             shots (int): how many measurements are performed
-        
+
         Returns:
             array: heterodyne outcome
         """
@@ -710,7 +712,7 @@ class BosonicModes:
     def post_select_generaldyne(self, covmat, indices, vals):
         r"""Simulates general-dyne measurement on a set of modes with a specified measurement
         outcome.
-        
+
         Args:
             covmat (array): covariance matrix of the generaldyne measurement
             indices (list): modes to be measured
@@ -749,7 +751,7 @@ class BosonicModes:
 
     def post_select_homodyne(self, n, val, eps=0.0002, phi=0):
         r"""Simulates a homodyne measurement on a mode, postselecting on an outcome.
-        
+
         Args:
             n (int): mode to be measured
             val (array): measurement value to post-select
@@ -766,7 +768,7 @@ class BosonicModes:
 
     def post_select_heterodyne(self, n, alpha_val):
         r"""Simulates a heterodyne measurement on a mode, postselecting on an outcome.
-        
+
         Args:
             n (int): mode to be measured
             alpha_val (array): measurement value to post-select
@@ -781,8 +783,8 @@ class BosonicModes:
         return
 
     def apply_u(self, U):
-        r""" Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j].
-        
+        r"""Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j].
+
         Args:
             U (array): linear opical unitary matrix
         """
@@ -791,8 +793,8 @@ class BosonicModes:
         self.covs = update_covs(self.covs, Us, self.from_xp)
 
     def apply_channel(self, X, Y):
-        r""" Transforms the state according to a deterministic Gaussian CPTP map.
-        
+        r"""Transforms the state according to a deterministic Gaussian CPTP map.
+
         Args:
             X (array): matrix for mutltiplicative part of transformation
             Y (array): matrix for additive part of transformation.
@@ -801,8 +803,8 @@ class BosonicModes:
         self.covs = update_covs(self.covs, X, self.from_xp, Y)
 
     def expandS(self, modes, S):
-        """ Expands symplectic matrix on subset of modes to symplectic matrix for the whole system. 
-        
+        """Expands symplectic matrix on subset of modes to symplectic matrix for the whole system.
+
         Args:
             modes (list): list of modes on which S acts
             S (array): symplectic matrix
@@ -810,9 +812,9 @@ class BosonicModes:
         return symp.expand(S, modes, self.nlen)
 
     def expandXY(self, modes, X, Y):
-        """ Expands deterministic Gaussian CPTP matrices ``(X,Y)`` on subset of modes to 
-        transformations for the whole system. 
-        
+        """Expands deterministic Gaussian CPTP matrices ``(X,Y)`` on subset of modes to
+        transformations for the whole system.
+
         Args:
             modes (list): list of modes on which ``(X,Y)``
             X (array): matrix for mutltiplicative part of transformation
