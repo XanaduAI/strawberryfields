@@ -46,6 +46,7 @@ c = 0.312
 
 
 @pytest.mark.parametrize("name,expected", eng_backend_params)
+@pytest.mark.frontend
 def test_load_backend(name, expected, cutoff):
     """Test backends can be correctly loaded via strings"""
     eng = sf.Engine(name)

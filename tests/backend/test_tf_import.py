@@ -19,6 +19,7 @@ import pytest
 
 import strawberryfields as sf
 
+pytestmark = pytest.mark.backends("tf")
 
 try:
     import tensorflow

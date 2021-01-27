@@ -56,6 +56,8 @@ from strawberryfields.logger import logging_handler_defined, default_handler, cr
 
 modules_contain_logging = [job, connection, engine]
 
+pytestmark = pytest.mark.api
+
 @pytest.fixture(autouse=True)
 def reset_logging(pytestconfig):
     """Reset the logging specific configurations such as handlers or levels as

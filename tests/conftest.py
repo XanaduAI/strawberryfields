@@ -249,3 +249,16 @@ def pytest_runtest_setup(item):
             pytest.skip("Broken test skipped: {}".format(*mark.args))
         else:
             pytest.skip("Test skipped as corresponding code base is currently broken!")
+
+# The list of pre-defined pytest markers
+pytest_std_markers = ['filterwarnings', 'parametrize', 'skip', 'skipif', 'usefixtures', 'xfail']
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        # Check the markers for each test case and if they were not marked with
+        # a custom SF marker, then add a dummy marker. This will way such tests
+        # will fail when pytest is run with the  --strict-markers option
+        custom_markers = [marker for marker in item.iter_markers_with_node() if marker[1].name not in pytest_std_markers]
+        if not custom_markers:
+            print("  No Strawberry Fields marker specified for the test function: ", item)
+            item.add_marker('dummy_strawberry_fields_marker')
