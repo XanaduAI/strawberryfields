@@ -260,5 +260,5 @@ def pytest_collection_modifyitems(items):
         # will fail when pytest is run with the  --strict-markers option
         custom_markers = [marker for marker in item.iter_markers_with_node() if marker[1].name not in pytest_std_markers]
         if not custom_markers:
-            print("  No Strawberry Fields marker specified for the test function: ", item)
+            print(" No Strawberry Fields marker specified for the test function: ", item)
             item.add_marker('dummy_strawberry_fields_marker')
