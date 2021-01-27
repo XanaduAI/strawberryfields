@@ -20,6 +20,8 @@ import numpy as np
 import strawberryfields.backends.bosonicbackend.bosoniccircuit as circuit
 import pytest
 
+pytestmark = pytest.mark.bosonic
+
 NUM_WEIGHTS_VALS = [1, 2, 5]
 NUM_MODES_VALS = [1, 3, 4]
 NUM_NEW_WEIGHTS_VALS = [1, 2, 3]
