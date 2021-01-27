@@ -25,6 +25,7 @@ def chop_in_blocks_multi(m, id_to_delete):
     Args:
         m (ndarray): array of matrices
         id_to_delete (ndarray): array for the indices that go into ``C``
+
     Returns:
         tuple: tuple of the ``A``, ``B`` and ``C`` matrices
     """
@@ -44,6 +45,7 @@ def chop_in_blocks_vector_multi(v, id_to_delete):
     Args:
         v (ndarray): array of vectors
         id_to_delete (ndarray): array for the indices that go into vb
+
     Returns:
         tuple: tuple of ``(va,vb)`` vectors
     """
@@ -63,7 +65,8 @@ def reassemble_multi(A, id_to_delete):
     Args:
         m (ndarray): array of matrices
         id_to_delete (ndarray): array of indices in the new matrices that will
-                                be set to the identity
+            be set to the identity
+
     Returns:
         array: array of new matrices, each filled with ``A`` and identity
     """
@@ -85,7 +88,8 @@ def reassemble_vector_multi(va, id_to_delete):
     Args:
         va (ndarray): array of vectors
         id_to_delete (ndarray): array of indices in the new vectors that will
-                                be set to 0
+            be set to 0
+
     Returns:
         array: array of new vectors, each filled with ``va`` and 0
     """
