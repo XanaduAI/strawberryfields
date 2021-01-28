@@ -221,6 +221,9 @@ class TestProperExecution:
         if isinstance(eng.backend, BaseFock):
             assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
 
+    @pytest.mark.backends("tf", "fock","gaussian")
+    #TODO: make work with bosonic backend
+    #Encountering a problem with ops.New()
     def test_subsystems(self, setup_eng, tol):
         """Check that the backend keeps in sync with the program when creating and deleting modes."""
         null = sf.Program(2)  # empty program
@@ -275,6 +278,8 @@ class TestProperExecution:
         # the regrefs are reset as well
         assert np.all([r.val is None for r in prog.register])
 
+    @pytest.mark.backends("tf", "fock","gaussian")
+    #TODO: make work with bosonic backend
     def test_empty_program(self, setup_eng):
         """Empty programs do not change the state of the backend."""
         eng, p1 = setup_eng(2)
