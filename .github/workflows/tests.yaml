@@ -27,7 +27,7 @@ jobs:
             - {BATCHED: 0, OPTIONS: "tf"}
             - {BATCHED: 1, OPTIONS: "tf and pure"}
             - {BATCHED: 1, OPTIONS: "tf and mixed"}
-
+            - {BATCHED: 0, OPTIONS: "bosonic"}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
