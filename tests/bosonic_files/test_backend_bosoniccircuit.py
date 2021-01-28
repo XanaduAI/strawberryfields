@@ -47,7 +47,6 @@ class TestBosonicCircuit:
 
         # Confirm number of modes and weights
         assert example.nlen == 3
-        assert example._trunc == 2
 
         # Confirm normalization
         assert np.isclose(sum(example.sweights()), 1)
@@ -71,7 +70,6 @@ class TestBosonicCircuit:
         # Reset with number of weights and modes and perform the same check
         example.reset(num_modes, num_weights)
         assert example.nlen == num_modes
-        assert example._trunc == num_weights
         assert np.isclose(sum(example.sweights()), 1)
         assert example.is_vacuum(tol=1e-10)
         for i in range(num_modes):

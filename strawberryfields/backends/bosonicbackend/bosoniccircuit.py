@@ -223,7 +223,7 @@ class BosonicModes:
         self.weights = np.ones(w_shape(self.nlen, num_weights), dtype=complex)
         self.weights = self.weights / (num_weights ** self.nlen)
 
-        self.means = np.zeros(m_shape(self.nlen, len(self.weights)), dtype=complex)
+        self.means = np.zeros(m_shape(self.nlen, num_weights), dtype=complex)
         id_covs = [np.identity(2 * self.nlen, dtype=complex) for i in range(len(self.weights))]
         self.covs = np.array(id_covs)
 
@@ -441,7 +441,7 @@ class BosonicModes:
             modes (list or None): modes to use for fidelity calculation
         """
         if modes is None:
-            modes = list(range(self.nlen))
+            modes = self.get_modes()
         # Sort by (q1,p1,q2,p2,...)
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
         # Construct mean vector for coherent state
