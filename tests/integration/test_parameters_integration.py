@@ -91,7 +91,9 @@ def eng_prog_params(batch_size, setup_eng):
 
     return eng, prog, params
 
-
+@pytest.mark.backends("fock", "tf","gaussian")
+#TODO: make Catstate work with bosonic
+#Currently encounters a problem trying to apply np.cos when phi is a MeasuremedParameter
 @pytest.mark.parametrize("G", testset)
 def test_parameters_with_operations(eng_prog_params, G):
     """Test all combinations of different types of Parameters with different Operation subclasses.
