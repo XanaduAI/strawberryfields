@@ -121,7 +121,7 @@ class BosonicModes:
 
         Args:
             num_subsystems (int, optional): Sets the number of modes in the reset
-                circuit. None means unchanged.
+                circuit. ``None`` means unchanged.
             num_weights (int): Sets the number of gaussians per mode in the
                 superposition.
         """
