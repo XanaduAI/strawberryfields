@@ -81,6 +81,34 @@ class TestIntegration:
 
         assert state.hbar == hbar
         assert np.allclose(mu_z, P, atol=tol, rtol=0)
+        
+    @pytest.mark.backends("bosonic")
+    def test_x_displacement_bosonic(self, setup_eng, hbar, tol):
+        """test x displacement on the Gaussian backend gives correct displacement"""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.Xgate(X) | q
+
+        state = eng.run(prog).state
+        mu_x = state.means()[0,0]
+
+        assert state.hbar == hbar
+        assert np.allclose(mu_x, X, atol=tol, rtol=0)
+
+    @pytest.mark.backends("bosonic")
+    def test_z_displacement_bosonic(self, setup_eng, hbar, tol):
+        """test x displacement on the Gaussian backend gives correct displacement"""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.Zgate(P) | q
+
+        state = eng.run(prog).state
+        mu_z = state.means()[0,1]
+
+        assert state.hbar == hbar
+        assert np.allclose(mu_z, P, atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize("hbar", HBAR, indirect=True)

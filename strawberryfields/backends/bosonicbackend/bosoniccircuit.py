@@ -116,7 +116,7 @@ class BosonicModes:
             self.loss(0.0, mode)
             self.active[mode] = None
 
-    def reset(self, num_subsystems=None, num_weights=None):
+    def reset(self, num_subsystems=None, num_weights=1):
         """Reset the simulation state.
 
         Args:
@@ -130,23 +130,19 @@ class BosonicModes:
                 raise ValueError("Number of modes must be an integer")
             self.nlen = num_subsystems
 
-        if num_weights is not None:
-            if not isinstance(num_weights, int):
-                raise ValueError("Number of weights must be an integer")
-            self._trunc = num_weights
+        if not isinstance(num_weights, int):
+            raise ValueError("Number of weights must be an integer")
 
         self.active = list(np.arange(self.nlen, dtype=int))
         # Mode index permutation list to and from XP ordering.
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
 
-        self.weights = np.ones(w_shape(self.nlen, self._trunc), dtype=complex)
-        self.weights = self.weights / (self._trunc ** self.nlen)
+        self.weights = np.ones(w_shape(self.nlen, num_weights), dtype=complex)
+        self.weights = self.weights / (num_weights ** self.nlen)
 
-        self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
-        id_covs = [
-            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
-        ]
+        self.means = np.zeros(m_shape(self.nlen, len(self.weights)), dtype=complex)
+        id_covs = [np.identity(2 * self.nlen, dtype=complex) for i in range(len(self.weights))]
         self.covs = np.array(id_covs)
 
     def get_modes(self):
@@ -552,8 +548,8 @@ class BosonicModes:
         reweights_exp_arg = np.einsum(
             "...j,...jk,...k", (vals - vc), np.linalg.inv(C + covmat), (vals - vc)
         )
-        reweights = np.exp(-reweights_exp_arg) / (
-            (np.pi ** len(indices) / 2) * np.sqrt(np.linalg.det(C + covmat))
+        reweights = np.exp(-0.5 * reweights_exp_arg) / (
+            np.sqrt(np.linalg.det(2 * np.pi * (C + covmat)))
         )
         self.weights *= reweights
         self.weights /= np.sum(self.weights)

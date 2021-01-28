@@ -82,7 +82,38 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
     cov2 = state.reduced_gaussian(3)[1]
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
 
+@pytest.mark.backends("bosonic")
+def test_bosonic_gate_teleportation(setup_eng, pure):
+    """Test that gaussian states match after gate teleportation"""
+    eng, prog = setup_eng(4)
+    with prog.context as q:
+        # TODO: at some point, use the blackbird parser to
+        # read in the following directly from the examples folder
+        Squeezed(0.1) | q[0]
+        Squeezed(-2) | q[1]
+        Squeezed(-2) | q[2]
 
+        Pgate(0.5) | q[1]
+
+        CZgate(1) | (q[0], q[1])
+        CZgate(1) | (q[1], q[2])
+
+        Fourier.H | q[0]
+        MeasureHomodyne(0, select=0) | q[0]
+        Fourier.H | q[1]
+        MeasureHomodyne(0, select=0) | q[1]
+
+        Squeezed(0.1) | q[3]
+        Fourier | q[3]
+        Pgate(0.5) | q[3]
+        Fourier | q[3]
+
+    state = eng.run(prog).state
+    cov1 = state.reduced_bosonic(2)[2]
+    cov2 = state.reduced_bosonic(3)[2]
+    assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
+
+@pytest.mark.backends("tf", "fock","gaussian")
 def test_gaussian_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     """Test that GBS returns expected Fock probabilities"""
     eng, prog = setup_eng(4)

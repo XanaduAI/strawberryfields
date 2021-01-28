@@ -110,6 +110,70 @@ class TestInitialStatesAgreeGaussian:
         assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
         assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
 
+@pytest.mark.backends("bosonic")
+class TestInitialStatesAgreeBosonic:
+    """Test that the initial state functions in utils match
+    the result returned by the bosonic backends."""
+
+    def test_vacuum(self, setup_eng, hbar, tol):
+        """Test vacuum function matches bosonic backends"""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.Vac | q[0]
+
+        state = eng.run(prog).state
+
+        mu, cov = utils.vacuum_state(basis="gaussian", hbar=hbar)
+        _, mu_exp, cov_exp = state.reduced_bosonic(0)
+        assert np.allclose(mu, mu_exp[0], atol=tol, rtol=0)
+        assert np.allclose(cov, cov_exp[0], atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("a", ALPHA)
+    def test_coherent(self, a, setup_eng, hbar, tol):
+        """Test coherent function matches bosonic backends"""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.Dgate(np.abs(a), np.angle(a)) | q[0]
+
+        state = eng.run(prog).state
+
+        mu, cov = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
+        _, mu_exp, cov_exp = state.reduced_bosonic(0)
+        assert np.allclose(mu, mu_exp[0], atol=tol, rtol=0)
+        assert np.allclose(cov, cov_exp[0], atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("r, phi", zip(R, PHI))
+    def test_squeezed(self, r, phi, setup_eng, hbar, tol):
+        """Test squeezed function matches bosonic backends"""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.Sgate(r, phi) | q[0]
+
+        state = eng.run(prog).state
+
+        mu, cov = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
+        _, mu_exp, cov_exp = state.reduced_bosonic(0)
+        assert np.allclose(mu, mu_exp[0], atol=tol, rtol=0)
+        assert np.allclose(cov, cov_exp[0], atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
+    def test_displaced_squeezed(self, a, r, phi, setup_eng, hbar, tol):
+        """Test displaced squeezed function matches bosonic backends"""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.Sgate(r, phi) | q[0]
+            ops.Dgate(np.abs(a), np.angle(a)) | q[0]
+
+        state = eng.run(prog).state
+
+        mu, cov = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
+        _, mu_exp, cov_exp = state.reduced_bosonic(0)
+        assert np.allclose(mu, mu_exp[0], atol=tol, rtol=0)
+        assert np.allclose(cov, cov_exp[0], atol=tol, rtol=0)
 
 @pytest.fixture
 def bsize(batch_size):

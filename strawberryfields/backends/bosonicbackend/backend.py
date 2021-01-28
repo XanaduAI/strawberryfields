@@ -225,7 +225,7 @@ class BosonicBackend(BaseBosonic):
                     # directly by asking preparation methods below for
                     # the right weights, means, covs.
                     else:
-                        w, m, c = np.array([1]), vac_means, vac_covs
+                        w, m, c = np.array([1], dtype=complex), vac_means, vac_covs
 
                     init_weights[reg] = w
                     init_means[reg] = m
@@ -273,8 +273,8 @@ class BosonicBackend(BaseBosonic):
     def get_modes(self):
         return self.circuit.get_modes()
 
-    def reset(self, pure=True, **kwargs):
-        self.circuit.reset(self._init_modes)
+    def reset(self, **kwargs):
+        self.circuit.reset(self._init_modes, 1)
 
     def prepare_thermal_state(self, nbar, mode):
         self.circuit.init_thermal(nbar, mode)
