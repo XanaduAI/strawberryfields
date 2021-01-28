@@ -19,7 +19,7 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields import ops
 
-from strawberryfields.backends import BaseGaussian
+from strawberryfields.backends import BaseGaussian, BaseBosonic
 from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
 
@@ -50,7 +50,8 @@ class TestGateApplication:
         eng, prog = setup_eng(2)
 
         if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and\
-           isinstance(eng.backend, BaseGaussian):
+           (isinstance(eng.backend, BaseGaussian)
+            or isinstance(eng.backend, BaseBosonic)):
             pytest.skip("Non-Gaussian gates cannot be applied to the Gaussian backend")
 
         with prog.context as q:
@@ -81,7 +82,7 @@ class TestChannelApplication:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian","bosonic")
     def test_thermal_loss_channel(self, setup_eng, tol):
         """Test thermal loss channel with no transmission produces thermal state"""
         eng, prog = setup_eng(1)

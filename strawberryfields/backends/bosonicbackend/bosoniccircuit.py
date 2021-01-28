@@ -198,37 +198,34 @@ class BosonicModes:
             self.loss(0.0, mode)
             self.active[mode] = None
 
-    def reset(self, num_subsystems=None, num_weights=None):
-        r"""Reset the simulation state.
+
+    def reset(self, num_subsystems=None, num_weights=1):
+        """Reset the simulation state.
 
         Args:
             num_subsystems (int, optional): Sets the number of modes in the reset
-                circuit. None means unchanged.
+                circuit. ``None`` means unchanged.
             num_weights (int): Sets the number of gaussians per mode in the
-                superposition. None means unchanged.
+                superposition.
         """
         if num_subsystems is not None:
             if not isinstance(num_subsystems, int):
                 raise ValueError("Number of modes must be an integer")
             self.nlen = num_subsystems
 
-        if num_weights is not None:
-            if not isinstance(num_weights, int):
-                raise ValueError("Number of weights must be an integer")
-            self._trunc = num_weights
+        if not isinstance(num_weights, int):
+            raise ValueError("Number of weights must be an integer")
 
         self.active = list(np.arange(self.nlen, dtype=int))
         # Mode index permutation list to and from XP ordering.
         self.to_xp = to_xp(self.nlen)
         self.from_xp = from_xp(self.nlen)
 
-        self.weights = np.ones(w_shape(self.nlen, self._trunc), dtype=complex)
-        self.weights = self.weights / (self._trunc ** self.nlen)
+        self.weights = np.ones(w_shape(self.nlen, num_weights), dtype=complex)
+        self.weights = self.weights / (num_weights ** self.nlen)
 
-        self.means = np.zeros(m_shape(self.nlen, self._trunc), dtype=complex)
-        id_covs = [
-            np.identity(2 * self.nlen, dtype=complex) for i in range(self._trunc ** self.nlen)
-        ]
+        self.means = np.zeros(m_shape(self.nlen, len(self.weights)), dtype=complex)
+        id_covs = [np.identity(2 * self.nlen, dtype=complex) for i in range(len(self.weights))]
         self.covs = np.array(id_covs)
 
     def get_modes(self):
