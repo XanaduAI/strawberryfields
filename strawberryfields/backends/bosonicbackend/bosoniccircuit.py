@@ -198,7 +198,6 @@ class BosonicModes:
             self.loss(0.0, mode)
             self.active[mode] = None
 
-
     def reset(self, num_subsystems=None, num_weights=1):
         """Reset the simulation state.
 
