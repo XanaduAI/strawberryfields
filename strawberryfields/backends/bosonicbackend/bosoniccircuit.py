@@ -323,8 +323,8 @@ class BosonicModes:
 
         if not avg:
             return val
-        elif avg:
-            return None
+
+        return None
 
     def phase_shift(self, phi, k):
         r"""Implement a phase shift in mode k.
