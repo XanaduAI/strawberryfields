@@ -500,7 +500,7 @@ class BosonicModes:
             * np.exp(-0.5 * exp_arg)
             / np.sqrt(np.linalg.det(self.covs[:, mode_ind, :][:, :, mode_ind]))
         )
-        parity = np.sum(weighted_exp)
+        parity = np.sum(weighted_exp) * (self.hbar / 2) ** len(modes)
         return parity
 
     def loss(self, T, k):
