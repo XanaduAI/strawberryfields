@@ -297,8 +297,6 @@ class BosonicModes:
             Y *= self.hbar / 2
             X2, Y2 = self.expandXY([k], X, Y)
             self.apply_channel(X2, Y2)
-            self.phase_shift(phi / 2, k)
-            return None
 
         # Add new ancilla mode, interfere it and measure it
         # Delete ancilla mode from active list
@@ -320,8 +318,13 @@ class BosonicModes:
             self.active = self.active[:new_mode]
             prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
             self.displace(prefac * val[0][0], np.pi / 2, k)
-            self.phase_shift(phi / 2, k)
+
+        self.phase_shift(phi / 2, k)
+
+        if not avg:
             return val
+        elif avg:
+            return None
 
     def phase_shift(self, phi, k):
         r"""Implement a phase shift in mode k.
