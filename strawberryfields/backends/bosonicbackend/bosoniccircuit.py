@@ -323,7 +323,6 @@ class BosonicModes:
             self.phase_shift(phi / 2, k)
             return val
 
-
     def phase_shift(self, phi, k):
         r"""Implement a phase shift in mode k.
 
@@ -780,7 +779,7 @@ class BosonicModes:
     def apply_u(self, U):
         r"""Transforms the state according to the linear optical unitary that
         maps a[i] \to U[i, j]^*a[j].
-        
+
         Args:
             U (array): linear opical unitary matrix
         """
