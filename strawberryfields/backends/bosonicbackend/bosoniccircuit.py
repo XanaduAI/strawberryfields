@@ -14,15 +14,12 @@
 
 """Bosonic circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
+import itertools as it
 import numpy as np
 from scipy.linalg import block_diag
-from thewalrus.quantum import Xmat
 import thewalrus.symplectic as symp
 
-import itertools as it
-from . import ops
-
-from ..shared_ops import changebasis
+from strawberryfields.backends.bosonicbackend import ops
 
 
 # Shape of the weights, means, and covs arrays.
@@ -137,10 +134,10 @@ class BosonicModes:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, num_subsystems=1, num_weights=1):
+    def __init__(self):
         self.hbar = 2
 
-    def add_mode(self, peak_list=[1]):
+    def add_mode(self, peak_list=None):
         r"""Add len(peak_list) modes to the circuit. Each mode has a number of
         weights specified by peak_list, and the means and covariances are set
         to vacuum.
@@ -148,6 +145,8 @@ class BosonicModes:
         Args:
             peak_list (list): list of weights per mode.
         """
+        if peak_list is None:
+            peak_list = [1]
 
         num_modes = len(peak_list)
         num_gauss = np.prod(peak_list)
@@ -298,10 +297,12 @@ class BosonicModes:
             Y *= self.hbar / 2
             X2, Y2 = self.expandXY([k], X, Y)
             self.apply_channel(X2, Y2)
+            self.phase_shift(phi / 2, k)
+            return None
 
         # Add new ancilla mode, interfere it and measure it
         # Delete ancilla mode from active list
-        if not avg:
+        elif not avg:
             self.add_mode()
             new_mode = self.nlen - 1
             self.squeeze(r_anc, 0, new_mode)
@@ -319,10 +320,9 @@ class BosonicModes:
             self.active = self.active[:new_mode]
             prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
             self.displace(prefac * val[0][0], np.pi / 2, k)
-        self.phase_shift(phi / 2, k)
-
-        if not avg:
+            self.phase_shift(phi / 2, k)
             return val
+
 
     def phase_shift(self, phi, k):
         r"""Implement a phase shift in mode k.
@@ -585,7 +585,7 @@ class BosonicModes:
         nonneg_weights_ind = np.where(np.angle(self.weights) != np.pi)[0]
         ub_ind = np.union1d(imag_means_ind, nonneg_weights_ind)
         ub_weights = np.abs(np.array(self.weights))
-        if len(imag_means_ind):
+        if imag_means_ind:
             ub_weights[imag_means_ind] *= np.exp(
                 0.5
                 * np.einsum(
@@ -617,7 +617,7 @@ class BosonicModes:
                     (peak_sample - self.means[:, expind]),
                 )
                 ub_exp_arg = np.copy(exp_arg)
-                if len(imag_means_ind):
+                if imag_means_ind:
                     ub_exp_arg[imag_means_ind] = np.einsum(
                         "...j,...jk,...k",
                         (peak_sample - self.means[imag_means_ind, :][:, expind].real),
@@ -776,11 +776,11 @@ class BosonicModes:
         indices = [n]
         vals = np.array([alpha_val.real, alpha_val.imag])
         self.post_select_generaldyne(covmat, indices, vals)
-        return
 
     def apply_u(self, U):
-        r"""Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j].
-
+        r"""Transforms the state according to the linear optical unitary that
+        maps a[i] \to U[i, j]^*a[j].
+        
         Args:
             U (array): linear opical unitary matrix
         """
