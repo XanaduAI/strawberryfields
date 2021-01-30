@@ -555,7 +555,6 @@ class BosonicModes:
         fid = self.fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
-    # pylint: disable=disable=too-many-branches
     def measure_dyne(self, covmat, indices, shots=1):
         r"""Performs general-dyne measurements on a set of modes.
 
@@ -570,6 +569,7 @@ class BosonicModes:
         Returns:
             array: measurement outcome corresponding to a point in phase space
         """
+        # pylint: disable=disable=too-many-branches
         if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
