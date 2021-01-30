@@ -129,7 +129,7 @@ def update_covs(covs, X, perm_out, Y=0):
     return (X_perm @ covs @ X_perm.T) + Y
 
 
-# pylint: too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes
 class BosonicModes:
     """A Bosonic circuit class."""
 
@@ -555,7 +555,7 @@ class BosonicModes:
         fid = self.fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=disable=too-many-branches
     def measure_dyne(self, covmat, indices, shots=1):
         r"""Performs general-dyne measurements on a set of modes.
 
