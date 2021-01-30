@@ -569,7 +569,7 @@ class BosonicModes:
         Returns:
             array: measurement outcome corresponding to a point in phase space
         """
-        # pylint: disable=disable=too-many-branches
+        # pylint: disable=too-many-branches
         if covmat.shape != (2 * len(indices), 2 * len(indices)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
