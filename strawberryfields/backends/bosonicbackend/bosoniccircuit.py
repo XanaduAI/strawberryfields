@@ -128,7 +128,7 @@ def update_covs(covs, X, perm_out, Y=0):
         Y = Y[:, perm_out][perm_out, :]
     return (X_perm @ covs @ X_perm.T) + Y
 
-
+# pylint: too-many-instance-attributes
 class BosonicModes:
     """A Bosonic circuit class."""
 
