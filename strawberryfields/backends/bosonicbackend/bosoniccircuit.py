@@ -278,11 +278,9 @@ class BosonicModes:
         self.means = update_means(self.means, sq, self.from_xp)
         self.covs = update_covs(self.covs, sq, self.from_xp)
 
-    def mb_squeeze(self, k, r, phi, r_anc, eta_anc, avg):
+    def mb_squeeze_avg(self, k, r, phi, r_anc, eta_anc):
         r"""Squeeze mode ``k`` by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
-
-        Either the average map, described by a Gaussian CPTP transformation, or a single-shot map
-        with ancillary measurement outcomes can be simulated.
+        This applies the average map, described by a Gaussian CPTP transformation.
 
         Args:
             k (int): mode to be squeezed
@@ -290,10 +288,6 @@ class BosonicModes:
             phi (float): target squeezing phase
             r_anc (float): squeezing magnitude of the ancillary mode
             eta_anc(float): detection efficiency of the ancillary mode
-            avg (bool): whether to apply the average map or single-shot
-
-        Returns:
-            float: if single-shot map selected, returns the measurement outcome of the ancilla
 
         Raises:
             ValueError: if the mode is not in the list of active modes
@@ -311,45 +305,73 @@ class BosonicModes:
         self.phase_shift(-phi / 2, k)
 
         # Construct (X,Y) for Gaussian CPTP of average map
-        if avg:
-            X = np.diag([np.cos(theta), 1 / np.cos(theta)])
-            Y = np.diag(
-                [
-                    (np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
-                    (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,
-                ]
-            )
-            Y *= self.hbar / 2
-            X2, Y2 = self.expandXY([k], X, Y)
-            self.apply_channel(X2, Y2)
+        X = np.diag([np.cos(theta), 1 / np.cos(theta)])
+        Y = np.diag(
+            [
+                (np.sin(theta) ** 2) * (np.exp(-2 * r_anc)),
+                (np.tan(theta) ** 2) * (1 - eta_anc) / eta_anc,
+            ]
+        )
+        Y *= self.hbar / 2
+        X2, Y2 = self.expandXY([k], X, Y)
+        self.apply_channel(X2, Y2)
+        self.phase_shift(phi / 2, k)
+
+    def mb_squeeze_single_shot(self, k, r, phi, r_anc, eta_anc):
+        r"""Squeeze mode ``k`` by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
+        This applies a single-shot map, returning the ancillary measurement outcome.
+
+        Args:
+            k (int): mode to be squeezed
+            r (float): target squeezing magnitude
+            phi (float): target squeezing phase
+            r_anc (float): squeezing magnitude of the ancillary mode
+            eta_anc(float): detection efficiency of the ancillary mode
+
+        Returns:
+            float: the measurement outcome of the ancilla
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
+        """
+
+        if self.active[k] is None:
+            raise ValueError("Cannot squeeze mode, mode does not exist")
+
+        # antisqueezing corresponds to an extra phase shift
+        if r < 0:
+            phi += np.pi
+        r = np.abs(r)
+        # beamsplitter angle
+        theta = np.arccos(np.exp(-r))
+        self.phase_shift(-phi / 2, k)
 
         # Add new ancilla mode, interfere it and measure it
-        # Delete ancilla mode from active list
-        else:
-            self.add_mode()
-            new_mode = self.nlen - 1
-            self.squeeze(r_anc, 0, new_mode)
-            self.beamsplitter(theta, 0, k, new_mode)
-            self.loss(eta_anc, new_mode)
-            self.phase_shift(np.pi / 2, new_mode)
-            val = self.homodyne(new_mode)
-            self.del_mode(new_mode)
-            self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=1)
-            self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=2)
-            self.means = np.delete(self.means, [2 * new_mode, 2 * new_mode + 1], axis=1)
-            self.nlen -= 1
-            self.from_xp = from_xp(self.nlen)
-            self.to_xp = to_xp(self.nlen)
-            self.active = self.active[:new_mode]
-            prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
-            self.displace(prefac * val[0][0], np.pi / 2, k)
+        self.add_mode()
+        new_mode = self.nlen - 1
+        self.squeeze(r_anc, 0, new_mode)
+        self.beamsplitter(theta, 0, k, new_mode)
+        self.loss(eta_anc, new_mode)
+        self.phase_shift(np.pi / 2, new_mode)
+        val = self.homodyne(new_mode)
+
+        # Delete all record of ancilla mode
+        self.del_mode(new_mode)
+        self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=1)
+        self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=2)
+        self.means = np.delete(self.means, [2 * new_mode, 2 * new_mode + 1], axis=1)
+        self.nlen -= 1
+        self.from_xp = from_xp(self.nlen)
+        self.to_xp = to_xp(self.nlen)
+        self.active = self.active[:new_mode]
+
+        # Feedforward displacement
+        prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
+        self.displace(prefac * val[0][0], np.pi / 2, k)
 
         self.phase_shift(phi / 2, k)
 
-        if not avg:
-            return val
-
-        return None
+        return val
 
     def phase_shift(self, phi, k):
         r"""Implement a phase shift in mode k.

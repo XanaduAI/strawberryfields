@@ -354,22 +354,34 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     @pytest.mark.parametrize("r_anc", R_ANC_VALS)
     @pytest.mark.parametrize("eta_anc", ETA_ANC_VALS)
-    def test_mb_squeeze(self, r, phi, r_anc, eta_anc):
+    def test_mb_squeeze_avg(self, r, phi, r_anc, eta_anc):
+        r"""Checks measurement-based squeezing average map."""
+        example = circuit.BosonicModes(2, 1)
+
+        # Test zero mbsqueezing
+        example.mb_squeeze_avg(0, 0, 0, r_anc, eta_anc)
+        assert example.is_vacuum(tol=1e-10)
+
+        # Test high-quality mbsqueezing
+        example.mb_squeeze_avg(0, r, phi, 9, 1)
+        example.squeeze(r, phi, 1)
+        assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
+        assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
+
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("r", R_VALS)
+    @pytest.mark.parametrize("r_anc", R_ANC_VALS)
+    @pytest.mark.parametrize("eta_anc", ETA_ANC_VALS)
+    def test_mb_squeeze_single_shot(self, r, phi, r_anc, eta_anc):
         r"""Checks measurement-based squeezing."""
         example = circuit.BosonicModes(2, 1)
 
         # Test zero mbsqueezing
-        example.mb_squeeze(0, 0, 0, r_anc, eta_anc, True)
-        assert example.is_vacuum(tol=1e-10)
-        example.mb_squeeze(0, 0, 0, 5, 1, False)
+        example.mb_squeeze_single_shot(0, 0, 0, 5, 1)
         assert example.is_vacuum(tol=1e-10)
 
         # Test high-quality mbsqueezing
-        example.mb_squeeze(0, r, phi, 9, 1, True)
-        example.squeeze(r, phi, 1)
-        assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
-        assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
-        example.mb_squeeze(0, r, phi, 9, 1, False)
+        example.mb_squeeze_single_shot(0, r, phi, 9, 1)
         example.squeeze(r, phi, 1)
         assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
 
