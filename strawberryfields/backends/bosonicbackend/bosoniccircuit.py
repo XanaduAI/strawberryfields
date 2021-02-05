@@ -373,14 +373,14 @@ class BosonicModes:
 
     def smeanxp(self):
         r"""Returns the symmetric ordered array of means in the
-        :math:`q_1,...,q_n,p_1,...,p_n` ordering, given that they 
+        :math:`q_1,...,q_n,p_1,...,p_n` ordering, given that they
         were stored in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.means.T[self.to_xp].T
 
     def scovmat(self):
         r"""Returns the symmetric ordered array of covariance matrices
-        in the :math:`q_1,p_1,...,q_n,p_n` ordering, just as 
+        in the :math:`q_1,p_1,...,q_n,p_n` ordering, just as
         they were stored.
         """
         return self.covs
@@ -514,7 +514,7 @@ class BosonicModes:
         return parity
 
     def loss(self, T, k):
-        r"""Implements a loss channel in mode k. T is the loss parameter that must be 
+        r"""Implements a loss channel in mode k. T is the loss parameter that must be
         between 0 and 1.
 
         Args:
@@ -531,7 +531,7 @@ class BosonicModes:
         self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
-        r"""Implements the thermal loss channel in mode k. T is the loss parameter that must 
+        r"""Implements the thermal loss channel in mode k. T is the loss parameter that must
         be between 0 and 1.
 
         Args:
