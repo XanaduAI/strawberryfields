@@ -652,7 +652,7 @@ class BosonicModes:
 
         # Indices for the relevant quadratures
         quad_ind = np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
-        # Associated means and covs, already adding the covmat to the state covariances        
+        # Associated means and covs, already adding the covmat to the state covariances
         means_quad = self.means[:, quad_ind]
         covs_quad = self.covs[:, quad_ind, :][:, :, quad_ind].real + covmat
         # Array to be filled with measurement samples
@@ -757,7 +757,7 @@ class BosonicModes:
                 if vertical_sample < prob_dist_val:
                     drawn = True
                     vals[i] = peak_sample
-        
+
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
         if len(modes) < len(self.active):
@@ -831,7 +831,7 @@ class BosonicModes:
         (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
         va = va + np.einsum("...ij,...j", B @ np.linalg.inv(C + covmat), (vals - vc))
         self.means = ops.reassemble_vector_multi(va, expind)
-        
+
         # Reweight each peak based on how likely a given peak was to have
         # contributed to the observed outcome
         reweights_exp_arg = np.einsum(

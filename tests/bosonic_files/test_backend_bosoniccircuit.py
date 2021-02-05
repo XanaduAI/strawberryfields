@@ -76,7 +76,11 @@ class TestBosonicCircuit:
             assert np.isclose(example.fidelity_vacuum([i]), 1)
         assert example.active == [i for i in range(num_modes)]
         assert example.get_mean().shape == (num_weights ** num_modes, 2 * num_modes)
-        assert example.get_covmat().shape == (num_weights ** num_modes, 2 * num_modes, 2 * num_modes)
+        assert example.get_covmat().shape == (
+            num_weights ** num_modes,
+            2 * num_modes,
+            2 * num_modes,
+        )
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
@@ -231,7 +235,9 @@ class TestBosonicCircuit:
         # Check that same modes are in both states
         assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
         assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
-        assert np.allclose(example.get_covmat_xp()[:, 0::2, 0::2], example.get_covmat_xp()[:, 1::2, 1::2])
+        assert np.allclose(
+            example.get_covmat_xp()[:, 0::2, 0::2], example.get_covmat_xp()[:, 1::2, 1::2]
+        )
         assert np.allclose(example.get_mean_xp()[:, 0::2], example.get_mean_xp()[:, 1::2])
 
     @pytest.mark.parametrize("phi", PHI_VALS)
