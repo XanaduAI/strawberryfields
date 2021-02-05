@@ -140,8 +140,9 @@ class BosonicModes:
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self):
+    def __init__(self, num_subsystems=1, num_weights=1):
         self.hbar = 2
+        self.reset(num_subsystems, num_weights)
 
     def add_mode(self, peak_list=None):
         r"""Add len(peak_list) modes to the circuit. Each mode has a number of

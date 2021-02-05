@@ -38,49 +38,67 @@ class TestBosonicModes:
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
-    def test_reset_circuit(self, num_weights, num_modes):
+    def test_circuit_init(self, num_weights, num_modes):
         r"""Checks that the reset method instantiates the correct number of modes
         as vacuum, each with a given number of weights."""
-        # Create a state over 3 modes, 2 weights per mode
-        example = circuit.BosonicModes()
-        example.reset(3, 2)
+        # Create a state over num_modes, each with num_weights
+        example = circuit.BosonicModes(num_modes, num_weights)
+        tot_num_weights = num_weights ** num_modes
+        num_quad = 2 * num_modes
 
-        # Confirm number of modes and weights
-        assert example.nlen == 3
+        # Confirm number of modes
+        assert example.nlen == num_modes
 
         # Confirm normalization
         assert np.isclose(sum(example.get_weights()), 1)
 
         # Confirm each mode initialized to vacuum
         assert example.is_vacuum(tol=1e-10)
-        for i in range(3):
+        for i in range(num_modes):
             assert np.isclose(example.fidelity_vacuum([i]), 1)
 
         # Confirm active modes
-        assert example.active == [0, 1, 2]
+        assert example.active == list(range(num_modes))
         # Check mode-wise and quadrature-wise ordering
-        assert np.allclose(example.to_xp, np.array([0, 2, 4, 1, 3, 5]))
-        assert np.allclose(example.from_xp, np.array([0, 3, 1, 4, 2, 5]))
+        to_xp_list = list(range(0, num_quad, 2)) + list(range(1, num_quad + 1, 2))
+        from_xp_list = []
+        for i in range(num_modes):
+            from_xp_list += [i, i + num_modes]
+        assert np.allclose(example.to_xp, np.array(to_xp_list))
+        assert np.allclose(example.from_xp, np.array(from_xp_list))
 
         # Confirm number of weights, means and covs
-        assert example.get_weights().shape == (2 ** 3,)
-        assert example.get_mean().shape == (2 ** 3, 6)
-        assert example.get_covmat().shape == circuit.c_shape(3, 2)
+        assert example.get_weights().shape == (tot_num_weights,)
+        assert example.get_mean().shape == (tot_num_weights, num_quad)
+        assert example.get_covmat().shape == circuit.c_shape(num_modes, num_weights)
+
+    @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
+    @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
+    def test_reset_circuit(self, num_weights, num_modes):
+        r"""Checks that the reset method instantiates the correct number of modes
+        as vacuum, each with a given number of weights."""
+        # Create a state over 1 mode, 1 weight per mode
+        example = circuit.BosonicModes(1, 1)
 
         # Reset with number of weights and modes and perform the same check
+        # as test_circuit_init
         example.reset(num_modes, num_weights)
+        tot_num_weights = num_weights ** num_modes
+        num_quad = 2 * num_modes
         assert example.nlen == num_modes
         assert np.isclose(sum(example.get_weights()), 1)
         assert example.is_vacuum(tol=1e-10)
         for i in range(num_modes):
             assert np.isclose(example.fidelity_vacuum([i]), 1)
         assert example.active == list(range(num_modes))
-        assert example.get_mean().shape == (num_weights ** num_modes, 2 * num_modes)
-        assert example.get_covmat().shape == (
-            num_weights ** num_modes,
-            2 * num_modes,
-            2 * num_modes,
-        )
+        assert example.get_mean().shape == (tot_num_weights, num_quad)
+        assert example.get_covmat().shape == circuit.c_shape(num_modes, num_weights)
+        to_xp_list = list(range(0, num_quad, 2)) + list(range(1, num_quad + 1, 2))
+        from_xp_list = []
+        for i in range(num_modes):
+            from_xp_list += [i, i + num_modes]
+        assert np.allclose(example.to_xp, np.array(to_xp_list))
+        assert np.allclose(example.from_xp, np.array(from_xp_list))
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
@@ -88,8 +106,7 @@ class TestBosonicModes:
     def test_add_del_modes(self, num_weights, num_modes, num_weights_new):
         r"""Checks that modes can be added and deleted."""
         # Create a state with the pre-defined number of weights and modes
-        example = circuit.BosonicModes()
-        example.reset(num_modes, num_weights)
+        example = circuit.BosonicModes(num_modes, num_weights)
         # Delete first mode and check active modes changed
         example.del_mode(0)
         assert example.get_modes() == list(range(1, num_modes))
@@ -109,8 +126,7 @@ class TestBosonicModes:
     def test_displace_squeeze_rotate(self, r, phi):
         r"""Checks single-mode Gaussian transformations."""
         # Ensure zero displacement, squeezing and rotation all yield vacuum
-        example = circuit.BosonicModes()
-        example.reset(1, 1)
+        example = circuit.BosonicModes(1, 1)
         example.squeeze(0, 0, 0)
         assert example.is_vacuum(tol=1e-10)
         example.displace(0, 0, 0)
@@ -144,8 +160,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     def test_from_cov_and_mean(self, r, phi):
         r"""Checks Gaussian states can be made from mean and covariance."""
-        example = circuit.BosonicModes()
-        example.reset(1, 1)
+        example = circuit.BosonicModes(1, 1)
 
         # Create a state with a given mean and cov
         d = example.hbar * (np.array([r * np.exp(1j * phi).real, r * np.exp(1j * phi).imag]))
@@ -179,8 +194,7 @@ class TestBosonicModes:
     def test_parity(self, num_weights, num_modes):
         r"""Checks parity function for vacuum state."""
         # Create state with number of weights and means
-        example = circuit.BosonicModes()
-        example.reset(num_modes, num_weights)
+        example = circuit.BosonicModes(num_modes, num_weights)
 
         # Assert that it has parity of 1 (since it is vacuum)
         assert np.isclose(example.parity_val(), 1)
@@ -194,8 +208,7 @@ class TestBosonicModes:
     def test_losses(self, r, phi, nbar, num_weights):
         r"""Checks loss, thermal_loss, and init_thermal."""
         # Create state with random number of weights and means
-        example = circuit.BosonicModes()
-        example.reset(3, num_weights)
+        example = circuit.BosonicModes(3, num_weights)
 
         # Displace, apply total loss to first mode and check it is vacuum
         example.displace(r, phi, 0)
@@ -217,8 +230,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     def test_gaussian_symplectic(self, r, phi):
         r"""Checks symplectic transformations, and get_covtmat_xp, get_mean_xp."""
-        example = circuit.BosonicModes()
-        example.reset(2, 1)
+        example = circuit.BosonicModes(2, 1)
 
         # Create a symplectic and apply to first mode
         Smat = np.array([[np.exp(-r), 0], [0, np.exp(r)]])
@@ -244,8 +256,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     def test_beamsplitter(self, r, phi):
         r"""Checks beamsplitter."""
-        example = circuit.BosonicModes()
-        example.reset(2, 1)
+        example = circuit.BosonicModes(2, 1)
         # Send two coherent states through beamspliter
         example.displace(r, 0, 0)
         example.displace(r, 0, 1)
@@ -260,8 +271,7 @@ class TestBosonicModes:
     def test_generaldyne(self, num_weights, r, num_shots):
         r"""Checks generaldyne."""
         # Create two vacuums with multiple weights
-        example = circuit.BosonicModes()
-        example.reset(2, num_weights)
+        example = circuit.BosonicModes(2, num_weights)
         # Create squeezed covariance matrix
         covmat = np.diag(np.array([np.exp(-r), np.exp(r)]))
         # Send two squeezed states through beamspliter
@@ -282,8 +292,7 @@ class TestBosonicModes:
     def test_homodyne(self, num_weights, r, phi):
         r"""Checks homodyne."""
         # Create coherent state with multiple weights
-        example = circuit.BosonicModes()
-        example.reset(1, num_weights)
+        example = circuit.BosonicModes(1, num_weights)
         # Make complex weights
 
         example.displace(r, phi, 0)
@@ -300,8 +309,7 @@ class TestBosonicModes:
     def test_heterodyne(self, num_weights, r, phi):
         r"""Checks heterodyne."""
         # Create coherent state with multiple weights
-        example = circuit.BosonicModes()
-        example.reset(1, num_weights)
+        example = circuit.BosonicModes(1, num_weights)
         example.displace(r, phi, 0)
         # Perform heterodyne on mode 0
         vals = example.heterodyne(0, shots=500)
@@ -313,8 +321,7 @@ class TestBosonicModes:
     def test_post_select_homodyne(self, num_weights, r):
         r"""Checks post_select_homodyne."""
         # Create maximally entangled states from highly squeezed states
-        example = circuit.BosonicModes()
-        example.reset(2, num_weights)
+        example = circuit.BosonicModes(2, num_weights)
         example.squeeze(8, 0, 0)
         example.squeeze(-8, 0, 1)
         example.beamsplitter(np.pi / 4, 0, 0, 1)
@@ -330,8 +337,7 @@ class TestBosonicModes:
     def test_post_select_heterodyne(self, num_weights, r):
         r"""Checks post_select_homodyne."""
         # Create maximally entangled states from highly squeezed states
-        example = circuit.BosonicModes()
-        example.reset(2, num_weights)
+        example = circuit.BosonicModes(2, num_weights)
         example.squeeze(8, 0, 0)
         example.squeeze(-8, 0, 1)
         example.beamsplitter(np.pi / 4, 0, 0, 1)
@@ -350,8 +356,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("eta_anc", ETA_ANC_VALS)
     def test_mb_squeeze(self, r, phi, r_anc, eta_anc):
         r"""Checks measurement-based squeezing."""
-        example = circuit.BosonicModes()
-        example.reset(2, 1)
+        example = circuit.BosonicModes(2, 1)
 
         # Test zero mbsqueezing
         example.mb_squeeze(0, 0, 0, r_anc, eta_anc, True)
@@ -372,8 +377,7 @@ class TestBosonicModes:
     def test_complex_weight(self, r):
         r"""Checks a cat state has correct parity and that the mean from homodyne sampling is 0."""
         # Make a cat state
-        example = circuit.BosonicModes()
-        example.reset(1, 4)
+        example = circuit.BosonicModes(1, 4)
 
         r = abs(r)
 
@@ -401,8 +405,7 @@ class TestBosonicModes:
     def test_linear_optical_unitary(self, r, phi):
         r"""Checks linear optical unitary implementation of a phase shift."""
         # Create two displaced states
-        example = circuit.BosonicModes()
-        example.reset(2, 1)
+        example = circuit.BosonicModes(2, 1)
         example.displace(r, 0, 0)
         example.displace(r, 0, 1)
         # Rotate them using different techniques
