@@ -33,7 +33,7 @@ R_ANC_VALS = np.array([0.1, 0.8, 1.2, 5])
 ETA_ANC_VALS = np.array([0.1, 0.4, 0.9, 1])
 
 
-class TestBosonicCircuit:
+class TestBosonicModes:
     r"""Tests all the functions inside backends.bosonicbackend.bosoniccircuit.py"""
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)

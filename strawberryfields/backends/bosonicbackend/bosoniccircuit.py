@@ -240,7 +240,8 @@ class BosonicModes:
 
     def get_modes(self):
         r"""Return the modes that are currently active. Active modes
-        are those created by the user which have not been deleted."""
+        are those created by the user which have not been deleted.
+        If a mode is deleted, its entry in the list is ``None``."""
         return [x for x in self.active if x is not None]
 
     def displace(self, r, phi, i):
