@@ -49,7 +49,7 @@ class TestBosonicCircuit:
         assert example.nlen == 3
 
         # Confirm normalization
-        assert np.isclose(sum(example.sweights()), 1)
+        assert np.isclose(sum(example.get_weights()), 1)
 
         # Confirm each mode initialized to vacuum
         assert example.is_vacuum(tol=1e-10)
@@ -63,20 +63,20 @@ class TestBosonicCircuit:
         assert np.allclose(example.from_xp, np.array([0, 3, 1, 4, 2, 5]))
 
         # Confirm number of weights, means and covs
-        assert example.sweights().shape == (2 ** 3,)
-        assert example.smean().shape == (2 ** 3, 6)
-        assert example.scovmat().shape == circuit.c_shape(3, 2)
+        assert example.get_weights().shape == (2 ** 3,)
+        assert example.get_mean().shape == (2 ** 3, 6)
+        assert example.get_covmat().shape == circuit.c_shape(3, 2)
 
         # Reset with number of weights and modes and perform the same check
         example.reset(num_modes, num_weights)
         assert example.nlen == num_modes
-        assert np.isclose(sum(example.sweights()), 1)
+        assert np.isclose(sum(example.get_weights()), 1)
         assert example.is_vacuum(tol=1e-10)
         for i in range(num_modes):
             assert np.isclose(example.fidelity_vacuum([i]), 1)
         assert example.active == [i for i in range(num_modes)]
-        assert example.smean().shape == (num_weights ** num_modes, 2 * num_modes)
-        assert example.scovmat().shape == (num_weights ** num_modes, 2 * num_modes, 2 * num_modes)
+        assert example.get_mean().shape == (num_weights ** num_modes, 2 * num_modes)
+        assert example.get_covmat().shape == (num_weights ** num_modes, 2 * num_modes, 2 * num_modes)
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
@@ -95,10 +95,10 @@ class TestBosonicCircuit:
         tot_weights = (num_weights ** num_modes) * num_weights_new
         # Check numbers of weights, means and covs
         assert example.get_modes() == [i for i in range(1, num_modes + 1)]
-        assert np.isclose(sum(example.sweights()), 1)
-        assert example.sweights().shape == (tot_weights,)
-        assert example.smean().shape == (tot_weights, 2 * (num_modes + 1))
-        assert example.scovmat().shape == (tot_weights, 2 * (num_modes + 1), 2 * (num_modes + 1))
+        assert np.isclose(sum(example.get_weights()), 1)
+        assert example.get_weights().shape == (tot_weights,)
+        assert example.get_mean().shape == (tot_weights, 2 * (num_modes + 1))
+        assert example.get_covmat().shape == (tot_weights, 2 * (num_modes + 1), 2 * (num_modes + 1))
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
@@ -125,16 +125,16 @@ class TestBosonicCircuit:
         Rmat = np.array([[np.cos(phi / 2), -np.sin(phi / 2)], [np.sin(phi / 2), np.cos(phi / 2)]])
         cov_new = Rmat @ Smat @ Rmat.T @ Rmat @ Smat.T @ Rmat.T
         d_new = Rmat @ Smat @ Rmat.T @ d
-        assert np.allclose(example.smean()[0], d_new)
-        assert np.allclose(example.scovmat()[0], cov_new)
+        assert np.allclose(example.get_mean()[0], d_new)
+        assert np.allclose(example.get_covmat()[0], cov_new)
 
         # Rotate state and confirm correct mean and covs produced
         example.phase_shift(phi, 0)
         Rmat2 = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
         cov_new = Rmat2 @ cov_new @ Rmat2.T
         d_new = Rmat2 @ d_new
-        assert np.allclose(example.smean()[0], d_new)
-        assert np.allclose(example.scovmat()[0], cov_new)
+        assert np.allclose(example.get_mean()[0], d_new)
+        assert np.allclose(example.get_covmat()[0], cov_new)
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
@@ -151,8 +151,8 @@ class TestBosonicCircuit:
         cov_new = Rmat2 @ Rmat @ Smat @ Rmat.T @ Rmat @ Smat.T @ Rmat.T @ Rmat2.T
         d_new = Rmat2 @ Rmat @ Smat @ Rmat.T @ d
 
-        example.fromsmean(d_new)
-        example.fromscovmat(cov_new)
+        example.from_mean(d_new)
+        example.from_covmat(cov_new)
 
         # Undo all the operations that would have in principle prepared the same state
         example.phase_shift(-phi, 0)
@@ -162,8 +162,8 @@ class TestBosonicCircuit:
         assert example.is_vacuum(tol=1e-10)
 
         # Do again specifying the mode this time
-        example.fromsmean(d_new, modes=[0])
-        example.fromscovmat(cov_new, modes=[0])
+        example.from_mean(d_new, modes=[0])
+        example.from_covmat(cov_new, modes=[0])
         example.phase_shift(-phi, 0)
         example.squeeze(-r, phi, 0)
         example.displace(-r, phi, 0)
@@ -202,17 +202,17 @@ class TestBosonicCircuit:
         example.thermal_loss(0, nbar, 1)
         assert np.allclose(
             np.tile((2 * nbar + 1) * np.eye(2), (num_weights ** 3, 1, 1)),
-            example.scovmat()[:, 2:4, 2:4],
+            example.get_covmat()[:, 2:4, 2:4],
         )
 
         # Initialize third mode as thermal and check it's the same as second mode
         example.init_thermal(nbar, 2)
-        assert np.allclose(example.scovmat()[:, 4:6, 4:6], example.scovmat()[:, 2:4, 2:4])
+        assert np.allclose(example.get_covmat()[:, 4:6, 4:6], example.get_covmat()[:, 2:4, 2:4])
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
     def test_gaussian_symplectic(self, r, phi):
-        r"""Checks symplectic transformations, and scovtmatxp, smeanxp."""
+        r"""Checks symplectic transformations, and get_covtmat_xp, get_mean_xp."""
         example = circuit.BosonicModes()
         example.reset(2, 1)
 
@@ -222,17 +222,17 @@ class TestBosonicCircuit:
         Rmat2 = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
         symp = Rmat2 @ Rmat @ Smat @ Rmat.T
         symp = example.expandS([0], symp)
-        example.apply_channel(symp, 0)
+        example.apply_channel(symp, np.zeros(symp.shape))
 
         # Apply the corresponding operations to second mode
         example.squeeze(r, phi, 1)
         example.phase_shift(phi, 1)
 
         # Check that same modes are in both states
-        assert np.allclose(example.scovmat()[:, 0:2, 0:2], example.scovmat()[:, 2:4, 2:4])
-        assert np.allclose(example.smean()[:, 0:2], example.smean()[:, 2:4])
-        assert np.allclose(example.scovmatxp()[:, 0::2, 0::2], example.scovmatxp()[:, 1::2, 1::2])
-        assert np.allclose(example.smeanxp()[:, 0::2], example.smeanxp()[:, 1::2])
+        assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
+        assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
+        assert np.allclose(example.get_covmat_xp()[:, 0::2, 0::2], example.get_covmat_xp()[:, 1::2, 1::2])
+        assert np.allclose(example.get_mean_xp()[:, 0::2], example.get_mean_xp()[:, 1::2])
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
@@ -317,7 +317,7 @@ class TestBosonicCircuit:
         example.post_select_homodyne(0, r, phi=np.pi / 2)
         # Check other mode ended up in correlated state
         mean_compare = np.tile(np.array([0, 0, 0, -r]), (num_weights ** 2, 1))
-        assert np.allclose(example.smean(), mean_compare)
+        assert np.allclose(example.get_mean(), mean_compare)
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("r", R_VALS)
@@ -335,32 +335,32 @@ class TestBosonicCircuit:
         # Check other mode ended up in correlated state
         mean_compare = np.tile(np.array([0, 0, -r, 0]), (num_weights ** 2, 1))
         cov_compare = np.tile(np.eye(4), (num_weights ** 2, 1, 1))
-        assert np.allclose(example.smean(), mean_compare)
-        assert np.allclose(example.scovmat(), cov_compare)
+        assert np.allclose(example.get_mean(), mean_compare)
+        assert np.allclose(example.get_covmat(), cov_compare)
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
     @pytest.mark.parametrize("r_anc", R_ANC_VALS)
     @pytest.mark.parametrize("eta_anc", ETA_ANC_VALS)
-    def test_mbsqueeze(self, r, phi, r_anc, eta_anc):
+    def test_mb_squeeze(self, r, phi, r_anc, eta_anc):
         r"""Checks measurement-based squeezing."""
         example = circuit.BosonicModes()
         example.reset(2, 1)
 
         # Test zero mbsqueezing
-        example.mbsqueeze(0, 0, 0, r_anc, eta_anc, True)
+        example.mb_squeeze(0, 0, 0, r_anc, eta_anc, True)
         assert example.is_vacuum(tol=1e-10)
-        example.mbsqueeze(0, 0, 0, 5, 1, False)
+        example.mb_squeeze(0, 0, 0, 5, 1, False)
         assert example.is_vacuum(tol=1e-10)
 
         # Test high-quality mbsqueezing
-        example.mbsqueeze(0, r, phi, 9, 1, True)
+        example.mb_squeeze(0, r, phi, 9, 1, True)
         example.squeeze(r, phi, 1)
-        assert np.allclose(example.scovmat()[:, 0:2, 0:2], example.scovmat()[:, 2:4, 2:4])
-        assert np.allclose(example.smean()[:, 0:2], example.smean()[:, 2:4])
-        example.mbsqueeze(0, r, phi, 9, 1, False)
+        assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
+        assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
+        example.mb_squeeze(0, r, phi, 9, 1, False)
         example.squeeze(r, phi, 1)
-        assert np.allclose(example.scovmat()[:, 0:2, 0:2], example.scovmat()[:, 2:4, 2:4])
+        assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
 
     @pytest.mark.parametrize("r", R_VALS)
     def test_complex_weight(self, r):
@@ -403,4 +403,4 @@ class TestBosonicCircuit:
         example.apply_u(np.diag([np.exp(1j * phi), 1]))
         example.phase_shift(phi, 1)
         # Check they have the same means
-        assert np.allclose(example.smean()[:, 0:2], example.smean()[:, 2:4])
+        assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])

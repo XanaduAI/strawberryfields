@@ -110,7 +110,7 @@ def update_means(means, X, perm_out):
     return (X_perm @ means.T).T
 
 
-def update_covs(covs, X, perm_out, Y=0):
+def update_covs(covs, X, perm_out, Y=None):
     r"""Apply a linear transformation parametrized by ``(X,Y)`` to the
     array of covariance matrices. The  quadrature ordering can be specified
     by ``perm_out`` to match ordering of ``(X,Y)`` to the covariance matrices.
@@ -127,8 +127,10 @@ def update_covs(covs, X, perm_out, Y=0):
         array: transformed array of covariance matrices
     """
     X_perm = X[:, perm_out][perm_out, :]
-    if not isinstance(Y, int):
+    if Y is not None:
         Y = Y[:, perm_out][perm_out, :]
+    else:
+        Y = 0.0
     return (X_perm @ covs @ X_perm.T) + Y
 
 
@@ -190,6 +192,9 @@ class BosonicModes:
 
         Args:
             modes (int or list): modes to be deleted.
+
+        Raises:
+            ValueError: if any of modes are not in the list of active modes
         """
         if isinstance(modes, int):
             modes = [modes]
@@ -209,6 +214,9 @@ class BosonicModes:
                 circuit. ``None`` means unchanged.
             num_weights (int): Sets the number of gaussians per mode in the
                 superposition.
+
+        Raises:
+            ValueError: if num_subsystems or num_weights is not an integer
         """
         if num_subsystems is not None:
             if not isinstance(num_subsystems, int):
@@ -231,7 +239,8 @@ class BosonicModes:
         self.covs = np.array(id_covs)
 
     def get_modes(self):
-        r"""Return the modes that are currently active."""
+        r"""Return the modes that are currently active. Active modes
+        are those created by the user which have not been deleted."""
         return [x for x in self.active if x is not None]
 
     def displace(self, r, phi, i):
@@ -241,6 +250,9 @@ class BosonicModes:
             r (float): displacement magnitude
             phi (float): displacement phase
             i (int): mode to be displaced
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
         """
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
@@ -253,6 +265,9 @@ class BosonicModes:
             r (float): squeezing magnitude
             phi (float): squeezing phase
             k (int): mode to be squeezed
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
         """
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
@@ -261,7 +276,7 @@ class BosonicModes:
         self.means = update_means(self.means, sq, self.from_xp)
         self.covs = update_covs(self.covs, sq, self.from_xp)
 
-    def mbsqueeze(self, k, r, phi, r_anc, eta_anc, avg):
+    def mb_squeeze(self, k, r, phi, r_anc, eta_anc, avg):
         r"""Squeeze mode ``k`` by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
 
         Either the average map, described by a Gaussian CPTP transformation, or a single-shot map
@@ -277,6 +292,9 @@ class BosonicModes:
 
         Returns:
             float: if single-shot map selected, returns the measurement outcome of the ancilla
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
         """
 
         if self.active[k] is None:
@@ -337,6 +355,9 @@ class BosonicModes:
         Args:
            phi (float): phase
            k (int): mode to be phase shifted
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
         """
         if self.active[k] is None:
             raise ValueError("Cannot phase shift mode, mode does not exist")
@@ -353,6 +374,10 @@ class BosonicModes:
             phi (float): complex beamsplitter angle
             k (int): first mode
             l (int): second mode
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
+            ValueError: if first mode equals second mode
         """
         if self.active[k] is None or self.active[l] is None:
             raise ValueError("Cannot perform beamsplitter, mode(s) do not exist")
@@ -364,39 +389,39 @@ class BosonicModes:
         self.means = update_means(self.means, bs, self.from_xp)
         self.covs = update_covs(self.covs, bs, self.from_xp)
 
-    def scovmatxp(self):
+    def get_covmat_xp(self):
         r"""Returns the symmetric ordered array of covariance matrices
         in the :math:`q_1,...,q_n,p_1,...,p_n` ordering, given that
         they were stored in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.covs[:, self.to_xp][..., self.to_xp]
 
-    def smeanxp(self):
+    def get_mean_xp(self):
         r"""Returns the symmetric ordered array of means in the
         :math:`q_1,...,q_n,p_1,...,p_n` ordering, given that they
         were stored in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.means.T[self.to_xp].T
 
-    def scovmat(self):
+    def get_covmat(self):
         r"""Returns the symmetric ordered array of covariance matrices
         in the :math:`q_1,p_1,...,q_n,p_n` ordering, just as
         they were stored.
         """
         return self.covs
 
-    def smean(self):
+    def get_mean(self):
         r"""Returns the symmetric ordered array of means
         in the :math:`q_1,p_1,...,q_n,p_n` ordering, just as
         they were stored.
         """
         return self.means
 
-    def sweights(self):
+    def get_weights(self):
         """Returns the array of weights."""
         return self.weights
 
-    def fromsmean(self, r, modes=None):
+    def from_mean(self, r, modes=None):
         r"""Populates the array of means from a provided array of means.
 
         The input must already have performed the scaling of the means by self.hbar,
@@ -412,7 +437,7 @@ class BosonicModes:
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
         self.means[:, mode_ind] = r
 
-    def fromscovmat(self, V, modes=None):
+    def from_covmat(self, V, modes=None):
         r"""Populates the array of covariance matrices from a provided array of covariance matrices.
 
         The input must already have performed the scaling of the covariances by self.hbar,
@@ -421,6 +446,10 @@ class BosonicModes:
         Args:
             V (array): covariance matrix in :math:`(x_1,p_1,x_2,p_2,\dots)` ordering
             modes (sequence): sequence of modes corresponding to the covariance matrix
+
+        Raises:
+            ValueError: if the covariance matrix dimension does not match the
+                        number of quadratures targeted
         """
         if modes is None:
             n = len(V) // 2
@@ -449,16 +478,20 @@ class BosonicModes:
         Args:
             alpha (array): amplitudes for coherent states
             modes (list or None): modes to use for fidelity calculation
+
+        Returns:
+            float: fidelity of the state in modes to the coherent state alpha
         """
         if modes is None:
             modes = self.get_modes()
         # Sort by (q1,p1,q2,p2,...)
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
         # Construct mean vector for coherent state
-        alpha_mean = np.array([])
+        alpha_mean = []
         for i in range(len(modes)):
-            alpha_mean = np.append(alpha_mean, alpha.real[i] * np.sqrt(2 * self.hbar))
-            alpha_mean = np.append(alpha_mean, alpha.imag[i] * np.sqrt(2 * self.hbar))
+            alpha_mean.append(alpha.real[i] * np.sqrt(2 * self.hbar))
+            alpha_mean.append(alpha.imag[i] * np.sqrt(2 * self.hbar))
+        alpha_mean = np.array(alpha_mean)
         # Construct difference of coherent state mean vector with means of all peaks in the state
         deltas = self.means[:, mode_ind] - alpha_mean
         # Construct sum of coherent state covariance matrix and all covariances in the state
@@ -481,6 +514,9 @@ class BosonicModes:
 
         Args:
             modes (list or None): modes to use for fidelity calculation
+
+        Returns:
+            float: fidelity of the state in modes to the vacuum
         """
         if modes is None:
             modes = self.get_modes()
@@ -494,6 +530,9 @@ class BosonicModes:
 
         Args:
             modes (list or None): modes to use for parity calculation
+
+        Returns:
+            float: parity of the state in modes
         """
         if modes is None:
             modes = list(range(self.nlen))
@@ -520,6 +559,9 @@ class BosonicModes:
         Args:
             T (float): loss amount is \sqrt{T}
             k (int): mode that loses energy
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
         """
 
         if self.active[k] is None:
@@ -538,6 +580,9 @@ class BosonicModes:
             T (float): loss amount is \sqrt{T}
             nbar (float): mean photon number of the thermal bath
             k (int): mode that undegoes thermal loss
+
+        Raises:
+            ValueError: if the mode is not in the list of active modes
         """
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
@@ -555,146 +600,183 @@ class BosonicModes:
         """
         self.thermal_loss(0.0, nbar, mode)
 
-    def is_vacuum(self, tol=0.0):
+    def is_vacuum(self, tol=1e-10):
         r"""Checks if the state is vacuum by calculating its fidelity with vacuum.
 
         Args:
             tol (float): the closeness tolerance to fidelity of 1
+
+        Return:
+            bool: whether the state is vacuum or not
         """
         fid = self.fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
-    def measure_dyne(self, covmat, indices, shots=1):
+    def measure_dyne(self, covmat, modes, shots=1):
         r"""Performs general-dyne measurements on a set of modes.
 
-        For more information see Quantum Continuous Variables: A Primer of Theoretical Methods
+        For more information on definition of general-dyne see
+        Quantum Continuous Variables: A Primer of Theoretical Methods
         by Alessio Serafini page 129.
+
+        TODO: add reference for sampling algorithm once available
 
         Args:
             covmat (array): covariance matrix of the generaldyne measurement
-            indices (list): modes to be measured
+            modes (list): modes to be measured
             shots (int): how many measurements are performed
 
         Returns:
             array: measurement outcome corresponding to a point in phase space
+
+        Raises:
+            ValueError: if the dimension of covmat does not match number of quadratures
+                        associated with modes
+            ValueError: if covmat does not respect the uncertainty relation
+            NotImplementedError: if any of the covariances of the state are imaginary
+            ValueError: if any of the modes are not in the list of active modes
         """
         # pylint: disable=too-many-branches
-        if covmat.shape != (2 * len(indices), 2 * len(indices)):
+        if covmat.shape != (2 * len(modes), 2 * len(modes)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
-        if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(indices)):
+        if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(modes)):
             raise ValueError("Measurement covariance matrix is unphysical.")
 
         if self.covs.imag.any():
             raise NotImplementedError("Covariance matrices must be real")
 
-        for i in indices:
+        for i in modes:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
 
-        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        vals = np.zeros((shots, 2 * len(indices)))
-        imag_means_ind = np.where(self.means[:, expind].imag.any(axis=1))[0]
+        # Indices for the relevant quadratures
+        quad_ind = np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
+        # Associated means and covs, already adding the covmat to the state covariances        
+        means_quad = self.means[:, quad_ind]
+        covs_quad = self.covs[:, quad_ind, :][:, :, quad_ind].real + covmat
+        # Array to be filled with measurement samples
+        vals = np.zeros((shots, 2 * len(modes)))
+
+        # Indices of the Gaussians in the linear combination with imaginary means
+        imag_means_ind = np.where(means_quad.imag.any(axis=1))[0]
+        # Indices of the Gaussians in the linear combination with weights
+        # that are not purely negative (i.e. positive or imaginary)
         nonneg_weights_ind = np.where(np.angle(self.weights) != np.pi)[0]
+        # Union of the two sets forms the set of indices used to construct the
+        # upper bounding function
         ub_ind = np.union1d(imag_means_ind, nonneg_weights_ind)
+
+        # Build weights for the upper bounding function
+        # Take absolute value of all weights
         ub_weights = np.abs(np.array(self.weights))
+        # If there are terms with complex means, multiply the associated weights
+        # by an extra prefactor, which comes from the cross term between the
+        # imaginary parts of the means
         if imag_means_ind.size > 0:
-            ub_weights[imag_means_ind] *= np.exp(
-                0.5
-                * np.einsum(
-                    "...j,...jk,...k",
-                    (self.means[imag_means_ind, :][:, expind].imag),
-                    np.linalg.inv(
-                        self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real + covmat
-                    ),
-                    (self.means[imag_means_ind, :][:, expind].imag),
-                )
+            # Get imaginary parts of means
+            imag_means = means_quad[imag_means_ind].imag
+            # Get associated covariances
+            imag_covs = covs_quad[imag_means_ind]
+            # Construct prefactor
+            imag_exp_arg = np.einsum(
+                "...j,...jk,...k",
+                imag_means,
+                np.linalg.inv(imag_covs),
+                imag_means,
             )
+            imag_prefactor = np.exp(0.5 * imag_exp_arg)
+            # Multiply weights by prefactor
+            ub_weights[imag_means_ind] *= imag_prefactor
+        # Keep only the weights that are indexed by ub_ind
         ub_weights = ub_weights[ub_ind]
+        # To define a probability dsitribution, normalize the set of weights
         ub_weights_prob = ub_weights / np.sum(ub_weights)
 
+        # Perform the rejection sampling technique until the desired number of shots
+        # are acquired
         for i in range(shots):
             drawn = False
             while not drawn:
+                # Sample an index for a peak from the upperbounding function
+                # according to ub_weights_prob
                 peak_ind_sample = np.random.choice(ub_ind, size=1, p=ub_weights_prob)[0]
+                # Get the associated mean covariance for that peak
+                mean_sample = means_quad[peak_ind_sample].real
+                cov_sample = covs_quad[peak_ind_sample]
+                # Sample a phase space value from the peak
+                peak_sample = np.random.multivariate_normal(mean_sample, cov_sample)
 
-                cov_meas = self.covs[peak_ind_sample, expind, :][:, expind].real + covmat
-                peak_sample = np.random.multivariate_normal(
-                    self.means[peak_ind_sample, expind].real, cov_meas
-                )
-
+                # Differences between the sample and the means
+                diff_sample = peak_sample - means_quad
+                # Calculate arguments for the Gaussian functions used to calculate
+                # the exact probability distribution at the sampled point
                 exp_arg = np.einsum(
                     "...j,...jk,...k",
-                    (peak_sample - self.means[:, expind]),
-                    np.linalg.inv(self.covs[:, expind, :][:, :, expind].real + covmat),
-                    (peak_sample - self.means[:, expind]),
+                    (diff_sample),
+                    np.linalg.inv(covs_quad),
+                    (diff_sample),
                 )
+
+                # Make a copy to calculate the exponential arguments of the
+                # upper bounding function at the point
                 ub_exp_arg = np.copy(exp_arg)
+                # If there are complex means, make sure to only use real part of
+                # the mean in the upper bounding function
                 if imag_means_ind.size > 0:
+                    # Difference between the sample and the means of the upper bound
+                    diff_sample_ub = peak_sample - means_quad[imag_means_ind, :].real
+                    # Replace arguments associated with complex means with real-valued expression
                     ub_exp_arg[imag_means_ind] = np.einsum(
                         "...j,...jk,...k",
-                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
-                        np.linalg.inv(
-                            self.covs[imag_means_ind, :, :][:, expind, :][:, :, expind].real
-                            + covmat
-                        ),
-                        (peak_sample - self.means[imag_means_ind, :][:, expind].real),
+                        (diff_sample_ub),
+                        np.linalg.inv(imag_covs),
+                        (diff_sample_ub),
                     )
-                prob_dist_val = np.real_if_close(
-                    np.sum(
-                        (
-                            np.array(self.weights)
-                            / np.sqrt(
-                                np.linalg.det(
-                                    2
-                                    * np.pi
-                                    * (self.covs[:, expind, :][:, :, expind].real + covmat)
-                                )
-                            )
-                        )
-                        * np.exp(-0.5 * exp_arg)
-                    )
-                )
-                prob_upbnd = np.real_if_close(
-                    np.sum(
-                        (
-                            ub_weights
-                            / np.sqrt(
-                                np.linalg.det(
-                                    2
-                                    * np.pi
-                                    * (
-                                        self.covs[ub_ind, :, :][:, expind, :][:, :, expind].real
-                                        + covmat
-                                    )
-                                )
-                            )
-                        )
-                        * np.exp(-0.5 * ub_exp_arg[ub_ind])
-                    )
-                )
+                # Keep only terms associated with upper bound indices ub_ind
+                ub_exp_arg = ub_exp_arg[ub_ind]
+
+                # Calculate the value of the probability distribution at the sampled point
+                # Prefactors for each exponential in the sum
+                prefactors = 1 / np.sqrt(np.linalg.det(2 * np.pi * covs_quad))
+                # Sum Gaussians
+                prob_dist_val = np.sum(self.weights * prefactors * np.exp(-0.5 * exp_arg))
+                # Should be real-valued
+                prob_dist_val = np.real_if_close(prob_dist_val)
+
+                # Calculate the upper bounding function at the sampled point
+                # Sum Gaussians, keeping only prefactors associated with ub_ind
+                prob_upbnd = np.sum(ub_weights * prefactors[ub_ind] * np.exp(-0.5 * ub_exp_arg))
+                # Should be real-valued
+                np.real_if_close(prob_upbnd)
+
+                # Sample point between 0 and upperbound function at the phase space sample
                 vertical_sample = np.random.random(size=1) * prob_upbnd
+                # Keep or reject phase space sample based on whether vertical_sample falls
+                # above or below the value of the probability distribution
                 if vertical_sample < prob_dist_val:
                     drawn = True
                     vals[i] = peak_sample
+        
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
-        if len(indices) < len(self.active):
-            self.post_select_generaldyne(covmat, indices, vals[0])
+        if len(modes) < len(self.active):
+            # Update other modes based on phase space sample
+            self.post_select_generaldyne(covmat, modes, vals[0])
 
         # If all modes are measured, set them to vacuum
-        if len(indices) == len(self.active):
-            for i in indices:
+        if len(modes) == len(self.active):
+            for i in modes:
                 self.loss(0, i)
 
         return vals
 
-    def homodyne(self, n, shots=1, eps=0.0002):
+    def homodyne(self, mode, shots=1, eps=0.0002):
         r"""Performs an x-homodyne measurement on a mode, simulated by a generaldyne
         onto a highly squeezed state.
 
         Args:
-            n (int): mode to be measured
+            mode (int): mode to be measured
             shots (int): how many measurements are performed
             eps (int): squeezing of the measurement state
 
@@ -702,49 +784,56 @@ class BosonicModes:
             array: homodyne outcome
         """
         covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
-        return self.measure_dyne(covmat, [n], shots=shots)
+        return self.measure_dyne(covmat, [mode], shots=shots)
 
-    def heterodyne(self, n, shots=1):
+    def heterodyne(self, mode, shots=1):
         r"""Performs a heterodyne measurement on a mode, simulated by a generaldyne
         onto a coherent state.
 
         Args:
-            n (int): mode to be measured
+            mode (int): mode to be measured
             shots (int): how many measurements are performed
 
         Returns:
             array: heterodyne outcome
         """
         covmat = self.hbar * np.eye(2) / 2
-        return self.measure_dyne(covmat, [n], shots=shots)
+        return self.measure_dyne(covmat, [mode], shots=shots)
 
-    def post_select_generaldyne(self, covmat, indices, vals):
+    def post_select_generaldyne(self, covmat, modes, vals):
         r"""Simulates general-dyne measurement on a set of modes with a specified measurement
         outcome.
 
         Args:
             covmat (array): covariance matrix of the generaldyne measurement
-            indices (list): modes to be measured
+            modes (list): modes to be measured
             vals (array): measurement outcome to postselect
+
+        Raises:
+            ValueError: if the dimension of covmat does not match number of quadratures
+                        associated with modes
+            ValueError: if any of the modes are not in the list of active modes
         """
-        if covmat.shape != (2 * len(indices), 2 * len(indices)):
+        if covmat.shape != (2 * len(modes), 2 * len(modes)):
             raise ValueError("Covariance matrix size does not match indices provided")
 
-        for i in indices:
+        for i in modes:
             if self.active[i] is None:
                 raise ValueError("Cannot apply measurement, mode does not exist")
 
-        expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
-        mp = self.scovmat()
+        expind = np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
+        mp = self.get_covmat()
         A, B, C = ops.chop_in_blocks_multi(mp, expind)
         V = A - B @ np.linalg.inv(C + covmat) @ B.transpose(0, 2, 1)
         self.covs = ops.reassemble_multi(V, expind)
 
-        r = self.smean()
+        r = self.get_mean()
         (va, vc) = ops.chop_in_blocks_vector_multi(r, expind)
         va = va + np.einsum("...ij,...j", B @ np.linalg.inv(C + covmat), (vals - vc))
         self.means = ops.reassemble_vector_multi(va, expind)
-
+        
+        # Reweight each peak based on how likely a given peak was to have
+        # contributed to the observed outcome
         reweights_exp_arg = np.einsum(
             "...j,...jk,...k", (vals - vc), np.linalg.inv(C + covmat), (vals - vc)
         )
@@ -758,37 +847,42 @@ class BosonicModes:
         self.covs = self.covs[abs(self.weights) > 0]
         self.weights = self.weights[abs(self.weights) > 0]
 
-    def post_select_homodyne(self, n, val, eps=0.0002, phi=0):
+    def post_select_homodyne(self, mode, val, eps=0.0002, phi=0):
         r"""Simulates a homodyne measurement on a mode, postselecting on an outcome.
 
         Args:
-            n (int): mode to be measured
+            mode (int): mode to be measured
             val (array): measurement value to post-select
             eps (int): squeezing of the measurement state
             phi (float): homodyne angle
+
+        Raises:
+            ValueError: if the mode are not in the list of active modes
         """
-        if self.active[n] is None:
+        if self.active[mode] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        self.phase_shift(phi, n)
+        self.phase_shift(phi, mode)
         covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
-        indices = [n]
+        indices = [mode]
         vals = np.array([val, 0])
         self.post_select_generaldyne(covmat, indices, vals)
 
-    def post_select_heterodyne(self, n, alpha_val):
+    def post_select_heterodyne(self, mode, alpha_val):
         r"""Simulates a heterodyne measurement on a mode, postselecting on an outcome.
 
         Args:
-            n (int): mode to be measured
+            mode (int): mode to be measured
             alpha_val (array): measurement value to post-select
+
+        Raises:
+            ValueError: if the mode are not in the list of active modes
         """
-        if self.active[n] is None:
+        if self.active[mode] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
         covmat = self.hbar * np.identity(2) / 2
-        indices = [n]
         vals = np.array([alpha_val.real, alpha_val.imag])
-        self.post_select_generaldyne(covmat, indices, vals)
+        self.post_select_generaldyne(covmat, [mode], vals)
 
     def apply_u(self, U):
         r"""Transforms the state according to the linear optical unitary that
