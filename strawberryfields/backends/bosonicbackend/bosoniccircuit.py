@@ -924,13 +924,10 @@ class BosonicModes:
             Y (array): matrix for additive part of transformation.
         """
         X2 = symp.expand(X, modes, self.nlen)
-        M = len(Y) // 2
-        Y2 = np.zeros((2 * self.nlen, 2 * self.nlen), dtype=Y.dtype)
-        w = np.array(modes)
-
-        Y2[w.reshape(-1, 1), w.reshape(1, -1)] = Y[:M, :M].copy()
-        Y2[(w + self.nlen).reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[M:, M:].copy()
-        Y2[w.reshape(-1, 1), (w + self.nlen).reshape(1, -1)] = Y[:M, M:].copy()
-        Y2[(w + self.nlen).reshape(-1, 1), w.reshape(1, -1)] = Y[M:, :M].copy()
+        Y2 = symp.expand(Y, modes, self.nlen)
+        for i in range(self.nlen):
+            if i not in modes:
+                Y2[i, i] = 0
+                Y2[i + self.nlen, i + self.nlen] = 0
 
         return X2, Y2
