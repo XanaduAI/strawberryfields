@@ -74,7 +74,7 @@ class TestBosonicCircuit:
         assert example.is_vacuum(tol=1e-10)
         for i in range(num_modes):
             assert np.isclose(example.fidelity_vacuum([i]), 1)
-        assert example.active == [i for i in range(num_modes)]
+        assert example.active == list(range(num_modes))
         assert example.get_mean().shape == (num_weights ** num_modes, 2 * num_modes)
         assert example.get_covmat().shape == (
             num_weights ** num_modes,
@@ -92,13 +92,13 @@ class TestBosonicCircuit:
         example.reset(num_modes, num_weights)
         # Delete first mode and check active modes changed
         example.del_mode(0)
-        assert example.get_modes() == [i for i in range(1, num_modes)]
+        assert example.get_modes() == list(range(1, num_modes))
 
         # Add new mode with new number of weights
         example.add_mode([num_weights_new])
         tot_weights = (num_weights ** num_modes) * num_weights_new
         # Check numbers of weights, means and covs
-        assert example.get_modes() == [i for i in range(1, num_modes + 1)]
+        assert example.get_modes() == list(range(1, num_modes + 1))
         assert np.isclose(sum(example.get_weights()), 1)
         assert example.get_weights().shape == (tot_weights,)
         assert example.get_mean().shape == (tot_weights, 2 * (num_modes + 1))
