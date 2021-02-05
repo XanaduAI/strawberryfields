@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2021 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ from strawberryfields.backends.bosonicbackend import ops
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(num_modes, num_gauss):
-    r"""Calculate total number of weights. Assumes same number of weights per mode.
+    """Calculate total number of weights. Assumes same number of weights per mode.
 
     Args:
         num_modes (int): number of modes
@@ -59,12 +59,14 @@ def c_shape(num_modes, num_gauss):
     Returns:
         tuple: (number of weights, number of quadratures, number of quadratures)
     """
-    return (num_gauss ** num_modes, 2 * num_modes, 2 * num_modes)
+    num_quad = 2 * num_modes
+    return (num_gauss ** num_modes, num_quad, num_quad)
 
 
 def to_xp(num_modes):
-    r"""Provides array of indices to order quadratures as all x
-    followed by all p, starting from (x1,p1,...,xn,pn) ordering.
+    """Provides an array of indices to order quadratures as all x
+    followed by all p i.e., (x1,...,xn,p1,..., pn), starting from the
+    (x1,p1,...,xn,pn) ordering.
 
     Args:
         num_modes (int): number of modes
@@ -72,12 +74,13 @@ def to_xp(num_modes):
     Returns:
         array: quadrature ordering for all x followed by all p
     """
-    return np.concatenate((np.arange(0, 2 * num_modes, 2), np.arange(0, 2 * num_modes, 2) + 1))
+    quad_order = np.arange(0, 2 * num_modes, 2)
+    return np.concatenate((quad_order, quad_order + 1))
 
 
 def from_xp(num_modes):
     r"""Provides array of indices to order quadratures as (x1,p1,...,xn,pn)
-    starting from all x followed by all p.
+    starting from all x followed by all p i.e., (x1,...,xn,p1,..., pn).
 
     Args:
         num_modes (int): number of modes
@@ -116,7 +119,7 @@ def update_covs(covs, X, perm_out, Y=0):
 
     Args:
         covs (array): array of covariance matrices
-        X (array): matrix for mutltiplicative part of transformation
+        X (array): matrix for multiplicative part of transformation
         perm_out (array): indices for quadrature ordering
         Y (array or 0): matrix for additive part of transformation.
 
@@ -144,7 +147,7 @@ class BosonicModes:
         to vacuum.
 
         Args:
-            peak_list (list): list of weights per mode.
+            peak_list (list): list of weights per mode
         """
         if peak_list is None:
             peak_list = [1]
@@ -228,7 +231,7 @@ class BosonicModes:
         self.covs = np.array(id_covs)
 
     def get_modes(self):
-        r"""Return the modes currently active."""
+        r"""Return the modes that are currently active."""
         return [x for x in self.active if x is not None]
 
     def displace(self, r, phi, i):
@@ -271,6 +274,7 @@ class BosonicModes:
             r_anc (float): squeezing magnitude of the ancillary mode
             eta_anc(float): detection efficiency of the ancillary mode
             avg (bool): whether to apply the average map or single-shot
+
         Returns:
             float: if single-shot map selected, returns the measurement outcome of the ancilla
         """
@@ -301,7 +305,7 @@ class BosonicModes:
 
         # Add new ancilla mode, interfere it and measure it
         # Delete ancilla mode from active list
-        elif not avg:
+        else:
             self.add_mode()
             new_mode = self.nlen - 1
             self.squeeze(r_anc, 0, new_mode)
@@ -313,7 +317,7 @@ class BosonicModes:
             self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=1)
             self.covs = np.delete(self.covs, [2 * new_mode, 2 * new_mode + 1], axis=2)
             self.means = np.delete(self.means, [2 * new_mode, 2 * new_mode + 1], axis=1)
-            self.nlen = self.nlen - 1
+            self.nlen -= 1
             self.from_xp = from_xp(self.nlen)
             self.to_xp = to_xp(self.nlen)
             self.active = self.active[:new_mode]
@@ -356,32 +360,35 @@ class BosonicModes:
         if k == l:
             raise ValueError("Cannot use the same mode for beamsplitter inputs")
 
-        # Cross-check with Gaussian backend.
         bs = symp.expand(symp.beam_splitter(theta, phi), [k, l], self.nlen)
         self.means = update_means(self.means, bs, self.from_xp)
         self.covs = update_covs(self.covs, bs, self.from_xp)
 
     def scovmatxp(self):
         r"""Returns the symmetric ordered array of covariance matrices
-        in the :math:`q_1,...,q_n,p_1,...,p_n` ordering.
+        in the :math:`q_1,...,q_n,p_1,...,p_n` ordering, given that
+        they were stored in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.covs[:, self.to_xp][..., self.to_xp]
 
     def smeanxp(self):
         r"""Returns the symmetric ordered array of means in the
-        :math:`q_1,...,q_n,p_1,...,p_n` ordering.
+        :math:`q_1,...,q_n,p_1,...,p_n` ordering, given that they 
+        were stored in the :math:`q_1,p_1,...,q_n,p_n` ordering.
         """
         return self.means.T[self.to_xp].T
 
     def scovmat(self):
         r"""Returns the symmetric ordered array of covariance matrices
-        in the :math:`q_1,p_1,...,q_n,p_n` ordering.
+        in the :math:`q_1,p_1,...,q_n,p_n` ordering, just as 
+        they were stored.
         """
         return self.covs
 
     def smean(self):
         r"""Returns the symmetric ordered array of means
-        in the :math:`q_1,p_1,...,q_n,p_n` ordering.
+        in the :math:`q_1,p_1,...,q_n,p_n` ordering, just as
+        they were stored.
         """
         return self.means
 
@@ -393,7 +400,7 @@ class BosonicModes:
         r"""Populates the array of means from a provided array of means.
 
         The input must already have performed the scaling of the means by self.hbar,
-        and must be sorted in ascending order.
+        and must be sorted :math:`(x_1,p_1,x_2,p_2,\dots)` order.
 
         Args:
             r (array): vector of means in :math:`(x_1,p_1,x_2,p_2,\dots)` ordering
@@ -408,7 +415,7 @@ class BosonicModes:
     def fromscovmat(self, V, modes=None):
         r"""Populates the array of covariance matrices from a provided array of covariance matrices.
 
-        The input must already have performed the scaling of the means by self.hbar,
+        The input must already have performed the scaling of the covariances by self.hbar,
         and must be sorted in ascending order.
 
         Args:
@@ -507,10 +514,11 @@ class BosonicModes:
         return parity
 
     def loss(self, T, k):
-        r"""Implements a loss channel in mode k.
+        r"""Implements a loss channel in mode k. T is the loss parameter that must be 
+        between 0 and 1.
 
         Args:
-            T (float between 0 and 1): loss amount is \sqrt{T}
+            T (float): loss amount is \sqrt{T}
             k (int): mode that loses energy
         """
 
@@ -523,10 +531,11 @@ class BosonicModes:
         self.apply_channel(X2, Y2)
 
     def thermal_loss(self, T, nbar, k):
-        r"""Implements the thermal loss channel in mode k.
+        r"""Implements the thermal loss channel in mode k. T is the loss parameter that must 
+        be between 0 and 1.
 
         Args:
-            T (float between 0 and 1): loss amount is \sqrt{T}
+            T (float): loss amount is \sqrt{T}
             nbar (float): mean photon number of the thermal bath
             k (int): mode that undegoes thermal loss
         """
@@ -727,7 +736,7 @@ class BosonicModes:
 
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         mp = self.scovmat()
-        (A, B, C) = ops.chop_in_blocks_multi(mp, expind)
+        A, B, C = ops.chop_in_blocks_multi(mp, expind)
         V = A - B @ np.linalg.inv(C + covmat) @ B.transpose(0, 2, 1)
         self.covs = ops.reassemble_multi(V, expind)
 
@@ -796,8 +805,8 @@ class BosonicModes:
         r"""Transforms the state according to a deterministic Gaussian CPTP map.
 
         Args:
-            X (array): matrix for mutltiplicative part of transformation
-            Y (array): matrix for additive part of transformation.
+            X (array): matrix for multiplicative part of transformation
+            Y (array): matrix for additive part of transformation
         """
         self.means = update_means(self.means, X, self.from_xp)
         self.covs = update_covs(self.covs, X, self.from_xp, Y)

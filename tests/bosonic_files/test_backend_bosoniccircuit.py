@@ -39,7 +39,7 @@ class TestBosonicCircuit:
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
     def test_reset_circuit(self, num_weights, num_modes):
-        r"""Checks that the reset method instantiates correct number of modes
+        r"""Checks that the reset method instantiates the correct number of modes
         as vacuum, each with a given number of weights."""
         # Create a state over 3 modes, 2 weights per mode
         example = circuit.BosonicModes()
@@ -83,7 +83,7 @@ class TestBosonicCircuit:
     @pytest.mark.parametrize("num_weights_new", NUM_NEW_WEIGHTS_VALS)
     def test_add_del_modes(self, num_weights, num_modes, num_weights_new):
         r"""Checks that modes can be added and deleted."""
-        # Create state with number of weights and modes
+        # Create a state with the pre-defined number of weights and modes
         example = circuit.BosonicModes()
         example.reset(num_modes, num_weights)
         # Delete first mode and check active modes changed
@@ -364,7 +364,7 @@ class TestBosonicCircuit:
 
     @pytest.mark.parametrize("r", R_VALS)
     def test_complex_weight(self, r):
-        r"""Checks a cat state has correct parity and that mean from homodyne sampling is 0."""
+        r"""Checks a cat state has correct parity and that the mean from homodyne sampling is 0."""
         # Make a cat state
         example = circuit.BosonicModes()
         example.reset(1, 4)
