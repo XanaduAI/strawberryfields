@@ -943,7 +943,7 @@ class BosonicModes:
         transformations for the whole system.
 
         Args:
-            modes (list): list of modes on which ``(X,Y)``
+            modes (list): list of modes on which ``(X,Y)`` act
             X (array): matrix for mutltiplicative part of transformation
             Y (array): matrix for additive part of transformation.
         """
