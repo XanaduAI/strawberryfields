@@ -102,9 +102,43 @@ class TestBosonicModes:
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
+    def test_del_modes(self, num_weights, num_modes):
+        r"""Checks that modes can be deleted."""
+        # Create a state with the pre-defined number of weights and modes
+        example = circuit.BosonicModes(num_modes, num_weights)
+        # Delete first mode and check active modes changed
+        example.del_mode(0)
+        tot_weights = (num_weights ** num_modes)
+        assert example.get_modes() == list(range(1, num_modes))
+        # Check numbers of weights, means and covs
+        assert np.isclose(sum(example.get_weights()), 1)
+        assert example.get_weights().shape == (tot_weights,)
+        assert example.get_mean().shape == (tot_weights, 2 * (num_modes))
+        assert example.get_covmat().shape == (tot_weights, 2 * (num_modes), 2 * (num_modes))
+    
+    @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
+    @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
     @pytest.mark.parametrize("num_weights_new", NUM_NEW_WEIGHTS_VALS)
-    def test_add_del_modes(self, num_weights, num_modes, num_weights_new):
-        r"""Checks that modes can be added and deleted."""
+    def test_add_modes(self, num_weights, num_modes, num_weights_new):
+        r"""Checks that modes can be added."""
+        # Create a state with the pre-defined number of weights and modes
+        example = circuit.BosonicModes(num_modes, num_weights)
+
+        # Add new mode with new number of weights
+        example.add_mode([num_weights_new])
+        tot_weights = (num_weights ** num_modes) * num_weights_new
+        # Check numbers of weights, means and covs
+        assert example.get_modes() == list(range(num_modes + 1))
+        assert np.isclose(sum(example.get_weights()), 1)
+        assert example.get_weights().shape == (tot_weights,)
+        assert example.get_mean().shape == (tot_weights, 2 * (num_modes + 1))
+        assert example.get_covmat().shape == (tot_weights, 2 * (num_modes + 1), 2 * (num_modes + 1))
+
+    @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
+    @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
+    @pytest.mark.parametrize("num_weights_new", NUM_NEW_WEIGHTS_VALS)
+    def test_add_del_modes_together(self, num_weights, num_modes, num_weights_new):
+        r"""Checks that modes can be added and deleted in sequence."""
         # Create a state with the pre-defined number of weights and modes
         example = circuit.BosonicModes(num_modes, num_weights)
         # Delete first mode and check active modes changed
@@ -425,3 +459,20 @@ class TestBosonicModes:
         example.phase_shift(phi, 1)
         # Check they have the same means
         assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
+    
+    @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
+    @pytest.mark.parametrize("r", R_VALS)    
+    def test_expandXY(self, num_modes,r):
+        r"""Tests the expandXY function"""
+        example = circuit.BosonicModes(num_modes, 1)
+        X = r*np.eye(2)
+        Y = r*np.eye(2)
+        X2,Y2 = example.expandXY([0],X,Y)
+        X2_diag = np.ones(2*num_modes)
+        X2_diag[0] = r
+        X2_diag[num_modes] = r
+        Y2_diag = np.zeros(2*num_modes)
+        Y2_diag[0] = r
+        Y2_diag[num_modes] = r
+        assert np.allclose(X2,np.diag(X2_diag))
+        assert np.allclose(Y2,np.diag(Y2_diag))

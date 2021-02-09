@@ -590,6 +590,8 @@ class BosonicModes:
 
         if self.active[k] is None:
             raise ValueError("Cannot apply loss channel, mode does not exist")
+        if (T < 0) or (T > 1):
+            raise ValueError("Loss parameter must be between 0 and 1.")
 
         X = np.sqrt(T) * np.identity(2)
         Y = self.hbar * (1 - T) * np.identity(2) / 2
@@ -839,7 +841,9 @@ class BosonicModes:
             ValueError: if any of the modes are not in the list of active modes
         """
         if covmat.shape != (2 * len(modes), 2 * len(modes)):
-            raise ValueError("The size of the covariance matrix does not match the indices provided.")
+            raise ValueError(
+                "The size of the covariance matrix does not match the indices provided."
+            )
 
         for i in modes:
             if self.active[i] is None:
@@ -876,7 +880,7 @@ class BosonicModes:
 
         Args:
             mode (int): mode to be measured
-            val (array): measurement value to post-select
+            val (array): measurement value to postselect
             eps (int): squeezing of the measurement state
             phi (float): homodyne angle
 
@@ -896,7 +900,7 @@ class BosonicModes:
 
         Args:
             mode (int): mode to be measured
-            alpha_val (array): measurement value to post-select
+            alpha_val (array): measurement value to postselect
 
         Raises:
             ValueError: if the mode are not in the list of active modes
