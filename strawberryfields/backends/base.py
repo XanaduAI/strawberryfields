@@ -677,3 +677,81 @@ class BaseGaussian(BaseBackend):
             BaseGaussianState: state description
         """
         raise NotImplementedError
+
+
+# ==============================
+# Base bosonic backend
+# ==============================
+
+
+class BaseBosonic(BaseBackend):
+    """Abstract base class for backends that are only capable of bosonic state manipulation."""
+
+    compiler = "bosonic"
+
+    def __init__(self):
+        super().__init__()
+        self._supported["bosonic"] = True
+
+    def measure_heterodyne(self, mode, shots=1, select=None):
+        r"""Perform a heterodyne measurement on the given mode.
+
+        Updates the current state of the circuit such that the measured mode is reset to the vacuum state.
+
+        Args:
+            mode (int): which mode to measure
+            shots (int): number of measurement samples to obtain
+            select (None or complex): If not None: desired value of the measurement result.
+                Enables post-selection on specific measurement results instead of random sampling.
+
+        Returns:
+            complex: measured value
+        """
+        raise NotImplementedError
+
+    def prepare_gaussian_state(self, r, V, modes):
+        r"""Prepare a Gaussian state.
+
+        The specified modes are traced out and replaced with a Gaussian state
+        provided via a vector of means and a covariance matrix.
+
+        Args:
+            r (array): vector of means in xp ordering
+            V (array): covariance matrix in xp ordering
+            modes (int or Sequence[int]): Which modes to prepare the state in.
+                If the modes are not sorted, this is taken into account when preparing the state.
+                I.e., when a two mode state is prepared with ``modes=[3,1]``, the first
+                mode of the given state goes into mode 3 and the second mode goes into mode 1.
+        """
+        raise NotImplementedError
+
+    def get_cutoff_dim(self):
+        raise NotApplicableError
+
+    def prepare_fock_state(self, n, mode):
+        raise NotApplicableError
+
+    def prepare_ket_state(self, state, mode):
+        raise NotApplicableError
+
+    def prepare_dm_state(self, state, mode):
+        raise NotApplicableError
+
+    def cubic_phase(self, gamma, mode):
+        raise NotApplicableError
+
+    def kerr_interaction(self, kappa, mode):
+        raise NotApplicableError
+
+    def cross_kerr_interaction(self, kappa, mode1, mode2):
+        raise NotApplicableError
+
+    def state(self, modes=None, **kwargs):
+        """Returns the state of the quantum simulation.
+
+        See :meth:`.BaseBackend.state`.
+
+        Returns:
+            BaseGaussianState: state description
+        """
+        raise NotImplementedError
