@@ -949,7 +949,7 @@ class BosonicModes:
         Args:
             modes (list): list of modes on which ``(X,Y)`` act
             X (array): matrix for mutltiplicative part of transformation
-            Y (array): matrix for additive part of transformation.
+            Y (array): matrix for additive part of transformation
         """
         X2 = symp.expand(X, modes, self.nlen)
         Y2 = symp.expand(Y, modes, self.nlen)
