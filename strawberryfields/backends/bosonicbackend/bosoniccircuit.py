@@ -121,7 +121,7 @@ def update_covs(covs, X, perm_out, Y=None):
         covs (array): array of covariance matrices
         X (array): matrix for multiplicative part of transformation
         perm_out (array): indices for quadrature ordering
-        Y (array or 0): matrix for additive part of transformation.
+        Y (array): matrix for additive part of transformation.
 
     Returns:
         array: transformed array of covariance matrices
@@ -192,17 +192,17 @@ class BosonicModes:
         r"""Delete modes from the circuit.
 
         Args:
-            modes (int or list): modes to be deleted.
+            modes (int or list): modes to be deleted
 
         Raises:
-            ValueError: if any of modes are not in the list of active modes
+            ValueError: if any of the modes are not in the list of active modes
         """
         if isinstance(modes, int):
             modes = [modes]
 
         for mode in modes:
             if self.active[mode] is None:
-                raise ValueError("Cannot delete mode, mode does not exist")
+                raise ValueError("Cannot delete mode, as the mode does not exist.")
 
             self.loss(0.0, mode)
             self.active[mode] = None
@@ -211,7 +211,7 @@ class BosonicModes:
         """Reset the simulation state.
 
         Args:
-            num_subsystems (int, optional): Sets the number of modes in the reset
+            num_subsystems (int): Sets the number of modes in the reset
                 circuit. ``None`` means unchanged.
             num_weights (int): Sets the number of gaussians per mode in the
                 superposition.
@@ -221,11 +221,11 @@ class BosonicModes:
         """
         if num_subsystems is not None:
             if not isinstance(num_subsystems, int):
-                raise ValueError("Number of modes must be an integer")
+                raise ValueError("Number of modes must be an integer.")
             self.nlen = num_subsystems
 
         if not isinstance(num_weights, int):
-            raise ValueError("Number of weights must be an integer")
+            raise ValueError("Number of weights must be an integer.")
 
         self.active = list(np.arange(self.nlen, dtype=int))
         # Mode index permutation list to and from XP ordering.
@@ -257,7 +257,7 @@ class BosonicModes:
             ValueError: if the mode is not in the list of active modes
         """
         if self.active[i] is None:
-            raise ValueError("Cannot displace mode, mode does not exist")
+            raise ValueError("Cannot displace mode, as the mode does not exist.")
         self.means += symp.expand_vector(r * np.exp(1j * phi), i, self.nlen)[self.from_xp]
 
     def squeeze(self, r, phi, k):
@@ -400,14 +400,14 @@ class BosonicModes:
             l (int): second mode
 
         Raises:
-            ValueError: if the mode is not in the list of active modes
-            ValueError: if first mode equals second mode
+            ValueError: if any of the two modes is not in the list of active modes
+            ValueError: if the first mode equals the second mode
         """
         if self.active[k] is None or self.active[l] is None:
             raise ValueError("Cannot perform beamsplitter, mode(s) do not exist")
 
         if k == l:
-            raise ValueError("Cannot use the same mode for beamsplitter inputs")
+            raise ValueError("Cannot use the same mode for beamsplitter inputs.")
 
         bs = symp.expand(symp.beam_splitter(theta, phi), [k, l], self.nlen)
         self.means = update_means(self.means, bs, self.from_xp)
@@ -473,7 +473,7 @@ class BosonicModes:
 
         Raises:
             ValueError: if the covariance matrix dimension does not match the
-                        number of quadratures targeted
+                number of quadratures targeted
         """
         if modes is None:
             n = len(V) // 2
@@ -481,7 +481,7 @@ class BosonicModes:
 
             if n != self.nlen:
                 raise ValueError(
-                    "Covariance matrix is the incorrect size, does not match means vector."
+                    "The covariance matrix has an incorrect size, does not match means vector."
                 )
         else:
             n = len(modes)
@@ -501,7 +501,7 @@ class BosonicModes:
 
         Args:
             alpha (array): amplitudes for coherent states
-            modes (list or None): modes to use for fidelity calculation
+            modes (list): modes to use for fidelity calculation
 
         Returns:
             float: fidelity of the state in modes to the coherent state alpha
@@ -537,7 +537,7 @@ class BosonicModes:
         r"""Returns the fidelity to the vacuum.
 
         Args:
-            modes (list or None): modes to use for fidelity calculation
+            modes (list): modes to use for fidelity calculation
 
         Returns:
             float: fidelity of the state in modes to the vacuum
@@ -553,10 +553,10 @@ class BosonicModes:
         value of the Wigner function at the origin.
 
         Args:
-            modes (list or None): modes to use for parity calculation
+            modes (list): modes to use for parity calculation
 
         Returns:
-            float: parity of the state in modes
+            float: parity of the state for the subsystem defined by modes
         """
         if modes is None:
             modes = list(range(self.nlen))
@@ -616,11 +616,11 @@ class BosonicModes:
         self.apply_channel(X2, Y2)
 
     def init_thermal(self, nbar, mode):
-        r"""Initializes a state of mode in a thermal state with the given population.
+        r"""Initializes a state in a thermal state with the given population.
 
         Args:
             nbar (float): mean photon number of the thermal state
-            mode (int): mode that get initialized
+            mode (int): mode that gets initialized
         """
         self.thermal_loss(0.0, nbar, mode)
 
@@ -662,13 +662,13 @@ class BosonicModes:
         """
         # pylint: disable=too-many-branches
         if covmat.shape != (2 * len(modes), 2 * len(modes)):
-            raise ValueError("Covariance matrix size does not match indices provided")
+            raise ValueError("Covariance matrix size does not match indices provided.")
 
         if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(modes)):
             raise ValueError("Measurement covariance matrix is unphysical.")
 
         if self.covs.imag.any():
-            raise NotImplementedError("Covariance matrices must be real")
+            raise NotImplementedError("Covariance matrices must be real.")
 
         for i in modes:
             if self.active[i] is None:
@@ -825,7 +825,7 @@ class BosonicModes:
         return self.measure_dyne(covmat, [mode], shots=shots)
 
     def post_select_generaldyne(self, covmat, modes, vals):
-        r"""Simulates general-dyne measurement on a set of modes with a specified measurement
+        r"""Simulates a general-dyne measurement on a set of modes with a specified measurement
         outcome.
 
         Args:
@@ -834,12 +834,12 @@ class BosonicModes:
             vals (array): measurement outcome to postselect
 
         Raises:
-            ValueError: if the dimension of covmat does not match number of quadratures
+            ValueError: if the dimension of covmat does not match the number of quadratures
                         associated with modes
             ValueError: if any of the modes are not in the list of active modes
         """
         if covmat.shape != (2 * len(modes), 2 * len(modes)):
-            raise ValueError("Covariance matrix size does not match indices provided")
+            raise ValueError("The size of the covariance matrix does not match the indices provided.")
 
         for i in modes:
             if self.active[i] is None:
@@ -884,7 +884,7 @@ class BosonicModes:
             ValueError: if the mode are not in the list of active modes
         """
         if self.active[mode] is None:
-            raise ValueError("Cannot apply homodyne measurement, mode does not exist")
+            raise ValueError("Cannot apply homodyne measurement, mode does not exist.")
         self.phase_shift(phi, mode)
         covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
         indices = [mode]
@@ -902,7 +902,7 @@ class BosonicModes:
             ValueError: if the mode are not in the list of active modes
         """
         if self.active[mode] is None:
-            raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
+            raise ValueError("Cannot apply heterodyne measurement, mode does not exist.")
 
         covmat = self.hbar * np.identity(2) / 2
         vals = np.array([alpha_val.real, alpha_val.imag])

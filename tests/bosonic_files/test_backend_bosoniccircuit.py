@@ -229,7 +229,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
     def test_gaussian_symplectic(self, r, phi):
-        r"""Checks symplectic transformations, and get_covtmat_xp, get_mean_xp."""
+        r"""Checks symplectic transformations, and get_covmat_xp, get_mean_xp."""
         example = circuit.BosonicModes(2, 1)
 
         # Create a symplectic and apply to first mode
@@ -255,7 +255,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
     def test_beamsplitter(self, r, phi):
-        r"""Checks beamsplitter."""
+        r"""Checks applying a beamsplitter."""
         example = circuit.BosonicModes(2, 1)
         # Send two coherent states through beamspliter
         example.displace(r, 0, 0)
@@ -269,7 +269,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     @pytest.mark.parametrize("num_shots", NUM_SHOTS_VALS)
     def test_generaldyne(self, num_weights, r, num_shots):
-        r"""Checks generaldyne."""
+        r"""Checks a generaldyne measurement."""
         # Create two vacuums with multiple weights
         example = circuit.BosonicModes(2, num_weights)
         # Create squeezed covariance matrix
@@ -290,7 +290,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
     def test_homodyne(self, num_weights, r, phi):
-        r"""Checks homodyne."""
+        r"""Checks a homodyne measurement."""
         # Create coherent state with multiple weights
         example = circuit.BosonicModes(1, num_weights)
         # Make complex weights
@@ -307,7 +307,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("r", R_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
     def test_heterodyne(self, num_weights, r, phi):
-        r"""Checks heterodyne."""
+        r"""Checks a heterodyne measurement."""
         # Create coherent state with multiple weights
         example = circuit.BosonicModes(1, num_weights)
         example.displace(r, phi, 0)
@@ -387,7 +387,7 @@ class TestBosonicModes:
 
     @pytest.mark.parametrize("r", R_VALS)
     def test_complex_weight(self, r):
-        r"""Checks a cat state has correct parity and that the mean from homodyne sampling is 0."""
+        r"""Checks that a cat state has correct parity and that the mean from homodyne sampling is 0."""
         # Make a cat state
         example = circuit.BosonicModes(1, 4)
 
@@ -415,7 +415,7 @@ class TestBosonicModes:
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
     def test_linear_optical_unitary(self, r, phi):
-        r"""Checks linear optical unitary implementation of a phase shift."""
+        r"""Checks the linear optical unitary implementation of a phase shift."""
         # Create two displaced states
         example = circuit.BosonicModes(2, 1)
         example.displace(r, 0, 0)
