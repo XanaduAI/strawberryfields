@@ -61,7 +61,7 @@ class TestBackendStateCreation:
         state = backend.state(modes=[0])
         f = state.fidelity_coherent([a])
         assert np.allclose(f, 1, atol=tol, rtol=0)
-
+    
     def test_reduced_state_fock_probs(self, cutoff, setup_backend, batch_size, tol):
         """Test backend calculates correct fock prob of reduced coherent state"""
         backend = setup_backend(2)
@@ -163,7 +163,7 @@ class TestBaseStateMeanPhotonNumber:
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-
+@pytest.mark.backends("fock", "tf","gaussian")
 class TestBaseFockKetDensityMatrix:
     """Tests for the ket, dm, and reduced density matrix function."""
 
@@ -319,7 +319,7 @@ class TestQuadratureExpectations:
 
         assert np.allclose(res.flatten(), res_exact.flatten(), atol=tol, rtol=0)
 
-
+@pytest.mark.backends("fock", "tf","gaussian")
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
@@ -565,7 +565,7 @@ class TestParityExpectation:
 
         assert np.allclose(state.parity_expectation([0]), (1 / ((2 * m) + 1)), atol=tol, rtol=0)
 
-
+@pytest.mark.backends("fock", "tf","gaussian")
 class TestFidelities:
     """Fidelity tests."""
 
@@ -617,3 +617,42 @@ class TestFidelities:
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)
+
+@pytest.mark.backends("bosonic")
+class TestBosonicState:
+    """Tests bosonic state function."""
+    def test_weights(self,setup_backend):
+        """Test weights are correct for a Gaussian state."""
+        backend = setup_backend(1)
+        backend.prepare_coherent_state(1,0,0)
+        weights = backend.state().weights()
+        assert len(weights) == 1
+        assert weights == np.array([1])
+        assert sum(weights) == 1
+        
+    def test_bosonic_purity(self,setup_backend,tol):
+        """Test purities are correct for Gaussian states."""
+        backend = setup_backend(1)
+        backend.prepare_coherent_state(r,phi,0)
+        purity1 = backend.state().purity()
+        backend.reset()
+        backend.prepare_thermal_state(1,0)
+        purity2 = backend.state().purity()
+        assert np.allclose(purity1, 1, atol=tol, rtol=0)
+        assert purity2 < 1
+        
+    def test_displacement(self,setup_backend,tol):
+        """Tests average displacement calculation."""
+        backend = setup_backend(1)
+        backend.prepare_coherent_state(r,phi,0)
+        disp = backend.state().displacement(0)
+        assert np.allclose(r*np.cos(phi)+1j*r*np.sin(phi),disp)
+    
+    def test_density_matrix(self,setup_backend,tol):
+        """Tests vacuum density matrix."""
+        backend = setup_backend(1)
+        backend.prepare_vacuum_state(0)
+        dm = backend.state().dm()
+        dm_compare = np.zeros((10,10))
+        dm_compare[0,0] = 1
+        assert np.allclose(dm,dm_compare)

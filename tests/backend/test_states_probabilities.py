@@ -67,7 +67,7 @@ class TestFockProbabilities:
             prob_n = state.fock_prob([n, cutoff // 2])
             assert np.allclose(prob_n, ref_probs[n], atol=tol, rtol=0)
 
-
+@pytest.mark.backends("fock", "tf","gaussian")
 @pytest.mark.parametrize("a", MAG_ALPHAS)
 @pytest.mark.parametrize("phi", PHASE_ALPHAS)
 class TestAllFockProbs:

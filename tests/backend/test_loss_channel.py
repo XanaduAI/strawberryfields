@@ -58,7 +58,7 @@ class TestRepresentationIndependent:
 
 # at the moment the Fock backends don't support
 # thermal loss channels.
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian","bosonic")
 class TestThermalLossChannel:
     """Tests that make use of the Gaussian representation to test
     thermal loss channels."""
@@ -83,7 +83,11 @@ class TestThermalLossChannel:
         state2 = backend.state()
 
         assert np.allclose(state1.means(), state2.means(), atol=tol, rtol=0)
-        assert np.allclose(state1.cov(), state2.cov(), atol=tol, rtol=0)
+        # Gaussian has one cov, bosonic has multiple covs
+        if state1._basis == "gaussian":
+            assert np.allclose(state1.cov(), state2.cov(), atol=tol, rtol=0)
+        elif state1._basis == "bosonic":
+            assert np.allclose(state1.covs(), state2.covs(), atol=tol, rtol=0)
 
     @pytest.mark.parametrize("nbar", MAG_ALPHAS)
     def test_full_thermal_loss_channel(self, nbar, setup_backend, pure, tol):
@@ -103,7 +107,10 @@ class TestThermalLossChannel:
         state2 = backend.state()
 
         assert np.allclose(state1.means(), state2.means(), atol=tol, rtol=0)
-        assert np.allclose(state1.cov(), state2.cov(), atol=tol, rtol=0)
+        if state1._basis == "gaussian":
+            assert np.allclose(state1.cov(), state2.cov(), atol=tol, rtol=0)
+        elif state1._basis == "bosonic":
+            assert np.allclose(state1.covs(), state2.covs(), atol=tol, rtol=0)
 
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("nbar", MAG_ALPHAS)
@@ -116,8 +123,10 @@ class TestThermalLossChannel:
         backend.squeeze(r, 0, 0)
         backend.thermal_loss(T, nbar, 0)
         state = backend.state()
-
-        res = state.cov()
+        if state._basis == "gaussian":
+            res = state.cov()
+        elif state._basis == "bosonic":
+            res = state.covs()
         exp = np.diag(
             [
                 T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
