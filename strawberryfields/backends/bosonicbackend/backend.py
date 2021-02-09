@@ -44,7 +44,7 @@ class BosonicBackend(BaseBosonic):
         self._init_modes = num_subsystems
         self.circuit = BosonicModes(num_subsystems)
 
-    def add_mode(self, modes=1, peaks=None):
+    def add_mode(self, modes=1, **kwargs):
         r"""Adds new modes to the circuit each a with number of Gaussian peaks
         specified by peaks.
 
@@ -55,10 +55,11 @@ class BosonicBackend(BaseBosonic):
             ValueError: if the length of the list of peaks is different than
             the number of modes.
         """
+        peaks = kwargs.get("peaks", None)
         if peaks is None:
             peaks = list(np.ones(modes))
         if modes != len(peaks):
-            return ValueError("Please specify the number of peaks per new mode.")
+            raise ValueError("Please specify the number of peaks per new mode.")
         self.circuit.add_mode(peaks)
 
     def del_mode(self, modes):

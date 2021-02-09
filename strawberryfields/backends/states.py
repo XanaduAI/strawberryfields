@@ -1780,7 +1780,7 @@ class BaseBosonicState(BaseState):
             return 1.0
 
         alpha_mean = []
-        for i, item in enumerate(modes):
+        for i in range(len(modes)):
             alpha_mean.append(alpha_list.real[i] * np.sqrt(2 * self.hbar))
             alpha_mean.append(alpha_list.imag[i] * np.sqrt(2 * self.hbar))
         alpha_mean = np.array(alpha_mean)
