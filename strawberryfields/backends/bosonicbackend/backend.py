@@ -60,7 +60,7 @@ class BosonicBackend(BaseBosonic):
         """
         peaks = kwargs.get("peaks", None)
         if peaks is None:
-            peaks = list(np.ones(n))
+            peaks = list(np.ones(n, dtype=int))
         if n != len(peaks):
             raise ValueError("Please specify the number of peaks per new mode.")
         self.circuit.add_mode(peaks)
