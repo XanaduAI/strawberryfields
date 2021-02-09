@@ -108,14 +108,14 @@ class TestBosonicModes:
         example = circuit.BosonicModes(num_modes, num_weights)
         # Delete first mode and check active modes changed
         example.del_mode(0)
-        tot_weights = (num_weights ** num_modes)
+        tot_weights = num_weights ** num_modes
         assert example.get_modes() == list(range(1, num_modes))
         # Check numbers of weights, means and covs
         assert np.isclose(sum(example.get_weights()), 1)
         assert example.get_weights().shape == (tot_weights,)
         assert example.get_mean().shape == (tot_weights, 2 * (num_modes))
         assert example.get_covmat().shape == (tot_weights, 2 * (num_modes), 2 * (num_modes))
-    
+
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
     @pytest.mark.parametrize("num_weights_new", NUM_NEW_WEIGHTS_VALS)
@@ -157,20 +157,49 @@ class TestBosonicModes:
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_displace_squeeze_rotate(self, r, phi):
-        r"""Checks single-mode Gaussian transformations."""
-        # Ensure zero displacement, squeezing and rotation all yield vacuum
+    def test_displace(self, r, phi):
+        r"""Checks the displacement operation."""
+        # Ensure zero displacement yields vacuum
         example = circuit.BosonicModes(1, 1)
-        example.squeeze(0, 0, 0)
-        assert example.is_vacuum(tol=1e-10)
         example.displace(0, 0, 0)
         assert example.is_vacuum(tol=1e-10)
+
+        # Displace and check it is a coherent state
+        example.displace(r, phi, 0)
+        assert np.isclose(example.fidelity_coherent(np.array([r * np.exp(1j * phi)])), 1)
+
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("r", R_VALS)
+    def test_rotate(self, r, phi):
+        r"""Checks the phase shift operation."""
+        # Ensure zero rotation yields vacuum
+        example = circuit.BosonicModes(1, 1)
         example.phase_shift(0, 0)
         assert example.is_vacuum(tol=1e-10)
 
-        # Displaceand check it is a coherent state
+        # Displace
         example.displace(r, phi, 0)
-        assert np.isclose(example.fidelity_coherent(np.array([r * np.exp(1j * phi)])), 1)
+        d = example.hbar * (np.array([r * np.exp(1j * phi).real, r * np.exp(1j * phi).imag]))
+
+        # Rotate state and confirm correct mean and covs produced
+        example.phase_shift(phi, 0)
+        Rmat2 = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
+        cov_new = Rmat2 @ Rmat2.T
+        d_new = Rmat2 @ d
+        assert np.allclose(example.get_mean()[0], d_new)
+        assert np.allclose(example.get_covmat()[0], cov_new)
+
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("r", R_VALS)
+    def test_squeeze(self, r, phi):
+        r"""Checks the squeezing operation."""
+        # Ensure zero squeezing yields vacuum
+        example = circuit.BosonicModes(1, 1)
+        example.squeeze(0, 0, 0)
+        assert example.is_vacuum(tol=1e-10)
+
+        # Displace
+        example.displace(r, phi, 0)
 
         # Squeeze state and confirm correct mean and covs produced
         example.squeeze(r, phi, 0)
@@ -179,14 +208,6 @@ class TestBosonicModes:
         Rmat = np.array([[np.cos(phi / 2), -np.sin(phi / 2)], [np.sin(phi / 2), np.cos(phi / 2)]])
         cov_new = Rmat @ Smat @ Rmat.T @ Rmat @ Smat.T @ Rmat.T
         d_new = Rmat @ Smat @ Rmat.T @ d
-        assert np.allclose(example.get_mean()[0], d_new)
-        assert np.allclose(example.get_covmat()[0], cov_new)
-
-        # Rotate state and confirm correct mean and covs produced
-        example.phase_shift(phi, 0)
-        Rmat2 = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
-        cov_new = Rmat2 @ cov_new @ Rmat2.T
-        d_new = Rmat2 @ d_new
         assert np.allclose(example.get_mean()[0], d_new)
         assert np.allclose(example.get_covmat()[0], cov_new)
 
@@ -459,20 +480,20 @@ class TestBosonicModes:
         example.phase_shift(phi, 1)
         # Check they have the same means
         assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
-    
+
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
-    @pytest.mark.parametrize("r", R_VALS)    
-    def test_expandXY(self, num_modes,r):
+    @pytest.mark.parametrize("r", R_VALS)
+    def test_expandXY(self, num_modes, r):
         r"""Tests the expandXY function"""
         example = circuit.BosonicModes(num_modes, 1)
-        X = r*np.eye(2)
-        Y = r*np.eye(2)
-        X2,Y2 = example.expandXY([0],X,Y)
-        X2_diag = np.ones(2*num_modes)
+        X = r * np.eye(2)
+        Y = r * np.eye(2)
+        X2, Y2 = example.expandXY([0], X, Y)
+        X2_diag = np.ones(2 * num_modes)
         X2_diag[0] = r
         X2_diag[num_modes] = r
-        Y2_diag = np.zeros(2*num_modes)
+        Y2_diag = np.zeros(2 * num_modes)
         Y2_diag[0] = r
         Y2_diag[num_modes] = r
-        assert np.allclose(X2,np.diag(X2_diag))
-        assert np.allclose(Y2,np.diag(Y2_diag))
+        assert np.allclose(X2, np.diag(X2_diag))
+        assert np.allclose(Y2, np.diag(Y2_diag))
