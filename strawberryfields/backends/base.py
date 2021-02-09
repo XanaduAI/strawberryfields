@@ -170,7 +170,7 @@ class BaseBackend:
         """
         # BaseBackend can be instantiated for testing purposes, even though it does not do anything.
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         """Add modes to the circuit.
 
         The new modes are initialized to the vacuum state.
@@ -181,6 +181,10 @@ class BaseBackend:
 
         Returns:
             list[int]: indices of the newly added modes
+
+        Keyword Args:
+            peaks (list): number of Gaussian peaks to be used for each new
+            mode (for bosonic backend only)
         """
         raise NotImplementedError
 

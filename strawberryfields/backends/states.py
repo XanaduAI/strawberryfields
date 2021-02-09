@@ -1497,7 +1497,7 @@ class BaseBosonicState(BaseState):
         r"""Returns the purity of the state."""
 
         pur = 0
-        for i in range(len(self._weights)):
+        for i, weight_i in enumerate(self._weights):
             exp_arg = np.einsum(
                 "...j,...jk,...k",
                 (self._mus[i] - self._mus),
@@ -1505,7 +1505,7 @@ class BaseBosonicState(BaseState):
                 (self._mus[i] - self._mus),
             )
             prefactor = 1 / (np.sqrt(np.linalg.det((self._covs + self._covs[i]))))
-            pur += np.sum((self._weights * self._weights[i] * prefactor) * np.exp(-0.5 * exp_arg))
+            pur += np.sum((self._weights * weight_i * prefactor) * np.exp(-0.5 * exp_arg))
         pur *= sf.hbar ** self.num_modes
         return pur
 
@@ -1601,14 +1601,14 @@ class BaseBosonicState(BaseState):
         X, P = np.meshgrid(xvec, pvec, sparse=True)
 
         wigner = 0
-        for i in range(len(weights)):
+        for i, weight_i in enumerate(weights):
             exp_arg = (
                 np.array([X - means[i, 0], P - means[i, 1]])
                 @ np.linalg.inv(covs[i])
                 @ np.array([X - means[i, 0], P - means[i, 1]])
             )
             prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
-            wigner += (weights[i] * prefactor) * np.exp(-0.5 * (exp_arg))
+            wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
 
         return wigner
 
@@ -1780,7 +1780,7 @@ class BaseBosonicState(BaseState):
             return 1.0
 
         alpha_mean = []
-        for i in range(len(modes)):
+        for i, item in enumerate(modes):
             alpha_mean.append(alpha_list.real[i] * np.sqrt(2 * self.hbar))
             alpha_mean.append(alpha_list.imag[i] * np.sqrt(2 * self.hbar))
         alpha_mean = np.array(alpha_mean)

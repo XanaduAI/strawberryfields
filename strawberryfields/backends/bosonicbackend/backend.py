@@ -15,16 +15,11 @@
 """Bosonic backend"""
 import numpy as np
 
-from scipy.special import comb
-from scipy.linalg import block_diag
-import itertools as it
-
 from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
 from .bosoniccircuit import BosonicModes
-from ..base import NotApplicableError
 
 
 class BosonicBackend(BaseBosonic):
@@ -49,14 +44,22 @@ class BosonicBackend(BaseBosonic):
         self._init_modes = num_subsystems
         self.circuit = BosonicModes(num_subsystems)
 
-    def add_mode(self, peaks=1):
-        r"""Adds a new mode to the circuit with a number of Gaussian peaks
+    def add_mode(self, modes=1, peaks=None):
+        r"""Adds new modes to the circuit each a with number of Gaussian peaks
         specified by peaks.
 
-         Args:
-             peaks (int): number of Gaussian peaks in the new mode
+        Args:
+             peaks (list): number of Gaussian peaks for each new mode
+
+        Raises:
+            ValueError: if the length of the list of peaks is different than
+            the number of modes.
         """
-        self.circuit.add_mode([peaks])
+        if peaks is None:
+            peaks = list(np.ones(modes))
+        if modes != len(peaks):
+            return ValueError("Please specify the number of peaks per new mode.")
+        self.circuit.add_mode(peaks)
 
     def del_mode(self, modes):
         r"""Delete modes from the circuit.
@@ -72,7 +75,7 @@ class BosonicBackend(BaseBosonic):
         If a mode is deleted, its entry in the list is ``None``."""
         return self.circuit.get_modes()
 
-    def reset(self, **kwargs):
+    def reset(self, pure=True, **kwargs):
         """Reset all modes in the circuit to vacuum."""
         self.circuit.reset(self._init_modes, 1)
 
@@ -161,7 +164,7 @@ class BosonicBackend(BaseBosonic):
             mode (int): mode to be squeezed
         """
         self.circuit.squeeze(r, phi, mode)
-    
+
     def mb_squeeze(self, mode, r, phi, r_anc, eta_anc, avg):
         r"""Squeeze mode by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
         Depending on avg, this applies the average or single-shot map, returning the ancillary measurement outcome.
@@ -179,9 +182,9 @@ class BosonicBackend(BaseBosonic):
         """
         if avg:
             self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
-        if not avg:
-            ancilla_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
-            return ancilla_val
+            return None
+        ancilla_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
+        return ancilla_val
 
     def beamsplitter(self, theta, phi, mode1, mode2):
         r"""Implement a beam splitter operation between mode1 and mode2.
@@ -202,7 +205,7 @@ class BosonicBackend(BaseBosonic):
             X (array): matrix for multiplicative part of transformation
             Y (array): matrix for additive part of transformation
         """
-        if isinstance(modes,int):
+        if isinstance(modes, int):
             modes = [modes]
         if Y is not None:
             X2, Y2 = self.circuit.expandXY(modes, X, Y)
@@ -254,13 +257,12 @@ class BosonicBackend(BaseBosonic):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
             return np.array([res[:, 0] + 1j * res[:, 1]])
-        else:
-            res = select
-            self.circuit.post_select_heterodyne(mode, select)
-            return res
+        res = select
+        self.circuit.post_select_heterodyne(mode, select)
+        return res
 
     def prepare_gaussian_state(self, r, V, modes):
-        """Prepares a Gaussian state on modes from the mean vector and covariance
+        r"""Prepares a Gaussian state on modes from the mean vector and covariance
         matrix.
 
         Args:
@@ -335,7 +337,7 @@ class BosonicBackend(BaseBosonic):
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         raise NotImplementedError("Bosonic backend does not yet support threshold" "measurements")
 
-    def state(self, modes=None, peaks=None, **kwargs):
+    def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.
 
         See :meth:`.BaseBackend.state`.
