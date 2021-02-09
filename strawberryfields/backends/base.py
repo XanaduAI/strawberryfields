@@ -183,8 +183,7 @@ class BaseBackend:
             list[int]: indices of the newly added modes
 
         Keyword Args:
-            peaks (list): number of Gaussian peaks to be used for each new
-            mode (for bosonic backend only)
+            peaks (list): number of Gaussian peaks for each new mode (for bosonic backend only)
         """
         raise NotImplementedError
 
