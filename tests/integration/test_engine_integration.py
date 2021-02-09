@@ -54,13 +54,15 @@ def test_load_backend(name, expected, cutoff):
 
 class TestEngineReset:
     """Test engine reset functionality"""
-
+    
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_init_vacuum(self, setup_eng, tol):
         """Test that the engine is initialized to the vacuum state"""
         eng, prog = setup_eng(2)
         eng.run(prog)  # run an empty program
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_reset_vacuum(self, setup_eng, tol):
         """Test that resetting the engine returns to the vacuum state"""
         eng, prog = setup_eng(2)
@@ -98,18 +100,21 @@ class TestProperExecution:
     """Test that various frontend circuits execute through
     the backend with no error"""
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_no_return_state(self, setup_eng):
         """Engine returns no state object when none is requested."""
         eng, prog = setup_eng(2)
         res = eng.run(prog, modes=[])
         assert res.state is None
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_return_state(self, setup_eng):
         """Engine returns a valid state object."""
         eng, prog = setup_eng(2)
         res = eng.run(prog)
         assert isinstance(res.state, BaseState)
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_return_samples(self, setup_eng):
         """Engine returns measurement samples."""
         eng, prog = setup_eng(2)
@@ -131,6 +136,7 @@ class TestProperExecution:
 
     # TODO: Some of these tests should probably check *something* after execution
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_measured_parameter(self, setup_eng):
         """Test that a circuit with measured parameters executes successfully."""
         eng, prog = setup_eng(2)
@@ -168,6 +174,7 @@ class TestProperExecution:
         else:
             assert samples.shape == (1, 3)
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_homodyne_measurement_vacuum(self, setup_eng, tol):
         """MeasureX and MeasureP leave the mode in the vacuum state"""
         eng, prog = setup_eng(2)
@@ -180,6 +187,7 @@ class TestProperExecution:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_homodyne_measurement_vacuum_phi(self, setup_eng, tol):
         """Homodyne measurements leave the mode in the vacuum state"""
         eng, prog = setup_eng(2)
@@ -190,6 +198,7 @@ class TestProperExecution:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_program_subroutine(self, setup_eng, tol):
         """Simple quantum program with a subroutine and references."""
         eng, prog = setup_eng(2)
@@ -221,6 +230,7 @@ class TestProperExecution:
         if isinstance(eng.backend, BaseFock):
             assert np.allclose(state.trace(), 1, atol=tol, rtol=0)
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_subsystems(self, setup_eng, tol):
         """Check that the backend keeps in sync with the program when creating and deleting modes."""
         null = sf.Program(2)  # empty program
@@ -275,6 +285,7 @@ class TestProperExecution:
         # the regrefs are reset as well
         assert np.all([r.val is None for r in prog.register])
 
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_empty_program(self, setup_eng):
         """Empty programs do not change the state of the backend."""
         eng, p1 = setup_eng(2)

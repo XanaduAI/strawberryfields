@@ -19,7 +19,7 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-
+@pytest.mark.backends("fock","tf","gaussian")
 @pytest.mark.parametrize('cutoff', [10], indirect=True)  # override default cutoff fixture
 def test_teleportation_fidelity(setup_eng, pure):
     """Test that teleportation of a coherent state has high fidelity"""
@@ -82,7 +82,7 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
     cov2 = state.reduced_gaussian(3)[1]
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
 
-
+@pytest.mark.backends("fock","tf","gaussian")
 def test_gaussian_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     """Test that GBS returns expected Fock probabilities"""
     eng, prog = setup_eng(4)
