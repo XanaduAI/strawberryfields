@@ -50,10 +50,10 @@ class BosonicBackend(BaseBosonic):
 
         Args:
             n (int): number of new modes to add
-        
+
         Keyword Args:
             peaks (list): number of Gaussian peaks for each new mode
-        
+
         Raises:
             ValueError: if the length of the list of peaks is different than
             the number of modes.
