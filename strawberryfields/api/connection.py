@@ -21,7 +21,7 @@ from typing import List, Dict
 import numpy as np
 import requests
 
-from strawberryfields import version
+from strawberryfields._version import __version__
 from strawberryfields.configuration import load_config
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
@@ -32,8 +32,6 @@ from .result import Result
 from .devicespec import DeviceSpec
 
 # pylint: disable=bad-continuation,protected-access
-
-USER_AGENT_STRING = f"StrawberryFields/{version()}"
 
 class RequestFailedError(Exception):
     """Raised when a request to the remote platform returns an error response."""
@@ -101,7 +99,7 @@ class Connection:
 
         self._headers = {
             "Accept-Version": self.api_version,
-            "User-Agent": USER_AGENT_STRING,
+            "User-Agent": self.user_agent,
         }
 
         self.log = create_logger(__name__)
@@ -110,6 +108,11 @@ class Connection:
     def api_version(self) -> str:
         """str: The platform API version to request."""
         return "0.2.0"
+
+    @property
+    def user_agent(self) -> str:
+        """str: The User-Agent header sent alongside requests to the platform."""
+        return f"StrawberryFields/{__version__}"
 
     @property
     def token(self) -> str:
