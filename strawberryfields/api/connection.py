@@ -100,7 +100,7 @@ class Connection:
 
         self._headers = {
             "Accept-Version": self.api_version,
-            "User-Agent": self.user_agentself.user_agent,
+            "User-Agent": self.user_agent,
         }
 
         self.log = create_logger(__name__)
