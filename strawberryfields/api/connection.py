@@ -33,6 +33,7 @@ from .devicespec import DeviceSpec
 
 # pylint: disable=bad-continuation,protected-access
 
+
 class RequestFailedError(Exception):
     """Raised when a request to the remote platform returns an error response."""
 
@@ -99,7 +100,7 @@ class Connection:
 
         self._headers = {
             "Accept-Version": self.api_version,
-            "User-Agent": self.user_agent,
+            "User-Agent": self.user_agentself.user_agent,
         }
 
         self.log = create_logger(__name__)
