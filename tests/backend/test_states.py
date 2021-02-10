@@ -61,7 +61,6 @@ class TestBackendStateCreation:
         state = backend.state(modes=[0])
         f = state.fidelity_coherent([a])
         assert np.allclose(f, 1, atol=tol, rtol=0)
-    
     def test_reduced_state_fock_probs(self, cutoff, setup_backend, batch_size, tol):
         """Test backend calculates correct fock prob of reduced coherent state"""
         backend = setup_backend(2)

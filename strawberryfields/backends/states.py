@@ -1470,18 +1470,18 @@ class BaseBosonicState(BaseState):
         return False
 
     def means(self):
-        r"""The vectors of means describing the Bosonic state.
+        r"""The vectors of means describing the Bosonic state on N modes.
 
         Returns:
-          array: a num_weights by :math:`2N` array.
+          array[complex]: an array of shape ``(num_weights, 2N)``
         """
         return self._mus
 
     def covs(self):
-        r"""The covariance matrices describing the Bosonic state.
+        r"""The covariance matrices describing the Bosonic state on N modes.
 
         Returns:
-          array: a num_weights by :math:`2N\times 2N` array.
+          array[complex]: an array of shape ``(num_weights, 2N, 2N)``
         """
         return self._covs
 
@@ -1506,7 +1506,7 @@ class BaseBosonicState(BaseState):
             )
             prefactor = 1 / (np.sqrt(np.linalg.det((self._covs + self._covs[i]))))
             pur += np.sum((self._weights * weight_i * prefactor) * np.exp(-0.5 * exp_arg))
-        pur *= sf.hbar ** self.num_modes
+        pur *= self._hbar ** self.num_modes
         return pur
 
     def reduced_bosonic(self, modes):
@@ -1593,7 +1593,7 @@ class BaseBosonicState(BaseState):
 
         if mode > self._modes:
             raise ValueError(
-                "The number of specified modes cannot " "be larger than the number of subsystems."
+                "The number of specified modes cannot be larger than the number of subsystems."
             )
 
         weights, means, covs = self.reduced_bosonic([mode])

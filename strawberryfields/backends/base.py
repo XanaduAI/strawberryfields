@@ -719,8 +719,8 @@ class BaseBosonic(BaseBackend):
         provided via a vector of means and a covariance matrix.
 
         Args:
-            r (array): vector of means in xp ordering
-            V (array): covariance matrix in xp ordering
+            r (array): vector of means in :math:`(x_1,p_1,x_2,p_2,\dots)` ordering
+            V (array): covariance matrix in :math:`(x_1,p_1,x_2,p_2,\dots)` ordering
             modes (int or Sequence[int]): Which modes to prepare the state in.
                 If the modes are not sorted, this is taken into account when preparing the state.
                 I.e., when a two mode state is prepared with ``modes=[3,1]``, the first
