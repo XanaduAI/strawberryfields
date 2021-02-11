@@ -139,6 +139,8 @@ class BaseBackend:
         * "gaussian": for manipulations in the Gaussian representation using the
           displacements and covariance matrices
         * "fock_basis": for manipulations in the Fock representation
+        * "bosonic": for manipulations of states represented as linear combinations
+          of Gaussian functions in phase space
         * "mixed_states": for representations where the quantum state is mixed
         * "batched": allows for a multiple circuits to be simulated in parallel
 
@@ -688,11 +690,12 @@ class BaseGaussian(BaseBackend):
 
 
 class BaseBosonic(BaseGaussian):
-    """Abstract base class for backends that are only capable of bosonic state manipulation."""
+    """Abstract base class for backends that are only capable manipulating states
+    represented as linear combinations of Gaussian functions in phase space."""
 
     def __init__(self):
         super().__init__()
-        self._supported["bosonic"] = True
+        self._supported["gaussian_linear_combo"] = True
 
     def prepare_gaussian_state(self, r, V, modes):
         r"""Prepare a Gaussian state.
