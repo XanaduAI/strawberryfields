@@ -690,8 +690,6 @@ class BaseGaussian(BaseBackend):
 class BaseBosonic(BaseGaussian):
     """Abstract base class for backends that are only capable of bosonic state manipulation."""
 
-    compiler = "bosonic"
-
     def __init__(self):
         super().__init__()
         self._supported["bosonic"] = True
