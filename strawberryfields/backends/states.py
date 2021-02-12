@@ -1439,14 +1439,14 @@ class BaseBosonicState(BaseState):
         )
 
     def __eq__(self, other):
-        """Equality operator for BaseBosonicState.
+        """Equality operator.
 
-        Returns True if other BaseBosonicState is close to self.
-        This is done by comparing the weights, means vectors and covs matrices.
-        If both are within the EQ_TOLERANCE, True is returned.
+        Returns ``True`` if other  :class:`~.BaseBosonicState` is close to ``self``.
+        This is done by comparing the weights, means vectors and covariance matrices.
+        If both are within the ``EQ_TOLERANCE``, ``True`` is returned.
 
         Args:
-            other (BaseGaussianState): BaseGaussianState to compare against.
+            other (:class:`~.BaseBosonicState`): ``BaseBosonicState`` to compare against
         """
         # pylint: disable=protected-access
         # TODO: check equality for two different representations of the same state.
@@ -1489,7 +1489,7 @@ class BaseBosonicState(BaseState):
         r"""The weights describing the Bosonic state.
 
         Returns:
-          array: an array of length num_weights.
+          array: an array of length ``num_weights``
         """
         return self._weights
 
@@ -1540,7 +1540,7 @@ class BaseBosonicState(BaseState):
 
         if len(modes) > self._modes:
             raise ValueError(
-                "The number of specified modes cannot " "be larger than the number of subsystems."
+                "The number of specified modes cannot be larger than the number of subsystems."
             )
 
         ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
@@ -1567,10 +1567,12 @@ class BaseBosonicState(BaseState):
             modes = list(range(self._modes))
         elif isinstance(modes, int):  # pragma: no cover
             modes = [modes]
+
         ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
         avg_mu = np.real_if_close(np.sum(self._weights[:, None] * self._mus[:, ind], axis=0))
         if avg_mu.imag.any():
             raise ValueError("State mean is complex valued.")
+
         alpha = avg_mu[::2] + 1j * avg_mu[1::2]
         alpha /= np.sqrt(2 * self._hbar)
         return alpha
@@ -1587,7 +1589,7 @@ class BaseBosonicState(BaseState):
             pvec (array): array of discretized :math:`p` quadrature values
 
         Returns:
-            array: 2D array of size [len(xvec), len(pvec)], containing reduced Wigner function
+            array: 2D array of size ``[len(xvec), len(pvec)]``, containing reduced Wigner function
             values for specified x and p values.
 
         Raises:
@@ -1650,6 +1652,7 @@ class BaseBosonicState(BaseState):
         """
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
+
         # Sort by (q1,p1,q2,p2,...)
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
         exp_arg = np.einsum(
@@ -1658,6 +1661,7 @@ class BaseBosonicState(BaseState):
             np.linalg.inv(self._covs[:, mode_ind, :][:, :, mode_ind]),
             self._mus[:, mode_ind],
         )
+
         prefactor = 1 / np.sqrt(np.linalg.det(self._covs[:, mode_ind, :][:, :, mode_ind]))
         weighted_exp = np.array(self._weights) * prefactor * np.exp(-0.5 * exp_arg)
         parity = np.sum(weighted_exp) * (self._hbar / 2) ** len(modes)
@@ -1726,6 +1730,7 @@ class BaseBosonicState(BaseState):
             mus,
         )
         mean = np.sum(weights * (cov_trace + mean_dots)) / (2 * self._hbar) - 0.5
+        
         # TODO: check variance formula for non-Gaussian states
         cov_sq_trace = np.matrix.trace(covs @ covs, axis1=1, axis2=2)
         mean_cov_dots = np.einsum(
@@ -1737,8 +1742,10 @@ class BaseBosonicState(BaseState):
         var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar ** 2) - 0.25
         mean = np.real_if_close(mean)
         var = np.real_if_close(var)
+        
         if mean.imag != 0 or var.imag != 0:
             raise ValueError("Mean or variance of photon number is complex.")
+            
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
@@ -1779,8 +1786,10 @@ class BaseBosonicState(BaseState):
         for i in range(len(modes)):
             alpha_mean.append(alpha_list.real[i] * np.sqrt(2 * self.hbar))
             alpha_mean.append(alpha_list.imag[i] * np.sqrt(2 * self.hbar))
+
         alpha_mean = np.array(alpha_mean)
         deltas = self._mus - alpha_mean
+
         cov_sum = self._covs + self._hbar * np.eye(2 * len(modes)) / 2
         exp_arg = np.einsum("...j,...jk,...k", deltas, np.linalg.inv(cov_sum), deltas)
         weighted_exp = (
@@ -1789,6 +1798,7 @@ class BaseBosonicState(BaseState):
             * np.exp(-0.5 * exp_arg)
             / np.sqrt(np.linalg.det(cov_sum))
         )
+
         fidelity = np.sum(weighted_exp)
         return fidelity
 
@@ -1799,17 +1809,17 @@ class BaseBosonicState(BaseState):
             n (Sequence[int]): the Fock state :math:`\ket{\vec{n}}` that we want to measure the probability of
 
         Keyword Args:
-            cutoff (int): Specifies where to truncate the computation (default value is 10).
+            cutoff (int): Specifies where to truncate the computation (default value is ``10``).
 
         Returns:
             float: measurement probability
         """
         if len(n) != self._modes:
-            raise ValueError("Fock state must be same length as the number of modes")
+            raise ValueError("Fock state must be the same length as the number of modes.")
 
         cutoff = kwargs.get("cutoff", 10)
         if sum(n) >= cutoff:
-            raise ValueError("Cutoff argument must be larger than the sum of photon numbers")
+            raise ValueError("Cutoff argument must be larger than the sum of photon numbers.")
 
         prob = 0
         for i in range(self.num_weights):

@@ -63,4 +63,3 @@ class TestGaussianCPTP:
         
         assert np.allclose(state1.means(), state2.means(), atol=tol, rtol=0)
         assert np.allclose(state1.covs(), state2.covs(), atol=tol, rtol=0)
-        

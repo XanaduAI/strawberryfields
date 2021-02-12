@@ -23,10 +23,11 @@ from .bosoniccircuit import BosonicModes
 
 
 class BosonicBackend(BaseBosonic):
-    """Bosonic backend class."""
+    """Bosonic backend class for simulating states that can be represented as 
+    linear combinations of Gaussian functions in phase space."""
 
     short_name = "bosonic"
-    circuit_spec = "bosonic"
+    circuit_spec = None
 
     def __init__(self):
         """Initialize the backend."""
@@ -51,7 +52,7 @@ class BosonicBackend(BaseBosonic):
 
         Raises:
             ValueError: if the length of the list of peaks is different than
-            the number of modes.
+            the number of modes
         """
         peaks = kwargs.get("peaks", None)
         if peaks is None:
@@ -209,7 +210,7 @@ class BosonicBackend(BaseBosonic):
         For the bosonic backend, mode indices are sorted in ascending order.
 
         Returns:
-            BosonicState: object containing all state information
+            :class:`~.BosonicState`: object containing all state information
         """
         if isinstance(modes, int):
             modes = [modes]

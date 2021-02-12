@@ -693,12 +693,15 @@ class BaseBosonic(BaseGaussian):
     """Abstract base class for backends that are only capable manipulating states
     represented as linear combinations of Gaussian functions in phase space."""
 
+    compiler = None
+
     def __init__(self):
         super().__init__()
         self._supported["gaussian_linear_combo"] = True
 
     def prepare_gaussian_state(self, r, V, modes):
-        r"""Prepare a Gaussian state.
+        r"""Prepare a Gaussian state. Note the different basis-ordering from the 
+        GaussianBackend.
 
         The specified modes are traced out and replaced with a Gaussian state
         provided via a vector of means and a covariance matrix.

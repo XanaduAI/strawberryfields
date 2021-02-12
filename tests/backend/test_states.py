@@ -621,7 +621,7 @@ class TestFidelities:
 class TestBosonicState:
     """Tests bosonic state function."""
     def test_weights(self,setup_backend):
-        """Test weights are correct for a Gaussian state."""
+        """Test weights are correct for a Gaussian state represented using the bosonic backend."""
         backend = setup_backend(1)
         backend.prepare_coherent_state(1,0,0)
         weights = backend.state().weights()
@@ -630,7 +630,7 @@ class TestBosonicState:
         assert sum(weights) == 1
         
     def test_bosonic_purity(self,setup_backend,tol):
-        """Test purities are correct for Gaussian states."""
+        """Test purities are correct for Gaussian states represented using the bosonic backend."""
         backend = setup_backend(1)
         backend.prepare_coherent_state(r,phi,0)
         purity1 = backend.state().purity()
