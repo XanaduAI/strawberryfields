@@ -1418,8 +1418,8 @@ class BaseGaussianState(BaseState):
 
 
 class BaseBosonicState(BaseState):
-    r"""Class for the representation of quantum states as superpositions of
-    Gaussian states.
+    r"""Class for the representation of quantum states as linear combinations
+    of Gaussian functions in phase space.
     """
     # pylint: disable=too-many-public-methods
 
@@ -1618,26 +1618,17 @@ class BaseBosonicState(BaseState):
         return wigner
 
     def quad_expectation(self, mode, phi=0, **kwargs):
-        r"""The :math:`\x_{\phi}` operator expectation values and variance for the specified mode.
-
-        Args:
-            mode (int): the requested mode
-            phi (float): quadrature angle, clockwise from the positive :math:`x` axis.
-
-        Returns:
-            tuple (float, float): expectation value and variance
-        """
         # pylint: disable=unused-argument
         rot = _R(phi)
 
         weights, mus, covs = self.reduced_bosonic([mode])
-        muphis = (rot.T @ mus.T).T
-        muphi = np.real_if_close(np.sum(weights[:, None] * muphis, axis=0))
-        covphis = rot.T @ covs @ rot
-        covphi = np.real_if_close(np.sum(weights[:, None, None] * covphis, axis=0))[0, 0]
-        covphi += np.real_if_close(np.sum(weights * muphis[:, 0] ** 2))
-        covphi -= muphi[0] ** 2
-        return (muphi[0], covphi)
+        mu_phis = (rot.T @ mus.T).T
+        mu_phi = np.real_if_close(np.sum(weights[:, None] * mu_phis, axis=0))
+        cov_phis = rot.T @ covs @ rot
+        cov_phi = np.real_if_close(np.sum(weights[:, None, None] * cov_phis, axis=0))[0, 0]
+        cov_phi += np.real_if_close(np.sum(weights * mu_phis[:, 0] ** 2))
+        cov_phi -= mu_phi[0] ** 2
+        return (mu_phi[0], cov_phi)
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
         raise NotImplementedError("poly_quad_expectation not implemented for bosonic states")

@@ -655,3 +655,11 @@ class TestBosonicState:
         dm_compare = np.zeros((10,10))
         dm_compare[0,0] = 1
         assert np.allclose(dm,dm_compare)
+    
+    def test_is_vacuum(self,setup_backend):
+        """Tests fidelity_vacuum method in BaseBosonicState."""
+        backend = setup_backend(1)
+        backend.prepare_vacuum_state(0)
+        assert np.allclose(backend.state().fidelity_vacuum(),1)
+        backend.del_mode(0)
+        assert np.allclose(backend.state().fidelity_vacuum(),1)
