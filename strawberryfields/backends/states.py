@@ -1740,6 +1740,8 @@ class BaseBosonicState(BaseState):
             mus,
         )
         var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar ** 2) - 0.25
+        var += np.sum(weights * ((cov_trace + mean_dots) / (2 * self._hbar) - 0.5) ** 2)
+        var -= mean ** 2
         mean = np.real_if_close(mean)
         var = np.real_if_close(var)
 
