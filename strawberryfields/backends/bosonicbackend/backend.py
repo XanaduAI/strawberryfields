@@ -23,7 +23,7 @@ from .bosoniccircuit import BosonicModes
 
 
 class BosonicBackend(BaseBosonic):
-    """Bosonic backend class for simulating states that can be represented as 
+    """Bosonic backend class for simulating states that can be represented as
     linear combinations of Gaussian functions in phase space."""
 
     short_name = "bosonic"

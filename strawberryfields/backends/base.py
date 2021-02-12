@@ -700,7 +700,7 @@ class BaseBosonic(BaseGaussian):
         self._supported["gaussian_linear_combo"] = True
 
     def prepare_gaussian_state(self, r, V, modes):
-        r"""Prepare a Gaussian state. Note the different basis-ordering from the 
+        r"""Prepare a Gaussian state. Note the different basis-ordering from the
         GaussianBackend.
 
         The specified modes are traced out and replaced with a Gaussian state

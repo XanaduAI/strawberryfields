@@ -1730,7 +1730,7 @@ class BaseBosonicState(BaseState):
             mus,
         )
         mean = np.sum(weights * (cov_trace + mean_dots)) / (2 * self._hbar) - 0.5
-        
+
         # TODO: check variance formula for non-Gaussian states
         cov_sq_trace = np.matrix.trace(covs @ covs, axis1=1, axis2=2)
         mean_cov_dots = np.einsum(
@@ -1742,10 +1742,10 @@ class BaseBosonicState(BaseState):
         var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar ** 2) - 0.25
         mean = np.real_if_close(mean)
         var = np.real_if_close(var)
-        
+
         if mean.imag != 0 or var.imag != 0:
             raise ValueError("Mean or variance of photon number is complex.")
-            
+
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
