@@ -1731,7 +1731,6 @@ class BaseBosonicState(BaseState):
         )
         mean = np.sum(weights * (cov_trace + mean_dots)) / (2 * self._hbar) - 0.5
 
-        # TODO: check variance formula for non-Gaussian states
         cov_sq_trace = np.matrix.trace(covs @ covs, axis1=1, axis2=2)
         mean_cov_dots = np.einsum(
             "...j,...jk,...k",
