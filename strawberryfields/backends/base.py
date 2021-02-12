@@ -715,3 +715,13 @@ class BaseBosonic(BaseGaussian):
             ValueError: if the shapes of r or V do not match the number of modes.
         """
         raise NotImplementedError
+    
+    def state(self, modes=None, **kwargs):
+        """Returns the state of the quantum simulation.
+
+        See :meth:`.BaseBackend.state`.
+
+        Returns:
+            BaseBosonicState: state description
+        """
+        raise NotImplementedError

@@ -1494,7 +1494,12 @@ class BaseBosonicState(BaseState):
         return self._weights
 
     def purity(self):
-        r"""Returns the purity of the state."""
+        r"""Yields the purity of the state by calculating the integral over phase space of
+        the Wigner function multiplied with itself.
+        
+        Returns
+            float: purity of the state
+        """
 
         pur = 0
         for i, weight_i in enumerate(self._weights):
@@ -1516,7 +1521,7 @@ class BaseBosonicState(BaseState):
             modes (int of Sequence[int]): indices of the requested modes
 
         Returns:
-            tuple (weights, means, cov): where means is an array containing the vectors of means,
+            tuple: (weights, means, cov) where means is an array containing the vectors of means,
             and covs is an array containing the covariance matrices.
 
         Raises:
