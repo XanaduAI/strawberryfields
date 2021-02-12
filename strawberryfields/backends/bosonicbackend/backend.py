@@ -67,7 +67,7 @@ class BosonicBackend(BaseBosonic):
         return self.circuit.get_modes()
 
     def reset(self, pure=True, **kwargs):
-        self.circuit.reset(num_subsystems = self._init_modes, num_weights=1)
+        self.circuit.reset(num_subsystems=self._init_modes, num_weights=1)
 
     def prepare_thermal_state(self, nbar, mode):
         self.circuit.init_thermal(nbar, mode)
@@ -87,7 +87,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.loss(0.0, mode)
         self.circuit.squeeze(r_s, phi_s, mode)
         self.circuit.displace(r_d, phi_d, mode)
-        
+
     def prepare_gaussian_state(self, r, V, modes):
         if isinstance(modes, int):
             modes = [modes]
@@ -125,8 +125,8 @@ class BosonicBackend(BaseBosonic):
 
     def mb_squeeze(self, mode, r, phi, r_anc, eta_anc, avg):
         r"""Squeeze mode by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
-        
-        Depending on avg, this applies the average or single-shot map, returning the ancillary 
+
+        Depending on avg, this applies the average or single-shot map, returning the ancillary
         measurement outcome.
 
         Args:
@@ -205,7 +205,7 @@ class BosonicBackend(BaseBosonic):
         """Returns the state of the quantum simulation.
 
         See :meth:`.BaseBackend.state`.
-        
+
         For the bosonic backend, mode indices are sorted in ascending order.
 
         Returns:

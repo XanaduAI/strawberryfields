@@ -710,7 +710,7 @@ class BaseBosonic(BaseGaussian):
                 If the modes are not sorted, this is taken into account when preparing the state.
                 I.e., when a two mode state is prepared with ``modes=[3,1]``, the first
                 mode of the given state goes into mode 3 and the second mode goes into mode 1.
-                
+
         Raises:
             ValueError: if the shapes of r or V do not match the number of modes.
         """
