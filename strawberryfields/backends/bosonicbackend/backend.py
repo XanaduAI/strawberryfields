@@ -197,10 +197,10 @@ class BosonicBackend(BaseBosonic):
         self.circuit.thermal_loss(T, nbar, mode)
 
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
-        raise NotImplementedError("Bosonic backend does not yet support Fock measurements")
+        raise NotImplementedError("Bosonic backend does not yet support Fock measurements.")
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        raise NotImplementedError("Bosonic backend does not yet support threshold measurements")
+        raise NotImplementedError("Bosonic backend does not yet support threshold measurements.")
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.
