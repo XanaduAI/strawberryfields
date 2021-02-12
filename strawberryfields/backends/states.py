@@ -1496,7 +1496,7 @@ class BaseBosonicState(BaseState):
     def purity(self):
         r"""Yields the purity of the state by calculating the integral over phase space of
         the Wigner function multiplied with itself.
-        
+
         Returns
             float: purity of the state
         """
