@@ -296,7 +296,10 @@ class TestConnection:
 
         conn = Connection(token=test_token, host=test_host)
         conn._refresh_access_token()
-        expected_headers = {'Accept-Version': conn.api_version}
+        expected_headers = {
+            'Accept-Version': conn.api_version,
+            'User-Agent': conn.user_agent,
+        }
         expected_url = f"https://{test_host}:443{path}"
         spy.assert_called_once_with(expected_url, headers=expected_headers, data=data)
 
