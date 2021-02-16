@@ -52,7 +52,7 @@ class BosonicBackend(BaseBosonic):
 
         Raises:
             ValueError: if the length of the list of peaks is different than
-            the number of modes
+                the number of modes
         """
         peaks = kwargs.get("peaks", None)
         if peaks is None:
@@ -144,6 +144,7 @@ class BosonicBackend(BaseBosonic):
         if avg:
             self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
             return None
+
         ancilla_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
         return ancilla_val
 
@@ -183,6 +184,7 @@ class BosonicBackend(BaseBosonic):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
             return np.array([res[:, 0] + 1j * res[:, 1]])
+
         res = select
         self.circuit.post_select_heterodyne(mode, select)
         return res

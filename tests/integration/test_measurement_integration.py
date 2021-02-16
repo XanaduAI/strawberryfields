@@ -63,6 +63,7 @@ class TestMeasurement:
 
 class TestPostselection:
     """Measurement tests that include post-selection"""
+
     @pytest.mark.backends("fock","tf","gaussian")
     def test_homodyne(self, setup_eng, tol):
         """Test that homodyne detection on a TMS state

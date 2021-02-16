@@ -1511,6 +1511,7 @@ class BaseBosonicState(BaseState):
             )
             prefactor = 1 / (np.sqrt(np.linalg.det((self._covs + self._covs[i]))))
             pur += np.sum((self._weights * weight_i * prefactor) * np.exp(-0.5 * exp_arg))
+
         pur *= self._hbar ** self.num_modes
         return pur
 
@@ -1633,10 +1634,10 @@ class BaseBosonicState(BaseState):
         return (mu_phi[0], cov_phi)
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
-        raise NotImplementedError("poly_quad_expectation not implemented for bosonic states")
+        raise NotImplementedError("The poly_quad_expectation method is not implemented for bosonic states.")
 
     def number_expectation(self, modes):
-        raise NotImplementedError("number_expectation not implemented for bosonic states")
+        raise NotImplementedError("The number_expectation method is not implemented for bosonic states.")
 
     def parity_expectation(self, modes):
         """Returns the expectation value of the parity operator for modes.
@@ -1668,7 +1669,7 @@ class BaseBosonicState(BaseState):
         return parity
 
     def ket(self, **kwargs):
-        raise NotImplementedError("ket not implemented for bosonic states")
+        raise NotImplementedError("The ket method is not implemented for bosonic states.")
 
     def dm(self, **kwargs):
         cutoff = kwargs.get("cutoff", 10)
@@ -1720,7 +1721,7 @@ class BaseBosonicState(BaseState):
             tuple: the mean photon number and variance
 
         Raises:
-            ValueError: if mean or variance is complex
+            ValueError: if the mean or the variance is complex
         """
         weights, mus, covs = self.reduced_bosonic([mode])
         cov_trace = np.matrix.trace(covs, axis1=1, axis2=2)
@@ -1750,7 +1751,7 @@ class BaseBosonicState(BaseState):
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
-        raise NotImplementedError("fidelity not implemented for bosonic states")
+        raise NotImplementedError("The fidelity method is not implemented for bosonic states.")
 
     def fidelity_vacuum(self, **kwargs):
         r"""Returns the fidelity to the vacuum.
@@ -1771,7 +1772,7 @@ class BaseBosonicState(BaseState):
             float: fidelity of the state in modes to the coherent state alpha
         """
         if len(alpha_list) != self._modes:
-            raise ValueError("alpha_list must be same length as the number of modes")
+            raise ValueError("The alpha_list argument must be the same length as the number of modes.")
 
         if not isinstance(alpha_list, np.ndarray):
             alpha_list = np.array(alpha_list)
@@ -1830,4 +1831,4 @@ class BaseBosonicState(BaseState):
         return prob.real
 
     def all_fock_probs(self, **kwargs):
-        raise NotImplementedError("all_fock_probs not implemented for bosonic states")
+        raise NotImplementedError("The all_fock_probs method is not implemented for bosonic states.")

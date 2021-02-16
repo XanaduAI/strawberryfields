@@ -619,7 +619,7 @@ class TestFidelities:
 
 @pytest.mark.backends("bosonic")
 class TestBosonicState:
-    """Tests bosonic state function."""
+    """Tests the bosonic state class."""
     def test_weights(self,setup_backend):
         """Test weights are correct for a Gaussian state represented using the bosonic backend."""
         backend = setup_backend(1)

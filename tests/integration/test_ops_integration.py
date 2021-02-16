@@ -69,6 +69,7 @@ class TestGateApplication:
 
 class TestChannelApplication:
     """tests that involve channel application"""
+
     @pytest.mark.backends("fock","tf","gaussian")
     def test_loss_channel(self, setup_eng, tol):
         """Test loss channel with no transmission produces vacuum"""

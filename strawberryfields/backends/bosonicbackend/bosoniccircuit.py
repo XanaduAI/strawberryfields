@@ -509,7 +509,7 @@ class BosonicModes:
         if modes is None:
             modes = self.get_modes()
 
-        # Shortcut if there are no active modes. Only allowable alpha is of length zero [],
+        # Shortcut if there are no active modes. Only allowable alpha is of length zero,
         # which is the vacuum, so its fidelity to the state will be 1.
         if len(modes) == 0:
             return 1.0
