@@ -21,6 +21,7 @@ from typing import List, Dict
 import numpy as np
 import requests
 
+from strawberryfields._version import __version__
 from strawberryfields.configuration import load_config
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
@@ -97,14 +98,22 @@ class Connection:
 
         self._base_url = "http{}://{}:{}".format("s" if self.use_ssl else "", self.host, self.port)
 
-        self._headers = {"Accept-Version": self.api_version}
+        self._headers = {
+            "Accept-Version": self.api_version,
+            "User-Agent": self.user_agent,
+        }
 
         self.log = create_logger(__name__)
 
     @property
     def api_version(self) -> str:
         """str: The platform API version to request."""
-        return "1.0.0"
+        return "0.2.0"
+
+    @property
+    def user_agent(self) -> str:
+        """str: The User-Agent header sent alongside requests to the platform."""
+        return f"StrawberryFields/{__version__}"
 
     @property
     def token(self) -> str:

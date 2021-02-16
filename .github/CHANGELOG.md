@@ -6,11 +6,17 @@
 
 <h3>Bug fixes</h3>
 
+* `Connection` objects now send requests to the platform API at version `0.2.0`
+  instead of the incorrect version number `1.0.0`.
+  [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Jeremy Swinarton.
 
 # Release 0.17.0 (current release)
 
