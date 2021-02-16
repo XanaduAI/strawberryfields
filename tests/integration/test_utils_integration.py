@@ -265,7 +265,7 @@ def entangle_states(q):
     ops.Sgate(2) | q[1]
     ops.BSgate(np.pi / 4, 0) | (q[0], q[1])
 
-
+@pytest.mark.backends("fock","tf","gaussian")
 class TestTeleportationOperationTest:
     """Run a teleportation algorithm but split the circuit into operations.
     Operations can be also methods of a class"""
