@@ -16,6 +16,8 @@
 
 This release contains contributions from (in alphabetical order):
 
+Jeremy Swinarton.
+
 # Release 0.17.0 (current release)
 
 <h3>New features since last release</h3>
