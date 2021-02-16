@@ -1318,7 +1318,12 @@ class BaseGaussianState(BaseState):
 
         if self._pure:
             return twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
 
         return None  # pragma: no cover
@@ -1344,7 +1349,12 @@ class BaseGaussianState(BaseState):
 
         if self.is_pure:
             psi = twq.state_vector(
-                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False
+                mu,
+                cov,
+                hbar=self._hbar,
+                normalize=True,
+                cutoff=cutoff,
+                check_purity=False,
             )
             rho = np.outer(psi, psi.conj())
             return rho
@@ -1405,3 +1415,446 @@ class BaseGaussianState(BaseState):
         mu = self._mu
         cov = self._cov
         return twq.probabilities(mu, cov, cutoff, hbar=self._hbar)
+
+
+class BaseBosonicState(BaseState):
+    r"""Class for the representation of quantum states as linear combinations
+    of Gaussian functions in phase space.
+
+    Note that this class uses the basis ordering convention
+
+    .. math:: \bar{\mathbf{r}} = (\bar{x}_1,\bar{p}_1,\bar{x}_2,\bar{p}_2,\dots,\bar{x}_N,\bar{p}_N)
+
+    Args:
+        state_data (tuple(means, covs, weights)): A tuple containing the array of all the vectors of means,
+            the array of all the covariance matrices, and the array of all the weights for the linear combination
+        num_modes (int): the number of modes in the state
+        num_weights (int): the number of terms in the linear combination
+        mode_names (Sequence): (optional) this argument contains a list providing mode names
+            for each mode in the state
+    """
+    # pylint: disable=too-many-public-methods
+
+    def __init__(self, state_data, num_modes, num_weights, mode_names=None):
+        super().__init__(num_modes, mode_names)
+
+        self._data = state_data
+        self.num_weights = num_weights
+        # vector of means and covariance matrix, using frontend x,p scaling
+        self._mus = self._data[0] * np.sqrt(self._hbar / 2)
+        self._covs = self._data[1] * (self._hbar / 2)
+        self._weights = self._data[2]
+
+        self._basis = "bosonic"
+        self._str = "<BosonicState: num_modes={}, num_weights={}, pure={}, hbar={}>".format(
+            self.num_modes, self.num_weights, self._pure, self._hbar
+        )
+
+    def __eq__(self, other):
+        """Equality operator for representations of a state.
+
+        Returns ``True`` if other  :class:`~.BaseBosonicState` is close to ``self``.
+        This is done by comparing the weights, means vectors and covariance matrices.
+        If both are within the ``EQ_TOLERANCE``, ``True`` is returned.
+
+        Note that there can be states with different weights, means and covariance
+        matrices, but which still produce the same Wigner function, so this method
+        is simply a check that the representations are the same, not that the states
+        are equal.
+
+        Args:
+            other (:class:`~.BaseBosonicState`): ``BaseBosonicState`` to compare against
+        """
+        # pylint: disable=protected-access
+        # TODO: check equality for two different representations of the same state.
+        # This only checks if they have equal representations.
+        if not isinstance(other, type(self)):
+            return False
+
+        if self.num_modes != other.num_modes:
+            return False
+
+        if self.num_weights != other.num_weights:
+            return False
+
+        if (
+            np.allclose(self._mus, other._mus, atol=self.EQ_TOLERANCE, rtol=0)
+            and np.allclose(self._covs, other._covs, atol=self.EQ_TOLERANCE, rtol=0)
+            and np.allclose(self._weights, other._weights, atol=self.EQ_TOLERANCE, rtol=0)
+        ):
+            return True
+
+        return False
+
+    def means(self):
+        r"""The vectors of means describing the Bosonic state on N modes.
+
+        Returns:
+          array[complex]: an array of shape ``(num_weights, 2N)``
+        """
+        return self._mus
+
+    def covs(self):
+        r"""The covariance matrices describing the Bosonic state on N modes.
+
+        Returns:
+          array[complex]: an array of shape ``(num_weights, 2N, 2N)``
+        """
+        return self._covs
+
+    def weights(self):
+        r"""The weights describing the Bosonic state.
+
+        Returns:
+          array: an array of length ``num_weights``
+        """
+        return self._weights
+
+    def purity(self):
+        r"""Yields the purity of the state by calculating the integral over phase space of
+        the Wigner function multiplied with itself.
+
+        Returns
+            float: purity of the state
+        """
+
+        pur = 0
+        for i, weight_i in enumerate(self._weights):
+            exp_arg = np.einsum(
+                "...j,...jk,...k",
+                (self._mus[i] - self._mus),
+                np.linalg.inv(self._covs + self._covs[i]),
+                (self._mus[i] - self._mus),
+            )
+            prefactor = 1 / (np.sqrt(np.linalg.det((self._covs + self._covs[i]))))
+            pur += np.sum((self._weights * weight_i * prefactor) * np.exp(-0.5 * exp_arg))
+
+        pur *= self._hbar ** self.num_modes
+        return pur
+
+    def reduced_bosonic(self, modes):
+        r"""Returns the weights, vectors of means and the covariance matrices of the specified modes.
+
+        Args:
+            modes (int of Sequence[int]): indices of the requested modes
+
+        Returns:
+            tuple: ``(weights, means, cov)`` where ``weights`` is an array for the coefficients in the
+                linear combination, ``means`` is an array containing the vectors of means,
+                and ``covs`` is an array containing the covariance matrices
+
+        Raises:
+            ValueError: if modes are duplicated or out of range
+        """
+        if modes == list(range(self._modes)):
+            # reduced state is full state
+            return self._weights, self._mus, self._covs
+
+        # reduce rho down to specified subsystems
+        if isinstance(modes, int):
+            modes = [modes]
+
+        if modes != sorted(modes):
+            raise ValueError("The specified modes cannot be duplicated.")
+
+        if len(modes) > self._modes:
+            raise ValueError(
+                "The number of specified modes cannot be larger than the number of subsystems."
+            )
+
+        ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
+
+        mu = self._mus[:, ind]
+        cov = self._covs[:, ind, :][:, :, ind]
+
+        return self._weights, mu, cov
+
+    def displacement(self, modes=None):
+        r"""Returns the displacement parameter :math:`\alpha` of the modes specified.
+
+        Args:
+            modes (int or Sequence[int]): modes specified
+
+        Returns:
+            Sequence[complex]: sequence of complex displacements :math:`\alpha`
+            corresponding to the list of specified modes
+
+        Raises:
+            ValueError: if the phase space coordinate is complex-valued
+        """
+        if modes is None:
+            modes = list(range(self._modes))
+        elif isinstance(modes, int):  # pragma: no cover
+            modes = [modes]
+
+        ind = np.sort(np.concatenate([2 * np.array(modes), 2 * np.array(modes) + 1]))
+        avg_mu = np.real_if_close(np.sum(self._weights[:, None] * self._mus[:, ind], axis=0))
+        if avg_mu.imag.any():
+            raise ValueError("State mean is complex valued.")
+
+        alpha = avg_mu[::2] + 1j * avg_mu[1::2]
+        alpha /= np.sqrt(2 * self._hbar)
+        return alpha
+
+    # =====================================================
+    # the following methods are overwritten from BaseState
+
+    def wigner(self, mode, xvec, pvec):
+        r"""Calculates the discretized Wigner function of the specified mode.
+
+        Args:
+            mode (int): the mode to calculate the Wigner function for
+            xvec (array): array of discretized :math:`x` quadrature values
+            pvec (array): array of discretized :math:`p` quadrature values
+
+        Returns:
+            array: 2D array of size ``[len(xvec), len(pvec)]``, containing reduced Wigner function
+            values for specified x and p values.
+
+        Raises:
+            ValueError: if mode is not an integer or out of range
+        """
+        if not isinstance(mode, int):
+            raise ValueError("Please select one mode indexed by an integer.")
+
+        if mode > self._modes:
+            raise ValueError(
+                "The number of specified modes cannot be larger than the number of subsystems."
+            )
+
+        weights, means, covs = self.reduced_bosonic([mode])
+
+        X, P = np.meshgrid(xvec, pvec, sparse=True)
+
+        wigner = 0
+        for i, weight_i in enumerate(weights):
+            exp_arg = (
+                np.array([X - means[i, 0], P - means[i, 1]])
+                @ np.linalg.inv(covs[i])
+                @ np.array([X - means[i, 0], P - means[i, 1]])
+            )
+            prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
+            wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
+
+        return wigner
+
+    def quad_expectation(self, mode, phi=0, **kwargs):
+        # pylint: disable=unused-argument
+        rot = _R(phi)
+
+        weights, mus, covs = self.reduced_bosonic([mode])
+        mu_phis = (rot.T @ mus.T).T
+        mu_phi = np.real_if_close(np.sum(weights[:, None] * mu_phis, axis=0))
+        cov_phis = rot.T @ covs @ rot
+        cov_phi = np.real_if_close(np.sum(weights[:, None, None] * cov_phis, axis=0))[0, 0]
+        cov_phi += np.real_if_close(np.sum(weights * mu_phis[:, 0] ** 2))
+        cov_phi -= mu_phi[0] ** 2
+        return (mu_phi[0], cov_phi)
+
+    def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
+        raise NotImplementedError(
+            "The poly_quad_expectation method is not implemented for bosonic states."
+        )
+
+    def number_expectation(self, modes):
+        raise NotImplementedError(
+            "The number_expectation method is not implemented for bosonic states."
+        )
+
+    def parity_expectation(self, modes):
+        """Returns the expectation value of the parity operator for modes.
+
+        Args:
+            mode (list): the requested modes
+
+        Returns:
+            float: parity of the modes
+
+        Raises:
+            ValueError: if any modes are duplicated
+        """
+        if len(modes) != len(set(modes)):
+            raise ValueError("There can be no duplicates in the modes specified.")
+
+        # Sort by (q1,p1,q2,p2,...)
+        mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
+        exp_arg = np.einsum(
+            "...j,...jk,...k",
+            self._mus[:, mode_ind],
+            np.linalg.inv(self._covs[:, mode_ind, :][:, :, mode_ind]),
+            self._mus[:, mode_ind],
+        )
+
+        prefactor = 1 / np.sqrt(np.linalg.det(self._covs[:, mode_ind, :][:, :, mode_ind]))
+        weighted_exp = np.array(self._weights) * prefactor * np.exp(-0.5 * exp_arg)
+        parity = np.sum(weighted_exp) * (self._hbar / 2) ** len(modes)
+        return parity
+
+    def ket(self, **kwargs):
+        raise NotImplementedError("The ket method is not implemented for bosonic states.")
+
+    def dm(self, **kwargs):
+        cutoff = kwargs.get("cutoff", 10)
+        return self.reduced_dm(list(range(self._modes)), cutoff=cutoff)
+
+    def reduced_dm(self, modes, **kwargs):
+        r"""Returns a reduced density matrix in the Fock basis.
+
+        Args:
+            modes (int or Sequence[int]): specifies the mode(s) to return the reduced density matrix for.
+
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the returned density matrix (default value is 10).
+
+        Returns:
+            array: the reduced density matrix for the specified modes
+
+        Raises:
+            ValueError: if any modes are duplicated or out of range
+        """
+        if isinstance(modes, int):
+            modes = [modes]
+
+        if modes != sorted(modes):
+            raise ValueError("The specified modes cannot be duplicated.")
+
+        if len(modes) > self._modes:
+            raise ValueError(
+                "The number of specified modes cannot be larger than the number of subsystems."
+            )
+
+        cutoff = kwargs.get("cutoff", 10)
+        weights, mus, covs = self.reduced_bosonic(modes)  # pylint: disable=unused-variable
+
+        rho = 0
+        for i in range(self.num_weights):
+            rho += weights[i] * twq.density_matrix(
+                mus[i], covs[i], hbar=self._hbar, normalize=False, cutoff=cutoff
+            )
+        return rho
+
+    def mean_photon(self, mode, **kwargs):
+        """Returns the mean photon number of a particular mode.
+
+        Args:
+            mode (int): specifies the mode
+
+        Returns:
+            tuple: the mean photon number and variance
+
+        Raises:
+            ValueError: if the mean or the variance is complex
+        """
+        weights, mus, covs = self.reduced_bosonic([mode])
+        cov_trace = np.matrix.trace(covs, axis1=1, axis2=2)
+        mean_dots = np.einsum(
+            "...j,...j",
+            mus,
+            mus,
+        )
+        mean = np.sum(weights * (cov_trace + mean_dots)) / (2 * self._hbar) - 0.5
+
+        cov_sq_trace = np.matrix.trace(covs @ covs, axis1=1, axis2=2)
+        mean_cov_dots = np.einsum(
+            "...j,...jk,...k",
+            mus,
+            covs,
+            mus,
+        )
+        var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar ** 2) - 0.25
+        var += np.sum(weights * ((cov_trace + mean_dots) / (2 * self._hbar) - 0.5) ** 2)
+        var -= mean ** 2
+        mean = np.real_if_close(mean)
+        var = np.real_if_close(var)
+
+        if mean.imag != 0 or var.imag != 0:
+            raise ValueError("Mean or variance of photon number is complex.")
+
+        return mean, var
+
+    def fidelity(self, other_state, mode, **kwargs):
+        raise NotImplementedError("The fidelity method is not implemented for bosonic states.")
+
+    def fidelity_vacuum(self, **kwargs):
+        r"""Returns the fidelity to the vacuum.
+
+        Returns:
+            float: fidelity of the state in modes to the vacuum
+        """
+        alpha = np.zeros(self._modes)
+        return self.fidelity_coherent(alpha)
+
+    def fidelity_coherent(self, alpha_list, **kwargs):
+        r"""Returns the fidelity to a coherent state.
+
+        Args:
+            alpha_list (array): amplitudes for coherent states
+
+        Returns:
+            float: fidelity of the state in modes to the coherent state alpha
+        """
+        if len(alpha_list) != self._modes:
+            raise ValueError(
+                "The alpha_list argument must be the same length as the number of modes."
+            )
+
+        if not isinstance(alpha_list, np.ndarray):
+            alpha_list = np.array(alpha_list)
+
+        modes = list(range(self._modes))
+
+        # Shortcut if there are no active modes. Only allowable alpha is of length zero [],
+        # which is the vacuum, so its fidelity to the state will be 1.
+        if len(modes) == 0:
+            return 1.0
+
+        alpha_mean = []
+        for i in range(len(modes)):
+            alpha_mean.append(alpha_list.real[i] * np.sqrt(2 * self.hbar))
+            alpha_mean.append(alpha_list.imag[i] * np.sqrt(2 * self.hbar))
+
+        alpha_mean = np.array(alpha_mean)
+        deltas = self._mus - alpha_mean
+
+        cov_sum = self._covs + self._hbar * np.eye(2 * len(modes)) / 2
+        exp_arg = np.einsum("...j,...jk,...k", deltas, np.linalg.inv(cov_sum), deltas)
+        weighted_exp = (
+            np.array(self._weights)
+            * self._hbar ** len(modes)
+            * np.exp(-0.5 * exp_arg)
+            / np.sqrt(np.linalg.det(cov_sum))
+        )
+
+        fidelity = np.sum(weighted_exp)
+        return fidelity
+
+    def fock_prob(self, n, **kwargs):
+        r"""Probability of a particular Fock basis state.
+
+        Args:
+            n (Sequence[int]): the Fock state :math:`\ket{\vec{n}}` that we want to measure the probability of
+
+        Keyword Args:
+            cutoff (int): Specifies where to truncate the computation (default value is ``10``).
+
+        Returns:
+            float: measurement probability
+        """
+        if len(n) != self._modes:
+            raise ValueError("Fock state must be the same length as the number of modes.")
+
+        cutoff = kwargs.get("cutoff", 10)
+        if sum(n) >= cutoff:
+            raise ValueError("Cutoff argument must be larger than the sum of photon numbers.")
+
+        prob = 0
+        for i in range(self.num_weights):
+            prob += self._weights[i] * twq.density_matrix_element(
+                self._mus[i], self._covs[i], n, n, hbar=self._hbar
+            )
+        return prob.real
+
+    def all_fock_probs(self, **kwargs):
+        raise NotImplementedError(
+            "The all_fock_probs method is not implemented for bosonic states."
+        )

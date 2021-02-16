@@ -433,3 +433,209 @@ class TestGaussianMultimode:
 
         assert np.allclose(state.means(), ex_means*np.sqrt(hbar/2), atol=tol, rtol=0)
         assert np.allclose(state.cov(), ex_cov*hbar/2, atol=tol, rtol=0)
+        
+def from_xp(n):
+    """Permutation to mode-like (x_1,p_1...x_n,p_n) ordering.
+
+    Args:
+        n (int): number of modes
+
+    Returns:
+        list[int]: the permutation of of mode indices.
+    """
+    perm_inds_list = [(i, i + n) for i in range(n)]
+    perm_inds = [a for tup in perm_inds_list for a in tup]
+    return perm_inds
+
+
+@pytest.mark.backends("bosonic")
+class TestBosonicMultimode:
+    """Tests for simulators that use the Bosonic representation.
+    This is the same test as TestGaussianMultimode, taking into
+    account the different basis ordering of the means and covs for
+    the bosonic backend."""
+
+    def test_singlemode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
+        """Test single mode Gaussian state preparation"""
+        N = 4
+        backend = setup_backend(N)
+
+        means = 2 * np.random.random(size=[2]) - 1
+        cov = random_covariance(1, pure=pure)
+
+        a = 0.2 + 0.4j
+        r = 1
+        phi = 0
+
+        # circuit is initially in displaced squeezed state
+        for i in range(N):
+            backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, mode=i)
+
+        # prepare Gaussian state in mode 1
+        backend.prepare_gaussian_state(means, cov, modes=1)
+
+        # test Gaussian state is correct
+        state = backend.state([1])
+        assert np.allclose(state.means(), np.array([means]) * np.sqrt(hbar / 2), atol=tol, rtol=0)
+        assert np.allclose(state.covs(), np.array([cov]) * hbar / 2, atol=tol, rtol=0)
+
+        # test that displaced squeezed states are unchanged
+        ex_means, ex_V = displaced_squeezed_state(
+            np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar
+        )
+        for i in [0, 2, 3]:
+            state = backend.state([i])
+            assert np.allclose(state.means(), np.array([ex_means]), atol=tol, rtol=0)
+            assert np.allclose(state.covs(), np.array([ex_V]), atol=tol, rtol=0)
+
+    def test_multimode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
+        """Test multimode Gaussian state preparation"""
+        N = 4
+        backend = setup_backend(N)
+
+        cov = np.diag(np.exp(2 * np.array([-1, -1, 1, 1])))
+        means = np.zeros([4])
+
+        # prepare displaced squeezed states in all modes
+        a = 0.2 + 0.4j
+        r = 0.5
+        phi = 0.12
+        for i in range(N):
+            backend.prepare_displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, i)
+
+        # prepare new squeezed displaced state in mode 1 and 3
+        backend.prepare_gaussian_state(means, cov, modes=[1, 3])
+        state = backend.state([1, 3])
+
+        # test Gaussian state is correct
+        state = backend.state([1, 3])
+        assert np.allclose(
+            state.means(), np.array([means[from_xp(2)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+        )
+        assert np.allclose(
+            state.covs(), np.array([cov[from_xp(2), :][:, from_xp(2)]]) * hbar / 2, atol=tol, rtol=0
+        )
+
+        # test that displaced squeezed states are unchanged
+        ex_means, ex_V = displaced_squeezed_state(
+            np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar
+        )
+        for i in [0, 2]:
+            state = backend.state([i])
+            assert np.allclose(state.means(), np.array([ex_means[from_xp(1)]]), atol=tol, rtol=0)
+            assert np.allclose(
+                state.covs(), np.array([ex_V[from_xp(1), :][:, from_xp(1)]]), atol=tol, rtol=0
+            )
+
+    def test_full_mode_squeezed_state(self, setup_backend, batch_size, pure, tol, hbar):
+        """Test full register Gaussian state preparation"""
+        N = 4
+        backend = setup_backend(N)
+
+        cov = np.diag(np.exp(2 * np.array([-1, -1, -1, -1, 1, 1, 1, 1])))
+        means = np.zeros([8])
+
+        backend.reset(pure=pure)
+        backend.prepare_gaussian_state(means, cov, modes=range(N))
+        state = backend.state()
+
+        # test Gaussian state is correct
+        state = backend.state()
+        assert np.allclose(
+            state.means(), np.array([means[from_xp(4)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+        )
+        assert np.allclose(
+            state.covs(), np.array([cov[from_xp(4), :][:, from_xp(4)]]) * hbar / 2, atol=tol, rtol=0
+        )
+
+    def test_multimode_gaussian_random_state(self, setup_backend, batch_size, pure, tol, hbar):
+        """Test multimode Gaussian state preparation on a random state"""
+        N = 4
+        backend = setup_backend(N)
+
+        means = 2 * np.random.random(size=[2 * N]) - 1
+        cov = random_covariance(N, pure=pure)
+
+        backend.reset(pure=pure)
+
+        # circuit is initially in a random state
+        backend.prepare_gaussian_state(means, cov, modes=range(N))
+
+        # test Gaussian state is correct
+        state = backend.state()
+        assert np.allclose(
+            state.means(), np.array([means[from_xp(N)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+        )
+        assert np.allclose(
+            state.covs(), np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2, atol=tol, rtol=0
+        )
+
+    def test_multimode_gaussian_random_state_with_replacement(self, setup_backend, batch_size, pure, tol, hbar):
+        """Test multimode Gaussian state preparation on a random state with replacement"""
+        N = 4
+        backend = setup_backend(N)
+
+        means = 2 * np.random.random(size=[2 * N]) - 1
+        cov = random_covariance(N, pure=pure)
+
+        backend.reset(pure=pure)
+
+        # circuit is initially in a random state
+        backend.prepare_gaussian_state(means, cov, modes=range(N))
+
+        # test Gaussian state is correct
+        state = backend.state()
+
+        # prepare Gaussian state in mode 2 and 1
+        means2 = 2 * np.random.random(size=[4]) - 1
+        cov2 = random_covariance(2, pure=pure)
+        backend.prepare_gaussian_state(means2, cov2, modes=[2, 1])
+
+        # test resulting Gaussian state is correct
+        state = backend.state()
+
+        # in the new means vector, the modes 0 and 3 remain unchanged
+        # Modes 1 and 2, however, now have values given from elements
+        # means2[1] and means2[0].
+        ex_means = np.array(
+            [
+                means[0],
+                means2[1],
+                means2[0],
+                means[3],  # position
+                means[4],
+                means2[3],
+                means2[2],
+                means[7],
+            ]
+        )  # momentum
+
+        ex_cov = np.zeros([8, 8])
+
+        # in the new covariance matrix, modes 0 and 3 remain unchanged
+        idx = np.array([0, 3, 4, 7])
+        rows = idx.reshape(-1, 1)
+        cols = idx.reshape(1, -1)
+        ex_cov[rows, cols] = cov[rows, cols]
+
+        # in the new covariance matrix, modes 1 and 2 have values given by
+        # rows 1 and 0 respectively from cov2
+        idx = np.array([1, 2, 5, 6])
+        rows = idx.reshape(-1, 1)
+        cols = idx.reshape(1, -1)
+
+        idx = np.array([1, 0, 3, 2])
+        rows2 = idx.reshape(-1, 1)
+        cols2 = idx.reshape(1, -1)
+
+        ex_cov[rows, cols] = cov2[rows2, cols2]
+
+        assert np.allclose(
+            state.means(), np.array([ex_means[from_xp(4)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+        )
+        assert np.allclose(
+            state.covs(),
+            np.array([ex_cov[from_xp(4), :][:, from_xp(4)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
+        )

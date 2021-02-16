@@ -38,7 +38,7 @@ scalar_arg_preparations = (
 testset = ops.one_args_gates + ops.two_args_gates + ops.channels + scalar_arg_preparations
 
 
-
+@pytest.mark.backends("fock","tf","gaussian")
 def test_free_parameters(setup_eng, tol):
     """Programs with free parameters."""
 
@@ -91,7 +91,7 @@ def eng_prog_params(batch_size, setup_eng):
 
     return eng, prog, params
 
-
+@pytest.mark.backends("fock","tf","gaussian")
 @pytest.mark.parametrize("G", testset)
 def test_parameters_with_operations(eng_prog_params, G):
     """Test all combinations of different types of Parameters with different Operation subclasses.

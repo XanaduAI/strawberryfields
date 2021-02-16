@@ -536,6 +536,7 @@ class TestDecompositionsGaussianGates:
         # Checks the means are transformed correctly
         assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
 
+    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('s', np.linspace(-0.6, 0.6, 5))
     def test_Pgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the Pgate gives the same transformation as its decomposition."""
@@ -554,6 +555,7 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('s', np.linspace(-0.5, 0.5, 5))
     def test_CXgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the CXgate gives the same transformation as its decomposition."""
@@ -575,6 +577,7 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('s', np.linspace(-0.5, 0.5, 5))
     def test_CZgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the CZgate gives the same transformation as its decomposition."""
@@ -590,6 +593,7 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
+    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('r', np.linspace(-0.3, 0.3, 5))
     def test_S2gate_decomp_equal(self, setup_eng, r, tol):
         """Tests that the S2gate gives the same transformation as its decomposition."""

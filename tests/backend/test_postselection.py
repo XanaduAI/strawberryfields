@@ -32,7 +32,7 @@ def test_homodyne(setup_backend, tol):
     assert np.allclose(res, x, atol=tol, rtol=0)
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian","bosonic")
 def test_heterodyne(setup_backend, tol):
     """Test that heterodyne detection on a TMS state
     returns post-selected value."""

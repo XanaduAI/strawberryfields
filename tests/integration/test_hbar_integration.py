@@ -33,7 +33,8 @@ HBAR = [0.5, 1]
 @pytest.mark.parametrize("hbar", HBAR, indirect=True)
 class TestIntegration:
     """Tests that go through the frontend and backend, and state object"""
-
+    
+    @pytest.mark.backends("fock","tf","gaussian")
     def test_squeeze_variance_frontend(self, setup_eng, hbar, tol):
         """test homodyne measurement of a squeeze state is correct,
         returning a variance of np.exp(-2*r)*h/2, via the frontend"""

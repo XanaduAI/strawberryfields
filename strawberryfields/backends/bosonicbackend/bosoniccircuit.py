@@ -508,6 +508,12 @@ class BosonicModes:
         """
         if modes is None:
             modes = self.get_modes()
+
+        # Shortcut if there are no active modes. Only allowable alpha is of length zero,
+        # which is the vacuum, so its fidelity to the state will be 1.
+        if len(modes) == 0:
+            return 1.0
+
         # Sort by (q1,p1,q2,p2,...)
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))
         # Construct mean vector for coherent state
