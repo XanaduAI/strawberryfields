@@ -701,7 +701,7 @@ class BaseBosonic(BaseGaussian):
 
     def prepare_gaussian_state(self, r, V, modes):
         r"""Prepare a Gaussian state.
-        
+
         Note the different basis-ordering from the :class:`~.GaussianBackend`.
 
         The specified modes are traced out and replaced with a Gaussian state

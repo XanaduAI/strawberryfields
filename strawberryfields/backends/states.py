@@ -1634,10 +1634,14 @@ class BaseBosonicState(BaseState):
         return (mu_phi[0], cov_phi)
 
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
-        raise NotImplementedError("The poly_quad_expectation method is not implemented for bosonic states.")
+        raise NotImplementedError(
+            "The poly_quad_expectation method is not implemented for bosonic states."
+        )
 
     def number_expectation(self, modes):
-        raise NotImplementedError("The number_expectation method is not implemented for bosonic states.")
+        raise NotImplementedError(
+            "The number_expectation method is not implemented for bosonic states."
+        )
 
     def parity_expectation(self, modes):
         """Returns the expectation value of the parity operator for modes.
@@ -1772,7 +1776,9 @@ class BaseBosonicState(BaseState):
             float: fidelity of the state in modes to the coherent state alpha
         """
         if len(alpha_list) != self._modes:
-            raise ValueError("The alpha_list argument must be the same length as the number of modes.")
+            raise ValueError(
+                "The alpha_list argument must be the same length as the number of modes."
+            )
 
         if not isinstance(alpha_list, np.ndarray):
             alpha_list = np.array(alpha_list)
@@ -1831,4 +1837,6 @@ class BaseBosonicState(BaseState):
         return prob.real
 
     def all_fock_probs(self, **kwargs):
-        raise NotImplementedError("The all_fock_probs method is not implemented for bosonic states.")
+        raise NotImplementedError(
+            "The all_fock_probs method is not implemented for bosonic states."
+        )
