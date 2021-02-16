@@ -23,8 +23,27 @@ from .bosoniccircuit import BosonicModes
 
 
 class BosonicBackend(BaseBosonic):
-    """Bosonic backend class for simulating states that can be represented as
-    linear combinations of Gaussian functions in phase space."""
+    r"""The BosonicBackend implements a simulation of quantum optical circuits
+    in NumPy by representing states as linear combinations of Gaussian functions
+    in phase space., returning a :class:`~.BosonicState` state object.
+
+    The primary component of the BosonicBackend is a
+    :attr:`~.BosonicModes` object which is used to simulate a multi-mode quantum optical system.
+    :class:`~.BosonicBackend` provides the basic API-compatible interface to the simulator, while the
+    :attr:`~.BosonicModes` object actually carries out the mathematical simulation.
+
+    The :attr:`BosonicModes` simulators maintain internal sets of weights, means and
+    covariance matrices for all the Gaussian functions in the linear combination. Note
+    these can be complex-valued quantities.
+
+    ..
+        .. currentmodule:: strawberryfields.backends.bosonicbackend
+        .. autosummary::
+            :toctree: api
+
+            ~bosoniccircuit.BosonicModes
+            ~ops
+    """
 
     short_name = "bosonic"
     circuit_spec = None

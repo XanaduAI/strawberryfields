@@ -1420,6 +1420,18 @@ class BaseGaussianState(BaseState):
 class BaseBosonicState(BaseState):
     r"""Class for the representation of quantum states as linear combinations
     of Gaussian functions in phase space.
+
+    Note that this class uses the basis ordering convention
+
+    .. math:: \bar{\mathbf{r}} = (\bar{x}_1,\bar{p}_1,\bar{x}_2,\bar{p}_2,\dots,\bar{x}_N,\bar{p}_N)
+
+    Args:
+        state_data (tuple(means, covs, weights)): A tuple containing the array of all the vectors of means,
+            the array of all the covariance matrices, and the array of all the weights for the linear combination
+        num_modes (int): the number of modes in the state
+        num_weights (int): the number of terms in the linear combination
+        mode_names (Sequence): (optional) this argument contains a list providing mode names
+            for each mode in the state
     """
     # pylint: disable=too-many-public-methods
 
@@ -1439,11 +1451,16 @@ class BaseBosonicState(BaseState):
         )
 
     def __eq__(self, other):
-        """Equality operator.
+        """Equality operator for representations of a state.
 
         Returns ``True`` if other  :class:`~.BaseBosonicState` is close to ``self``.
         This is done by comparing the weights, means vectors and covariance matrices.
         If both are within the ``EQ_TOLERANCE``, ``True`` is returned.
+
+        Note that there can be states with different weights, means and covariance
+        matrices, but which still produce the same Wigner function, so this method
+        is simply a check that the representations are the same, not that the states
+        are equal.
 
         Args:
             other (:class:`~.BaseBosonicState`): ``BaseBosonicState`` to compare against
@@ -1522,8 +1539,9 @@ class BaseBosonicState(BaseState):
             modes (int of Sequence[int]): indices of the requested modes
 
         Returns:
-            tuple: (weights, means, cov) where means is an array containing the vectors of means,
-            and covs is an array containing the covariance matrices.
+            tuple: ``(weights, means, cov)`` where ``weights`` is an array for the coefficients in the
+                linear combination, ``means`` is an array containing the vectors of means,
+                and ``covs`` is an array containing the covariance matrices
 
         Raises:
             ValueError: if modes are duplicated or out of range
