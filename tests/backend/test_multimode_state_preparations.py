@@ -570,6 +570,22 @@ class TestBosonicMultimode:
             state.covs(), np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2, atol=tol, rtol=0
         )
 
+    def test_multimode_gaussian_random_state_with_replacement(self, setup_backend, batch_size, pure, tol, hbar):
+        """Test multimode Gaussian state preparation on a random state with replacement"""
+        N = 4
+        backend = setup_backend(N)
+
+        means = 2 * np.random.random(size=[2 * N]) - 1
+        cov = random_covariance(N, pure=pure)
+
+        backend.reset(pure=pure)
+
+        # circuit is initially in a random state
+        backend.prepare_gaussian_state(means, cov, modes=range(N))
+
+        # test Gaussian state is correct
+        state = backend.state()
+
         # prepare Gaussian state in mode 2 and 1
         means2 = 2 * np.random.random(size=[4]) - 1
         cov2 = random_covariance(2, pure=pure)
