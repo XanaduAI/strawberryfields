@@ -21,6 +21,8 @@ import strawberryfields as sf
 import strawberryfields.backends.bosonicbackend.backend as bosonic
 import pytest
 
+pytestmark = pytest.mark.bosonic
+
 ALPHA_VALS = np.linspace(-1,1,5)
 PHI_VALS = np.linspace(0,1,3)
 FOCK_VALS = np.arange(5,dtype=int)
@@ -28,7 +30,6 @@ r_fock = 0.05
 EPS_VALS = np.array([0.01,0.05,0.1,0.5])
 R_VALS = np.linspace(-1,1,5)
 
-@pytest.mark.backends("bosonic")
 class TestKronList():
     """Test kron_list function from the bosonic backend."""
     def test_kron_list(self):
@@ -37,7 +38,6 @@ class TestKronList():
         list_compare = [3,4,5,6,8,10]
         assert np.allclose(list_compare, bosonic.kron_list([l1,l2]))
 
-@pytest.mark.backends("bosonic")
 class TestBosonicCatStates:
     r"""Tests cat state method of the BosonicBackend class."""
     
@@ -210,7 +210,6 @@ class TestBosonicCatStates:
             assert np.allclose(parity_complex, -1)
             assert np.allclose(parity_real, -1)
 
-@pytest.mark.backends("bosonic")  
 class TestBosonicFockStates:
     r"""Tests fock state method of the BosonicBackend class."""
     
@@ -280,7 +279,6 @@ class TestBosonicFockStates:
         state = backend.state()
         assert np.allclose(state.parity_expectation([0]),(-1.0)**n,atol=r_fock)
 
-@pytest.mark.backends("bosonic")
 class TestBosonicGKPStates:
     r"""Tests the gkp method of the BosonicBackend class."""
     
@@ -373,7 +371,6 @@ class TestBosonicGKPStates:
             backend = bosonic.BosonicBackend()
             backend.run_prog(prog)
 
-@pytest.mark.backends("bosonic")
 class TestBosonicUserSpecifiedState():
     """Checks the Bosonic preparation method."""
     
@@ -405,7 +402,6 @@ class TestBosonicUserSpecifiedState():
         #Check the two states are equal
         assert state.__eq__(state2)
         
-@pytest.mark.backends("bosonic")     
 class TestBosonicPrograms():
     """Tests that small programs run and return the correct output."""
 

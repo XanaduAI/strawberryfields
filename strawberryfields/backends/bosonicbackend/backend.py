@@ -330,8 +330,7 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat(self, alpha, phi, cutoff, desc, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        math::
-        \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`.
 
         Args:
             alpha (float): alpha value of cat state
@@ -381,8 +380,7 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        math::
-        \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`.
 
         For this representation, weights, means and covariances are real-valued.
 
@@ -477,8 +475,7 @@ class BosonicBackend(BaseBosonic):
 
         GKP states are qubits, with the qubit state defined by:
 
-        math::
-        \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
+        :math:`\ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}`
 
         where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
