@@ -505,6 +505,30 @@ class TestBosonicPrograms():
         assert 1 in ancilla_samples.keys()
         assert len(ancilla_samples[1]) == 2
         
+    @pytest.mark.parametrize("alpha", ALPHA_VALS)        
+    def test_add_new_mode(self,alpha):
+        """Tests adding a new mode in a program context."""
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Vacuum() | q[0]
+            q = q + (sf.ops.New(n=1),)
+            sf.ops.Catstate(alpha) | q[1]
+        backend = bosonic.BosonicBackend()
+        backend.run_prog(prog)
+        state = backend.state()
+        #Check output shapes
+        if alpha != 0:
+            assert state.weights().shape == (4,)
+            assert np.allclose(sum(state.weights()),1)
+            assert state.means().shape == (4,4)
+            assert state.covs().shape == (4,4,4)
+        
+        else:
+            assert state.weights().shape == (1,)
+            assert np.allclose(sum(state.weights()),1)
+            assert state.means().shape == (1,4)
+            assert state.covs().shape == (1,4,4)
+        
     def test_raised_errors(self):
         """Runs programs with operations that are not applicable
         or have not been implemented."""
@@ -521,5 +545,16 @@ class TestBosonicPrograms():
             prog = sf.Program(1)
             with prog.context as q:
                 sf.ops.MeasureThreshold() | q[0]
+            backend = bosonic.BosonicBackend()
+            backend.run_prog(prog)
+    
+    def test_non_initial_prep_error(self):
+        """Tests that more than one non-Gaussian state preparations in the same mode
+        raises an error."""
+        with pytest.raises(NotImplementedError):
+            prog = sf.Program(1)
+            with prog.context as q:
+                sf.ops.Catstate()|q[0]
+                sf.ops.GKP() | q[0]
             backend = bosonic.BosonicBackend()
             backend.run_prog(prog)

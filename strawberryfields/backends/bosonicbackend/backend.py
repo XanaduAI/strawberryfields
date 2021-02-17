@@ -95,6 +95,7 @@ class BosonicBackend(BaseBosonic):
             GKP,
             Ket,
             MbSgate,
+            _New_modes,
         )
 
         # Initialize the circuit. This applies all non-Gaussian state-prep
@@ -107,7 +108,7 @@ class BosonicBackend(BaseBosonic):
         samples_dict = {}
         all_samples = {}
         for cmd in prog.circuit:
-            nongausspreps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket)
+            nongausspreps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket, _New_modes)
             ancilla_gates = (MbSgate,)
             # For ancilla-assisted gates, if they return measurement values, store
             # them in ancillae_samples_dict
@@ -172,9 +173,11 @@ class BosonicBackend(BaseBosonic):
             Fock,
             GKP,
             Ket,
+            _New_modes,
         )
 
-        nmodes = prog.num_subsystems
+        nongausspreps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket)
+        nmodes = prog.init_num_subsystems
         self.begin_circuit(nmodes)
         # Dummy initial weights, means and covs
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
@@ -187,7 +190,7 @@ class BosonicBackend(BaseBosonic):
 
         # Go through the operations in the circuit
         for cmd in prog.circuit:
-            # Check if an operation has already acted on these modes.
+            # Check if an operation other than New() has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
             isitnew = 1 - np.isin(labels, reg_list)
             if np.any(isitnew):
@@ -212,6 +215,15 @@ class BosonicBackend(BaseBosonic):
                             "Ket and DensityMatrix preparation not implemented in bosonic backend."
                         )
 
+                    # If a new mode is added in the program context, then add it
+                    # but don't add it to the reg_list in case there is a subsequent
+                    # non-Gaussian state prep added
+                    elif isinstance(cmd.op, _New_modes):
+                        cmd.op.apply(cmd.reg, self)
+                        init_weights.append([0])
+                        init_means.append([0])
+                        init_covs.append([0])
+
                     # The rest of the preparations are gaussian.
                     # TODO: initialize with Gaussian |vacuum> state
                     # directly by asking preparation methods below for
@@ -223,7 +235,17 @@ class BosonicBackend(BaseBosonic):
                     init_means[reg] = means
                     init_covs[reg] = covs
 
-                reg_list += labels
+                # Add the mode to the list of already prepared modes, unless the command was
+                # just to create the new mode, in which case it checks again to see if there is
+                # a subsequent non-Gaussian state creation
+                if not isinstance(cmd.op, _New_modes):
+                    reg_list += labels
+
+            else:
+                if type(cmd.op) in nongausspreps:
+                    raise NotImplementedError(
+                        "Non-gaussian state preparations must be the first operation for each register."
+                    )
 
         # Assume unused modes in the circuit are vacua.
         # If there are any Gaussian state preparations, these will be handled
