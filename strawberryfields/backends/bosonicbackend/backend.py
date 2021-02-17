@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=too-many-public-methods
+# pylint: disable=import-outside-toplevel
 """Bosonic backend"""
 import itertools as it
 
@@ -172,6 +173,7 @@ class BosonicBackend(BaseBosonic):
             GKP,
             Ket,
         )
+
         nmodes = prog.num_subsystems
         self.begin_circuit(nmodes)
         # Dummy initial weights, means and covs
@@ -343,7 +345,7 @@ class BosonicBackend(BaseBosonic):
             tuple: arrays of the weights, means and covariances for the state
         """
 
-        if desc not in ("complex","real"):
+        if desc not in ("complex", "real"):
             raise ValueError(r'``desc`` accepts only "real" or "complex" as arguments.')
 
         # Case alpha = 0, prepare vacuum
