@@ -27,6 +27,16 @@ from strawberryfields.backends.states import BaseBosonicState
 from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
 from strawberryfields.backends.base import NotApplicableError
 
+from strawberryfields.ops import (
+    Bosonic,
+    Catstate,
+    DensityMatrix,
+    Fock,
+    GKP,
+    Ket,
+    MbSgate,
+)
+
 
 def kron_list(l):
     """Take Kronecker products of a list of lists."""
@@ -86,16 +96,6 @@ class BosonicBackend(BaseBosonic):
             NotImplementedError: if an op in the program is not implemented
                                  in the bosonic backend
         """
-
-        from strawberryfields.ops import (
-            Bosonic,
-            Catstate,
-            DensityMatrix,
-            Fock,
-            GKP,
-            Ket,
-            MbSgate,
-        )
 
         # Initialize the circuit. This applies all non-Gaussian state-prep
         self.init_circuit(prog)
@@ -165,15 +165,6 @@ class BosonicBackend(BaseBosonic):
         Raises:
             NotImplementedError: if Ket or DensityMatrix preparation used
         """
-
-        from strawberryfields.ops import (
-            Bosonic,
-            Catstate,
-            DensityMatrix,
-            Fock,
-            GKP,
-            Ket,
-        )
 
         nmodes = prog.num_subsystems
         self.begin_circuit(nmodes)
@@ -474,7 +465,7 @@ class BosonicBackend(BaseBosonic):
         return weights, means, cov
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
-        """Prepares the arrays of weights, means and covs for a finite energy GKP state.
+        r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
 
