@@ -13,7 +13,7 @@
 # limitations under the License.
 
 r"""
-Unit tests for backends.bosonicbackend.bosoniccircuit.py.
+Unit tests for backends.bosonicbackend.backend.py.
 """
 
 import numpy as np
@@ -279,11 +279,11 @@ class TestBosonicFockStates:
 
 @pytest.mark.backends("bosonic")
 class TestBosonicGKPStates:
-    r"""Tests gkp method of the BosonicBackend class."""
+    r"""Tests the gkp method of the BosonicBackend class."""
     
     @pytest.mark.parametrize("eps", EPS_VALS)
     def test_gkp(self,eps):
-        r"""Checks the complex cat state representation."""
+        r"""Checks the GKP state weights, means and covariances are correct."""
         prog = sf.Program(1)
         with prog.context as q:
             sf.ops.GKP(epsilon=eps) | q[0]
@@ -358,7 +358,10 @@ class TestBosonicGKPStates:
     
     def test_gkp_complex(self):
         r"""Checks that trying to call a complex representation
-        raises an error."""   
+        raises an error.
+        
+        This test can be updated once the complex representation is
+        implemented."""   
         with pytest.raises(NotImplementedError):
             prog = sf.Program(1)
             with prog.context as q:
