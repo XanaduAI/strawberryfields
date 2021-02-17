@@ -42,12 +42,14 @@ from .xstrict import Xstrict
 from .xunitary import Xunitary
 from .fock import Fock
 from .gaussian import Gaussian
+from .bosonic import Bosonic
 from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
 
 compilers = (
     Fock,
     Gaussian,
+    Bosonic,
     GBS,
     GaussianUnitary,
     Xcov,
