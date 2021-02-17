@@ -794,15 +794,15 @@ class Fock(Preparation):
 
 class Bosonic(Preparation):
     """Prepare a mode as a linear combination of Gaussian functions in phase space.
-    
+
     Args:
         weights (array): coefficients for each Gaussian in the linear combination
         means (array): array of means for each Gaussian in the linear combination
         covs (array): array of covariance matrices for each Gaussian in the linear combination
     """
+
     def __init__(self, weights=None, means=None, covs=None):
-        super().__init__([weights,means,covs])
-        
+        super().__init__([weights, means, covs])
 
 
 class Catstate(Preparation):
@@ -880,24 +880,24 @@ class Catstate(Preparation):
 
 class GKP(Preparation):
     r"""Prepare a mode in a finite energy Gottesman-Kitaev-Preskill (GKP) state.
-    
+
     In their ideal form, square lattice GKP states are linear combinations of position eigenkets :math:`\ket{\cdot}_q`
     spaced every :math:`\sqrt{\pi\hbar}`. Finite energy GKPs are attained by applying the Fock damping
     operator :math:`e^{-\epsilon\hat{n}}` to the ideal states.
-    
+
     GKP states are qubits, with the qubit state defined by:
     .. math::
     \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
     where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
-    
+
     Square lattice GKPs have Wigner functions with peaks arranged on a square lattice, whereas alternative
-    lattices, such has hexagonal GKPs, can be obtained by applying symplectic transformations to the 
+    lattices, such has hexagonal GKPs, can be obtained by applying symplectic transformations to the
     square lattice GKPs.
-    
+
     Args:
         state (list): [theta,phi] for qubit definition above
         epsilon (float): finite energy parameter of the state
-        cutoff (float): if using the 'real' representation, this determines 
+        cutoff (float): if using the 'real' representation, this determines
                 how many terms to keep
         desc (string): 'real' or 'complex' reprsentation
         shape (string): 'square' lattice or otherwise
@@ -905,7 +905,6 @@ class GKP(Preparation):
 
     def __init__(self, state=[0, 0], epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):
         super().__init__([state, epsilon, cutoff, desc, shape])
-
 
 
 class Ket(Preparation):
@@ -1337,11 +1336,11 @@ class ThermalLossChannel(Channel):
 
 class MbSgate(Channel):
     r"""Phase space measurement-based squeezing gate.
-    
-    This mode can either be implemented as the average transformation, 
-    corresponding to a Gaussian CPTP map, or as a single-shot instance 
+
+    This mode can either be implemented as the average transformation,
+    corresponding to a Gaussian CPTP map, or as a single-shot instance
     of the measurement-based squeezing circuit.
-    
+
     Measurement-based squeezing consists of adding an ancillary squeezed
     mode, entangling it with the target mode at a beamsplitter, performing
     a homodyne measurement on the ancillary mode, and then applying a feedforward

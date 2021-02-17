@@ -335,7 +335,7 @@ class BosonicBackend(BaseBosonic):
         Args:
             alpha (float): alpha value of cat state
             phi (float): phi value of cat state
-            cutoff (float): if using the 'real' representation, this determines 
+            cutoff (float): if using the 'real' representation, this determines
                 how many terms to keep
             desc (string): whether to use the 'real' or 'complex' representation
             D (float): for 'real rep., quality parameter of approximation
@@ -455,7 +455,7 @@ class BosonicBackend(BaseBosonic):
         Args:
             state (list): [theta,phi] for qubit definition above
             epsilon (float): finite energy parameter of the state
-            cutoff (float): if using the 'real' representation, this determines 
+            cutoff (float): if using the 'real' representation, this determines
                 how many terms to keep
             desc (string): 'real' or 'complex' reprsentation
             shape (string): 'square' lattice or otherwise
@@ -638,7 +638,7 @@ class BosonicBackend(BaseBosonic):
             eta_anc(float): detection efficiency of the ancillary mode
         """
         self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
-    
+
     def mb_squeeze_single_shot(self, mode, r, phi, r_anc, eta_anc):
         r"""Squeeze mode by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
         Here, the single-shot map is applied, returning the ancillary measurement outcome.
