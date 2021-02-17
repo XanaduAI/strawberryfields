@@ -337,7 +337,7 @@ class BosonicBackend(BaseBosonic):
              tuple: arrays of the weights, means and covariances for the state
         """
 
-        if desc != "complex" or desc != "real":
+        if desc != "complex" and desc != "real":
             raise ValueError(r'``desc`` accepts only "real" or "complex" as arguments.')
 
         # Case alpha = 0, prepare vacuum

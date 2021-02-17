@@ -31,7 +31,7 @@ R_VALS = np.linspace(-1,1,5)
 @pytest.mark.backends("bosonic")
 class TestKronList():
     """Test kron_list function from the bosonic backend."""
-    def test_kron_list():
+    def test_kron_list(self):
         l1 = [1,2]
         l2 = [3,4,5]
         list_compare = [3,4,5,6,8,10]
