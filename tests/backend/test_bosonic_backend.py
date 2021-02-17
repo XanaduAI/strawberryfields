@@ -242,7 +242,7 @@ class TestBosonicFockStates:
         assert np.allclose(state.covs().real, state.covs())
         
         if n == 0:
-            covs_compare = np.tile(np.eye(2),(1,1,1))
+            covs_compare = np.tile(np.eye(2)*sf.hbar/2,(1,1,1))
             assert np.allclose(state.covs(), covs_compare)
             assert np.allclose(state.fidelity_vacuum(),1)
     
