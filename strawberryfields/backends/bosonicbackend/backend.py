@@ -13,6 +13,7 @@
 # limitations under the License.
 # pylint: disable=too-many-public-methods
 # pylint: disable=import-outside-toplevel
+# pylint: disable=too-many-branches
 """Bosonic backend"""
 import itertools as it
 
@@ -215,8 +216,8 @@ class BosonicBackend(BaseBosonic):
                             "Ket and DensityMatrix preparation not implemented in bosonic backend."
                         )
 
-                    # If a new mode is added in the program context, then add it
-                    # but don't add it to the reg_list in case there is a subsequent
+                    # If a new mode is added in the program context, then add it here,
+                    # but don't add its label to the reg_list in case there is a subsequent
                     # non-Gaussian state prep added
                     elif isinstance(cmd.op, _New_modes):
                         cmd.op.apply(cmd.reg, self)
