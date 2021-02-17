@@ -330,22 +330,22 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_cat(self, alpha, phi, cutoff, desc, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
-        
-        .. math::
-       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
 
-        Args:
-            alpha (float): alpha value of cat state
-            phi (float): phi value of cat state
-            cutoff (float): if using the 'real' representation, this determines
-                how many terms to keep
-            desc (string): whether to use the 'real' or 'complex' representation
-            D (float): for 'real rep., quality parameter of approximation
+         .. math::
+        \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
 
-        Returns:
-            tuple: arrays of the weights, means and covariances for the state
+         Args:
+             alpha (float): alpha value of cat state
+             phi (float): phi value of cat state
+             cutoff (float): if using the 'real' representation, this determines
+                 how many terms to keep
+             desc (string): whether to use the 'real' or 'complex' representation
+             D (float): for 'real rep., quality parameter of approximation
+
+         Returns:
+             tuple: arrays of the weights, means and covariances for the state
         """
-        
+
         if desc != "complex" or desc != "real":
             raise ValueError(r'``desc`` accepts only "real" or "complex" as arguments.')
 
@@ -375,33 +375,33 @@ class BosonicBackend(BaseBosonic):
             covs = 0.5 * hbar * np.identity(2, dtype=float)
             covs = np.repeat(covs[None, :], weights.size, axis=0)
             return weights, means, covs
-        
-        #The only remaining option is a real-valued cat state
+
+        # The only remaining option is a real-valued cat state
         return self.prepare_cat_real_rep(alpha, phi, cutoff, D)
-        
+
     def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
-        
-        .. math::
-       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
-            
-        For this representation, weights, means and covariances are real-valued.
 
-        Args:
-            alpha (float): alpha value of cat state
-            phi (float): phi value of cat state
-            cutoff (float): if using the 'real' representation, this determines
-                how many terms to keep
-            D (float): for 'real rep., quality parameter of approximation
+         .. math::
+        \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
 
-        Returns:
-            tuple: arrays of the weights, means and covariances for the state
+         For this representation, weights, means and covariances are real-valued.
+
+         Args:
+             alpha (float): alpha value of cat state
+             phi (float): phi value of cat state
+             cutoff (float): if using the 'real' representation, this determines
+                 how many terms to keep
+             D (float): for 'real rep., quality parameter of approximation
+
+         Returns:
+             tuple: arrays of the weights, means and covariances for the state
         """
         # Normalization factor
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
         phi = np.pi * phi
         hbar = self.circuit.hbar
-        
+
         # Defining useful constants
         a = np.absolute(alpha)
         phase = np.angle(alpha)
@@ -410,9 +410,7 @@ class BosonicBackend(BaseBosonic):
         num_mean = 8 * a * np.sqrt(hbar) / (np.pi * D * np.sqrt(2))
         denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
         coef_sigma = np.pi ** 2 * hbar / (8 * a ** 2 * (E + v))
-        prefac = (
-            np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi ** 2 * D) / (4 * a) / (np.sqrt(E + v))
-        )
+        prefac = np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi ** 2 * D) / (4 * a) / (np.sqrt(E + v))
         z_max = int(
             np.ceil(
                 2
@@ -474,16 +472,15 @@ class BosonicBackend(BaseBosonic):
             cov = S @ cov @ S.T
 
         return weights, means, cov
-            
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
         """Prepares the arrays of weights, means and covs for a finite energy GKP state.
-        
+
         GKP states are qubits, with the qubit state defined by:
-        
+
         .. math::
         \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
-        
+
         where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
         Args:
@@ -501,10 +498,10 @@ class BosonicBackend(BaseBosonic):
             NotImplementedError: if the complex representation or a non-square lattice
                                 is attempted
         """
-        
+
         if desc == "complex":
             raise NotImplementedError("The complex description of GKP is not implemented")
-            
+
         if shape != "square":
             raise NotImplementedError("Only square GKP are implemented for now")
 
@@ -572,9 +569,7 @@ class BosonicBackend(BaseBosonic):
 
         # Create set of means before finite energy effects
         means_gen = it.tee(
-            it.starmap(
-                lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
-            ),
+            it.starmap(lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)),
             2,
         )
         means = np.concatenate(
@@ -607,7 +602,7 @@ class BosonicBackend(BaseBosonic):
         )
         covs = np.repeat(covs[None, :], weights.size, axis=0)
 
-        return weights, means, covs          
+        return weights, means, covs
 
     def prepare_fock(self, n, r=0.05):
         """Prepares the arrays of weights, means and covs of a Fock state.

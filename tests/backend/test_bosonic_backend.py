@@ -28,11 +28,14 @@ r_fock = 0.05
 EPS_VALS = np.array([0.01,0.05,0.1,0.5])
 R_VALS = np.linspace(-1,1,5)
 
-def test_kron_list():
-    l1 = [1,2]
-    l2 = [3,4,5]
-    list_compare = [3,4,5,6,8,10]
-    assert np.allclose(list_compare, bosonic.kron_list([l1,l2]))
+@pytest.mark.backends("bosonic")
+class TestKronList():
+    """Test kron_list function from the bosonic backend."""
+    def test_kron_list():
+        l1 = [1,2]
+        l2 = [3,4,5]
+        list_compare = [3,4,5,6,8,10]
+        assert np.allclose(list_compare, bosonic.kron_list([l1,l2]))
 
 @pytest.mark.backends("bosonic")
 class TestBosonicCatStates:

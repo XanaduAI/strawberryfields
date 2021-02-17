@@ -886,10 +886,10 @@ class GKP(Preparation):
     operator :math:`e^{-\epsilon\hat{n}}` to the ideal states.
 
     GKP states are qubits, with the qubit state defined by:
-    
+
     .. math::
     \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
-    
+
     where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
     Square lattice GKPs have Wigner functions with peaks arranged on a square lattice, whereas alternative
@@ -1351,7 +1351,7 @@ class MbSgate(Channel):
     mode, entangling it with the target mode at a beamsplitter, performing
     a homodyne measurement on the ancillary mode, and then applying a feedforward
     displacement to the target mode.
-    
+
     Args:
         r (float): target squeezing magnitude
         phi (float): target squeezing phase
@@ -1368,7 +1368,7 @@ class MbSgate(Channel):
         if avg:
             backend.mb_squeeze_avg(*reg, r, phi, r_anc, eta_anc)
             return None
-        
+
         s = np.sqrt(sf.hbar / 2)
         ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
         return ancilla_val / s
