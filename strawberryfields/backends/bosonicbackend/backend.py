@@ -24,8 +24,8 @@ from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
-from .bosoniccircuit import BosonicModes
-from ..base import NotApplicableError
+from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
+from strawberryfields.backends.base import NotApplicableError
 
 
 def kron_list(l):
@@ -67,6 +67,7 @@ class BosonicBackend(BaseBosonic):
         self._supported["mixed_states"] = True
         self._init_modes = None
         self.circuit = None
+        self.ancillae_samples_dict = {}
 
     def run_prog(self, prog, **kwargs):
         """Runs a strawberryfields program using the bosonic backend.
@@ -123,7 +124,7 @@ class BosonicBackend(BaseBosonic):
                 applied.append(cmd)
 
             # Rest of operations applied as normal
-            if type(cmd.op) not in (nongausspreps + ancilla_gates):
+            if type(cmd.op) not in nongausspreps + ancilla_gates:
                 try:
                     # try to apply it to the backend and, if op is a measurement, store outcome in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
@@ -154,7 +155,7 @@ class BosonicBackend(BaseBosonic):
 
         return applied, samples_dict, all_samples
 
-    def init_circuit(self, prog, **kwargs):
+    def init_circuit(self, prog):
         """Instantiate the circuit and initialize weights, means, and covs
         depending on the Preparation classes.
 
@@ -176,7 +177,6 @@ class BosonicBackend(BaseBosonic):
 
         nmodes = prog.num_subsystems
         self.begin_circuit(nmodes)
-        self.ancillae_samples_dict = {}
         # Dummy initial weights, means and covs
         init_weights, init_means, init_covs = [[0] * nmodes for i in range(3)]
 
@@ -196,16 +196,16 @@ class BosonicBackend(BaseBosonic):
                 pars = cmd.op.p
                 for reg in labels:
                     # All the possible preparations should go in this loop
-                    if type(cmd.op) == Bosonic:
+                    if isinstance(cmd.op, Bosonic):
                         weights, means, covs = [pars[i].tolist() for i in range(3)]
 
-                    elif type(cmd.op) == Catstate:
+                    elif isinstance(cmd.op, Catstate):
                         weights, means, covs = self.prepare_cat(*pars)
 
-                    elif type(cmd.op) == GKP:
+                    elif isinstance(cmd.op, GKP):
                         weights, means, covs = self.prepare_gkp(*pars)
 
-                    elif type(cmd.op) == Fock:
+                    elif isinstance(cmd.op, Fock):
                         weights, means, covs = self.prepare_fock(*pars)
 
                     elif type(cmd.op) in (Ket, DensityMatrix):
@@ -330,7 +330,9 @@ class BosonicBackend(BaseBosonic):
 
     def prepare_cat(self, alpha, phi, cutoff, desc, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
-            ``(|alpha> + exp(i*phi*pi)|-alpha>)/N``.
+        
+        .. math::
+       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
 
         Args:
             alpha (float): alpha value of cat state
@@ -343,6 +345,9 @@ class BosonicBackend(BaseBosonic):
         Returns:
             tuple: arrays of the weights, means and covariances for the state
         """
+        
+        if desc != "complex" or desc != "real":
+            raise ValueError(r'``desc`` accepts only "real" or "complex" as arguments.')
 
         # Case alpha = 0, prepare vacuum
         if np.isclose(np.absolute(alpha), 0):
@@ -353,10 +358,10 @@ class BosonicBackend(BaseBosonic):
 
         # Normalization factor
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
-        phi = np.pi * phi
         hbar = self.circuit.hbar
 
         if desc == "complex":
+            phi = np.pi * phi
             # Mean of |alpha><alpha| term
             rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
             # Mean of |alpha><-alpha| term
@@ -370,87 +375,116 @@ class BosonicBackend(BaseBosonic):
             covs = 0.5 * hbar * np.identity(2, dtype=float)
             covs = np.repeat(covs[None, :], weights.size, axis=0)
             return weights, means, covs
+        
+        #The only remaining option is a real-valued cat state
+        return self.prepare_cat_real_rep(alpha, phi, cutoff, D)
+        
+    def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
+        r"""Prepares the arrays of weights, means and covs for a cat state:
+        
+        .. math::
+       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
+            
+        For this representation, weights, means and covariances are real-valued.
 
-        elif desc == "real":
-            # Defining useful constants
-            a = np.absolute(alpha)
-            phase = np.angle(alpha)
-            E = np.pi ** 2 * D * hbar / (16 * a ** 2)
-            v = hbar / 2
-            num_mean = 8 * a * np.sqrt(hbar) / (np.pi * D * np.sqrt(2))
-            denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
-            coef_sigma = np.pi ** 2 * hbar / (8 * a ** 2 * (E + v))
-            prefac = (
-                np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi ** 2 * D) / (4 * a) / (np.sqrt(E + v))
+        Args:
+            alpha (float): alpha value of cat state
+            phi (float): phi value of cat state
+            cutoff (float): if using the 'real' representation, this determines
+                how many terms to keep
+            D (float): for 'real rep., quality parameter of approximation
+
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
+        """
+        # Normalization factor
+        norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
+        phi = np.pi * phi
+        hbar = self.circuit.hbar
+        
+        # Defining useful constants
+        a = np.absolute(alpha)
+        phase = np.angle(alpha)
+        E = np.pi ** 2 * D * hbar / (16 * a ** 2)
+        v = hbar / 2
+        num_mean = 8 * a * np.sqrt(hbar) / (np.pi * D * np.sqrt(2))
+        denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
+        coef_sigma = np.pi ** 2 * hbar / (8 * a ** 2 * (E + v))
+        prefac = (
+            np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi ** 2 * D) / (4 * a) / (np.sqrt(E + v))
+        )
+        z_max = int(
+            np.ceil(
+                2
+                * np.sqrt(2)
+                * a
+                / (np.pi * np.sqrt(hbar))
+                * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
             )
-            z_max = int(
-                np.ceil(
-                    2
-                    * np.sqrt(2)
-                    * a
-                    / (np.pi * np.sqrt(hbar))
-                    * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
-                )
-            )
+        )
 
-            x_means = np.zeros(4 * z_max + 1, dtype=float)
-            p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
+        x_means = np.zeros(4 * z_max + 1, dtype=float)
+        p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
 
-            # Creating and calculating the weigths array for oscillating terms
-            odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
-            even_terms = (odd_terms + 1) % 2
-            even_phases = (-1) ** ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2)
-            odd_phases = (-1) ** (
-                1 + ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
-            )
-            weights = np.cos(phi) * even_terms * even_phases * np.exp(
-                -0.5 * coef_sigma * p_means ** 2
-            ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
-            weights *= prefac
-            weights_real = np.ones(2, dtype=float)
-            weights = norm * np.concatenate((weights_real, weights))
+        # Creating and calculating the weigths array for oscillating terms
+        odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
+        even_terms = (odd_terms + 1) % 2
+        even_phases = (-1) ** ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2)
+        odd_phases = (-1) ** (
+            1 + ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
+        )
+        weights = np.cos(phi) * even_terms * even_phases * np.exp(
+            -0.5 * coef_sigma * p_means ** 2
+        ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
+        weights *= prefac
+        weights_real = np.ones(2, dtype=float)
+        weights = norm * np.concatenate((weights_real, weights))
 
-            # making sure the state is properly normalized
-            weights /= np.sum(weights)
+        # making sure the state is properly normalized
+        weights /= np.sum(weights)
 
-            # computing the means array
-            means = np.concatenate(
-                (
-                    np.reshape(x_means, (-1, 1)),
-                    np.reshape(p_means, (-1, 1)),
-                ),
-                axis=1,
-            )
-            means *= num_mean / denom_mean
-            means_real = np.sqrt(2 * hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
-            means = np.concatenate((means_real, means))
+        # computing the means array
+        means = np.concatenate(
+            (
+                np.reshape(x_means, (-1, 1)),
+                np.reshape(p_means, (-1, 1)),
+            ),
+            axis=1,
+        )
+        means *= num_mean / denom_mean
+        means_real = np.sqrt(2 * hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
+        means = np.concatenate((means_real, means))
 
-            # computing the covariance array
-            cov = np.array([[0.5 * hbar, 0], [0, (E * v) / (E + v)]])
-            cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
-            cov_real = 0.5 * hbar * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
-            cov = np.concatenate((cov_real, cov))
+        # computing the covariance array
+        cov = np.array([[0.5 * hbar, 0], [0, (E * v) / (E + v)]])
+        cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
+        cov_real = 0.5 * hbar * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+        cov = np.concatenate((cov_real, cov))
 
-            # filter out 0 components
-            filt = ~np.isclose(weights, 0, atol=cutoff)
-            weights = weights[filt]
-            means = means[filt]
-            cov = cov[filt]
+        # filter out 0 components
+        filt = ~np.isclose(weights, 0, atol=cutoff)
+        weights = weights[filt]
+        means = means[filt]
+        cov = cov[filt]
 
-            # applying a rotation if necessary
-            if not np.isclose(phase, 0):
-                S = np.array([[np.cos(phase), -np.sin(phase)], [np.sin(phase), np.cos(phase)]])
-                means = np.dot(S, means.T).T
-                cov = S @ cov @ S.T
+        # applying a rotation if necessary
+        if not np.isclose(phase, 0):
+            S = np.array([[np.cos(phase), -np.sin(phase)], [np.sin(phase), np.cos(phase)]])
+            means = np.dot(S, means.T).T
+            cov = S @ cov @ S.T
 
-            return weights, means, cov
-
-        else:
-            raise ValueError('desc accept only "real" or "complex" arguments')
+        return weights, means, cov
+            
 
     def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
-        """Prepares the arrays of weights, means and covs for a gkp state:
-            ``cos(theta/2)|0>_{gkp} + exp(-i*phi)sin(theta/2)|1>_{gkp}``
+        """Prepares the arrays of weights, means and covs for a finite energy GKP state.
+        
+        GKP states are qubits, with the qubit state defined by:
+        
+        .. math::
+        \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
+        
+        where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
         Args:
             state (list): [theta,phi] for qubit definition above
@@ -467,115 +501,113 @@ class BosonicBackend(BaseBosonic):
             NotImplementedError: if the complex representation or a non-square lattice
                                 is attempted
         """
+        
+        if desc == "complex":
+            raise NotImplementedError("The complex description of GKP is not implemented")
+            
+        if shape != "square":
+            raise NotImplementedError("Only square GKP are implemented for now")
 
         theta, phi = state[0], state[1]
 
-        if shape == "square":
-            if desc == "real":
+        def coef(peak_loc):
+            """Returns the value of the weight for a given peak.
 
-                def coef(peak_loc):
-                    """Returns the value of the weight for a given peak.
+            Args:
+                peak_loc (array): location of the ideal peak in phase space
 
-                    Args:
-                        peak_loc (array): location of the ideal peak in phase space
-
-                    Returns:
-                        float: weight of the peak
-                    """
-                    l, m = peak_loc[:, 0], peak_loc[:, 1]
-                    t = np.zeros(peak_loc.shape[0], dtype=complex)
-                    t += np.logical_and(l % 2 == 0, m % 2 == 0)
-                    t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
-                        np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
-                    )
-                    t += np.logical_and(l % 4 == 2, m % 2 == 1) * (
-                        np.sin(0.5 * theta) ** 2 - np.cos(0.5 * theta) ** 2
-                    )
-                    t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
-                    t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
-                    t -= (
-                        np.logical_or(
-                            np.logical_and(l % 4 == 3, m % 4 == 3),
-                            np.logical_and(l % 4 == 1, m % 4 == 1),
-                        )
-                        * np.sin(theta)
-                        * np.sin(phi)
-                    )
-                    t += (
-                        np.logical_or(
-                            np.logical_and(l % 4 == 3, m % 4 == 1),
-                            np.logical_and(l % 4 == 1, m % 4 == 3),
-                        )
-                        * np.sin(theta)
-                        * np.sin(phi)
-                    )
-                    prefactor = np.exp(
-                        -np.pi
-                        * 0.25
-                        * (l ** 2 + m ** 2)
-                        * (1 - np.exp(-2 * epsilon))
-                        / (1 + np.exp(-2 * epsilon))
-                    )
-                    weight = t * prefactor
-                    return weight
-
-                # Set the max peak value
-                z_max = int(
-                    np.ceil(
-                        np.sqrt(
-                            -4
-                            / np.pi
-                            * np.log(cutoff)
-                            * (1 + np.exp(-2 * epsilon))
-                            / (1 - np.exp(-2 * epsilon))
-                        )
-                    )
+            Returns:
+                float: weight of the peak
+            """
+            l, m = peak_loc[:, 0], peak_loc[:, 1]
+            t = np.zeros(peak_loc.shape[0], dtype=complex)
+            t += np.logical_and(l % 2 == 0, m % 2 == 0)
+            t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
+                np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
+            )
+            t += np.logical_and(l % 4 == 2, m % 2 == 1) * (
+                np.sin(0.5 * theta) ** 2 - np.cos(0.5 * theta) ** 2
+            )
+            t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
+            t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
+            t -= (
+                np.logical_or(
+                    np.logical_and(l % 4 == 3, m % 4 == 3),
+                    np.logical_and(l % 4 == 1, m % 4 == 1),
                 )
-                damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
-
-                # Create set of means before finite energy effects
-                means_gen = it.tee(
-                    it.starmap(
-                        lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
-                    ),
-                    2,
+                * np.sin(theta)
+                * np.sin(phi)
+            )
+            t += (
+                np.logical_or(
+                    np.logical_and(l % 4 == 3, m % 4 == 1),
+                    np.logical_and(l % 4 == 1, m % 4 == 3),
                 )
-                means = np.concatenate(
-                    (
-                        np.reshape(
-                            np.fromiter(means_gen[0], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
-                        ).real,
-                        np.reshape(
-                            np.fromiter(means_gen[1], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
-                        ).imag,
-                    ),
-                    axis=1,
+                * np.sin(theta)
+                * np.sin(phi)
+            )
+            prefactor = np.exp(
+                -np.pi
+                * 0.25
+                * (l ** 2 + m ** 2)
+                * (1 - np.exp(-2 * epsilon))
+                / (1 + np.exp(-2 * epsilon))
+            )
+            weight = t * prefactor
+            return weight
+
+        # Set the max peak value
+        z_max = int(
+            np.ceil(
+                np.sqrt(
+                    -4
+                    / np.pi
+                    * np.log(cutoff)
+                    * (1 + np.exp(-2 * epsilon))
+                    / (1 - np.exp(-2 * epsilon))
                 )
+            )
+        )
+        damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
 
-                # Calculate the weights for each peak
-                weights = coef(means)
-                filt = abs(weights) > cutoff
-                weights = weights[filt]
-                weights /= np.sum(weights)
-                # Apply finite energy effect to means
-                means = means[filt]
-                means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
-                # Covariances all the same
-                covs = (
-                    0.5
-                    * self.circuit.hbar
-                    * (1 - np.exp(-2 * epsilon))
-                    / (1 + np.exp(-2 * epsilon))
-                    * np.identity(2)
-                )
-                covs = np.repeat(covs[None, :], weights.size, axis=0)
+        # Create set of means before finite energy effects
+        means_gen = it.tee(
+            it.starmap(
+                lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)
+            ),
+            2,
+        )
+        means = np.concatenate(
+            (
+                np.reshape(
+                    np.fromiter(means_gen[0], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                ).real,
+                np.reshape(
+                    np.fromiter(means_gen[1], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                ).imag,
+            ),
+            axis=1,
+        )
 
-                return weights, means, covs
+        # Calculate the weights for each peak
+        weights = coef(means)
+        filt = abs(weights) > cutoff
+        weights = weights[filt]
+        weights /= np.sum(weights)
+        # Apply finite energy effect to means
+        means = means[filt]
+        means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
+        # Covariances all the same
+        covs = (
+            0.5
+            * self.circuit.hbar
+            * (1 - np.exp(-2 * epsilon))
+            / (1 + np.exp(-2 * epsilon))
+            * np.identity(2)
+        )
+        covs = np.repeat(covs[None, :], weights.size, axis=0)
 
-            elif desc == "complex":
-                raise NotImplementedError("The complex description of GKP is not implemented")
-        else:
-            raise ValueError("Only square GKP are implemented for now")
+        return weights, means, covs          
 
     def prepare_fock(self, n, r=0.05):
         """Prepares the arrays of weights, means and covs of a Fock state.

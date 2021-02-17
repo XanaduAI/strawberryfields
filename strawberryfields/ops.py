@@ -886,8 +886,10 @@ class GKP(Preparation):
     operator :math:`e^{-\epsilon\hat{n}}` to the ideal states.
 
     GKP states are qubits, with the qubit state defined by:
+    
     .. math::
     \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
+    
     where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
     Square lattice GKPs have Wigner functions with peaks arranged on a square lattice, whereas alternative
@@ -903,7 +905,9 @@ class GKP(Preparation):
         shape (string): 'square' lattice or otherwise
     """
 
-    def __init__(self, state=[0, 0], epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):
+    def __init__(self, state=None, epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):
+        if state is None:
+            state = [0, 0]
         super().__init__([state, epsilon, cutoff, desc, shape])
 
 
@@ -948,6 +952,8 @@ class Ket(Preparation):
             super().__init__([state.ket()])
         elif isinstance(state, BaseGaussianState):
             raise ValueError("Gaussian states are not supported for the Ket operation.")
+        elif isinstance(state, BaseBosonicState):
+            raise ValueError("Bosonic states are not supported for the Ket operation.")
         else:
             super().__init__([state])
 
@@ -1345,6 +1351,13 @@ class MbSgate(Channel):
     mode, entangling it with the target mode at a beamsplitter, performing
     a homodyne measurement on the ancillary mode, and then applying a feedforward
     displacement to the target mode.
+    
+    Args:
+        r (float): target squeezing magnitude
+        phi (float): target squeezing phase
+        r_anc (float): squeezing magnitude of the ancillary mode
+        eta_anc(float): detection efficiency of the ancillary mode
+        avg (bool): whether to apply the average or single-shot map
     """
 
     def __init__(self, r, phi=0.0, r_anc=10.0, eta_anc=1.0, avg=True):
@@ -1355,10 +1368,10 @@ class MbSgate(Channel):
         if avg:
             backend.mb_squeeze_avg(*reg, r, phi, r_anc, eta_anc)
             return None
-        if not avg:
-            s = np.sqrt(sf.hbar / 2)
-            ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
-            return ancilla_val / s
+        
+        s = np.sqrt(sf.hbar / 2)
+        ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
+        return ancilla_val / s
 
 
 # ====================================================================
