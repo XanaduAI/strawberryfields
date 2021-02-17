@@ -322,22 +322,22 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat(self, alpha, phi, cutoff, desc, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-         .. math::
+        math::
         \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
 
-         Args:
-             alpha (float): alpha value of cat state
-             phi (float): phi value of cat state
-             cutoff (float): if using the 'real' representation, this determines
+        Args:
+            alpha (float): alpha value of cat state
+            phi (float): phi value of cat state
+            cutoff (float): if using the 'real' representation, this determines
                  how many terms to keep
-             desc (string): whether to use the 'real' or 'complex' representation
-             D (float): for 'real rep., quality parameter of approximation
+            desc (string): whether to use the 'real' or 'complex' representation
+            D (float): for 'real rep., quality parameter of approximation
 
-         Returns:
-             tuple: arrays of the weights, means and covariances for the state
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
         """
 
-        if desc != "complex" and desc != "real":
+        if desc not in ("complex","real"):
             raise ValueError(r'``desc`` accepts only "real" or "complex" as arguments.')
 
         # Case alpha = 0, prepare vacuum
@@ -373,20 +373,20 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-         .. math::
+        math::
         \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}).
 
-         For this representation, weights, means and covariances are real-valued.
+        For this representation, weights, means and covariances are real-valued.
 
-         Args:
-             alpha (float): alpha value of cat state
-             phi (float): phi value of cat state
-             cutoff (float): if using the 'real' representation, this determines
+        Args:
+            alpha (float): alpha value of cat state
+            phi (float): phi value of cat state
+            cutoff (float): if using the 'real' representation, this determines
                  how many terms to keep
-             D (float): for 'real rep., quality parameter of approximation
+            D (float): for 'real rep., quality parameter of approximation
 
-         Returns:
-             tuple: arrays of the weights, means and covariances for the state
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
         """
         # Normalization factor
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
@@ -469,7 +469,7 @@ class BosonicBackend(BaseBosonic):
 
         GKP states are qubits, with the qubit state defined by:
 
-        .. math::
+        math::
         \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
 
         where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
