@@ -395,7 +395,7 @@ class BosonicBackend(BaseBosonic):
             means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
             covs = 0.5 * hbar * np.identity(2, dtype=float)
             covs = np.repeat(covs[None, :], weights.size, axis=0)
-            
+
             return weights, means, covs
 
         # The only remaining option is a real-valued cat state
