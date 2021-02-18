@@ -135,6 +135,12 @@ def _get_mode_order(num_of_values, modes, N, timebins):
 
 def reshape_samples(all_samples, modes, N, timebins):
     """Reshapes the samples dict so that they have the expected correct shape.
+    
+    .. note::
+
+        This function will empty the ``all_samples`` dictionary that's being sent in,
+        which will thus contain no samples after the reshaped samples dictionary has been
+        constructed. The samples will instead be returned, reshaped, in a new dictionary.
 
     Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are
     the ones defined to be measured in the circuit, instead of being spread over a larger
@@ -204,6 +210,7 @@ def reshape_samples(all_samples, modes, N, timebins):
             # create an entry for the new mode with a nested list for each timebin
             new_samples[mode_idx] = [[] for _ in range(timebins)]
 
+        # pops samples, thus emptying all_samples for memory conservation
         sample = all_samples[mode].pop(0)[0]
         new_samples[mode_idx][timebin_idx].append(sample)
 
