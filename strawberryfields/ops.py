@@ -888,8 +888,7 @@ class GKP(Preparation):
     GKP states are qubits, with the qubit state defined by:
 
     .. math::
-
-    \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}
+        \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}_{gkp}
 
     where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
@@ -902,8 +901,8 @@ class GKP(Preparation):
         epsilon (float): finite energy parameter of the state
         cutoff (float): if using the 'real' representation, this determines
                 how many terms to keep
-        desc (string): 'real' or 'complex' reprsentation
-        shape (string): 'square' lattice or otherwise
+        desc (str): 'real' or 'complex' reprsentation
+        shape (str): shape of the lattice; default 'square'
     """
 
     def __init__(self, state=None, epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):

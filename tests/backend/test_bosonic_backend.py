@@ -55,7 +55,7 @@ class TestBosonicCatStates:
         
        
         if alpha != 0:
-            #Check shapes
+            # Check shapes
             assert state.num_weights == 4
             assert state.weights().shape == (4,)
             assert np.allclose(sum(state.weights()),1)
@@ -64,7 +64,7 @@ class TestBosonicCatStates:
             covs_compare = np.tile(np.eye(2)*sf.hbar/2,(4,1,1))
             assert np.allclose(state.covs(), covs_compare)
             
-            #Weights not real if phi != 0 or 1
+            # Weights not real if phi != 0 or 1
             if phi % 1 == 0:
                 assert np.allclose(state.weights().real, state.weights())
             else:
@@ -157,9 +157,9 @@ class TestBosonicCatStates:
         results = eng.run(prog_cat_fock)
         wigner_fock = results.state.wigner(0,x,p)
         
-        assert np.allclose(wigner_complex,wigner_real,rtol=1e-3,atol=1e-6)
-        assert np.allclose(wigner_complex,wigner_fock,rtol=1e-3,atol=1e-6)
-        assert np.allclose(wigner_fock,wigner_real,rtol=1e-3,atol=1e-6)
+        assert np.allclose(wigner_complex, wigner_real, rtol=1e-3, atol=1e-6)
+        assert np.allclose(wigner_complex, wigner_fock, rtol=1e-3, atol=1e-6)
+        assert np.allclose(wigner_fock, wigner_real, rtol=1e-3, atol=1e-6)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     def test_cat_state_parity(self,alpha):
@@ -224,17 +224,17 @@ class TestBosonicFockStates:
         backend.run_prog(prog)
         state = backend.state()
         
-        #Check shapes
+        # check shapes
         assert state.num_weights == n+1
         assert state.weights().shape == (n+1,)
         assert np.allclose(sum(state.weights()),1)
         assert state.means().shape == (n+1,2)
         assert state.covs().shape == (n+1,2,2)
         
-        #Check mean photon is close to n
+        # check mean photon is close to n
         mean,var = state.mean_photon(0)
-        assert np.allclose(mean,n,atol=r_fock)
-        assert np.allclose(var,0,atol=r_fock)
+        assert np.allclose(mean, n, atol=r_fock)
+        assert np.allclose(var, 0, atol=r_fock)
         
         # Weights, means and covs should be real
         assert np.allclose(state.weights().real, state.weights())
@@ -371,7 +371,7 @@ class TestBosonicGKPStates:
             backend = bosonic.BosonicBackend()
             backend.run_prog(prog)
 
-class TestBosonicUserSpecifiedState():
+class TestBosonicUserSpecifiedState:
     """Checks the Bosonic preparation method."""
     
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
@@ -402,7 +402,7 @@ class TestBosonicUserSpecifiedState():
         #Check the two states are equal
         assert state.__eq__(state2)
         
-class TestBosonicPrograms():
+class TestBosonicPrograms:
     """Tests that small programs run and return the correct output."""
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
@@ -412,8 +412,8 @@ class TestBosonicPrograms():
         prog = sf.Program(3)
         with prog.context as q:
             sf.ops.Catstate(alpha) | q[0]
-            #This line should be ignored since it is a Gaussian prep
-            #that would be picked up in run_prog, but not init_circuit
+            # this line should be ignored since it is a Gaussian prep
+            # that would be picked up in run_prog, but not init_circuit
             sf.ops.Squeezed(r) | q[1]
         backend = bosonic.BosonicBackend()
         backend.init_circuit(prog)

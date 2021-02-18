@@ -83,10 +83,8 @@ class BosonicBackend(BaseBosonic):
                     dictionary of ancilla measurement samples
 
         Raises:
-            NotApplicableError: if an op in the program does not apply to
-                                the bosonic backend
-            NotImplementedError: if an op in the program is not implemented
-                                 in the bosonic backend
+            NotApplicableError: if an op in the program does not apply to the bosonic backend
+            NotImplementedError: if an op in the program is not implemented in the bosonic backend
         """
         from strawberryfields.ops import (
             Bosonic,
@@ -141,19 +139,19 @@ class BosonicBackend(BaseBosonic):
 
                     applied.append(cmd)
 
-                except NotApplicableError:
+                except NotApplicableError as e:
                     # command is not applicable to the current backend type
                     raise NotApplicableError(
                         "The operation {} cannot be used with the Bosonic Backend.".format(cmd.op)
-                    ) from None
+                    ) from e
 
-                except NotImplementedError:
+                except NotImplementedError as e:
                     # command not directly supported by backend API
                     raise NotImplementedError(
                         "The operation {} has not been implemented in the Bosonic Backend for the arguments {}.".format(
                             cmd.op, kwargs
                         )
-                    ) from None
+                    ) from e
 
         return applied, samples_dict, all_samples
 
@@ -165,7 +163,7 @@ class BosonicBackend(BaseBosonic):
             prog (object): sf.Program instance
 
         Raises:
-            NotImplementedError: if Ket or DensityMatrix preparation used
+            NotImplementedError: if ``Ket`` or ``DensityMatrix`` preparation used
         """
         from strawberryfields.ops import (
             Bosonic,
@@ -213,7 +211,7 @@ class BosonicBackend(BaseBosonic):
 
                     elif type(cmd.op) in (Ket, DensityMatrix):
                         raise NotImplementedError(
-                            "Ket and DensityMatrix preparation not implemented in bosonic backend."
+                            "Ket and DensityMatrix preparation not implemented in the bosonic backend."
                         )
 
                     # If a new mode is added in the program context, then add it here,
@@ -361,7 +359,7 @@ class BosonicBackend(BaseBosonic):
             cutoff (float): if using the 'real' representation, this determines
                  how many terms to keep
             desc (string): whether to use the 'real' or 'complex' representation
-            D (float): for 'real rep., quality parameter of approximation
+            D (float): for 'real' representation, quality parameter of approximation
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -383,18 +381,21 @@ class BosonicBackend(BaseBosonic):
 
         if desc == "complex":
             phi = np.pi * phi
+
             # Mean of |alpha><alpha| term
             rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
             # Mean of |alpha><-alpha| term
             rcomplex = np.sqrt(2 * hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
             # Coefficient for complex Gaussians
             cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
+
             # Arrays of weights, means and covs
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             weights /= np.sum(weights)
             means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
             covs = 0.5 * hbar * np.identity(2, dtype=float)
             covs = np.repeat(covs[None, :], weights.size, axis=0)
+            
             return weights, means, covs
 
         # The only remaining option is a real-valued cat state
@@ -412,7 +413,7 @@ class BosonicBackend(BaseBosonic):
             phi (float): phi value of cat state
             cutoff (float): if using the 'real' representation, this determines
                  how many terms to keep
-            D (float): for 'real rep., quality parameter of approximation
+            D (float): for 'real' representation, quality parameter of approximation
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -498,7 +499,7 @@ class BosonicBackend(BaseBosonic):
 
         GKP states are qubits, with the qubit state defined by:
 
-        :math:`\ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^(-i\phi)\sin\frac{\theta}{2}\ket{1}_{gkp}`
+        :math:`\ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}_{gkp}`
 
         where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
 
@@ -507,15 +508,14 @@ class BosonicBackend(BaseBosonic):
             epsilon (float): finite energy parameter of the state
             cutoff (float): if using the 'real' representation, this determines
                 how many terms to keep
-            desc (string): 'real' or 'complex' reprsentation
-            shape (string): 'square' lattice or otherwise
+            desc (str): 'real' or 'complex' reprsentation
+            shape (str): shape of the lattice; default 'square'
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
 
         Raises:
-            NotImplementedError: if the complex representation or a non-square lattice
-                                is attempted
+            NotImplementedError: if the complex representation or a non-square lattice is attempted
         """
 
         if desc == "complex":
@@ -634,7 +634,7 @@ class BosonicBackend(BaseBosonic):
             tuple: arrays of the weights, means and covariances for the state
 
         Raises:
-            ValueError: if 1/r**2 is less than n
+            ValueError: if :math:`1/r^2` is less than n
         """
         if 1 / r ** 2 < n:
             raise ValueError(
@@ -681,7 +681,7 @@ class BosonicBackend(BaseBosonic):
             r (float): target squeezing magnitude
             phi (float): target squeezing phase
             r_anc (float): squeezing magnitude of the ancillary mode
-            eta_anc(float): detection efficiency of the ancillary mode
+            eta_anc (float): detection efficiency of the ancillary mode
         """
         self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
 
