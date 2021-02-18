@@ -135,7 +135,7 @@ def _get_mode_order(num_of_values, modes, N, timebins):
 
 def reshape_samples(all_samples, modes, N, timebins):
     """Reshapes the samples dict so that they have the expected correct shape.
-    
+
     .. note::
 
         This function will empty the ``all_samples`` dictionary that's being sent in,
