@@ -315,6 +315,7 @@ class TestBosonicGKPStates:
         # Means should be integer multiples of sqrt(pi*hbar)/2 times a damping
         damping = 2 * np.exp(-eps) / (1 + np.exp(-2 * eps))
         mean_ints = state.means() / (damping * np.sqrt(np.pi * sf.hbar) / 2)
+
         # Round to make sure numerical errors are washed out
         mean_ints = np.round(np.real_if_close(mean_ints), 10)
         assert np.allclose(mean_ints % 1, np.zeros(mean_ints.shape))
@@ -324,7 +325,7 @@ class TestBosonicGKPStates:
         r"""Checks that logically equivalent GKP states have
         Wigner functions that agree."""
         x = np.linspace(-3 * np.sqrt(np.pi), 3 * np.sqrt(np.pi), 40)
-        p = np.linspace(-3 * np.sqrt(np.pi), 3 * np.sqrt(np.pi), 40)
+        p = np.copy(x)
 
         # Prepare GKP 0 and apply Hadamard
         prog_0H = sf.Program(1)
@@ -421,6 +422,7 @@ class TestBosonicPrograms:
             # this line should be ignored since it is a Gaussian prep
             # that would be picked up in run_prog, but not init_circuit
             sf.ops.Squeezed(r) | q[1]
+
         backend = bosonic.BosonicBackend()
         backend.init_circuit(prog)
         state = backend.state()
@@ -441,9 +443,11 @@ class TestBosonicPrograms:
     def test_different_preparations(self, alpha, r):
         """Runs a program with non-Gaussian and Gaussian preparations."""
         prog = sf.Program(3)
+
         with prog.context as q:
             sf.ops.Catstate(alpha) | q[0]
             sf.ops.Squeezed(r) | q[1]
+
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
         state = backend.state()

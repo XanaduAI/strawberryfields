@@ -43,8 +43,8 @@ class Bosonic(Compiler):
         # measurements
         "MeasureHomodyne",
         "MeasureHeterodyne",
-        # "MeasureFock",
-        # "MeasureThreshold",
+        # TODO: "MeasureFock",
+        # TODO: "MeasureThreshold",
         # channels
         "LossChannel",
         "ThermalLossChannel",
