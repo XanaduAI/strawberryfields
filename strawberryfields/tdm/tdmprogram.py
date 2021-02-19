@@ -138,7 +138,7 @@ def reshape_samples(all_samples, modes, N, timebins):
 
     .. note::
 
-        This function will empty the ``all_samples`` dictionary that's being sent in,
+        This function will empty the input ``all_samples`` dictionary,
         which will thus contain no samples after the reshaped samples dictionary has been
         constructed. The samples will instead be returned, reshaped, in a new dictionary.
 
