@@ -364,7 +364,9 @@ class BosonicBackend(BaseBosonic):
         """
 
         if desc not in ("complex", "real"):
-            raise ValueError('The representation argument accepts only "real" or "complex" as arguments.')
+            raise ValueError(
+                'The representation argument accepts only "real" or "complex" as arguments.'
+            )
 
         # Case alpha = 0, prepare vacuum
         if np.isclose(np.absolute(alpha), 0):
@@ -637,9 +639,7 @@ class BosonicBackend(BaseBosonic):
             ValueError: if :math:`1/r^2` is less than :math:`n`
         """
         if 1 / r ** 2 < n:
-            raise ValueError(
-                f"The parameter 1 / r ** 2={1 / r ** 2} is smaller than n={n}"
-            )
+            raise ValueError(f"The parameter 1 / r ** 2={1 / r ** 2} is smaller than n={n}")
         # A simple function to calculate the parity
         parity = lambda n: 1 if n % 2 == 0 else -1
         # All the means are zero
