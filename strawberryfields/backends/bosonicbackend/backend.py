@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=too-many-public-methods
+# pylint: disable=import-outside-toplevel
 
 """Bosonic backend"""
 import itertools as it
@@ -28,8 +29,6 @@ from strawberryfields.backends.states import BaseBosonicState
 
 from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
 from strawberryfields.backends.base import NotApplicableError
-
-import strawberryfields.ops as ops
 
 
 def kron_list(l):
@@ -85,6 +84,16 @@ class BosonicBackend(BaseBosonic):
             NotApplicableError: if an op in the program does not apply to the bosonic backend
             NotImplementedError: if an op in the program is not implemented in the bosonic backend
         """
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            MbSgate,
+            _New_modes,
+        )
 
         # Initialize the circuit. This applies all non-Gaussian state-prep
         self.init_circuit(prog)
@@ -97,15 +106,15 @@ class BosonicBackend(BaseBosonic):
         all_samples = {}
 
         non_gauss_preps = (
-            ops.Bosonic,
-            ops.Catstate,
-            ops.DensityMatrix,
-            ops.Fock,
-            ops.GKP,
-            ops.Ket,
-            ops._New_modes,
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            _New_modes,
         )
-        ancilla_gates = (ops.MbSgate,)
+        ancilla_gates = (MbSgate,)
         for cmd in prog.circuit:
             # For ancilla-assisted gates, if they return measurement values, store
             # them in ancillae_samples_dict
@@ -164,8 +173,17 @@ class BosonicBackend(BaseBosonic):
         Raises:
             NotImplementedError: if ``Ket`` or ``DensityMatrix`` preparation used
         """
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            _New_modes,
+        )
 
-        non_gauss_preps = (ops.Bosonic, ops.Catstate, ops.DensityMatrix, ops.Fock, ops.GKP, ops.Ket)
+        non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket)
         nmodes = prog.init_num_subsystems
         self.begin_circuit(nmodes)
         # Dummy initial weights, means and covs
@@ -187,25 +205,25 @@ class BosonicBackend(BaseBosonic):
                 pars = cmd.op.p
                 for reg in labels:
                     # All the possible preparations should go in this loop
-                    if isinstance(cmd.op, ops.Bosonic):
+                    if isinstance(cmd.op, Bosonic):
                         weights, means, covs = [pars[i] for i in range(3)]
 
-                    elif isinstance(cmd.op, ops.Catstate):
+                    elif isinstance(cmd.op, Catstate):
                         weights, means, covs = self.prepare_cat(*pars)
 
-                    elif isinstance(cmd.op, ops.GKP):
+                    elif isinstance(cmd.op, GKP):
                         weights, means, covs = self.prepare_gkp(*pars)
 
-                    elif isinstance(cmd.op, ops.Fock):
+                    elif isinstance(cmd.op, Fock):
                         weights, means, covs = self.prepare_fock(*pars)
 
-                    elif isinstance(cmd.op, (ops.Ket, ops.DensityMatrix)):
+                    elif isinstance(cmd.op, (Ket, DensityMatrix)):
                         raise NotImplementedError(
                             "Ket and DensityMatrix preparation not implemented in the bosonic backend."
                         )
 
                     # If a new mode is added in the program context, then add it here
-                    elif isinstance(cmd.op, ops._New_modes):
+                    elif isinstance(cmd.op, _New_modes):
                         cmd.op.apply(cmd.reg, self)
                         init_weights.append([0])
                         init_means.append([0])
@@ -225,7 +243,7 @@ class BosonicBackend(BaseBosonic):
                 # Add the mode to the list of already prepared modes, unless the command was
                 # just to create the new mode, in which case it checks again to see if there is
                 # a subsequent non-Gaussian state creation
-                if not isinstance(cmd.op, ops._New_modes):
+                if not isinstance(cmd.op, _New_modes):
                     reg_list += labels
 
             else:
