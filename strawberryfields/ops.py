@@ -823,6 +823,12 @@ class Catstate(Preparation):
         alpha (complex): displacement parameter
         p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
+        representation (str): whether to use the ``'real'`` or ``'complex'`` representation
+            (Bosonic backend only)
+        cutoff (float): if using the ``'real'`` representation, this determines
+            how many terms to keep (Bosonic backend only)
+        D (float): for ``'real'`` representation, quality parameter of approximation
+            (Bosonic backend only)
 
     .. details::
 

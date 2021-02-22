@@ -360,12 +360,12 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat(self, alpha, phi, representation, cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`.
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
 
         Args:
             alpha (float): alpha value of cat state
             phi (float): phi value of cat state
-            representation (string): whether to use the ``'real'`` or ``'complex'`` representation
+            representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
             D (float): for ``'real'`` representation, quality parameter of approximation
@@ -419,7 +419,7 @@ class BosonicBackend(BaseBosonic):
     def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`.
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
 
         For this representation, weights, means and covariances are real-valued.
 
@@ -691,7 +691,7 @@ class BosonicBackend(BaseBosonic):
         Here, the average, deterministic Gaussian CPTP map is applied.
 
         Args:
-            k (int): mode to be squeezed
+            mode (int): mode to be squeezed
             r (float): target squeezing magnitude
             phi (float): target squeezing phase
             r_anc (float): squeezing magnitude of the ancillary mode
@@ -705,7 +705,7 @@ class BosonicBackend(BaseBosonic):
         Here, the single-shot map is applied, returning the ancillary measurement outcome.
 
         Args:
-            k (int): mode to be squeezed
+            mode (int): mode to be squeezed
             r (float): target squeezing magnitude
             phi (float): target squeezing phase
             r_anc (float): squeezing magnitude of the ancillary mode

@@ -66,7 +66,7 @@ class TestBosonicCatStates:
             covs_compare = np.tile(np.eye(2) * sf.hbar / 2, (4, 1, 1))
             assert np.allclose(state.covs(), covs_compare)
 
-            # Weights not real if phi != 0 or 1
+            # Weights should be real if phi is an integer
             if phi % 1 == 0:
                 assert np.allclose(state.weights().real, state.weights())
             else:
