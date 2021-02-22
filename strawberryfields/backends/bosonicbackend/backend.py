@@ -267,9 +267,7 @@ class BosonicBackend(BaseBosonic):
         # Tensor product of the weights.
         tensored_weights = kron_list(init_weights)
         # De-nest the means iterator.
-        tensored_means = np.array(
-            [[a for b in tup for a in b] for tup in mean_combos], dtype=complex
-        )
+        tensored_means = np.array([np.concatenate(tup) for tup in mean_combos], dtype=complex)
         # Stack covs appropriately.
         tensored_covs = np.array([block_diag(*tup) for tup in cov_combos])
 
