@@ -50,6 +50,7 @@ using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_
 
 import copy
 import numbers
+from typing import Type
 import warnings
 import networkx as nx
 
@@ -452,8 +453,13 @@ class Program:
         return p
 
     def assert_number_of_modes(self, device):
-        """Check that the number of modes in the program is valid for the given device."""
+        """Check that the number of modes in the program is valid for the given device.
 
+        Args:
+            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+                ``device.modes`` must be an integer, containing the allowed number of modes
+                for the target.
+        """
         # Program subsystems may be created and destroyed during execution. The length
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
@@ -465,12 +471,26 @@ class Program:
             )
 
     def assert_number_of_measurements(self, device):
-        """TODO"""
+        """Check that the number of measurements in the circuit doesn't exceed the number of allowed
+        measurements according to the device specification.
+
+        Args:
+            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+                ``device.modes`` must be a dictionary, containing the maximum number of allowed
+                measurements for the specified target.
+
+        """
         num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
 
-        max_pnr = device.modes["max"]["pnr"]
-        max_homodyne = device.modes["max"]["homodyne"]
-        max_heterodyne = device.modes["max"]["heterodyne"]
+        try:
+            max_pnr = device.modes["max"]["pnr"]
+            max_homodyne = device.modes["max"]["homodyne"]
+            max_heterodyne = device.modes["max"]["heterodyne"]
+        except (KeyError, TypeError) as e:
+            raise KeyError(
+                "Device specification must contain an entry for the maximum allowed number "
+                "of measurments. Have you specified the correct target?"
+            ) from e
 
         for c in self.circuit:
             if "MeasureFock" in str(c.op):
