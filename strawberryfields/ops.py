@@ -899,16 +899,17 @@ class GKP(Preparation):
     Args:
         state (list): [theta,phi] for qubit definition above
         epsilon (float): finite energy parameter of the state
-        cutoff (float): if using the 'real' representation, this determines
-                how many terms to keep
-        desc (str): 'real' or 'complex' reprsentation
-        shape (str): shape of the lattice; default 'square'
+        cutoff (float): this determines how many terms to keep
+        representation (str): ``'real'`` or ``'complex'`` reprsentation
+        shape (str): shape of the lattice; default ``'square'``
     """
 
-    def __init__(self, state=None, epsilon=0.2, cutoff=1e-12, desc="real", shape="square"):
+    def __init__(
+        self, state=None, epsilon=0.2, cutoff=1e-12, representation="real", shape="square"
+    ):
         if state is None:
             state = [0, 0]
-        super().__init__([state, epsilon, cutoff, desc, shape])
+        super().__init__([state, epsilon, cutoff, representation, shape])
 
 
 class Ket(Preparation):
@@ -1340,7 +1341,7 @@ class ThermalLossChannel(Channel):
         backend.thermal_loss(p[0], p[1], *reg)
 
 
-class MbSgate(Channel):
+class MSgate(Channel):
     r"""Phase space measurement-based squeezing gate.
 
     This mode can either be implemented as the average transformation,

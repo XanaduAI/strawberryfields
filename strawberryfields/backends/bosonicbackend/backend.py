@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=too-many-public-methods
-# pylint: disable=import-outside-toplevel
 
 """Bosonic backend"""
 import itertools as it
@@ -70,6 +69,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit = None
         self.ancillae_samples_dict = {}
 
+    # pylint: disable=import-outside-toplevel
     def run_prog(self, prog, **kwargs):
         """Runs a strawberryfields program using the bosonic backend.
 
@@ -91,7 +91,7 @@ class BosonicBackend(BaseBosonic):
             Fock,
             GKP,
             Ket,
-            MbSgate,
+            MSgate,
             _New_modes,
         )
 
@@ -114,7 +114,7 @@ class BosonicBackend(BaseBosonic):
             Ket,
             _New_modes,
         )
-        ancilla_gates = (MbSgate,)
+        ancilla_gates = (MSgate,)
         for cmd in prog.circuit:
             # For ancilla-assisted gates, if they return measurement values, store
             # them in ancillae_samples_dict
@@ -163,6 +163,7 @@ class BosonicBackend(BaseBosonic):
         return applied, samples_dict, all_samples
 
     # pylint: disable=too-many-branches
+    # pylint: disable=import-outside-toplevel
     def init_circuit(self, prog):
         """Instantiate the circuit and initialize weights, means, and covs
         depending on the ``Preparation`` classes.
@@ -367,7 +368,7 @@ class BosonicBackend(BaseBosonic):
             representation (string): whether to use the ``'real'`` or ``'complex'`` representation
             cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
-            D (float): for 'real' representation, quality parameter of approximation
+            D (float): for ``'real'`` representation, quality parameter of approximation
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -394,15 +395,19 @@ class BosonicBackend(BaseBosonic):
 
             # Mean of |alpha><alpha| term
             rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
+
             # Mean of |alpha><-alpha| term
             rcomplex = np.sqrt(2 * hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
+
             # Coefficient for complex Gaussians
             cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
 
             # Arrays of weights, means and covs
             weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
             weights /= np.sum(weights)
+
             means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
+
             covs = 0.5 * hbar * np.identity(2, dtype=float)
             covs = np.repeat(covs[None, :], weights.size, axis=0)
 
@@ -503,7 +508,7 @@ class BosonicBackend(BaseBosonic):
 
         return weights, means, cov
 
-    def prepare_gkp(self, state, epsilon, cutoff, desc="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, cutoff, representation="real", shape="square"):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
@@ -515,9 +520,8 @@ class BosonicBackend(BaseBosonic):
         Args:
             state (list): ``[theta,phi]`` for qubit definition above
             epsilon (float): finite energy parameter of the state
-            cutoff (float): if using the ``'real'`` representation, this determines
-                how many terms to keep
-            desc (str): 'real' or 'complex' reprsentation
+            cutoff (float): this determines how many terms to keep
+            representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
 
         Returns:
@@ -527,7 +531,7 @@ class BosonicBackend(BaseBosonic):
             NotImplementedError: if the complex representation or a non-square lattice is attempted
         """
 
-        if desc == "complex":
+        if representation == "complex":
             raise NotImplementedError("The complex description of GKP is not implemented")
 
         if shape != "square":

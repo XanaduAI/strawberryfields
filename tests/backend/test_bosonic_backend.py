@@ -86,8 +86,31 @@ class TestBosonicCatStates:
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
     def test_cat_real(self, alpha, phi):
-        r"""Checks the real cat state representation."""
-        # Check that low cutoff and low D produce fewer weights when alpha !=0
+        r"""Checks the real cat state representation produces real weights,
+        means and covariances."""
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
+
+        backend = bosonic.BosonicBackend()
+        backend.run_prog(prog)
+        state = backend.state()
+        num_weights = state.num_weights
+
+        assert np.allclose(sum(state.weights()), 1)
+        assert state.means().shape == (num_weights, 2)
+        assert state.covs().shape == (num_weights, 2, 2)
+
+        # Weights, means and covs should be real
+        assert np.allclose(state.weights().real, state.weights())
+        assert np.allclose(state.means().real, state.means())
+        assert np.allclose(state.covs().real, state.covs())
+
+    @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    def test_cat_real_cutoff_and_D(self, alpha, phi):
+        r"""Checks that for the real cat state representation a
+        low cutoff and low D produce fewer weights when alpha !=0."""
         prog = sf.Program(1)
         with prog.context as q:
             sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
@@ -96,15 +119,6 @@ class TestBosonicCatStates:
         backend.run_prog(prog)
         state = backend.state()
         num_weights_low = state.num_weights
-
-        assert np.allclose(sum(state.weights()), 1)
-        assert state.means().shape == (num_weights_low, 2)
-        assert state.covs().shape == (num_weights_low, 2, 2)
-
-        # Weights, means and covs should be real
-        assert np.allclose(state.weights().real, state.weights())
-        assert np.allclose(state.means().real, state.means())
-        assert np.allclose(state.covs().real, state.covs())
 
         prog = sf.Program(1)
         with prog.context as q:
@@ -368,12 +382,12 @@ class TestBosonicGKPStates:
 
         This test can be updated once the complex representation is
         implemented."""
-        with pytest.raises(NotImplementedError):
-            prog = sf.Program(1)
-            with prog.context as q:
-                sf.ops.GKP(desc="complex") | q[0]
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.GKP(representation="complex") | q[0]
 
-            backend = bosonic.BosonicBackend()
+        backend = bosonic.BosonicBackend()
+        with pytest.raises(NotImplementedError):
             backend.run_prog(prog)
 
 
@@ -498,9 +512,9 @@ class TestBosonicPrograms:
         """Runs a program with measurement-based gates."""
         prog = sf.Program(2)
         with prog.context as q:
-            sf.ops.MbSgate(1, 0, 1, 1, avg=True) | q[0]
-            sf.ops.MbSgate(1, 0, 1, 1, avg=False) | q[1]
-            sf.ops.MbSgate(1, 0, 1, 1, avg=False) | q[1]
+            sf.ops.MSgate(1, 0, 1, 1, avg=True) | q[0]
+            sf.ops.MSgate(1, 0, 1, 1, avg=False) | q[1]
+            sf.ops.MSgate(1, 0, 1, 1, avg=False) | q[1]
         backend = bosonic.BosonicBackend()
         applied, samples, all_samples = backend.run_prog(prog)
 
@@ -544,27 +558,27 @@ class TestBosonicPrograms:
         or have not been implemented."""
         from strawberryfields.backends.base import NotApplicableError
 
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Kgate(1) | q[0]
+        backend = bosonic.BosonicBackend()
         with pytest.raises(NotApplicableError):
-            prog = sf.Program(1)
-            with prog.context as q:
-                sf.ops.Kgate(1) | q[0]
-            backend = bosonic.BosonicBackend()
             backend.run_prog(prog)
 
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.MeasureThreshold() | q[0]
+        backend = bosonic.BosonicBackend()
         with pytest.raises(NotImplementedError):
-            prog = sf.Program(1)
-            with prog.context as q:
-                sf.ops.MeasureThreshold() | q[0]
-            backend = bosonic.BosonicBackend()
             backend.run_prog(prog)
 
     def test_non_initial_prep_error(self):
         """Tests that more than one non-Gaussian state preparations in the same mode
         raises an error."""
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Catstate() | q[0]
+            sf.ops.GKP() | q[0]
+        backend = bosonic.BosonicBackend()
         with pytest.raises(NotImplementedError):
-            prog = sf.Program(1)
-            with prog.context as q:
-                sf.ops.Catstate() | q[0]
-                sf.ops.GKP() | q[0]
-            backend = bosonic.BosonicBackend()
             backend.run_prog(prog)
