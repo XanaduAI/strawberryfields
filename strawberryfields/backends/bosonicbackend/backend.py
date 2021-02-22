@@ -458,12 +458,11 @@ class BosonicBackend(BaseBosonic):
         p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
 
         # Creating and calculating the weights array for oscillating terms
-        odd_terms = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 2
+        term_inds = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int)
+        odd_terms = term_inds % 2
         even_terms = (odd_terms + 1) % 2
-        even_phases = (-1) ** ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) % 4) // 2)
-        odd_phases = (-1) ** (
-            1 + ((np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int) + 2) % 4) // 2
-        )
+        even_phases = (-1) ** ((term_inds % 4) // 2)
+        odd_phases = (-1) ** (1 + ((term_inds + 2) % 4) // 2)
         weights = np.cos(phi) * even_terms * even_phases * np.exp(
             -0.5 * coef_sigma * p_means ** 2
         ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
