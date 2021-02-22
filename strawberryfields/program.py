@@ -464,7 +464,7 @@ class Program:
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
 
-        if isinstance(device.modes, int) and modes_total > device.modes:
+        if modes_total > device.modes:
             raise CircuitError(
                 f"This program contains {modes_total} modes, but the device '{device.target}' "
                 f"only supports a {device.modes}-mode program."
