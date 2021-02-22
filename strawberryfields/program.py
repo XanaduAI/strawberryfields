@@ -458,11 +458,39 @@ class Program:
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
 
-        if modes_total > device.modes:
+        if isinstance(device.modes, int) and modes_total > device.modes:
             raise CircuitError(
                 f"This program contains {modes_total} modes, but the device '{device.target}' "
                 f"only supports a {device.modes}-mode program."
             )
+
+    def assert_number_of_measurements(self, device):
+        """TODO"""
+        num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
+
+        max_pnr = device.modes["max"]["pnr"]
+        max_homodyne = device.modes["max"]["homodyne"]
+        max_heterodyne = device.modes["max"]["heterodyne"]
+
+        for c in self.circuit:
+            if "MeasureFock" in str(c.op):
+                num_pnr += len(c.reg)
+            if "MeasureHomodyne" in str(c.op):
+                num_homodyne += len(c.reg)
+            if "MeasureHeterodyne" in str(c.op):
+                num_heterodyne += len(c.reg)
+
+        too_many_measurments = (
+            num_pnr > max_pnr, num_homodyne > max_homodyne, num_heterodyne > max_heterodyne
+        )
+        if any(too_many_measurments):
+            raise CircuitError(
+                f"This program contains {num_pnr} fock measurements, {num_homodyne} homodyne "
+                f"measurements and {num_heterodyne} heterodyne measurements.\n"
+                f"Simulon supports a maximum of {max_pnr} fock measurements, {max_homodyne} "
+                f"homodyne measurements, {max_heterodyne} heterodyne measurements respectively."
+            )
+
 
     def compile(self, *, device=None, compiler=None, **kwargs):
         """Compile the program given a Strawberry Fields photonic compiler, or
@@ -543,9 +571,15 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-            # TODO: add validation for device specs that provide a dictionary for `device.modes`.
-            if device.modes is not None and isinstance(device.modes, int):
-                self.assert_number_of_modes(device)
+            if device.modes is not None:
+                if isinstance(device.modes, int):
+                    # Check that the number of modes is correct, if device.modes
+                    # is provided as an integer
+                    self.assert_number_of_modes(device)
+                elif device.target == "simulon":
+                    # check that the number of measurements are withing the allowed
+                    # limits; device.modes will be a dictionary
+                    self.assert_number_of_measurements(device)
 
         else:
             compiler = _get_compiler(compiler)
