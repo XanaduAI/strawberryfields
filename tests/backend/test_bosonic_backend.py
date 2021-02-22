@@ -90,7 +90,7 @@ class TestBosonicCatStates:
         # Check that low cutoff and low D produce fewer weights when alpha !=0
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, cutoff=1e-6, desc="real", D=1) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -108,7 +108,7 @@ class TestBosonicCatStates:
 
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, cutoff=1e-12, desc="real", D=10) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=10) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -139,7 +139,7 @@ class TestBosonicCatStates:
 
         prog_real_cat = sf.Program(1)
         with prog_real_cat.context as qr:
-            sf.ops.Catstate(alpha, phi, desc="real", D=10) | qr[0]
+            sf.ops.Catstate(alpha, phi, representation="real", D=10) | qr[0]
 
         backend_complex = bosonic.BosonicBackend()
         backend_complex.run_prog(prog_complex_cat)
@@ -174,7 +174,7 @@ class TestBosonicCatStates:
 
         prog_real_cat = sf.Program(1)
         with prog_real_cat.context as qr:
-            sf.ops.Catstate(alpha, desc="real") | qr[0]
+            sf.ops.Catstate(alpha, representation="real") | qr[0]
 
         backend_complex = bosonic.BosonicBackend()
         backend_complex.run_prog(prog_complex_cat)
@@ -197,7 +197,7 @@ class TestBosonicCatStates:
 
             prog_real_cat = sf.Program(1)
             with prog_real_cat.context as qr:
-                sf.ops.Catstate(alpha, 1, desc="real") | qr[0]
+                sf.ops.Catstate(alpha, 1, representation="real") | qr[0]
 
             backend_complex = bosonic.BosonicBackend()
             backend_complex.run_prog(prog_complex_cat)
@@ -387,7 +387,7 @@ class TestBosonicUserSpecifiedState:
         dummy_backend = bosonic.BosonicBackend()
         dummy_backend.begin_circuit(1)
         # Get weights, means and covs for a cat state
-        weights, means, covs = dummy_backend.prepare_cat(alpha, 0, 0, "complex", 0)
+        weights, means, covs = dummy_backend.prepare_cat(alpha, 0, "complex", 0, 0)
 
         # Initiate the state, but use Bosonic method
         backend = bosonic.BosonicBackend()

@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=too-many-public-methods
-# pylint: disable=import-outside-toplevel
-# pylint: disable=too-many-branches
+
 """Bosonic backend"""
 import itertools as it
+from functools import reduce
 
 import numpy as np
 
@@ -29,12 +29,12 @@ from strawberryfields.backends.states import BaseBosonicState
 from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
 from strawberryfields.backends.base import NotApplicableError
 
+import strawberryfields.ops as ops
+
 
 def kron_list(l):
     """Take Kronecker products of a list of lists."""
-    if len(l) == 1:
-        return l[0]
-    return np.kron(l[0], kron_list(l[1:]))
+    return reduce(np.kron, l)
 
 
 class BosonicBackend(BaseBosonic):
@@ -85,16 +85,6 @@ class BosonicBackend(BaseBosonic):
             NotApplicableError: if an op in the program does not apply to the bosonic backend
             NotImplementedError: if an op in the program is not implemented in the bosonic backend
         """
-        from strawberryfields.ops import (
-            Bosonic,
-            Catstate,
-            DensityMatrix,
-            Fock,
-            GKP,
-            Ket,
-            MbSgate,
-            _New_modes,
-        )
 
         # Initialize the circuit. This applies all non-Gaussian state-prep
         self.init_circuit(prog)
@@ -106,8 +96,16 @@ class BosonicBackend(BaseBosonic):
         samples_dict = {}
         all_samples = {}
 
-        nongausspreps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket, _New_modes)
-        ancilla_gates = (MbSgate,)
+        non_gauss_preps = (
+            ops.Bosonic,
+            ops.Catstate,
+            ops.DensityMatrix,
+            ops.Fock,
+            ops.GKP,
+            ops.Ket,
+            ops._New_modes,
+        )
+        ancilla_gates = (ops.MbSgate,)
         for cmd in prog.circuit:
             # For ancilla-assisted gates, if they return measurement values, store
             # them in ancillae_samples_dict
@@ -124,7 +122,7 @@ class BosonicBackend(BaseBosonic):
                 applied.append(cmd)
 
             # Rest of operations applied as normal
-            if not isinstance(cmd.op, nongausspreps + ancilla_gates):
+            if not isinstance(cmd.op, non_gauss_preps + ancilla_gates):
                 try:
                     # try to apply it to the backend and if op is a measurement, store outcome in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
@@ -155,6 +153,7 @@ class BosonicBackend(BaseBosonic):
 
         return applied, samples_dict, all_samples
 
+    # pylint: disable=too-many-branches
     def init_circuit(self, prog):
         """Instantiate the circuit and initialize weights, means, and covs
         depending on the ``Preparation`` classes.
@@ -165,17 +164,8 @@ class BosonicBackend(BaseBosonic):
         Raises:
             NotImplementedError: if ``Ket`` or ``DensityMatrix`` preparation used
         """
-        from strawberryfields.ops import (
-            Bosonic,
-            Catstate,
-            DensityMatrix,
-            Fock,
-            GKP,
-            Ket,
-            _New_modes,
-        )
 
-        nongausspreps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket)
+        non_gauss_preps = (ops.Bosonic, ops.Catstate, ops.DensityMatrix, ops.Fock, ops.GKP, ops.Ket)
         nmodes = prog.init_num_subsystems
         self.begin_circuit(nmodes)
         # Dummy initial weights, means and covs
@@ -197,25 +187,25 @@ class BosonicBackend(BaseBosonic):
                 pars = cmd.op.p
                 for reg in labels:
                     # All the possible preparations should go in this loop
-                    if isinstance(cmd.op, Bosonic):
-                        weights, means, covs = [pars[i].tolist() for i in range(3)]
+                    if isinstance(cmd.op, ops.Bosonic):
+                        weights, means, covs = [pars[i] for i in range(3)]
 
-                    elif isinstance(cmd.op, Catstate):
+                    elif isinstance(cmd.op, ops.Catstate):
                         weights, means, covs = self.prepare_cat(*pars)
 
-                    elif isinstance(cmd.op, GKP):
+                    elif isinstance(cmd.op, ops.GKP):
                         weights, means, covs = self.prepare_gkp(*pars)
 
-                    elif isinstance(cmd.op, Fock):
+                    elif isinstance(cmd.op, ops.Fock):
                         weights, means, covs = self.prepare_fock(*pars)
 
-                    elif isinstance(cmd.op, (Ket, DensityMatrix)):
+                    elif isinstance(cmd.op, (ops.Ket, ops.DensityMatrix)):
                         raise NotImplementedError(
                             "Ket and DensityMatrix preparation not implemented in the bosonic backend."
                         )
 
                     # If a new mode is added in the program context, then add it here
-                    elif isinstance(cmd.op, _New_modes):
+                    elif isinstance(cmd.op, ops._New_modes):
                         cmd.op.apply(cmd.reg, self)
                         init_weights.append([0])
                         init_means.append([0])
@@ -235,16 +225,16 @@ class BosonicBackend(BaseBosonic):
                 # Add the mode to the list of already prepared modes, unless the command was
                 # just to create the new mode, in which case it checks again to see if there is
                 # a subsequent non-Gaussian state creation
-                if not isinstance(cmd.op, _New_modes):
+                if not isinstance(cmd.op, ops._New_modes):
                     reg_list += labels
 
             else:
-                if type(cmd.op) in nongausspreps:
+                if type(cmd.op) in non_gauss_preps:
                     raise NotImplementedError(
                         "Non-gaussian state preparations must be the first operation for each register."
                     )
 
-        # Assume unused modes in the circuit are vacua.
+        # Assume unused modes in the circuit are vacuum states.
         # If there are any Gaussian state preparations, these will be handled
         # by the run_prog method
         for i in set(range(nmodes)).difference(reg_list):
@@ -256,16 +246,18 @@ class BosonicBackend(BaseBosonic):
         cov_combos = it.product(*init_covs)
 
         # Tensor product of the weights.
-        weights = kron_list(init_weights)
+        tensored_weights = kron_list(init_weights)
         # De-nest the means iterator.
-        means = np.array([[a for b in tup for a in b] for tup in mean_combos], dtype=complex)
+        tensored_means = np.array(
+            [[a for b in tup for a in b] for tup in mean_combos], dtype=complex
+        )
         # Stack covs appropriately.
-        covs = np.array([block_diag(*tup) for tup in cov_combos])
+        tensored_covs = np.array([block_diag(*tup) for tup in cov_combos])
 
         # Declare circuit attributes.
-        self.circuit.weights = weights
-        self.circuit.means = means
-        self.circuit.covs = covs
+        self.circuit.weights = tensored_weights
+        self.circuit.means = tensored_means
+        self.circuit.covs = tensored_covs
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
@@ -346,7 +338,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
-    def prepare_cat(self, alpha, phi, cutoff, desc, D):
+    def prepare_cat(self, alpha, phi, representation, cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`.
@@ -354,16 +346,16 @@ class BosonicBackend(BaseBosonic):
         Args:
             alpha (float): alpha value of cat state
             phi (float): phi value of cat state
+            representation (string): whether to use the ``'real'`` or ``'complex'`` representation
             cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
-            desc (string): whether to use the 'real' or 'complex' representation
             D (float): for 'real' representation, quality parameter of approximation
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
         """
 
-        if desc not in ("complex", "real"):
+        if representation not in ("complex", "real"):
             raise ValueError(
                 'The representation argument accepts only "real" or "complex" as arguments.'
             )
@@ -379,7 +371,7 @@ class BosonicBackend(BaseBosonic):
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
         hbar = self.circuit.hbar
 
-        if desc == "complex":
+        if representation == "complex":
             phi = np.pi * phi
 
             # Mean of |alpha><alpha| term
@@ -411,9 +403,8 @@ class BosonicBackend(BaseBosonic):
         Args:
             alpha (float): alpha value of cat state
             phi (float): phi value of cat state
-            cutoff (float): if using the 'real' representation, this determines
-                 how many terms to keep
-            D (float): for 'real' representation, quality parameter of approximation
+            cutoff (float): this determines how many terms to keep
+            D (float): quality parameter of approximation
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -526,7 +517,7 @@ class BosonicBackend(BaseBosonic):
 
         theta, phi = state[0], state[1]
 
-        def coef(peak_loc):
+        def coeff(peak_loc):
             """Returns the value of the weight for a given peak.
 
             Args:
@@ -604,7 +595,7 @@ class BosonicBackend(BaseBosonic):
         )
 
         # Calculate the weights for each peak
-        weights = coef(means)
+        weights = coeff(means)
         filt = abs(weights) > cutoff
         weights = weights[filt]
 
@@ -673,7 +664,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.squeeze(r, phi, mode)
 
     def mb_squeeze_avg(self, mode, r, phi, r_anc, eta_anc):
-        r"""Squeeze mode by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
+        r"""Squeeze mode by the amount :math:`re^{i\phi}` using measurement-based squeezing.
 
         Here, the average, deterministic Gaussian CPTP map is applied.
 
@@ -687,7 +678,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
 
     def mb_squeeze_single_shot(self, mode, r, phi, r_anc, eta_anc):
-        r"""Squeeze mode by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
+        r"""Squeeze mode by the amount :math:`re^{i\phi}` using measurement-based squeezing.
 
         Here, the single-shot map is applied, returning the ancillary measurement outcome.
 
