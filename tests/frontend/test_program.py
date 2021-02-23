@@ -416,7 +416,7 @@ class TestValidation:
         """Test that an exception is raised if the compiler is called with a
         device spec with an incorrect number of measurements"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
             interactive = True
             primitives = {'MeasureHomodyne', 'MeasureHeterodyne', 'MeasureFock'}
@@ -446,7 +446,7 @@ class TestValidation:
         with pytest.raises(
             program.CircuitError, match="Simulon supports a maximum of 2 fock measurements"
         ):
-            prog.compile(device=spec, compiler=DummyCircuit())
+            prog.compile(device=spec, compiler=DummyCompiler())
 
     def test_no_default_compiler(self):
         """Test that an exception is raised if the DeviceSpec has no compilers
