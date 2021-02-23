@@ -109,8 +109,9 @@ class BosonicBackend(BaseBosonic):
             _New_modes,
         )
 
-        # Initialize the circuit. This applies all non-Gaussian state-prep
-        self.init_circuit(prog)
+        # If a circuit exists, initialize the circuit. This applies all non-Gaussian state-prep
+        if prog.circuit:
+            self.init_circuit(prog)
 
         # Apply operations to circuit. For now, copied from LocalEngine;
         # only change is to ignore preparation classes and ancilla-assisted gates

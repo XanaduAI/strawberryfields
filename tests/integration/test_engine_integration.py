@@ -288,8 +288,6 @@ class TestProperExecution:
         # the regrefs are reset as well
         assert np.all([r.val is None for r in prog.register])
 
-    # TODO: understand why this test does not work for the bosonic backend
-    @pytest.mark.backends("tf","fock","gaussian")
     def test_empty_program(self, setup_eng):
         """Empty programs do not change the state of the backend."""
         eng, p1 = setup_eng(2)
