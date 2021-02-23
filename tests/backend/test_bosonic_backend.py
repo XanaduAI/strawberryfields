@@ -433,7 +433,7 @@ class TestBosonicPrograms:
         prog = sf.Program(3)
         with prog.context as q:
             sf.ops.Catstate(alpha) | q[0]
-            # this line should be ignored since it is a Gaussian prep
+            # this line should have no effect since it is a Gaussian prep
             # that would be picked up in run_prog, but not init_circuit
             sf.ops.Squeezed(r) | q[1]
 

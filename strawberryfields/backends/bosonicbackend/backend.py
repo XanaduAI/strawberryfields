@@ -131,7 +131,7 @@ class BosonicBackend(BaseBosonic):
                 applied.append(cmd)
 
             # Rest of operations applied as normal
-            if not isinstance(cmd.op, non_gauss_preps + ancilla_gates):
+            elif not isinstance(cmd.op, non_gauss_preps):
                 try:
                     # try to apply it to the backend and if op is a measurement, store outcome in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
