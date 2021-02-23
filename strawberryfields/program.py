@@ -495,9 +495,9 @@ class Program:
             op_name = str(c.op)
             if "MeasureFock" in op_name:
                 num_pnr += len(c.reg)
-            if "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
+            elif "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
                 num_homodyne += len(c.reg)
-            if "MeasureHeterodyne" in op_name or "MeasureHD"in op_name:
+            elif "MeasureHeterodyne" in op_name or "MeasureHD"in op_name:
                 num_heterodyne += len(c.reg)
 
         too_many_measurments = (
