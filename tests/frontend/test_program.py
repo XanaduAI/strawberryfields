@@ -402,6 +402,52 @@ class TestValidation:
         with pytest.raises(program.CircuitError, match="program contains 3 modes, but the device 'None' only supports a 2-mode program"):
             new_prog = prog.compile(device=spec, compiler=DummyCircuit())
 
+    @pytest.mark.parametrize(
+        "measure_op", [
+            ops.MeasureFock(),  # MeasureFock
+            ops.MeasureHomodyne(phi=0),  # MeasureX
+            ops.MeasureHomodyne(phi=42),  # MeasureHomodyne
+            ops.MeasureHomodyne(phi=np.pi/2),  # MeasureP
+            ops.MeasureHeterodyne(),  # MeasureHD
+            ops.MeasureHeterodyne(select=0)  # MeasureHeterodyne
+        ],
+    )
+    def test_incorrect_number_of_measurements(self, measure_op):
+        """Test that an exception is raised if the compiler is called with a
+        device spec with an incorrect number of measurements"""
+
+        class DummyCircuit(Compiler):
+            """A circuit with 2 modes"""
+            interactive = True
+            primitives = {'MeasureHomodyne', 'MeasureHeterodyne', 'MeasureFock'}
+            decompositions = set()
+
+        # set maximum number of measurements to 2, and measure 3 in prog below
+        device_dict = {
+            "modes": {
+                "max": {
+                    "pnr": 2,
+                    "homodyne": 2,
+                    "heterodyne": 2
+                }
+            },
+            "layout": None, "gate_parameters": {}, "compiler": [None]
+        }
+        # set the target to simulon manually to avoid device spec being loaded from api;
+        # needed for the measurements check to run
+        spec = sf.api.DeviceSpec(target="abc", connection=None, spec=device_dict)
+        spec._target = "simulon"
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            for reg in q:
+                measure_op | reg
+
+        with pytest.raises(
+            program.CircuitError, match="Simulon supports a maximum of 2 fock measurements"
+        ):
+            prog.compile(device=spec, compiler=DummyCircuit())
+
     def test_no_default_compiler(self):
         """Test that an exception is raised if the DeviceSpec has no compilers
         specified (and thus no default compiler)"""
