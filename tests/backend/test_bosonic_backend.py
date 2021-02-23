@@ -29,6 +29,7 @@ FOCK_VALS = np.arange(5, dtype=int)
 r_fock = 0.05
 EPS_VALS = np.array([0.01, 0.05, 0.1, 0.5])
 R_VALS = np.linspace(-1, 1, 5)
+SHOTS_VALS = np.array([1,19,100])
 
 
 class TestKronList:
@@ -493,7 +494,7 @@ class TestBosonicPrograms:
             sf.ops.Catstate(alpha) | q[0]
             sf.ops.Squeezed(r) | q[1]
             sf.ops.MeasureX | q[0]
-            sf.ops.MeasureX | q[1]
+            sf.ops.MeasureHD | q[1]
         backend = bosonic.BosonicBackend()
         applied, samples, all_samples = backend.run_prog(prog)
         state = backend.state()
@@ -504,7 +505,26 @@ class TestBosonicPrograms:
         # Check samples
         for i in range(2):
             assert i in samples.keys()
-            assert samples[i].shape == (1,)
+            assert samples[i].shape == (1,1)
+    
+    @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("shots", SHOTS_VALS)
+    def test_measurement_many_shots(self, alpha, shots):
+        """Runs a program with measurements."""
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.MeasureHomodyne(0) | q[0]
+        backend = bosonic.BosonicBackend()
+        applied, samples, all_samples = backend.run_prog(prog,shots=shots)
+        state = backend.state()
+
+        # Check output is vacuum since everything was measured
+        assert np.allclose(state.fidelity_vacuum(), 1)
+
+        # Check samples
+        assert 0 in samples.keys()
+        assert samples[0].shape == (1, int(shots))
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("r", R_VALS)

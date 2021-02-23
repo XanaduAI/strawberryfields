@@ -28,11 +28,23 @@ from strawberryfields.backends.states import BaseBosonicState
 
 from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
 from strawberryfields.backends.base import NotApplicableError
+from strawberryfields.program_utils import CircuitError
+import sympy
 
 
 def kron_list(l):
     """Take Kronecker products of a list of lists."""
     return reduce(np.kron, l)
+
+
+def parameter_checker(parameters):
+    """Checks if any items in an iterable are sympy objects."""
+    for item in parameters:
+        if isinstance(item, sympy.Expr):
+            return True
+        # This checks all the items within item if item is a list, array, etc.
+        elif hasattr(item, "__iter__") and not isinstance(item, str):
+            return parameter_checker(item)
 
 
 class BosonicBackend(BaseBosonic):
@@ -173,6 +185,8 @@ class BosonicBackend(BaseBosonic):
 
         Raises:
             NotImplementedError: if ``Ket`` or ``DensityMatrix`` preparation used
+            CircuitError: if any of the parameters for non-Gaussian state preparation
+                are symbolic
         """
         from strawberryfields.ops import (
             Bosonic,
@@ -184,7 +198,7 @@ class BosonicBackend(BaseBosonic):
             _New_modes,
         )
 
-        non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket)
+        non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket, _New_modes)
         nmodes = prog.init_num_subsystems
         self.begin_circuit(nmodes)
         # Dummy initial weights, means and covs
@@ -204,6 +218,13 @@ class BosonicBackend(BaseBosonic):
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
+                # Check if any of the preparations rely on symbolic quantities
+                if isinstance(cmd.op, non_gauss_preps):
+                    if parameter_checker(pars):
+                        raise CircuitError(
+                            "Symbolic non-Gaussian preparations have not been implemented "
+                            "in the bosonic backend."
+                        )
                 for reg in labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
@@ -361,7 +382,7 @@ class BosonicBackend(BaseBosonic):
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
 
         Args:
-            alpha (float): alpha value of cat state
+            alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             cutoff (float): if using the ``'real'`` representation, this determines
@@ -422,7 +443,7 @@ class BosonicBackend(BaseBosonic):
         For this representation, weights, means and covariances are real-valued.
 
         Args:
-            alpha (float): alpha value of cat state
+            alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
             cutoff (float): this determines how many terms to keep
             D (float): quality parameter of approximation
@@ -734,15 +755,15 @@ class BosonicBackend(BaseBosonic):
             X2 = self.circuit.expandS(modes, X)
             self.circuit.apply_channel(X, Y)
 
-    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, select=None, **kwargs):
         # Phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, **kwargs)[0, 0]
+            val = self.circuit.homodyne(mode, **kwargs)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
-            self.circuit.post_select_homodyne(mode, val, **kwargs)
+            self.circuit.post_select_homodyne(mode, val)
 
         return np.array([[val * np.sqrt(2 * self.circuit.hbar) / 2]])
 
