@@ -507,8 +507,8 @@ class Program:
             raise CircuitError(
                 f"This program contains {num_pnr} fock measurements, {num_homodyne} homodyne "
                 f"measurements and {num_heterodyne} heterodyne measurements.\n"
-                f"Simulon supports a maximum of {max_pnr} fock measurements, {max_homodyne} "
-                f"homodyne measurements, {max_heterodyne} heterodyne measurements respectively."
+                f"A maximum of {max_pnr} fock measurements, {max_homodyne} homodyne "
+                f"measurements, {max_heterodyne} heterodyne measurements are supported."
             )
 
 
