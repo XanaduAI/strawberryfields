@@ -28,10 +28,16 @@ import scipy.special as ssp
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
 import strawberryfields.decompositions as dec
-from .backends.states import BaseFockState, BaseGaussianState
+from .backends.states import BaseFockState, BaseGaussianState, BaseBosonicState
 from .backends.shared_ops import changebasis
 from .program_utils import Command, RegRef, MergeFailure
-from .parameters import par_regref_deps, par_str, par_evaluate, par_is_symbolic, par_funcs as pf
+from .parameters import (
+    par_regref_deps,
+    par_str,
+    par_evaluate,
+    par_is_symbolic,
+    par_funcs as pf,
+)
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -786,6 +792,19 @@ class Fock(Preparation):
         backend.prepare_fock_state(p[0], *reg)
 
 
+class Bosonic(Preparation):
+    """Prepare a mode as a linear combination of Gaussian functions in phase space.
+
+    Args:
+        weights (array): coefficients for each Gaussian in the linear combination
+        means (array): array of means for each Gaussian in the linear combination
+        covs (array): array of covariance matrices for each Gaussian in the linear combination
+    """
+
+    def __init__(self, weights=None, means=None, covs=None):
+        super().__init__([weights, means, covs])
+
+
 class Catstate(Preparation):
     r"""Prepare a mode in a cat state.
 
@@ -798,12 +817,18 @@ class Catstate(Preparation):
 
     .. warning::
         Cat states are **non-Gaussian**, and thus can
-        only be used in the Fock backends, *not* the Gaussian backend.
+        only be used in the Fock and Bosonic backends, *not* the Gaussian backend.
 
     Args:
         alpha (complex): displacement parameter
         p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
+        representation (str): whether to use the ``'real'`` or ``'complex'`` representation
+            (Bosonic backend only)
+        cutoff (float): if using the ``'real'`` representation, this determines
+            how many terms to keep (Bosonic backend only)
+        D (float): for ``'real'`` representation, quality parameter of approximation
+            (Bosonic backend only)
 
     .. details::
 
@@ -828,8 +853,8 @@ class Catstate(Preparation):
         the squeezed single photon state :math:`S\ket{1}`.
     """
 
-    def __init__(self, alpha=0, p=0):
-        super().__init__([alpha, p])
+    def __init__(self, alpha=0, p=0, representation="complex", cutoff=1e-12, D=2):
+        super().__init__([alpha, p, representation, cutoff, D])
 
     def _apply(self, reg, backend, **kwargs):
         alpha = self.p[0]
@@ -857,6 +882,40 @@ class Catstate(Preparation):
         ket = par_evaluate(ket)
 
         backend.prepare_ket_state(ket, *reg)
+
+
+class GKP(Preparation):
+    r"""Prepare a mode in a finite energy Gottesman-Kitaev-Preskill (GKP) state.
+
+    In their ideal form, square lattice GKP states are linear combinations of position eigenkets :math:`\ket{\cdot}_q`
+    spaced every :math:`\sqrt{\pi\hbar}`. Finite energy GKPs are attained by applying the Fock damping
+    operator :math:`e^{-\epsilon\hat{n}}` to the ideal states.
+
+    GKP states are qubits, with the qubit state defined by:
+
+    .. math::
+        \ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}_{gkp}
+
+    where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
+
+    Square lattice GKPs have Wigner functions with peaks arranged on a square lattice, whereas alternative
+    lattices, such has hexagonal GKPs, can be obtained by applying symplectic transformations to the
+    square lattice GKPs.
+
+    Args:
+        state (list): [theta,phi] for qubit definition above
+        epsilon (float): finite energy parameter of the state
+        cutoff (float): this determines how many terms to keep
+        representation (str): ``'real'`` or ``'complex'`` reprsentation
+        shape (str): shape of the lattice; default ``'square'``
+    """
+
+    def __init__(
+        self, state=None, epsilon=0.2, cutoff=1e-12, representation="real", shape="square"
+    ):
+        if state is None:
+            state = [0, 0]
+        super().__init__([state, epsilon, cutoff, representation, shape])
 
 
 class Ket(Preparation):
@@ -900,6 +959,8 @@ class Ket(Preparation):
             super().__init__([state.ket()])
         elif isinstance(state, BaseGaussianState):
             raise ValueError("Gaussian states are not supported for the Ket operation.")
+        elif isinstance(state, BaseBosonicState):
+            raise ValueError("Bosonic states are not supported for the Ket operation.")
         else:
             super().__init__([state])
 
@@ -1284,6 +1345,40 @@ class ThermalLossChannel(Channel):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         backend.thermal_loss(p[0], p[1], *reg)
+
+
+class MSgate(Channel):
+    r"""Phase space measurement-based squeezing gate.
+
+    This mode can either be implemented as the average transformation,
+    corresponding to a Gaussian CPTP map, or as a single-shot instance
+    of the measurement-based squeezing circuit.
+
+    Measurement-based squeezing consists of adding an ancillary squeezed
+    mode, entangling it with the target mode at a beamsplitter, performing
+    a homodyne measurement on the ancillary mode, and then applying a feedforward
+    displacement to the target mode.
+
+    Args:
+        r (float): target squeezing magnitude
+        phi (float): target squeezing phase
+        r_anc (float): squeezing magnitude of the ancillary mode
+        eta_anc(float): detection efficiency of the ancillary mode
+        avg (bool): whether to apply the average or single-shot map
+    """
+
+    def __init__(self, r, phi=0.0, r_anc=10.0, eta_anc=1.0, avg=True):
+        super().__init__([r, phi, r_anc, eta_anc, avg])
+
+    def _apply(self, reg, backend, **kwargs):
+        r, phi, r_anc, eta_anc, avg = par_evaluate(self.p)
+        if avg:
+            backend.mb_squeeze_avg(*reg, r, phi, r_anc, eta_anc)
+            return None
+
+        s = np.sqrt(sf.hbar / 2)
+        ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
+        return ancilla_val / s
 
 
 # ====================================================================
@@ -1835,7 +1930,12 @@ class S2gate(Gate):
         # two opposite squeezers sandwiched between 50% beamsplitters
         S = Sgate(self.p[0], self.p[1])
         BS = BSgate(np.pi / 4, 0)
-        return [Command(BS, reg), Command(S, reg[0]), Command(S.H, reg[1]), Command(BS.H, reg)]
+        return [
+            Command(BS, reg),
+            Command(S, reg[0]),
+            Command(S.H, reg[1]),
+            Command(BS.H, reg),
+        ]
 
 
 class CXgate(Gate):
@@ -2473,7 +2573,8 @@ class BipartiteGraphEmbed(Decomposition):
                 if not (drop_identity and np.all(X == np.identity(len(X)))):
                     cmds.append(
                         Command(
-                            Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol), _reg
+                            Interferometer(X, mesh=mesh, drop_identity=drop_identity, tol=tol),
+                            _reg,
                         )
                     )
 
@@ -2775,7 +2876,16 @@ MeasureHD = MeasureHeterodyne()
 
 Fourier = Fouriergate()
 
-shorthands = ["New", "Del", "Vac", "MeasureX", "MeasureP", "MeasureHD", "Fourier", "All"]
+shorthands = [
+    "New",
+    "Del",
+    "Vac",
+    "MeasureX",
+    "MeasureP",
+    "MeasureHD",
+    "Fourier",
+    "All",
+]
 
 # =======================================================================
 # here we list different classes of operations for unit testing purposes
@@ -2785,7 +2895,7 @@ one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKga
 two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
-channels = (LossChannel, ThermalLossChannel)
+channels = (LossChannel, ThermalLossChannel, MSgate)
 
 simple_state_preparations = (
     Vacuum,
@@ -2796,11 +2906,17 @@ simple_state_preparations = (
     Catstate,
     Thermal,
 )  # have __init__ methods with default arguments
-state_preparations = simple_state_preparations + (Ket, DensityMatrix)
+state_preparations = simple_state_preparations + (Ket, DensityMatrix, Bosonic, GKP)
 
 measurements = (MeasureFock, MeasureHomodyne, MeasureHeterodyne, MeasureThreshold)
 
-decompositions = (Interferometer, BipartiteGraphEmbed, GraphEmbed, GaussianTransform, Gaussian)
+decompositions = (
+    Interferometer,
+    BipartiteGraphEmbed,
+    GraphEmbed,
+    GaussianTransform,
+    Gaussian,
+)
 
 # =======================================================================
 # exported symbols
