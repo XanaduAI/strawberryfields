@@ -203,7 +203,8 @@ class TestProgram:
         assert y.val is None
 
     def test_assert_number_of_modes(self):
-        """TODO"""
+        """Check that the correct error is raised when calling `prog.assert_number_of_modes`
+        with the incorrect number of modes."""
         device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
         spec = sf.api.DeviceSpec(target=None, connection=None, spec=device_dict)
 
@@ -226,7 +227,8 @@ class TestProgram:
         ],
     )
     def test_assert_number_of_measurements(self, measure_op, measure_name):
-        """TODO"""
+        """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
+        with the incorrect number of measurements in the circuit."""
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "modes": {
