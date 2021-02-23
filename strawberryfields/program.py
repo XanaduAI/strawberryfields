@@ -597,8 +597,8 @@ class Program:
                     # is provided as an integer
                     self.assert_number_of_modes(device)
                 elif device.target == "simulon":
-                    # check that the number of measurements are withing the allowed
-                    # limits; device.modes will be a dictionary
+                    # check that the number of measurements is within the allowed
+                    # limits for each measurement type; device.modes will be a dictionary
                     self.assert_number_of_measurements(device)
 
         else:
