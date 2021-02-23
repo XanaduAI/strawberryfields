@@ -753,7 +753,7 @@ class BosonicBackend(BaseBosonic):
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
-        return res
+        return np.array([[res]])
 
     def is_vacuum(self, tol=1e-10, **kwargs):
         return self.circuit.is_vacuum(tol=tol)
