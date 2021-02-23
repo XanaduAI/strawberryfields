@@ -493,11 +493,12 @@ class Program:
             ) from e
 
         for c in self.circuit:
-            if "MeasureFock" in str(c.op):
+            op_name = str(c.op)
+            if "MeasureFock" in op_name:
                 num_pnr += len(c.reg)
-            if "MeasureHomodyne" in str(c.op):
+            if "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
                 num_homodyne += len(c.reg)
-            if "MeasureHeterodyne" in str(c.op):
+            if "MeasureHeterodyne" in op_name or "MeasureHD"in op_name:
                 num_heterodyne += len(c.reg)
 
         too_many_measurments = (
