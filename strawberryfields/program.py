@@ -50,7 +50,6 @@ using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_
 
 import copy
 import numbers
-from typing import Type
 import warnings
 import networkx as nx
 
