@@ -53,7 +53,7 @@ class Bosonic(Compiler):
         "Sgate",
         "Rgate",
         "BSgate",
-        "MbSgate",
+        "MSgate",
     }
 
     decompositions = {
