@@ -43,8 +43,10 @@ def parameter_checker(parameters):
         if isinstance(item, sympy.Expr):
             return True
         # This checks all the items within item if item is a list, array, etc.
-        elif hasattr(item, "__iter__") and not isinstance(item, str):
-            return parameter_checker(item)
+        if hasattr(item, "__iter__") and not isinstance(item, str):
+            if parameter_checker(item):
+                return True
+    return False
 
 
 class BosonicBackend(BaseBosonic):
@@ -755,12 +757,12 @@ class BosonicBackend(BaseBosonic):
             X2 = self.circuit.expandS(modes, X)
             self.circuit.apply_channel(X, Y)
 
-    def measure_homodyne(self, phi, mode, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None):
         # Phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, **kwargs)[:, 0]
+            val = self.circuit.homodyne(mode, shots=shots)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             self.circuit.post_select_homodyne(mode, val)
