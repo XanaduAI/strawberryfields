@@ -240,8 +240,6 @@ class TestProgram:
             },
             "layout": None, "gate_parameters": {}, "compiler": [None]
         }
-        # set the target to simulon manually to avoid device spec being loaded from api;
-        # needed for the measurements check to run
         spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
