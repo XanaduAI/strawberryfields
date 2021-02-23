@@ -757,7 +757,7 @@ class BosonicBackend(BaseBosonic):
             X2 = self.circuit.expandS(modes, X)
             self.circuit.apply_channel(X, Y)
 
-    def measure_homodyne(self, phi, mode, shots=1, select=None):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         # Phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
