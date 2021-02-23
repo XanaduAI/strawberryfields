@@ -497,11 +497,13 @@ class Program:
                 num_pnr += len(c.reg)
             elif "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
                 num_homodyne += len(c.reg)
-            elif "MeasureHeterodyne" in op_name or "MeasureHD"in op_name:
+            elif "MeasureHeterodyne" in op_name or "MeasureHD" in op_name:
                 num_heterodyne += len(c.reg)
 
         too_many_measurments = (
-            num_pnr > max_pnr, num_homodyne > max_homodyne, num_heterodyne > max_heterodyne
+            num_pnr > max_pnr,
+            num_homodyne > max_homodyne,
+            num_heterodyne > max_heterodyne,
         )
         if any(too_many_measurments):
             raise CircuitError(
@@ -510,7 +512,6 @@ class Program:
                 f"A maximum of {max_pnr} fock measurements, {max_homodyne} homodyne "
                 f"measurements, {max_heterodyne} heterodyne measurements are supported."
             )
-
 
     def compile(self, *, device=None, compiler=None, **kwargs):
         """Compile the program given a Strawberry Fields photonic compiler, or
