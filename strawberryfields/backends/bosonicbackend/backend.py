@@ -83,6 +83,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit = None
         self.ancillae_samples_dict = {}
 
+    # pylint: disable=too-many-branches
     # pylint: disable=import-outside-toplevel
     def run_prog(self, prog, **kwargs):
         """Runs a strawberryfields program using the bosonic backend.
