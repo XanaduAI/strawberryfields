@@ -202,6 +202,56 @@ class TestProgram:
         assert x.val == 2.0
         assert y.val is None
 
+    def test_assert_number_of_modes(self):
+        """TODO"""
+        device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
+        spec = sf.api.DeviceSpec(target=None, connection=None, spec=device_dict)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.S2gate(0.6) | [q[1], q[2]]
+
+        with pytest.raises(program.CircuitError, match="program contains 3 modes, but the device 'None' only supports a 2-mode program"):
+            prog.assert_number_of_modes(spec)
+
+    @pytest.mark.parametrize(
+        "measure_op, measure_name", [
+            (ops.MeasureFock(), "fock"),  # MeasureFock
+            (ops.MeasureHomodyne(phi=0), "homodyne"),  # MeasureX
+            (ops.MeasureHomodyne(phi=42), "homodyne"),  # MeasureHomodyne
+            (ops.MeasureHomodyne(phi=np.pi/2), "homodyne"),  # MeasureP
+            (ops.MeasureHeterodyne(), "heterodyne"),  # MeasureHD
+            (ops.MeasureHeterodyne(select=0), "heterodyne"),  # MeasureHeterodyne
+        ],
+    )
+    def test_assert_number_of_measurements(self, measure_op, measure_name):
+        """TODO"""
+        # set maximum number of measurements to 2, and measure 3 in prog below
+        device_dict = {
+            "modes": {
+                "max": {
+                    "pnr": 2,
+                    "homodyne": 2,
+                    "heterodyne": 2
+                }
+            },
+            "layout": None, "gate_parameters": {}, "compiler": [None]
+        }
+        # set the target to simulon manually to avoid device spec being loaded from api;
+        # needed for the measurements check to run
+        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            for reg in q:
+                measure_op | reg
+
+        with pytest.raises(
+            program.CircuitError, match=f"contains 3 {measure_name} measurements"
+        ):
+            prog.assert_number_of_measurements(spec)
+
 
 class TestRegRefs:
     """Testing register references."""
@@ -381,11 +431,13 @@ class TestValidation:
         with pytest.warns(UserWarning, match='The circuit consists of 2 disconnected components.'):
             new_prog = prog.compile(compiler='fock')
 
+    # TODO: move this test into an integration tests folder (a similar test for the
+    # `prog.assert_number_of_modes` method can be found above), under `test_assert_number_of_modes`.
     def test_incorrect_modes(self):
         """Test that an exception is raised if the compiler
         is called with a device spec with an incorrect number of modes"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
             interactive = True
             primitives = {'S2gate', 'Interferometer'}
@@ -400,19 +452,21 @@ class TestValidation:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(program.CircuitError, match="program contains 3 modes, but the device 'None' only supports a 2-mode program"):
-            new_prog = prog.compile(device=spec, compiler=DummyCircuit())
+            new_prog = prog.compile(device=spec, compiler=DummyCompiler())
 
+    # TODO: move this test into an integration tests folder (a similar test for the
+    # `prog.assert_number_of_measurements` method can be found above), named `test_assert_number_of_measurements`.
     @pytest.mark.parametrize(
-        "measure_op", [
-            ops.MeasureFock(),  # MeasureFock
-            ops.MeasureHomodyne(phi=0),  # MeasureX
-            ops.MeasureHomodyne(phi=42),  # MeasureHomodyne
-            ops.MeasureHomodyne(phi=np.pi/2),  # MeasureP
-            ops.MeasureHeterodyne(),  # MeasureHD
-            ops.MeasureHeterodyne(select=0)  # MeasureHeterodyne
+        "measure_op, measure_name", [
+            (ops.MeasureFock(), "fock"),  # MeasureFock
+            (ops.MeasureHomodyne(phi=0), "homodyne"),  # MeasureX
+            (ops.MeasureHomodyne(phi=42), "homodyne"),  # MeasureHomodyne
+            (ops.MeasureHomodyne(phi=np.pi/2), "homodyne"),  # MeasureP
+            (ops.MeasureHeterodyne(), "heterodyne"),  # MeasureHD
+            (ops.MeasureHeterodyne(select=0), "heterodyne"),  # MeasureHeterodyne
         ],
     )
-    def test_incorrect_number_of_measurements(self, measure_op):
+    def test_incorrect_number_of_measurements(self, measure_op, measure_name):
         """Test that an exception is raised if the compiler is called with a
         device spec with an incorrect number of measurements"""
 
@@ -435,8 +489,7 @@ class TestValidation:
         }
         # set the target to simulon manually to avoid device spec being loaded from api;
         # needed for the measurements check to run
-        spec = sf.api.DeviceSpec(target="abc", connection=None, spec=device_dict)
-        spec._target = "simulon"
+        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -444,7 +497,7 @@ class TestValidation:
                 measure_op | reg
 
         with pytest.raises(
-            program.CircuitError, match="Simulon supports a maximum of 2 fock measurements"
+            program.CircuitError, match=f"contains 3 {measure_name} measurements"
         ):
             prog.compile(device=spec, compiler=DummyCompiler())
 
