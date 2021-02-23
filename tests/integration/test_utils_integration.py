@@ -45,7 +45,7 @@ np.random.seed(42)
 # ===================================================================================
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian", "bosonic")
 class TestInitialStatesAgreeGaussian:
     """Test that the initial state functions in utils match
     the result returned by the Gaussian backends."""
@@ -60,9 +60,16 @@ class TestInitialStatesAgreeGaussian:
         state = eng.run(prog).state
 
         mu, cov = utils.vacuum_state(basis="gaussian", hbar=hbar)
-        mu_exp, cov_exp = state.reduced_gaussian(0)
-        assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
-        assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+        
+        if state._basis == "gassian":
+            mu_exp, cov_exp = state.reduced_gaussian(0)
+            assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
+            assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            _, mu_exp, cov_exp = state.reduced_bosonic(0)
+            assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
+            assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("a", ALPHA)
     def test_coherent(self, a, setup_eng, hbar, tol):
@@ -75,9 +82,16 @@ class TestInitialStatesAgreeGaussian:
         state = eng.run(prog).state
 
         mu, cov = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
-        mu_exp, cov_exp = state.reduced_gaussian(0)
-        assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
-        assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+        
+        if state._basis == "gassian":
+            mu_exp, cov_exp = state.reduced_gaussian(0)
+            assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
+            assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            _, mu_exp, cov_exp = state.reduced_bosonic(0)
+            assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
+            assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_squeezed(self, r, phi, setup_eng, hbar, tol):
@@ -90,9 +104,16 @@ class TestInitialStatesAgreeGaussian:
         state = eng.run(prog).state
 
         mu, cov = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
-        mu_exp, cov_exp = state.reduced_gaussian(0)
-        assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
-        assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+        
+        if state._basis == "gassian":
+            mu_exp, cov_exp = state.reduced_gaussian(0)
+            assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
+            assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            _, mu_exp, cov_exp = state.reduced_bosonic(0)
+            assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
+            assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("a, r, phi", zip(ALPHA, R, PHI))
     def test_displaced_squeezed(self, a, r, phi, setup_eng, hbar, tol):
@@ -106,9 +127,16 @@ class TestInitialStatesAgreeGaussian:
         state = eng.run(prog).state
 
         mu, cov = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
-        mu_exp, cov_exp = state.reduced_gaussian(0)
-        assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
-        assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+        
+        if state._basis == "gassian":
+            mu_exp, cov_exp = state.reduced_gaussian(0)
+            assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
+            assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            _, mu_exp, cov_exp = state.reduced_bosonic(0)
+            assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
+            assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
 
 
 @pytest.fixture
@@ -265,7 +293,6 @@ def entangle_states(q):
     ops.Sgate(2) | q[1]
     ops.BSgate(np.pi / 4, 0) | (q[0], q[1])
 
-@pytest.mark.backends("fock","tf","gaussian")
 class TestTeleportationOperationTest:
     """Run a teleportation algorithm but split the circuit into operations.
     Operations can be also methods of a class"""

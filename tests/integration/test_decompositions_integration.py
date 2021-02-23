@@ -233,10 +233,23 @@ class TestGaussianBackendDecompositions:
         prog = prog.compile(compiler='gaussian')
         assert len(prog) == 0
 
+def from_xp(num_modes):
+    r"""Provides array of indices to order quadratures as (x1,p1,...,xn,pn)
+    starting from all x followed by all p i.e., (x1,...,xn,p1,..., pn).
 
-@pytest.mark.backends("gaussian")
+    Args:
+        num_modes (int): number of modes
+
+    Returns:
+        list: quadrature ordering for (x1,p1,...,xn,pn)
+    """
+    perm_inds_list = [(i, i + num_modes) for i in range(num_modes)]
+    perm_inds = [a for tup in perm_inds_list for a in tup]
+    return perm_inds
+
+@pytest.mark.backends("gaussian", "bosonic")
 class TestGaussianBackendPrepareState:
-    """Test passing several Gaussian states directly to the Gaussian backend.
+    """Test passing several Gaussian states directly to the Gaussian and Bosonic backends.
     This is allowed for backends that implement the prepare_gaussian_state method."""
 
     def test_vacuum(self, setup_eng, hbar, tol):
@@ -247,8 +260,17 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
-        assert np.allclose(state.cov(), cov, atol=tol)
-        assert np.all(state.means() == np.zeros([6]))
+        
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), cov, atol=tol)
+            assert np.all(state.means() == np.zeros([6]))
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(3)
+            cov = cov[:,indices][indices,:]
+            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+            assert np.all(state.means() == np.zeros((1,6)))
+            
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
 
     def test_squeezed(self, setup_eng, hbar, tol):
@@ -260,7 +282,14 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
-        assert np.allclose(state.cov(), cov, atol=tol)
+        
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), cov, atol=tol)
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(3)
+            cov = cov[:,indices][indices,:]
+            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
         """Testing a displaced squeezed state"""
@@ -272,8 +301,16 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, r=means, decomp=False) | q
 
         state = eng.run(prog).state
-        assert np.allclose(state.cov(), cov, atol=tol)
-        assert np.allclose(state.means(), means, atol=tol)
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), cov, atol=tol)
+            assert np.allclose(state.means(), means, atol=tol)
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(3)
+            cov = cov[:,indices][indices,:]
+            means = means[indices]
+            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+            assert np.allclose(state.means(), np.expand_dims(means,axis=0), atol=tol)
 
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing a thermal state"""
@@ -284,7 +321,13 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
-        assert np.allclose(state.cov(), cov, atol=tol)
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), cov, atol=tol)
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(3)
+            cov = cov[:,indices][indices,:]
+            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
     def test_rotated_squeezed(self, setup_eng, hbar, tol):
         """Testing a rotated squeezed state"""
@@ -300,7 +343,13 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
-        assert np.allclose(state.cov(), cov, atol=tol)
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), cov, atol=tol)
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(3)
+            cov = cov[:,indices][indices,:]
+            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
 
 @pytest.mark.backends("gaussian")
@@ -452,7 +501,7 @@ class TestFockBackendDecomposeState:
 class TestDecompositionsGaussianGates:
     """Test the actions of several non-primitive Gaussian gates"""
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_Pgate(self, setup_eng, pure, hbar, tol):
         """Test the action of the P gate in phase space"""
         if not pure:
@@ -471,12 +520,20 @@ class TestDecompositionsGaussianGates:
         state = eng.run(prog).state
 
         Pmat = np.array([[1, 0], [s, 1]])
+        
         Vexpected = 0.5 * hbar * Pmat @ np.diag(np.exp([-2 * r, 2 * r])) @ Pmat.T
-        assert np.allclose(Vexpected, state.cov(), atol=tol, rtol=0)
         rexpected = Pmat @ np.array([x1, p1])
-        assert np.allclose(rexpected, state.means(), atol=tol, rtol=0)
+        
+        # Check the covariance and mean transformed correctly
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
+            assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            assert np.allclose(state.covs(), np.expand_dims(Vexpected,axis=0), atol=tol, rtol=0)
+            assert np.allclose(state.means(), np.expand_dims(rexpected,axis=0), atol=tol, rtol=0)
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_CXgate(self, setup_eng, pure, hbar, tol):
         """Test the action of the CX gate in phase space"""
         if not pure:
@@ -498,15 +555,25 @@ class TestDecompositionsGaussianGates:
             ops.Zgate(p2) | q[1]
             ops.CXgate(s) | q
         state = eng.run(prog).state
+        
         CXmat = np.array([[1, 0, 0, 0], [s, 1, 0, 0], [0, 0, 1, -s], [0, 0, 0, 1]])
+        
         Vexpected = 0.5 * hbar * CXmat @ np.diag(np.exp([-2 * r, -2 * r, 2 * r, 2 * r])) @ CXmat.T
-        # Checks the covariance matrix is transformed correctly
-        assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
         rexpected = CXmat @ np.array([x1, x2, p1, p2])
-        # Checks the means are transformed correctly
-        assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
+        
+        # Check the covariance and mean transformed correctly
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
+            assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(2)
+            Vexpected = Vexpected[:,indices][indices,:]
+            rexpected = rexpected[indices]
+            assert np.allclose(state.covs(), np.expand_dims(Vexpected,axis=0), atol=tol, rtol=0)
+            assert np.allclose(state.means(), np.expand_dims(rexpected,axis=0), atol=tol, rtol=0)
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_CZgate(self, setup_eng, pure, hbar, tol):
         """Test the action of the CZ gate in phase space"""
         if not pure:
@@ -530,13 +597,20 @@ class TestDecompositionsGaussianGates:
         state = eng.run(prog).state
         CZmat = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, s, 1, 0], [s, 0, 0, 1]])
         Vexpected = 0.5 * hbar * CZmat @ np.diag(np.exp([-2 * r, -2 * r, 2 * r, 2 * r])) @ CZmat.T
-        # Checks the covariance matrix is transformed correctly
-        assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
         rexpected = CZmat @ np.array([x1, x2, p1, p2])
-        # Checks the means are transformed correctly
-        assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
+        
+        # Check the covariance and mean transformed correctly
+        if state._basis == "gaussian":
+            assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
+            assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
+            
+        elif state._basis == "bosonic":
+            indices = from_xp(2)
+            Vexpected = Vexpected[:,indices][indices,:]
+            rexpected = rexpected[indices]
+            assert np.allclose(state.covs(), np.expand_dims(Vexpected,axis=0), atol=tol, rtol=0)
+            assert np.allclose(state.means(), np.expand_dims(rexpected,axis=0), atol=tol, rtol=0)
 
-    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('s', np.linspace(-0.6, 0.6, 5))
     def test_Pgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the Pgate gives the same transformation as its decomposition."""
@@ -555,7 +629,6 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('s', np.linspace(-0.5, 0.5, 5))
     def test_CXgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the CXgate gives the same transformation as its decomposition."""
@@ -577,7 +650,6 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('s', np.linspace(-0.5, 0.5, 5))
     def test_CZgate_decomp_equal(self, setup_eng, s, tol):
         """Tests that the CZgate gives the same transformation as its decomposition."""
@@ -593,7 +665,6 @@ class TestDecompositionsGaussianGates:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends("fock","tf","gaussian")
     @pytest.mark.parametrize('r', np.linspace(-0.3, 0.3, 5))
     def test_S2gate_decomp_equal(self, setup_eng, r, tol):
         """Tests that the S2gate gives the same transformation as its decomposition."""
