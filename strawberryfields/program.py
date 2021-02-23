@@ -500,17 +500,20 @@ class Program:
             elif "MeasureHeterodyne" in op_name or "MeasureHD" in op_name:
                 num_heterodyne += len(c.reg)
 
-        too_many_measurments = (
-            num_pnr > max_pnr,
-            num_homodyne > max_homodyne,
-            num_heterodyne > max_heterodyne,
-        )
-        if any(too_many_measurments):
+        if num_pnr > max_pnr:
             raise CircuitError(
-                f"This program contains {num_pnr} fock measurements, {num_homodyne} homodyne "
-                f"measurements and {num_heterodyne} heterodyne measurements.\n"
-                f"A maximum of {max_pnr} fock measurements, {max_homodyne} homodyne "
-                f"measurements, {max_heterodyne} heterodyne measurements are supported."
+                f"This program contains {num_pnr} fock measurements. "
+                f"A maximum of {max_pnr} fock measurements are supported."
+            )
+        if num_homodyne > max_homodyne:
+            raise CircuitError(
+                f"This program contains {num_homodyne} homodyne measurements. "
+                f"A maximum of {max_homodyne} homodyne measurements are supported."
+            )
+        if num_heterodyne > max_heterodyne:
+            raise CircuitError(
+                f"This program contains {num_heterodyne} heterodyne measurements. "
+                f"A maximum of {max_heterodyne} heterodyne measurements are supported."
             )
 
     def compile(self, *, device=None, compiler=None, **kwargs):
