@@ -20,6 +20,7 @@ import numpy as np
 import strawberryfields as sf
 import strawberryfields.backends.bosonicbackend.backend as bosonic
 import pytest
+import sympy
 
 pytestmark = pytest.mark.bosonic
 
@@ -40,8 +41,24 @@ class TestKronList:
         l2 = [3, 4, 5]
         list_compare = [3, 4, 5, 6, 8, 10]
         assert np.allclose(list_compare, bosonic.kron_list([l1, l2]))
+        
+class TestParameterChecker:
+    """Test parameter_checker function from the bosonic backend."""
 
-
+    def test_parameter_checker(self):
+        symbolic_param = sympy.Expr()
+        params = []
+        assert not bosonic.parameter_checker(params)
+        
+        params = [1,3.0,[4+1j,5],[[3.5,4.8,9]],np.array([7,9]),range(3)]
+        assert not bosonic.parameter_checker(params)
+        
+        params = [1,symbolic_param]
+        assert bosonic.parameter_checker(params)
+        
+        params = [1,[3,symbolic_param]]
+        assert bosonic.parameter_checker(params)
+        
 class TestBosonicCatStates:
     r"""Tests cat state method of the BosonicBackend class."""
 
