@@ -36,7 +36,7 @@ class TestBosonicRepresentation:
         """Tests average map of mbsqueezing operation for no squeezing,
         where the result should be a vacuum state."""
         backend = setup_backend(2)
-        backend.mb_squeeze(0, 0, 0, r_anc, eta, True)
+        backend.mb_squeeze_avg(0, 0, 0, r_anc, eta)
         backend.squeeze(0, 0, 1)
         assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)
 
@@ -46,7 +46,7 @@ class TestBosonicRepresentation:
         """Tests average map of mbsqueezing operation with a high squeezed ancilla,
         where the result should be an ideal state."""
         backend = setup_backend(2)
-        backend.mb_squeeze(0, r, phi, 9, 1.0, True)
+        backend.mb_squeeze_avg(0, r, phi, 9, 1.0)
         backend.squeeze(r, phi, 1)
         assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)
 
@@ -56,7 +56,7 @@ class TestBosonicRepresentation:
         """Tests single shot map of mbsqueezing operation for no squeezing,
         where the result should be a vacuum state."""
         backend = setup_backend(2)
-        backend.mb_squeeze(0, 0, 0, r_anc, eta, False)
+        backend.mb_squeeze_single_shot(0, 0, 0, r_anc, eta)
         backend.squeeze(0, 0, 1)
         assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)
 
@@ -66,6 +66,6 @@ class TestBosonicRepresentation:
         """Tests single shot map of mbsqueezing operation with a high squeezed ancilla,
         where the result should be an ideal state."""
         backend = setup_backend(2)
-        backend.mb_squeeze(0, r, phi, 9, 1.0, False)
+        backend.mb_squeeze_single_shot(0, r, phi, 9, 1.0)
         backend.squeeze(r, phi, 1)
         assert np.allclose(backend.circuit.covs[0, :2, :2], backend.circuit.covs[0, 2:, 2:], atol=tol)

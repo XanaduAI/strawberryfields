@@ -693,7 +693,7 @@ class BaseBosonic(BaseGaussian):
     """Abstract base class for backends that are only capable of manipulating states
     represented as linear combinations of Gaussian functions in phase space."""
 
-    compiler = None
+    compiler = "bosonic"
 
     def __init__(self):
         super().__init__()
