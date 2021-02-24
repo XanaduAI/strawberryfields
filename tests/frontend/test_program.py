@@ -252,6 +252,19 @@ class TestProgram:
         ):
             prog.assert_number_of_measurements(spec)
 
+    def test_assert_number_of_measurements_wrong_entry(self):
+        """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
+        with the incorrect type of device spec mode entry."""
+        device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
+        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+            ops.S2gate(0.6) | [q[1], q[2]]
+
+        with pytest.raises(KeyError, match="Have you specified the correct target?"):
+            prog.assert_number_of_measurements(spec)
 
 class TestRegRefs:
     """Testing register references."""
