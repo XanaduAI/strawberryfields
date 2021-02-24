@@ -63,9 +63,9 @@ class TestIntegration:
             ops.Xgate(X) | q
 
         state = eng.run(prog).state
-        if state._basis == "gaussian":
+        if eng.backend_name == "gaussian":
             mu_x = state.means()[0]
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             mu_x = state.means()[0,0]
 
         assert state.hbar == hbar
@@ -80,9 +80,9 @@ class TestIntegration:
             ops.Zgate(P) | q
 
         state = eng.run(prog).state
-        if state._basis == "gaussian":
+        if eng.backend_name == "gaussian":
             mu_z = state.means()[1]
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             mu_z = state.means()[0,1]
 
         assert state.hbar == hbar

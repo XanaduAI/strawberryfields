@@ -33,7 +33,7 @@ from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["BaseEngine", "LocalEngine"]
+__all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]
 
 
 class BaseEngine(abc.ABC):

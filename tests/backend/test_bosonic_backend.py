@@ -51,10 +51,10 @@ class TestParameterChecker:
         params = []
         assert not bosonic.parameter_checker(params)
 
-        params = [1, 3.0, [4 + 1j, 5], [[3.5, 4.8, 9]], np.array([7, 9]), range(3)]
+        params = [1, "real", 3.0, [4 + 1j, 5], [[3.5, 4.8, "complex"]], np.array([7, 9]), range(3)]
         assert not bosonic.parameter_checker(params)
 
-        params = [1, symbolic_param]
+        params = [1, "real", symbolic_param]
         assert bosonic.parameter_checker(params)
 
         params = [1, [3, symbolic_param]]
@@ -524,7 +524,7 @@ class TestBosonicPrograms:
         # Check samples
         for i in range(2):
             assert i in samples.keys()
-            assert samples[i].shape == (1, 1)
+            assert samples[i].shape == (1,)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("shots", SHOTS_VALS)
@@ -544,7 +544,7 @@ class TestBosonicPrograms:
 
         # Check samples
         assert 0 in samples.keys()
-        assert samples[0].shape == (1, int(shots))
+        assert samples[0].shape == (int(shots),)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("r", R_VALS)

@@ -78,11 +78,11 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
 
     state = eng.run(prog).state
     
-    if state._basis == "gaussian":
+    if eng.backend_name == "gaussian":
         cov1 = state.reduced_gaussian(2)[1]
         cov2 = state.reduced_gaussian(3)[1]
         
-    elif state._basis == "bosonic":
+    elif eng.backend_name == "bosonic":
         cov1 = state.reduced_bosonic(2)[1]
         cov2 = state.reduced_bosonic(3)[1]
         
@@ -251,7 +251,7 @@ class TestGaussianCloning:
             self.gaussian_cloning_circuit(q)
 
         state = eng.run(prog, **{'modes': [0, 3]}).state
-        if state._basis == "gaussian":
+        if eng.backend_name == "gaussian":
             coh = np.array([state.is_coherent(i) for i in range(2)])
             # check all outputs are coherent states
             assert np.all(coh)

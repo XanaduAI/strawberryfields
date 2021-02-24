@@ -141,9 +141,9 @@ class BosonicBackend(BaseBosonic):
                 if val is not None:
                     for i, r in enumerate(cmd.reg):
                         if r.ind not in self.ancillae_samples_dict.keys():
-                            self.ancillae_samples_dict[r.ind] = [val[:, i]]
+                            self.ancillae_samples_dict[r.ind] = [val]
                         else:
-                            self.ancillae_samples_dict[r.ind].append(val[:, i])
+                            self.ancillae_samples_dict[r.ind].append(val)
 
                 applied.append(cmd)
 
@@ -154,12 +154,12 @@ class BosonicBackend(BaseBosonic):
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val[:, i]
+                            samples_dict[r.ind] = val
 
                             # Internally also store all the measurement outcomes
                             if r.ind not in all_samples:
                                 all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, i])
+                            all_samples[r.ind].append(val)
 
                     applied.append(cmd)
 
@@ -179,7 +179,6 @@ class BosonicBackend(BaseBosonic):
 
         return applied, samples_dict, all_samples
 
-    # pylint: disable=too-many-branches
     # pylint: disable=import-outside-toplevel
     def init_circuit(self, prog):
         """Instantiate the circuit and initialize weights, means, and covs
@@ -203,6 +202,9 @@ class BosonicBackend(BaseBosonic):
             _New_modes,
         )
 
+        # _New_modes is what gets checked when New() is called in a program circuit.
+        # It is included here since it could be used to instantiate a mode for non-Gaussian
+        # state preparation, and it's best to initialize any new modes from the outset.
         non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket, _New_modes)
         nmodes = prog.init_num_subsystems
         self.begin_circuit(nmodes)
@@ -224,12 +226,11 @@ class BosonicBackend(BaseBosonic):
                 # Operation parameters
                 pars = cmd.op.p
                 # Check if any of the preparations rely on symbolic quantities
-                if isinstance(cmd.op, non_gauss_preps):
-                    if parameter_checker(pars):
-                        raise CircuitError(
-                            "Symbolic non-Gaussian preparations have not been implemented "
-                            "in the bosonic backend."
-                        )
+                if isinstance(cmd.op, non_gauss_preps) and parameter_checker(pars):
+                    raise CircuitError(
+                        "Symbolic non-Gaussian preparations have not been implemented "
+                        "in the bosonic backend."
+                    )
                 for reg in labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
@@ -769,17 +770,18 @@ class BosonicBackend(BaseBosonic):
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             self.circuit.post_select_homodyne(mode, val)
+            val = np.array([val])
 
-        return np.array([[val * np.sqrt(2 * self.circuit.hbar) / 2]])
+        return val * np.sqrt(2 * self.circuit.hbar) / 2
 
     def measure_heterodyne(self, mode, shots=1, select=None):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
-            return np.array([[res[:, 0] + 1j * res[:, 1]]])
+            return res[:, 0] + 1j * res[:, 1]
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
-        return np.array([[res]])
+        return np.array([res])
 
     def is_vacuum(self, tol=1e-10, **kwargs):
         return self.circuit.is_vacuum(tol=tol)

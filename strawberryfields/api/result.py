@@ -138,6 +138,17 @@ class Result:
         if self.samples.ndim == 2:
             # if samples has dim 2, assume they're from a standard Program
             shots, modes = self.samples.shape
+
+            if self.ancilla_samples is not None:
+                ancilla_modes = 0
+                for i in self.ancilla_samples.keys():
+                    ancilla_modes += len(self.ancilla_samples[i])
+                return (
+                    "<Result: shots={}, num_modes={}, num_ancillae={}, contains state={}>".format(
+                        shots, modes, ancilla_modes, self._is_stateful
+                    )
+                )
+
             return "<Result: shots={}, num_modes={}, contains state={}>".format(
                 shots, modes, self._is_stateful
             )

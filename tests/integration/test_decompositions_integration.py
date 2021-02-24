@@ -233,23 +233,9 @@ class TestGaussianBackendDecompositions:
         prog = prog.compile(compiler='gaussian')
         assert len(prog) == 0
 
-def from_xp(num_modes):
-    r"""Provides array of indices to order quadratures as (x1,p1,...,xn,pn)
-    starting from all x followed by all p i.e., (x1,...,xn,p1,..., pn).
-
-    Args:
-        num_modes (int): number of modes
-
-    Returns:
-        list: quadrature ordering for (x1,p1,...,xn,pn)
-    """
-    perm_inds_list = [(i, i + num_modes) for i in range(num_modes)]
-    perm_inds = [a for tup in perm_inds_list for a in tup]
-    return perm_inds
-
-@pytest.mark.backends("gaussian", "bosonic")
+@pytest.mark.backends("gaussian")
 class TestGaussianBackendPrepareState:
-    """Test passing several Gaussian states directly to the Gaussian and Bosonic backends.
+    """Test passing several Gaussian states directly to the Gaussian backend.
     This is allowed for backends that implement the prepare_gaussian_state method."""
 
     def test_vacuum(self, setup_eng, hbar, tol):
@@ -261,15 +247,8 @@ class TestGaussianBackendPrepareState:
 
         state = eng.run(prog).state
         
-        if state._basis == "gaussian":
-            assert np.allclose(state.cov(), cov, atol=tol)
-            assert np.all(state.means() == np.zeros([6]))
-            
-        elif state._basis == "bosonic":
-            indices = from_xp(3)
-            cov = cov[:,indices][indices,:]
-            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
-            assert np.all(state.means() == np.zeros((1,6)))
+        assert np.allclose(state.cov(), cov, atol=tol)
+        assert np.all(state.means() == np.zeros([6]))
             
         assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
 
@@ -283,13 +262,7 @@ class TestGaussianBackendPrepareState:
 
         state = eng.run(prog).state
         
-        if state._basis == "gaussian":
-            assert np.allclose(state.cov(), cov, atol=tol)
-            
-        elif state._basis == "bosonic":
-            indices = from_xp(3)
-            cov = cov[:,indices][indices,:]
-            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+        assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_displaced_squeezed(self, setup_eng, hbar, tol):
         """Testing a displaced squeezed state"""
@@ -301,16 +274,8 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, r=means, decomp=False) | q
 
         state = eng.run(prog).state
-        if state._basis == "gaussian":
-            assert np.allclose(state.cov(), cov, atol=tol)
-            assert np.allclose(state.means(), means, atol=tol)
-            
-        elif state._basis == "bosonic":
-            indices = from_xp(3)
-            cov = cov[:,indices][indices,:]
-            means = means[indices]
-            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
-            assert np.allclose(state.means(), np.expand_dims(means,axis=0), atol=tol)
+        assert np.allclose(state.cov(), cov, atol=tol)
+        assert np.allclose(state.means(), means, atol=tol)
 
     def test_thermal(self, setup_eng, hbar, tol):
         """Testing a thermal state"""
@@ -321,13 +286,7 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
-        if state._basis == "gaussian":
-            assert np.allclose(state.cov(), cov, atol=tol)
-            
-        elif state._basis == "bosonic":
-            indices = from_xp(3)
-            cov = cov[:,indices][indices,:]
-            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+        assert np.allclose(state.cov(), cov, atol=tol)
 
     def test_rotated_squeezed(self, setup_eng, hbar, tol):
         """Testing a rotated squeezed state"""
@@ -343,13 +302,106 @@ class TestGaussianBackendPrepareState:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
-        if state._basis == "gaussian":
-            assert np.allclose(state.cov(), cov, atol=tol)
+        assert np.allclose(state.cov(), cov, atol=tol)
+
+def from_xp(num_modes):
+    r"""Provides array of indices to order quadratures as (x1,p1,...,xn,pn)
+    starting from all x followed by all p i.e., (x1,...,xn,p1,..., pn).
+
+    Args:
+        num_modes (int): number of modes
+
+    Returns:
+        list: quadrature ordering for (x1,p1,...,xn,pn)
+    """
+    perm_inds_list = [(i, i + num_modes) for i in range(num_modes)]
+    perm_inds = [a for tup in perm_inds_list for a in tup]
+    return perm_inds
+
+@pytest.mark.backends("bosonic")
+class TestBosonicBackendPrepareState:
+    """Test passing several Gaussian states directly to the Bosonic backend.
+    This is allowed for backends that implement the prepare_gaussian_state method."""
+
+    def test_vacuum(self, setup_eng, hbar, tol):
+        """Testing a vacuum state"""
+        eng, prog = setup_eng(3)
+        cov = (hbar / 2) * np.identity(6)
+        with prog.context as q:
+            ops.Gaussian(cov, decomp=False) | q
+
+        state = eng.run(prog).state
+        
+        indices = from_xp(3)
+        cov = cov[:,indices][indices,:]
+        assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+        assert np.all(state.means() == np.zeros((1,6)))
             
-        elif state._basis == "bosonic":
-            indices = from_xp(3)
-            cov = cov[:,indices][indices,:]
-            assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+        assert np.allclose(state.fidelity_vacuum(), 1, atol=tol)
+
+    def test_squeezed(self, setup_eng, hbar, tol):
+        """Testing a squeezed state"""
+        eng, prog = setup_eng(3)
+        cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
+
+        with prog.context as q:
+            ops.Gaussian(cov, decomp=False) | q
+
+        state = eng.run(prog).state
+            
+        indices = from_xp(3)
+        cov = cov[:,indices][indices,:]
+        assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+
+    def test_displaced_squeezed(self, setup_eng, hbar, tol):
+        """Testing a displaced squeezed state"""
+        eng, prog = setup_eng(3)
+        cov = (hbar / 2) * np.diag([np.exp(-0.1)] * 3 + [np.exp(0.1)] * 3)
+        means = np.array([0, 0.1, 0.2, -0.1, 0.3, 0])
+
+        with prog.context as q:
+            ops.Gaussian(cov, r=means, decomp=False) | q
+
+        state = eng.run(prog).state
+            
+        indices = from_xp(3)
+        cov = cov[:,indices][indices,:]
+        means = means[indices]
+        assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+        assert np.allclose(state.means(), np.expand_dims(means,axis=0), atol=tol)
+
+    def test_thermal(self, setup_eng, hbar, tol):
+        """Testing a thermal state"""
+        eng, prog = setup_eng(3)
+        cov = np.diag(hbar * (np.array([0.3, 0.4, 0.2] * 2) + 0.5))
+
+        with prog.context as q:
+            ops.Gaussian(cov, decomp=False) | q
+
+        state = eng.run(prog).state
+            
+        indices = from_xp(3)
+        cov = cov[:,indices][indices,:]
+        assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
+
+    def test_rotated_squeezed(self, setup_eng, hbar, tol):
+        """Testing a rotated squeezed state"""
+        eng, prog = setup_eng(3)
+
+        r = 0.1
+        phi = 0.2312
+        v1 = (hbar / 2) * np.diag([np.exp(-r), np.exp(r)])
+        A = changebasis(3)
+        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
+
+        with prog.context as q:
+            ops.Gaussian(cov, decomp=False) | q
+
+        state = eng.run(prog).state
+            
+        indices = from_xp(3)
+        cov = cov[:,indices][indices,:]
+        assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
 
 @pytest.mark.backends("gaussian")
@@ -525,11 +577,11 @@ class TestDecompositionsGaussianGates:
         rexpected = Pmat @ np.array([x1, p1])
         
         # Check the covariance and mean transformed correctly
-        if state._basis == "gaussian":
+        if eng.backend_name == "gaussian":
             assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
             assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             assert np.allclose(state.covs(), np.expand_dims(Vexpected,axis=0), atol=tol, rtol=0)
             assert np.allclose(state.means(), np.expand_dims(rexpected,axis=0), atol=tol, rtol=0)
 
@@ -562,11 +614,11 @@ class TestDecompositionsGaussianGates:
         rexpected = CXmat @ np.array([x1, x2, p1, p2])
         
         # Check the covariance and mean transformed correctly
-        if state._basis == "gaussian":
+        if eng.backend_name == "gaussian":
             assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
             assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             indices = from_xp(2)
             Vexpected = Vexpected[:,indices][indices,:]
             rexpected = rexpected[indices]
@@ -600,11 +652,11 @@ class TestDecompositionsGaussianGates:
         rexpected = CZmat @ np.array([x1, x2, p1, p2])
         
         # Check the covariance and mean transformed correctly
-        if state._basis == "gaussian":
+        if eng.backend_name == "gaussian":
             assert np.allclose(state.cov(), Vexpected, atol=tol, rtol=0)
             assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             indices = from_xp(2)
             Vexpected = Vexpected[:,indices][indices,:]
             rexpected = rexpected[indices]
