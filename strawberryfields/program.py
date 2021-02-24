@@ -469,7 +469,7 @@ class Program:
                 f"only supports a {device.modes}-mode program."
             )
 
-    def assert_number_of_measurements(self, device):
+    def assert_max_number_of_measurements(self, device):
         """Check that the number of measurements in the circuit doesn't exceed the number of allowed
         measurements according to the device specification.
 
@@ -603,7 +603,7 @@ class Program:
                 elif device.target == "simulon":
                     # check that the number of measurements is within the allowed
                     # limits for each measurement type; device.modes will be a dictionary
-                    self.assert_number_of_measurements(device)
+                    self.assert_max_number_of_measurements(device)
 
         else:
             compiler = _get_compiler(compiler)
