@@ -226,7 +226,7 @@ class TestProgram:
             (ops.MeasureHeterodyne(select=0), "heterodyne"),  # MeasureHeterodyne
         ],
     )
-    def test_assert_number_of_measurements(self, measure_op, measure_name):
+    def test_assert_max_number_of_measurements(self, measure_op, measure_name):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect number of measurements in the circuit."""
         # set maximum number of measurements to 2, and measure 3 in prog below
@@ -250,9 +250,9 @@ class TestProgram:
         with pytest.raises(
             program.CircuitError, match=f"contains 3 {measure_name} measurements"
         ):
-            prog.assert_number_of_measurements(spec)
+            prog.assert_max_number_of_measurements(spec)
 
-    def test_assert_number_of_measurements_wrong_entry(self):
+    def test_assert_max_number_of_measurements_wrong_entry(self):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect type of device spec mode entry."""
         device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
@@ -264,7 +264,7 @@ class TestProgram:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(KeyError, match="Have you specified the correct target?"):
-            prog.assert_number_of_measurements(spec)
+            prog.assert_max_number_of_measurements(spec)
 
 class TestRegRefs:
     """Testing register references."""
