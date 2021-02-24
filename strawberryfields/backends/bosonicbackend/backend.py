@@ -154,12 +154,12 @@ class BosonicBackend(BaseBosonic):
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val
+                            samples_dict[r.ind] = val[:, i]
 
                             # Internally also store all the measurement outcomes
                             if r.ind not in all_samples:
                                 all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val)
+                            all_samples[r.ind].append(val[:, i])
 
                     applied.append(cmd)
 
@@ -772,16 +772,16 @@ class BosonicBackend(BaseBosonic):
             self.circuit.post_select_homodyne(mode, val)
             val = np.array([val])
 
-        return val * np.sqrt(2 * self.circuit.hbar) / 2
+        return np.array([val]).T * np.sqrt(2 * self.circuit.hbar) / 2
 
     def measure_heterodyne(self, mode, shots=1, select=None):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
-            return res[:, 0] + 1j * res[:, 1]
+            return np.array([res[:, 0] + 1j * res[:, 1]]).T
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
-        return np.array([res])
+        return np.array([[res]])
 
     def is_vacuum(self, tol=1e-10, **kwargs):
         return self.circuit.is_vacuum(tol=tol)

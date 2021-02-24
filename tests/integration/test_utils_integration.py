@@ -61,12 +61,12 @@ class TestInitialStatesAgreeGaussian:
 
         mu, cov = utils.vacuum_state(basis="gaussian", hbar=hbar)
         
-        if state._basis == "gassian":
+        if eng.backend_name == "gassian":
             mu_exp, cov_exp = state.reduced_gaussian(0)
             assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
             assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             _, mu_exp, cov_exp = state.reduced_bosonic(0)
             assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
             assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
@@ -83,12 +83,12 @@ class TestInitialStatesAgreeGaussian:
 
         mu, cov = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
         
-        if state._basis == "gassian":
+        if eng.backend_name == "gassian":
             mu_exp, cov_exp = state.reduced_gaussian(0)
             assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
             assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             _, mu_exp, cov_exp = state.reduced_bosonic(0)
             assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
             assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
@@ -105,12 +105,12 @@ class TestInitialStatesAgreeGaussian:
 
         mu, cov = utils.squeezed_state(r, phi, basis="gaussian", hbar=hbar)
         
-        if state._basis == "gassian":
+        if eng.backend_name == "gassian":
             mu_exp, cov_exp = state.reduced_gaussian(0)
             assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
             assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             _, mu_exp, cov_exp = state.reduced_bosonic(0)
             assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
             assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
@@ -128,12 +128,12 @@ class TestInitialStatesAgreeGaussian:
 
         mu, cov = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
         
-        if state._basis == "gassian":
+        if eng.backend_name == "gassian":
             mu_exp, cov_exp = state.reduced_gaussian(0)
             assert np.allclose(mu, mu_exp, atol=tol, rtol=0)
             assert np.allclose(cov, cov_exp, atol=tol, rtol=0)
             
-        elif state._basis == "bosonic":
+        elif eng.backend_name == "bosonic":
             _, mu_exp, cov_exp = state.reduced_bosonic(0)
             assert np.allclose(np.expand_dims(mu, axis=0), mu_exp, atol=tol, rtol=0)
             assert np.allclose(np.expand_dims(cov, axis=0), cov_exp, atol=tol, rtol=0)
