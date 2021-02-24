@@ -2,7 +2,7 @@ Hardware and cloud
 ==================
 
 Using Strawberry Fields, you can submit quantum programs to be executed on photonic
-hardware or to be run on a cloud simulator via the Xanadu cloud platform.
+hardware or to be run on a cloud simulator via the Xanadu Quantum Cloud.
 
 .. warning::
 
@@ -133,16 +133,16 @@ You can also omit the ``--output`` parameter to print the result to the screen.
 Cloud simulator
 ---------------
 
-Instead of submitting a job to be run on quantum hardware, it is also possible to run jobs on
-our cloud simulator Simulon. The process is very similar to running jobs on hardware. You
+In addition to submitting jobs to be run on quantum hardware, it is also possible to run jobs on
+the Xanadu Quantum Cloud simulator Simulon. The process is very similar to running jobs on hardware. You
 will need to configure your account, as described above, and submit a job via the ``RemoteEngine``,
-using `"simulon"` as the target instead of a specific chip:
+using ``"simulon"`` as the target instead of a specific chip:
 
 >>> eng = sf.RemoteEngine("simulon")
 >>> result = eng.run(prog)
 
-Alternatively, it's also possible to run jobs asynchronously with `eng.run_async` or by submitting a
-Blackbird script, setting the ``target`` to ``simulon`` in the Blackbird header.
+Simulon jobs can also be submitted asynchronously using ``eng.run_async``, or by submitting a
+Blackbird script with the ``target`` set to ``simulon`` in the Blackbird header.
 
 See the `Submitting jobs on hardware`_ section above for more details.
 
