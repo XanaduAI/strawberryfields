@@ -42,7 +42,8 @@ def parameter_checker(parameters):
     for item in parameters:
         if isinstance(item, sympy.Expr):
             return True
-        # This checks all the items within item if item is a list, array, etc.
+
+        # This checks all the nested items if item is an iterable
         if hasattr(item, "__iter__") and not isinstance(item, str):
             if parameter_checker(item):
                 return True
@@ -764,7 +765,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, shots=shots)[:, 0]
+            val = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             self.circuit.post_select_homodyne(mode, val)

@@ -33,7 +33,7 @@ class Result:
     * ``results.samples``: Measurement samples from any measurements performed.
 
     * ``results.ancilla_samples``: Measurement samples from any ancillary states
-        used for measurement-based gates.
+      used for measurement-based gates.
 
     **Example:**
 

@@ -741,9 +741,6 @@ class BosonicEngine(LocalEngine):
     and makes the results available via :class:`.Result`.
     """
 
-    def _init_backend(self, init_num_subsystems):
-        self.backend.begin_circuit(init_num_subsystems, **self.backend_options)
-
     def _run_program(self, prog, **kwargs):
         # Custom Bosonic run code
         applied, samples_dict, all_samples = self.backend.run_prog(prog, **kwargs)

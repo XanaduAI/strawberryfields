@@ -534,6 +534,7 @@ class TestBosonicPrograms:
         with prog.context as q:
             sf.ops.Catstate(alpha) | q[0]
             sf.ops.MeasureHomodyne(0) | q[0]
+
         backend = bosonic.BosonicBackend()
         applied, samples, all_samples = backend.run_prog(prog, shots=shots)
         state = backend.state()
