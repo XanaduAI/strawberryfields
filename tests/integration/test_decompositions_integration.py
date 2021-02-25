@@ -235,8 +235,7 @@ class TestGaussianBackendDecompositions:
 
 @pytest.mark.backends("gaussian")
 class TestGaussianBackendPrepareState:
-    """Test passing several Gaussian states directly to the Gaussian backend.
-    This is allowed for backends that implement the prepare_gaussian_state method."""
+    """Test passing several Gaussian states directly to the Gaussian backend."""
 
     def test_vacuum(self, setup_eng, hbar, tol):
         """Testing a vacuum state"""

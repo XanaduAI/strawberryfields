@@ -144,9 +144,8 @@ class Result:
                 for i in self.ancilla_samples.keys():
                     ancilla_modes += len(self.ancilla_samples[i])
                 return (
-                    "<Result: shots={}, num_modes={}, num_ancillae={}, contains state={}>".format(
-                        shots, modes, ancilla_modes, self._is_stateful
-                    )
+                    f"<Result: shots={shots}, num_modes={modes}, num_ancillae={ancilla_modes}, "
+                    f"contains state={self._is_stateful}>"
                 )
 
             return "<Result: shots={}, num_modes={}, contains state={}>".format(
