@@ -320,8 +320,7 @@ def from_xp(num_modes):
 
 @pytest.mark.backends("bosonic")
 class TestBosonicBackendPrepareState:
-    """Test passing several Gaussian states directly to the Bosonic backend.
-    This is allowed for backends that implement the prepare_gaussian_state method."""
+    """Test passing several Gaussian states directly to the Bosonic backend."""
 
     def test_vacuum(self, setup_eng, hbar, tol):
         """Testing a vacuum state"""
@@ -734,4 +733,3 @@ class TestDecompositionsGaussianGates:
 
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
-
