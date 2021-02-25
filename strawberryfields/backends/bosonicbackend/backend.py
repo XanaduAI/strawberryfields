@@ -16,6 +16,7 @@
 """Bosonic backend"""
 import itertools as it
 from functools import reduce
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -44,7 +45,7 @@ def parameter_checker(parameters):
             return True
 
         # This checks all the nested items if item is an iterable
-        if hasattr(item, "__iter__") and not isinstance(item, str):
+        if isinstance(item, Iterable) and not isinstance(item, str):
             if parameter_checker(item):
                 return True
     return False
