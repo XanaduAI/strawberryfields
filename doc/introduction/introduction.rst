@@ -62,7 +62,7 @@ In the following sections you can learn more about the key features of Strawberr
 ..
 
 5. :doc:`photonic_hardware` gives an overview of building, submitting, and managing
-   remote hardware jobs through Strawberry Fields.
+   remote jobs on both hardware and cloud simulators through Strawberry Fields.
 
 ..
 
