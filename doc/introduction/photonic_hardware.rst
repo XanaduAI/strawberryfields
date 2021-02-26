@@ -150,7 +150,9 @@ See the `Submitting jobs on hardware`_ section above for more details.
 
     Simulon runs on the ``gaussian`` backend (see :ref:`simulating_your_program`) and thus only supports
     Gaussian operations, including homodyne and heterodyne measurements, as well terminal
-    Fock measurements.
+    Fock measurements. Note that there are limits to how many measurements a circuit can have depending
+    on the type of measurement. These can be retrieved by calling ``engine.device_spec.modes`` with
+    ``engine = sf.RemoteEngine("simulon")``.
 
 Tutorials
 ---------
