@@ -16,6 +16,7 @@
 """Bosonic backend"""
 import itertools as it
 from functools import reduce
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -28,11 +29,26 @@ from strawberryfields.backends.states import BaseBosonicState
 
 from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
 from strawberryfields.backends.base import NotApplicableError
+from strawberryfields.program_utils import CircuitError
+import sympy
 
 
 def kron_list(l):
     """Take Kronecker products of a list of lists."""
     return reduce(np.kron, l)
+
+
+def parameter_checker(parameters):
+    """Checks if any items in an iterable are sympy objects."""
+    for item in parameters:
+        if isinstance(item, sympy.Expr):
+            return True
+
+        # This checks all the nested items if item is an iterable
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            if parameter_checker(item):
+                return True
+    return False
 
 
 class BosonicBackend(BaseBosonic):
@@ -69,6 +85,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit = None
         self.ancillae_samples_dict = {}
 
+    # pylint: disable=too-many-branches
     # pylint: disable=import-outside-toplevel
     def run_prog(self, prog, **kwargs):
         """Runs a strawberryfields program using the bosonic backend.
@@ -95,8 +112,9 @@ class BosonicBackend(BaseBosonic):
             _New_modes,
         )
 
-        # Initialize the circuit. This applies all non-Gaussian state-prep
-        self.init_circuit(prog)
+        # If a circuit exists, initialize the circuit. This applies all non-Gaussian state-prep
+        if prog.circuit:
+            self.init_circuit(prog)
 
         # Apply operations to circuit. For now, copied from LocalEngine;
         # only change is to ignore preparation classes and ancilla-assisted gates
@@ -124,9 +142,9 @@ class BosonicBackend(BaseBosonic):
                 if val is not None:
                     for i, r in enumerate(cmd.reg):
                         if r.ind not in self.ancillae_samples_dict.keys():
-                            self.ancillae_samples_dict[r.ind] = [val[:, i]]
+                            self.ancillae_samples_dict[r.ind] = [val]
                         else:
-                            self.ancillae_samples_dict[r.ind].append(val[:, i])
+                            self.ancillae_samples_dict[r.ind].append(val)
 
                 applied.append(cmd)
 
@@ -162,7 +180,6 @@ class BosonicBackend(BaseBosonic):
 
         return applied, samples_dict, all_samples
 
-    # pylint: disable=too-many-branches
     # pylint: disable=import-outside-toplevel
     def init_circuit(self, prog):
         """Instantiate the circuit and initialize weights, means, and covs
@@ -173,6 +190,8 @@ class BosonicBackend(BaseBosonic):
 
         Raises:
             NotImplementedError: if ``Ket`` or ``DensityMatrix`` preparation used
+            CircuitError: if any of the parameters for non-Gaussian state preparation
+                are symbolic
         """
         from strawberryfields.ops import (
             Bosonic,
@@ -184,7 +203,10 @@ class BosonicBackend(BaseBosonic):
             _New_modes,
         )
 
-        non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket)
+        # _New_modes is what gets checked when New() is called in a program circuit.
+        # It is included here since it could be used to instantiate a mode for non-Gaussian
+        # state preparation, and it's best to initialize any new modes from the outset.
+        non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket, _New_modes)
         nmodes = prog.init_num_subsystems
         self.begin_circuit(nmodes)
         # Dummy initial weights, means and covs
@@ -204,6 +226,12 @@ class BosonicBackend(BaseBosonic):
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
+                # Check if any of the preparations rely on symbolic quantities
+                if isinstance(cmd.op, non_gauss_preps) and parameter_checker(pars):
+                    raise CircuitError(
+                        "Symbolic non-Gaussian preparations have not been implemented "
+                        "in the bosonic backend."
+                    )
                 for reg in labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
@@ -361,7 +389,7 @@ class BosonicBackend(BaseBosonic):
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
 
         Args:
-            alpha (float): alpha value of cat state
+            alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             cutoff (float): if using the ``'real'`` representation, this determines
@@ -422,7 +450,7 @@ class BosonicBackend(BaseBosonic):
         For this representation, weights, means and covariances are real-valued.
 
         Args:
-            alpha (float): alpha value of cat state
+            alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
             cutoff (float): this determines how many terms to keep
             D (float): quality parameter of approximation
@@ -739,17 +767,18 @@ class BosonicBackend(BaseBosonic):
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, **kwargs)[0, 0]
+            val = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
-            self.circuit.post_select_homodyne(mode, val, **kwargs)
+            self.circuit.post_select_homodyne(mode, val)
+            val = np.array([val])
 
-        return np.array([[val * np.sqrt(2 * self.circuit.hbar) / 2]])
+        return np.array([val]).T * np.sqrt(2 * self.circuit.hbar) / 2
 
     def measure_heterodyne(self, mode, shots=1, select=None):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
-            return np.array([[res[:, 0] + 1j * res[:, 1]]])
+            return np.array([res[:, 0] + 1j * res[:, 1]]).T
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
