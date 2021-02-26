@@ -146,6 +146,12 @@ Blackbird script with the ``target`` set to ``simulon`` in the Blackbird header.
 
 See the `Submitting jobs on hardware`_ section above for more details.
 
+.. note::
+
+    Simulon runs on the ``gaussian`` backend (see `simulating_your_program`) and thus only supports
+    Gaussian operations, including homodyne and heterodyne measurements, as well terminal
+    Fock measurements.
+
 Tutorials
 ---------
 
