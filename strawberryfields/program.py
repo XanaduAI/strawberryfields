@@ -597,7 +597,7 @@ class Program:
 
             if device.modes is not None:
                 if isinstance(device.modes, int):
-                    # Check that the number of modes is correct, if device.modes
+                    # check that the number of modes is correct, if device.modes
                     # is provided as an integer
                     self.assert_number_of_modes(device)
                 else:
