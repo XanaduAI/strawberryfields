@@ -510,7 +510,7 @@ class LocalEngine(BaseEngine):
             # contains measurements) and state object construction.
             result._state = self.backend.state(**temp_run_options)
             if self.backend_name == "bosonic":
-                result._ancilla_samples = self.backend.ancillae_samples_dict
+                result._ancilla_samples = self.backend.ancillae_samples_dict.copy()
         return result
 
 
