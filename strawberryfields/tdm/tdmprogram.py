@@ -193,6 +193,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     # calculate the total number of samples and the order in which they were measured
     num_of_values = len([i for j in all_samples.values() for i in j])
     mode_order = _get_mode_order(num_of_values, modes, N, timebins)
+    idx_tracker = {i: 0 for i in mode_order}
 
     # iterate backwards through all_samples and add them into the correct mode
     new_samples = dict()
@@ -204,7 +205,8 @@ def reshape_samples(all_samples, modes, N, timebins):
             # create an entry for the new mode with a nested list for each timebin
             new_samples[mode_idx] = [[] for _ in range(timebins)]
 
-        sample = all_samples[mode].pop(0)[0]
+        sample = all_samples[mode][idx_tracker[mode]][0]
+        idx_tracker[mode] += 1
         new_samples[mode_idx][timebin_idx].append(sample)
 
         # populate each spatial mode in one timebin before moving on to the next timebin
