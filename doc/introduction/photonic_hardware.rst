@@ -148,7 +148,7 @@ See the `Submitting jobs on hardware`_ section above for more details.
 
 .. note::
 
-    Simulon runs on the ``gaussian`` backend (see `simulating_your_program`) and thus only supports
+    Simulon runs on the ``gaussian`` backend (see :ref:`simulating_your_program`) and thus only supports
     Gaussian operations, including homodyne and heterodyne measurements, as well terminal
     Fock measurements.
 
