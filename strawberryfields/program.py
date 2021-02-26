@@ -452,8 +452,13 @@ class Program:
         return p
 
     def assert_number_of_modes(self, device):
-        """Check that the number of modes in the program is valid for the given device."""
+        """Check that the number of modes in the program is valid for the given device.
 
+        Args:
+            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+                ``device.modes`` must be an integer, containing the allowed number of modes
+                for the target.
+        """
         # Program subsystems may be created and destroyed during execution. The length
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
@@ -462,6 +467,53 @@ class Program:
             raise CircuitError(
                 f"This program contains {modes_total} modes, but the device '{device.target}' "
                 f"only supports a {device.modes}-mode program."
+            )
+
+    def assert_max_number_of_measurements(self, device):
+        """Check that the number of measurements in the circuit doesn't exceed the number of allowed
+        measurements according to the device specification.
+
+        Args:
+            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+                ``device.modes`` must be a dictionary, containing the maximum number of allowed
+                measurements for the specified target.
+
+        """
+        num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
+
+        try:
+            max_pnr = device.modes["max"]["pnr"]
+            max_homodyne = device.modes["max"]["homodyne"]
+            max_heterodyne = device.modes["max"]["heterodyne"]
+        except (KeyError, TypeError) as e:
+            raise KeyError(
+                "Device specification must contain an entry for the maximum allowed number "
+                "of measurments. Have you specified the correct target?"
+            ) from e
+
+        for c in self.circuit:
+            op_name = str(c.op)
+            if "MeasureFock" in op_name:
+                num_pnr += len(c.reg)
+            elif "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
+                num_homodyne += len(c.reg)
+            elif "MeasureHeterodyne" in op_name or "MeasureHD" in op_name:
+                num_heterodyne += len(c.reg)
+
+        if num_pnr > max_pnr:
+            raise CircuitError(
+                f"This program contains {num_pnr} fock measurements. "
+                f"A maximum of {max_pnr} fock measurements are supported."
+            )
+        if num_homodyne > max_homodyne:
+            raise CircuitError(
+                f"This program contains {num_homodyne} homodyne measurements. "
+                f"A maximum of {max_homodyne} homodyne measurements are supported."
+            )
+        if num_heterodyne > max_heterodyne:
+            raise CircuitError(
+                f"This program contains {num_heterodyne} heterodyne measurements. "
+                f"A maximum of {max_heterodyne} heterodyne measurements are supported."
             )
 
     def compile(self, *, device=None, compiler=None, **kwargs):
@@ -543,9 +595,15 @@ class Program:
             else:
                 compiler = _get_compiler(compiler)
 
-            # TODO: add validation for device specs that provide a dictionary for `device.modes`.
-            if device.modes is not None and isinstance(device.modes, int):
-                self.assert_number_of_modes(device)
+            if device.modes is not None:
+                if isinstance(device.modes, int):
+                    # check that the number of modes is correct, if device.modes
+                    # is provided as an integer
+                    self.assert_number_of_modes(device)
+                else:
+                    # check that the number of measurements is within the allowed
+                    # limits for each measurement type; device.modes will be a dictionary
+                    self.assert_max_number_of_measurements(device)
 
         else:
             compiler = _get_compiler(compiler)
