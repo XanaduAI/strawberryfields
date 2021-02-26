@@ -353,7 +353,7 @@ class BosonicModes:
         self.beamsplitter(theta, 0, k, new_mode)
         self.loss(eta_anc, new_mode)
         self.phase_shift(np.pi / 2, new_mode)
-        val = self.homodyne(new_mode)
+        val = self.homodyne(new_mode)[0][0]
 
         # Delete all record of ancilla mode
         self.del_mode(new_mode)
@@ -367,7 +367,7 @@ class BosonicModes:
 
         # Feedforward displacement
         prefac = -np.tan(theta) / np.sqrt(2 * self.hbar * eta_anc)
-        self.displace(prefac * val[0][0], np.pi / 2, k)
+        self.displace(prefac * val, np.pi / 2, k)
 
         self.phase_shift(phi / 2, k)
 

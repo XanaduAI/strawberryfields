@@ -20,6 +20,7 @@ import numpy as np
 import strawberryfields as sf
 import strawberryfields.backends.bosonicbackend.backend as bosonic
 import pytest
+import sympy
 
 pytestmark = pytest.mark.bosonic
 
@@ -29,6 +30,7 @@ FOCK_VALS = np.arange(5, dtype=int)
 r_fock = 0.05
 EPS_VALS = np.array([0.01, 0.05, 0.1, 0.5])
 R_VALS = np.linspace(-1, 1, 5)
+SHOTS_VALS = np.array([1, 19, 100])
 
 
 class TestKronList:
@@ -39,6 +41,24 @@ class TestKronList:
         l2 = [3, 4, 5]
         list_compare = [3, 4, 5, 6, 8, 10]
         assert np.allclose(list_compare, bosonic.kron_list([l1, l2]))
+
+
+class TestParameterChecker:
+    """Test parameter_checker function from the bosonic backend."""
+
+    def test_parameter_checker(self):
+        symbolic_param = sympy.Expr()
+        params = []
+        assert not bosonic.parameter_checker(params)
+
+        params = [1, "real", 3.0, [4 + 1j, 5], [[3.5, 4.8, "complex"]], np.array([7, 9]), range(3)]
+        assert not bosonic.parameter_checker(params)
+
+        params = [1, "real", symbolic_param]
+        assert bosonic.parameter_checker(params)
+
+        params = [1, [3, symbolic_param]]
+        assert bosonic.parameter_checker(params)
 
 
 class TestBosonicCatStates:
@@ -493,7 +513,7 @@ class TestBosonicPrograms:
             sf.ops.Catstate(alpha) | q[0]
             sf.ops.Squeezed(r) | q[1]
             sf.ops.MeasureX | q[0]
-            sf.ops.MeasureX | q[1]
+            sf.ops.MeasureHD | q[1]
         backend = bosonic.BosonicBackend()
         applied, samples, all_samples = backend.run_prog(prog)
         state = backend.state()
@@ -505,6 +525,26 @@ class TestBosonicPrograms:
         for i in range(2):
             assert i in samples.keys()
             assert samples[i].shape == (1,)
+
+    @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("shots", SHOTS_VALS)
+    def test_measurement_many_shots(self, alpha, shots):
+        """Runs a program with measurements."""
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.MeasureHomodyne(0) | q[0]
+
+        backend = bosonic.BosonicBackend()
+        applied, samples, all_samples = backend.run_prog(prog, shots=shots)
+        state = backend.state()
+
+        # Check output is vacuum since everything was measured
+        assert np.allclose(state.fidelity_vacuum(), 1)
+
+        # Check samples
+        assert 0 in samples.keys()
+        assert samples[0].shape == (int(shots),)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("r", R_VALS)

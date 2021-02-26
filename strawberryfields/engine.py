@@ -33,7 +33,7 @@ from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["BaseEngine", "LocalEngine"]
+__all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]
 
 
 class BaseEngine(abc.ABC):
@@ -317,6 +317,14 @@ class LocalEngine(BaseEngine):
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
 
+    def __new__(cls, backend, *, backend_options=None):
+        if backend == "bosonic":
+            bos_eng = super().__new__(BosonicEngine)
+            bos_eng.__init__(backend, backend_options=backend_options)
+            return bos_eng
+
+        return super().__new__(cls)
+
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
@@ -501,7 +509,8 @@ class LocalEngine(BaseEngine):
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
             result._state = self.backend.state(**temp_run_options)
-
+            if self.backend_name == "bosonic":
+                result._ancilla_samples = self.backend.ancillae_samples_dict.copy()
         return result
 
 
@@ -723,3 +732,17 @@ class Engine(LocalEngine):
 
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__
+
+
+class BosonicEngine(LocalEngine):
+    """Local quantum program executor engine for programs executed on the bosonic backend.
+
+    The BosonicEngine is used to execute :class:`.Program` instances on the bosonic backend,
+    and makes the results available via :class:`.Result`.
+    """
+
+    def _run_program(self, prog, **kwargs):
+        # Custom Bosonic run code
+        applied, samples_dict, all_samples = self.backend.run_prog(prog, **kwargs)
+        samples = self._combine_and_sort_samples(samples_dict)
+        return applied, samples, all_samples
