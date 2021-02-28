@@ -1638,6 +1638,43 @@ class BaseBosonicState(BaseState):
 
         return wigner
 
+    def marginal(self, mode, xvec, phi=0):
+        r"""Calculates the discretized marginal distribution of the specified mode along
+        the :math:`x\cos\phi + p\sin\phi` quadrature.
+
+        Args:
+            mode (int): the mode to calculate the Wigner function for
+            xvec (array): array of discretized quadrature values
+            phi (float): :math:`phi` value for qudrature angle in phase space
+
+        Returns:
+            array: 1D array of size ``len(xvec)``, containing marginal distribution values.
+
+        Raises:
+            ValueError: if mode is not an integer or out of range
+        """
+        if not isinstance(mode, int):
+            raise ValueError("Please select one mode indexed by an integer.")
+
+        if mode > self._modes:
+            raise ValueError(
+                "The number of specified modes cannot " "be larger than the number of subsystems."
+            )
+
+        weights, mus, covs = self.reduced_bosonic([mode])
+
+        rot = _R(phi)
+        mus_phi = (rot.T @ mus.T).T
+        covs_phi = rot.T @ covs @ rot
+
+        marginal = 0
+        for i in range(len(weights)):
+            exp_arg = -0.5 * (xvec - mus_phi[i, 0]) ** 2 / covs_phi[i, 0, 0]
+            prefactor = 1 / (np.sqrt((2 * np.pi * covs_phi[i, 0, 0])))
+            marginal += weights[i] * prefactor * np.exp(exp_arg)
+
+        return np.real_if_close(marginal)
+
     def quad_expectation(self, mode, phi=0, **kwargs):
         # pylint: disable=unused-argument
         rot = _R(phi)
