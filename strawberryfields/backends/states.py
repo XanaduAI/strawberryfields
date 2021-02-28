@@ -1636,7 +1636,7 @@ class BaseBosonicState(BaseState):
             prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
             wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
 
-        return wigner
+        return np.real_if_close(wigner)
 
     def marginal(self, mode, xvec, phi=0):
         r"""Calculates the discretized marginal distribution of the specified mode along
