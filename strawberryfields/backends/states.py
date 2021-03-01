@@ -1668,10 +1668,10 @@ class BaseBosonicState(BaseState):
         covs_phi = rot.T @ covs @ rot
 
         marginal = 0
-        for i in range(len(weights)):
+        for i, weight_i in enumerate(weights):
             exp_arg = -0.5 * (xvec - mus_phi[i, 0]) ** 2 / covs_phi[i, 0, 0]
             prefactor = 1 / (np.sqrt((2 * np.pi * covs_phi[i, 0, 0])))
-            marginal += weights[i] * prefactor * np.exp(exp_arg)
+            marginal += weight_i * prefactor * np.exp(exp_arg)
 
         return np.real_if_close(marginal)
 
