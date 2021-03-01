@@ -19,7 +19,6 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-@pytest.mark.backends("fock","tf", "gaussian")
 @pytest.mark.parametrize('cutoff', [10], indirect=True)  # override default cutoff fixture
 def test_teleportation_fidelity(setup_eng, pure):
     """Test that teleportation of a coherent state has high fidelity"""
@@ -51,7 +50,7 @@ def test_teleportation_fidelity(setup_eng, pure):
     assert np.allclose(fidelity, 1, atol=0.02, rtol=0)
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian", "bosonic")
 def test_gaussian_gate_teleportation(setup_eng, pure):
     """Test that gaussian states match after gate teleportation"""
     eng, prog = setup_eng(4)
@@ -78,8 +77,15 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
         Fourier | q[3]
 
     state = eng.run(prog).state
-    cov1 = state.reduced_gaussian(2)[1]
-    cov2 = state.reduced_gaussian(3)[1]
+    
+    if eng.backend_name == "gaussian":
+        cov1 = state.reduced_gaussian(2)[1]
+        cov2 = state.reduced_gaussian(3)[1]
+        
+    elif eng.backend_name == "bosonic":
+        cov1 = state.reduced_bosonic(2)[1]
+        cov2 = state.reduced_bosonic(3)[1]
+        
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
 
 @pytest.mark.backends("fock","tf","gaussian")
@@ -218,7 +224,7 @@ def test_hamiltonian_simulation_fock_probs(setup_eng, pure, batch_size, tol):
     assert np.allclose(probs, results, atol=tol, rtol=0)
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian", "bosonic")
 class TestGaussianCloning:
     """Tests specific to Gaussian cloning"""
 
@@ -245,11 +251,13 @@ class TestGaussianCloning:
             self.gaussian_cloning_circuit(q)
 
         state = eng.run(prog, **{'modes': [0, 3]}).state
-        coh = np.array([state.is_coherent(i) for i in range(2)])
+        if eng.backend_name == "gaussian":
+            coh = np.array([state.is_coherent(i) for i in range(2)])
+            # check all outputs are coherent states
+            assert np.all(coh)
+            
         disp = state.displacement()
 
-        # check all outputs are coherent states
-        assert np.all(coh)
         # check outputs are identical clones
         assert np.allclose(*disp, atol=tol, rtol=0)
 

@@ -40,9 +40,9 @@ class TestMeasurement:
         # Fock measurements put the modes into vacuum state
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_heterodyne(self, setup_eng, tol):
-        """Test Fock measurements return expected results"""
+        """Test heterodyne measurements return expected results"""
         eng, prog = setup_eng(2)
         a0 = 0.44643
         phi0 = -0.2721457
@@ -64,7 +64,6 @@ class TestMeasurement:
 class TestPostselection:
     """Measurement tests that include post-selection"""
 
-    @pytest.mark.backends("fock","tf","gaussian")
     def test_homodyne(self, setup_eng, tol):
         """Test that homodyne detection on a TMS state
         returns post-selected value."""
@@ -80,7 +79,7 @@ class TestPostselection:
         eng.run(prog)
         assert np.allclose(q[0].val, x, atol=tol, rtol=0)
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_heterodyne(self, setup_eng, tol):
         """Test that heterodyne detection on a TMS state
         returns post-selected value."""

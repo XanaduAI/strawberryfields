@@ -12,14 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=too-many-public-methods
+
 """Bosonic backend"""
+import itertools as it
+from functools import reduce
+from collections.abc import Iterable
+
 import numpy as np
+
+from scipy.special import comb
+from scipy.linalg import block_diag
 
 from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
-from .bosoniccircuit import BosonicModes
+from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
+from strawberryfields.backends.base import NotApplicableError
+from strawberryfields.program_utils import CircuitError
+import sympy
+
+
+def kron_list(l):
+    """Take Kronecker products of a list of lists."""
+    return reduce(np.kron, l)
+
+
+def parameter_checker(parameters):
+    """Checks if any items in an iterable are sympy objects."""
+    for item in parameters:
+        if isinstance(item, sympy.Expr):
+            return True
+
+        # This checks all the nested items if item is an iterable
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            if parameter_checker(item):
+                return True
+    return False
 
 
 class BosonicBackend(BaseBosonic):
@@ -54,6 +83,226 @@ class BosonicBackend(BaseBosonic):
         self._supported["mixed_states"] = True
         self._init_modes = None
         self.circuit = None
+        self.ancillae_samples_dict = {}
+
+    # pylint: disable=too-many-branches
+    # pylint: disable=import-outside-toplevel
+    def run_prog(self, prog, **kwargs):
+        """Runs a strawberryfields program using the bosonic backend.
+
+        Args:
+            prog (object): sf.Program instance
+
+        Returns:
+            tuple: a tuple of the list of applied commands, the dictionary of measurement samples,
+            and the dictionary of ancilla measurement samples
+
+        Raises:
+            NotApplicableError: if an op in the program does not apply to the bosonic backend
+            NotImplementedError: if an op in the program is not implemented in the bosonic backend
+        """
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            MSgate,
+            _New_modes,
+        )
+
+        # If a circuit exists, initialize the circuit. This applies all non-Gaussian state-prep
+        if prog.circuit:
+            self.init_circuit(prog)
+
+        # Apply operations to circuit. For now, copied from LocalEngine;
+        # only change is to ignore preparation classes and ancilla-assisted gates
+        # TODO: Deal with Preparation classes in the middle of a circuit.
+        applied = []
+        samples_dict = {}
+        all_samples = {}
+
+        non_gauss_preps = (
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            _New_modes,
+        )
+        ancilla_gates = (MSgate,)
+        for cmd in prog.circuit:
+            # For ancilla-assisted gates, if they return measurement values, store
+            # them in ancillae_samples_dict
+            if isinstance(cmd.op, ancilla_gates):
+                # if the op returns a measurement outcome store it in a dictionary
+                val = cmd.op.apply(cmd.reg, self, **kwargs)
+                if val is not None:
+                    for i, r in enumerate(cmd.reg):
+                        if r.ind not in self.ancillae_samples_dict.keys():
+                            self.ancillae_samples_dict[r.ind] = [val]
+                        else:
+                            self.ancillae_samples_dict[r.ind].append(val)
+
+                applied.append(cmd)
+
+            # Rest of operations applied as normal
+            elif not isinstance(cmd.op, non_gauss_preps):
+                try:
+                    # try to apply it to the backend and if op is a measurement, store outcome in values
+                    val = cmd.op.apply(cmd.reg, self, **kwargs)
+                    if val is not None:
+                        for i, r in enumerate(cmd.reg):
+                            samples_dict[r.ind] = val[:, i]
+
+                            # Internally also store all the measurement outcomes
+                            if r.ind not in all_samples:
+                                all_samples[r.ind] = list()
+                            all_samples[r.ind].append(val[:, i])
+
+                    applied.append(cmd)
+
+                except NotApplicableError as e:
+                    # command is not applicable to the current backend type
+                    raise NotApplicableError(
+                        "The operation {} cannot be used with the Bosonic Backend.".format(cmd.op)
+                    ) from e
+
+                except NotImplementedError as e:
+                    # command not directly supported by backend API
+                    raise NotImplementedError(
+                        "The operation {} has not been implemented in the Bosonic Backend for the arguments {}.".format(
+                            cmd.op, kwargs
+                        )
+                    ) from e
+
+        return applied, samples_dict, all_samples
+
+    # pylint: disable=import-outside-toplevel
+    def init_circuit(self, prog):
+        """Instantiate the circuit and initialize weights, means, and covs
+        depending on the ``Preparation`` classes.
+
+        Args:
+            prog (object): :class:`~.Program` instance
+
+        Raises:
+            NotImplementedError: if ``Ket`` or ``DensityMatrix`` preparation used
+            CircuitError: if any of the parameters for non-Gaussian state preparation
+                are symbolic
+        """
+        from strawberryfields.ops import (
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            GKP,
+            Ket,
+            _New_modes,
+        )
+
+        # _New_modes is what gets checked when New() is called in a program circuit.
+        # It is included here since it could be used to instantiate a mode for non-Gaussian
+        # state preparation, and it's best to initialize any new modes from the outset.
+        non_gauss_preps = (Bosonic, Catstate, DensityMatrix, Fock, GKP, Ket, _New_modes)
+        nmodes = prog.init_num_subsystems
+        self.begin_circuit(nmodes)
+        # Dummy initial weights, means and covs
+        init_weights, init_means, init_covs = [[0] * nmodes for _ in range(3)]
+
+        vac_means = np.zeros((1, 2), dtype=complex)
+        vac_covs = np.expand_dims(0.5 * self.circuit.hbar * np.identity(2), axis=0)
+
+        # List of modes that have been traversed through
+        reg_list = []
+
+        # Go through the operations in the circuit
+        for cmd in prog.circuit:
+            # Check if an operation other than New() has already acted on these modes.
+            labels = [label.ind for label in cmd.reg]
+            isitnew = 1 - np.isin(labels, reg_list)
+            if np.any(isitnew):
+                # Operation parameters
+                pars = cmd.op.p
+                # Check if any of the preparations rely on symbolic quantities
+                if isinstance(cmd.op, non_gauss_preps) and parameter_checker(pars):
+                    raise CircuitError(
+                        "Symbolic non-Gaussian preparations have not been implemented "
+                        "in the bosonic backend."
+                    )
+                for reg in labels:
+                    # All the possible preparations should go in this loop
+                    if isinstance(cmd.op, Bosonic):
+                        weights, means, covs = [pars[i] for i in range(3)]
+
+                    elif isinstance(cmd.op, Catstate):
+                        weights, means, covs = self.prepare_cat(*pars)
+
+                    elif isinstance(cmd.op, GKP):
+                        weights, means, covs = self.prepare_gkp(*pars)
+
+                    elif isinstance(cmd.op, Fock):
+                        weights, means, covs = self.prepare_fock(*pars)
+
+                    elif isinstance(cmd.op, (Ket, DensityMatrix)):
+                        raise NotImplementedError(
+                            "Ket and DensityMatrix preparation not implemented in the bosonic backend."
+                        )
+
+                    # If a new mode is added in the program context, then add it here
+                    elif isinstance(cmd.op, _New_modes):
+                        cmd.op.apply(cmd.reg, self)
+                        init_weights.append([0])
+                        init_means.append([0])
+                        init_covs.append([0])
+
+                    # The rest of the preparations are gaussian.
+                    # TODO: initialize with Gaussian |vacuum> state
+                    # directly by asking preparation methods below for
+                    # the right weights, means, covs.
+                    else:
+                        weights, means, covs = np.array([1], dtype=complex), vac_means, vac_covs
+
+                    init_weights[reg] = weights
+                    init_means[reg] = means
+                    init_covs[reg] = covs
+
+                # Add the mode to the list of already prepared modes, unless the command was
+                # just to create the new mode, in which case it checks again to see if there is
+                # a subsequent non-Gaussian state creation
+                if not isinstance(cmd.op, _New_modes):
+                    reg_list += labels
+
+            else:
+                if type(cmd.op) in non_gauss_preps:
+                    raise NotImplementedError(
+                        "Non-gaussian state preparations must be the first operation for each register."
+                    )
+
+        # Assume unused modes in the circuit are vacuum states.
+        # If there are any Gaussian state preparations, these will be handled
+        # by the run_prog method
+        for i in set(range(nmodes)).difference(reg_list):
+            init_weights[i], init_means[i], init_covs[i] = np.array([1]), vac_means, vac_covs
+
+        # Find all possible combinations of means and combs of the
+        # Gaussians between the modes.
+        mean_combos = it.product(*init_means)
+        cov_combos = it.product(*init_covs)
+
+        # Tensor product of the weights.
+        tensored_weights = kron_list(init_weights)
+        # De-nest the means iterator.
+        tensored_means = np.array([np.concatenate(tup) for tup in mean_combos], dtype=complex)
+        # Stack covs appropriately.
+        tensored_covs = np.array([block_diag(*tup) for tup in cov_combos])
+
+        # Declare circuit attributes.
+        self.circuit.weights = tensored_weights
+        self.circuit.means = tensored_means
+        self.circuit.covs = tensored_covs
 
     def begin_circuit(self, num_subsystems, **kwargs):
         self._init_modes = num_subsystems
@@ -134,6 +383,324 @@ class BosonicBackend(BaseBosonic):
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
+    def prepare_cat(self, alpha, phi, representation, cutoff, D):
+        r"""Prepares the arrays of weights, means and covs for a cat state:
+
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
+
+        Args:
+            alpha (complex): alpha value of cat state
+            phi (float): phi value of cat state
+            representation (str): whether to use the ``'real'`` or ``'complex'`` representation
+            cutoff (float): if using the ``'real'`` representation, this determines
+                 how many terms to keep
+            D (float): for ``'real'`` representation, quality parameter of approximation
+
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
+        """
+
+        if representation not in ("complex", "real"):
+            raise ValueError(
+                'The representation argument accepts only "real" or "complex" as arguments.'
+            )
+
+        # Case alpha = 0, prepare vacuum
+        if np.isclose(np.absolute(alpha), 0):
+            weights = np.array([1], dtype=complex)
+            means = np.array([[0, 0]], dtype=complex)
+            covs = np.array([0.5 * self.circuit.hbar * np.identity(2)])
+            return weights, means, covs
+
+        # Normalization factor
+        norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
+        hbar = self.circuit.hbar
+
+        if representation == "complex":
+            phi = np.pi * phi
+
+            # Mean of |alpha><alpha| term
+            rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
+
+            # Mean of |alpha><-alpha| term
+            rcomplex = np.sqrt(2 * hbar) * np.array([1j * alpha.imag, -1j * alpha.real])
+
+            # Coefficient for complex Gaussians
+            cplx_coef = np.exp(-2 * np.absolute(alpha) ** 2 - 1j * phi)
+
+            # Arrays of weights, means and covs
+            weights = norm * np.array([1, 1, cplx_coef, np.conjugate(cplx_coef)])
+            weights /= np.sum(weights)
+
+            means = np.array([rplus, -rplus, rcomplex, np.conjugate(rcomplex)])
+
+            covs = 0.5 * hbar * np.identity(2, dtype=float)
+            covs = np.repeat(covs[None, :], weights.size, axis=0)
+
+            return weights, means, covs
+
+        # The only remaining option is a real-valued cat state
+        return self.prepare_cat_real_rep(alpha, phi, cutoff, D)
+
+    def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
+        r"""Prepares the arrays of weights, means and covs for a cat state:
+
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
+
+        For this representation, weights, means and covariances are real-valued.
+
+        Args:
+            alpha (complex): alpha value of cat state
+            phi (float): phi value of cat state
+            cutoff (float): this determines how many terms to keep
+            D (float): quality parameter of approximation
+
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
+        """
+        # Normalization factor
+        norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
+        phi = np.pi * phi
+        hbar = self.circuit.hbar
+
+        # Defining useful constants
+        a = np.absolute(alpha)
+        phase = np.angle(alpha)
+        E = np.pi ** 2 * D * hbar / (16 * a ** 2)
+        v = hbar / 2
+        num_mean = 8 * a * np.sqrt(hbar) / (np.pi * D * np.sqrt(2))
+        denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
+        coef_sigma = np.pi ** 2 * hbar / (8 * a ** 2 * (E + v))
+        prefac = np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi ** 2 * D) / (4 * a) / (np.sqrt(E + v))
+        z_max = int(
+            np.ceil(
+                2
+                * np.sqrt(2)
+                * a
+                / (np.pi * np.sqrt(hbar))
+                * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
+            )
+        )
+
+        x_means = np.zeros(4 * z_max + 1, dtype=float)
+        p_means = 0.5 * np.array(range(-2 * z_max, 2 * z_max + 1), dtype=float)
+
+        # Creating and calculating the weights array for oscillating terms
+        term_inds = np.array(range(-2 * z_max, 2 * z_max + 1), dtype=int)
+        odd_terms = term_inds % 2
+        even_terms = (odd_terms + 1) % 2
+        even_phases = (-1) ** ((term_inds % 4) // 2)
+        odd_phases = (-1) ** (1 + ((term_inds + 2) % 4) // 2)
+        weights = np.cos(phi) * even_terms * even_phases * np.exp(
+            -0.5 * coef_sigma * p_means ** 2
+        ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
+        weights *= prefac
+        weights_real = np.ones(2, dtype=float)
+        weights = norm * np.concatenate((weights_real, weights))
+
+        # making sure the state is properly normalized
+        weights /= np.sum(weights)
+
+        # computing the means array
+        means = np.concatenate(
+            (
+                np.reshape(x_means, (-1, 1)),
+                np.reshape(p_means, (-1, 1)),
+            ),
+            axis=1,
+        )
+        means *= num_mean / denom_mean
+        means_real = np.sqrt(2 * hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
+        means = np.concatenate((means_real, means))
+
+        # computing the covariance array
+        cov = np.array([[0.5 * hbar, 0], [0, (E * v) / (E + v)]])
+        cov = np.repeat(cov[None, :], 4 * z_max + 1, axis=0)
+        cov_real = 0.5 * hbar * np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]], dtype=float)
+        cov = np.concatenate((cov_real, cov))
+
+        # filter out 0 components
+        filt = ~np.isclose(weights, 0, atol=cutoff)
+        weights = weights[filt]
+        means = means[filt]
+        cov = cov[filt]
+
+        # applying a rotation if necessary
+        if not np.isclose(phase, 0):
+            S = np.array([[np.cos(phase), -np.sin(phase)], [np.sin(phase), np.cos(phase)]])
+            means = np.dot(S, means.T).T
+            cov = S @ cov @ S.T
+
+        return weights, means, cov
+
+    def prepare_gkp(self, state, epsilon, cutoff, representation="real", shape="square"):
+        r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
+
+        GKP states are qubits, with the qubit state defined by:
+
+        :math:`\ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}_{gkp}`
+
+        where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
+
+        Args:
+            state (list): ``[theta,phi]`` for qubit definition above
+            epsilon (float): finite energy parameter of the state
+            cutoff (float): this determines how many terms to keep
+            representation (str): ``'real'`` or ``'complex'`` reprsentation
+            shape (str): shape of the lattice; default 'square'
+
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
+
+        Raises:
+            NotImplementedError: if the complex representation or a non-square lattice is attempted
+        """
+
+        if representation == "complex":
+            raise NotImplementedError("The complex description of GKP is not implemented")
+
+        if shape != "square":
+            raise NotImplementedError("Only square GKP are implemented for now")
+
+        theta, phi = state[0], state[1]
+
+        def coeff(peak_loc):
+            """Returns the value of the weight for a given peak.
+
+            Args:
+                peak_loc (array): location of the ideal peak in phase space
+
+            Returns:
+                float: weight of the peak
+            """
+            l, m = peak_loc[:, 0], peak_loc[:, 1]
+            t = np.zeros(peak_loc.shape[0], dtype=complex)
+            t += np.logical_and(l % 2 == 0, m % 2 == 0)
+            t += np.logical_and(l % 4 == 0, m % 2 == 1) * (
+                np.cos(0.5 * theta) ** 2 - np.sin(0.5 * theta) ** 2
+            )
+            t += np.logical_and(l % 4 == 2, m % 2 == 1) * (
+                np.sin(0.5 * theta) ** 2 - np.cos(0.5 * theta) ** 2
+            )
+            t += np.logical_and(l % 4 % 2 == 1, m % 4 == 0) * np.sin(theta) * np.cos(phi)
+            t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
+            t -= (
+                np.logical_or(
+                    np.logical_and(l % 4 == 3, m % 4 == 3),
+                    np.logical_and(l % 4 == 1, m % 4 == 1),
+                )
+                * np.sin(theta)
+                * np.sin(phi)
+            )
+            t += (
+                np.logical_or(
+                    np.logical_and(l % 4 == 3, m % 4 == 1),
+                    np.logical_and(l % 4 == 1, m % 4 == 3),
+                )
+                * np.sin(theta)
+                * np.sin(phi)
+            )
+            prefactor = np.exp(
+                -np.pi
+                * 0.25
+                * (l ** 2 + m ** 2)
+                * (1 - np.exp(-2 * epsilon))
+                / (1 + np.exp(-2 * epsilon))
+            )
+            weight = t * prefactor
+            return weight
+
+        # Set the max peak value
+        z_max = int(
+            np.ceil(
+                np.sqrt(
+                    -4
+                    / np.pi
+                    * np.log(cutoff)
+                    * (1 + np.exp(-2 * epsilon))
+                    / (1 - np.exp(-2 * epsilon))
+                )
+            )
+        )
+        damping = 2 * np.exp(-epsilon) / (1 + np.exp(-2 * epsilon))
+
+        # Create set of means before finite energy effects
+        means_gen = it.tee(
+            it.starmap(lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)),
+            2,
+        )
+        means = np.concatenate(
+            (
+                np.reshape(
+                    np.fromiter(means_gen[0], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                ).real,
+                np.reshape(
+                    np.fromiter(means_gen[1], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                ).imag,
+            ),
+            axis=1,
+        )
+
+        # Calculate the weights for each peak
+        weights = coeff(means)
+        filt = abs(weights) > cutoff
+        weights = weights[filt]
+
+        weights /= np.sum(weights)
+        # Apply finite energy effect to means
+        means = means[filt]
+
+        means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
+        # Covariances all the same
+        covs = (
+            0.5
+            * self.circuit.hbar
+            * (1 - np.exp(-2 * epsilon))
+            / (1 + np.exp(-2 * epsilon))
+            * np.identity(2)
+        )
+        covs = np.repeat(covs[None, :], weights.size, axis=0)
+
+        return weights, means, covs
+
+    def prepare_fock(self, n, r=0.05):
+        """Prepares the arrays of weights, means and covs of a Fock state.
+
+        Args:
+            n (int): photon number
+            r (float): quality parameter for the approximation
+
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
+
+        Raises:
+            ValueError: if :math:`1/r^2` is less than :math:`n`
+        """
+        if 1 / r ** 2 < n:
+            raise ValueError(f"The parameter 1 / r ** 2={1 / r ** 2} is smaller than n={n}")
+        # A simple function to calculate the parity
+        parity = lambda n: 1 if n % 2 == 0 else -1
+        # All the means are zero
+        means = np.zeros([n + 1, 2])
+        covs = np.array(
+            [
+                0.5
+                * self.circuit.hbar
+                * np.identity(2)
+                * (1 + (n - j) * r ** 2)
+                / (1 - (n - j) * r ** 2)
+                for j in range(n + 1)
+            ]
+        )
+        weights = np.array(
+            [
+                (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
+                for j in range(n + 1)
+            ]
+        )
+        weights = weights / np.sum(weights)
+        return weights, means, covs
+
     def rotation(self, phi, mode):
         self.circuit.phase_shift(phi, mode)
 
@@ -143,27 +710,35 @@ class BosonicBackend(BaseBosonic):
     def squeeze(self, r, phi, mode):
         self.circuit.squeeze(r, phi, mode)
 
-    def mb_squeeze(self, mode, r, phi, r_anc, eta_anc, avg):
-        r"""Squeeze mode by the amount ``r*exp(1j*phi)`` using measurement-based squeezing.
+    def mb_squeeze_avg(self, mode, r, phi, r_anc, eta_anc):
+        r"""Squeeze mode by the amount :math:`re^{i\phi}` using measurement-based squeezing.
 
-        Depending on avg, this applies the average or single-shot map, returning the ancillary
-        measurement outcome.
+        Here, the average, deterministic Gaussian CPTP map is applied.
 
         Args:
-            k (int): mode to be squeezed
+            mode (int): mode to be squeezed
+            r (float): target squeezing magnitude
+            phi (float): target squeezing phase
+            r_anc (float): squeezing magnitude of the ancillary mode
+            eta_anc (float): detection efficiency of the ancillary mode
+        """
+        self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
+
+    def mb_squeeze_single_shot(self, mode, r, phi, r_anc, eta_anc):
+        r"""Squeeze mode by the amount :math:`re^{i\phi}` using measurement-based squeezing.
+
+        Here, the single-shot map is applied, returning the ancillary measurement outcome.
+
+        Args:
+            mode (int): mode to be squeezed
             r (float): target squeezing magnitude
             phi (float): target squeezing phase
             r_anc (float): squeezing magnitude of the ancillary mode
             eta_anc(float): detection efficiency of the ancillary mode
-            avg (bool): whether to apply the average or single-shot map
 
         Returns:
-            float or None: if not avg, the measurement outcome of the ancilla
+            float: the measurement outcome of the ancilla
         """
-        if avg:
-            self.circuit.mb_squeeze_avg(mode, r, phi, r_anc, eta_anc)
-            return None
-
         ancilla_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
         return ancilla_val
 
@@ -192,21 +767,22 @@ class BosonicBackend(BaseBosonic):
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, **kwargs)[0, 0]
+            val = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
-            self.circuit.post_select_homodyne(mode, val, **kwargs)
+            self.circuit.post_select_homodyne(mode, val)
+            val = np.array([val])
 
-        return np.array([val * np.sqrt(2 * self.circuit.hbar) / 2])
+        return np.array([val]).T * np.sqrt(2 * self.circuit.hbar) / 2
 
     def measure_heterodyne(self, mode, shots=1, select=None):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
-            return np.array([res[:, 0] + 1j * res[:, 1]])
+            return np.array([res[:, 0] + 1j * res[:, 1]]).T
 
         res = select
         self.circuit.post_select_heterodyne(mode, select)
-        return res
+        return np.array([[res]])
 
     def is_vacuum(self, tol=1e-10, **kwargs):
         return self.circuit.is_vacuum(tol=tol)

@@ -28,7 +28,6 @@ np.random.seed(42)
 A = 0.1234
 B = -0.543
 
-@pytest.mark.backends("fock","tf","gaussian")
 @pytest.mark.parametrize("gate", ops.gates)
 class TestGateApplication:
     """tests that involve gate application"""
@@ -70,7 +69,6 @@ class TestGateApplication:
 class TestChannelApplication:
     """tests that involve channel application"""
 
-    @pytest.mark.backends("fock","tf","gaussian")
     def test_loss_channel(self, setup_eng, tol):
         """Test loss channel with no transmission produces vacuum"""
         eng, prog = setup_eng(1)
@@ -82,7 +80,7 @@ class TestChannelApplication:
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_thermal_loss_channel(self, setup_eng, tol):
         """Test thermal loss channel with no transmission produces thermal state"""
         eng, prog = setup_eng(1)

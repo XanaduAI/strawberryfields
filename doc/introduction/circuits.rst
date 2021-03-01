@@ -83,6 +83,7 @@ the same structure as the above example; in particular,
     Strawberry Fields also provides support for constructing and simulating photonic
     time domain multiplexing algorithms. For more details, please see :class:`~.TDMProgram`.
 
+.. _simulating_your_program:
 
 Simulating your program
 -----------------------
