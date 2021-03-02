@@ -2,10 +2,16 @@
 
 <h3>New features since last release</h3>
 
-* Adds the Bosonic backend, which can simulate states 
-  represented as linear combinations of Gaussian functions in phase 
-  space. It can be regarded as a generalization of the Gaussian backend, 
-  since transformations on states correspond to modifications of the means and 
+* Adds the Bosonic backend, which can simulate states represented as linear 
+  combinations of Gaussian functions in phase space.   
+  [#533](https://github.com/XanaduAI/strawberryfields/pull/533)
+  [#538](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [#539](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [#541](https://github.com/XanaduAI/strawberryfields/pull/541)
+  [#546](https://github.com/XanaduAI/strawberryfields/pull/546)
+  
+  It can be regarded as a generalization of the Gaussian backend, since 
+  transformations on states correspond to modifications of the means and 
   covariances of each Gaussian in the linear combination, along with changes to 
   the coefficients of the linear combination. Example states that can be 
   expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill, 
@@ -27,12 +33,17 @@
   ```
   
 * Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
-  for the Bosonic backend. `MSgate` is an implementation of inline squeezing that 
-  can be performed by interacting the target state with an ancillary squeezed 
-  vacuum state at a beamsplitter, measuring the ancillary mode with homodyne, 
-  and then applying a feed-forward displacement. The channel is implemented either
-  on average (as a Gaussian CPTP map) or in the single-shot implementation. If 
-  the single-shot implementation is used, the measurement outcome of the ancillary
+  for the Bosonic backend.
+  [#538](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [#539](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [#541](https://github.com/XanaduAI/strawberryfields/pull/541)
+  
+  `MSgate` is an implementation of inline squeezing that can be performed by 
+  interacting the target state with an ancillary squeezed vacuum state at a 
+  beamsplitter, measuring the ancillary mode with homodyne, and then applying 
+  a feed-forward displacement. The channel is implemented either on average 
+  (as a Gaussian CPTP map) or in the single-shot implementation. If the 
+  single-shot implementation is used, the measurement outcome of the ancillary
   mode is stored in the results object.
   
   ```python
@@ -57,13 +68,6 @@
   plt.contourf(xvec, pvec, wigner)
   plt.show()
   ```
-
-* The relevant pull requests for the Bosonic backend are:
-  [#533](https://github.com/XanaduAI/strawberryfields/pull/533), 
-  [#538](https://github.com/XanaduAI/strawberryfields/pull/538), 
-  [#539](https://github.com/XanaduAI/strawberryfields/pull/539), 
-  [#541](https://github.com/XanaduAI/strawberryfields/pull/541), and 
-  [#546](https://github.com/XanaduAI/strawberryfields/pull/546).
   
 <h3>Breaking Changes</h3>
 
