@@ -4,11 +4,11 @@
 
 * Adds the Bosonic backend, which can simulate states represented as linear 
   combinations of Gaussian functions in phase space.   
-  [#533](https://github.com/XanaduAI/strawberryfields/pull/533)
-  [#538](https://github.com/XanaduAI/strawberryfields/pull/538)
-  [#539](https://github.com/XanaduAI/strawberryfields/pull/539)
-  [#541](https://github.com/XanaduAI/strawberryfields/pull/541)
-  [#546](https://github.com/XanaduAI/strawberryfields/pull/546)
+  [(#533)](https://github.com/XanaduAI/strawberryfields/pull/533)
+  [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
+  [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
   
   It can be regarded as a generalization of the Gaussian backend, since 
   transformations on states correspond to modifications of the means and 
@@ -34,9 +34,9 @@
   
 * Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
   for the Bosonic backend.
-  [#538](https://github.com/XanaduAI/strawberryfields/pull/538)
-  [#539](https://github.com/XanaduAI/strawberryfields/pull/539)
-  [#541](https://github.com/XanaduAI/strawberryfields/pull/541)
+  [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
   
   `MSgate` is an implementation of inline squeezing that can be performed by 
   interacting the target state with an ancillary squeezed vacuum state at a 
