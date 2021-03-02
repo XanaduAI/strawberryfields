@@ -17,7 +17,7 @@ the average and single shot maps."""
 
 import strawberryfields as sf
 import numpy as np
-import pylab as plt
+import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 # Values of target squeezing

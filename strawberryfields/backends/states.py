@@ -1658,7 +1658,7 @@ class BaseBosonicState(BaseState):
 
         if mode > self._modes:
             raise ValueError(
-                "The number of specified modes cannot " "be larger than the number of subsystems."
+                "The number of specified modes cannot be larger than the number of subsystems."
             )
 
         weights, mus, covs = self.reduced_bosonic([mode])

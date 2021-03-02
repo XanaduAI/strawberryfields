@@ -2,8 +2,8 @@
 
 <h3>New features since last release</h3>
 
-* Adds the Bosonic backend, a new backend that can be used to simulate states 
-  that can be represented as linear combinations of Gaussian functions in phase 
+* Adds the Bosonic backend, which can simulate states 
+  represented as linear combinations of Gaussian functions in phase 
   space. It can be regarded as a generalization of the Gaussian backend, 
   since transformations on states correspond to modifications of the means and 
   covariances of each Gaussian in the linear combination, along with changes to 
@@ -26,12 +26,12 @@
   plt.show()
   ```
   
-* Adds `MSgate` the measurement-based squeezing gate, a new front-end operation 
+* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
   for the Bosonic backend. `MSgate` is an implementation of inline squeezing that 
   can be performed by interacting the target state with an ancillary squeezed 
   vacuum state at a beamsplitter, measuring the ancillary mode with homodyne, 
-  then applying a feedforward displacement. The channel is implemented either
-  on average as a Gaussian CPTP map, or in the single-shot implementation. If 
+  and then applying a feed-forward displacement. The channel is implemented either
+  on average (as a Gaussian CPTP map) or in the single-shot implementation. If 
   the single-shot implementation is used, the measurement outcome of the ancillary
   mode is stored in the results object.
   
@@ -70,9 +70,6 @@
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
 
 <h3>Documentation</h3>
-
-* All docstrings from the Bosonic backend appear in the documentation, analogously
-  to the other backends.
 
 <h3>Contributors</h3>
 

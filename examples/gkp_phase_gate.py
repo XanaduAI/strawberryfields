@@ -18,8 +18,8 @@ The qubit phase gate is applied using measurement-based squeezing."""
 
 import strawberryfields as sf
 import numpy as np
-import pylab as plt
-import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib import colors, colorbar
 
 
 sf.hbar = 1
@@ -69,9 +69,9 @@ else:
     cmax = -cmin
 
 fig, axs = plt.subplots(1, 5, figsize=(16, 4), gridspec_kw={"width_ratios": [1, 1, 1, 1, 0.05]})
-cmap = mpl.cm.RdBu
-norm = mpl.colors.Normalize(vmin=cmin, vmax=cmax)
-cb1 = mpl.colorbar.ColorbarBase(axs[4], cmap=cmap, norm=norm, orientation="vertical")
+cmap = plt.cm.RdBu
+norm = colors.Normalize(vmin=cmin, vmax=cmax)
+cb1 = colorbar.ColorbarBase(axs[4], cmap=cmap, norm=norm, orientation="vertical")
 ims = np.empty(4, dtype=object)
 axs[0].set_ylabel(r"p (units of $\sqrt{\hbar\pi}$)", fontsize=15)
 axs[0].set_title(r"$|+i^\epsilon\rangle_{gkp}$, $\epsilon$=0.1 (10 dB)", fontsize=15)
@@ -81,7 +81,7 @@ for i in range(4):
         p / np.sqrt(np.pi),
         wigners[i],
         levels=60,
-        cmap=mpl.cm.RdBu,
+        cmap=plt.cm.RdBu,
         vmin=cmin,
         vmax=cmax,
     )

@@ -17,7 +17,7 @@ for GKP and cat states."""
 
 import strawberryfields as sf
 import numpy as np
-import pylab as plt
+import matplotlib.pyplot as plt
 
 # Create cat state
 prog_cat = sf.Program(1)
