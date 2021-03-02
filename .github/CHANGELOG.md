@@ -58,8 +58,12 @@
   plt.show()
   ```
 
-* The relevant pull requests for the Bosonic backend are [#533], [#538], [#539], 
-  [#541], and [#546].
+* The relevant pull requests for the Bosonic backend are:
+  [#533](https://github.com/XanaduAI/strawberryfields/pull/533), 
+  [#538](https://github.com/XanaduAI/strawberryfields/pull/538), 
+  [#539](https://github.com/XanaduAI/strawberryfields/pull/539), 
+  [#541](https://github.com/XanaduAI/strawberryfields/pull/541), and 
+  [#546](https://github.com/XanaduAI/strawberryfields/pull/546).
   
 <h3>Breaking Changes</h3>
 
