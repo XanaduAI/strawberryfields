@@ -2,6 +2,73 @@
 
 <h3>New features since last release</h3>
 
+* Adds the Bosonic backend, which can simulate states represented as linear 
+  combinations of Gaussian functions in phase space.   
+  [(#533)](https://github.com/XanaduAI/strawberryfields/pull/533)
+  [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
+  [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
+  
+  It can be regarded as a generalization of the Gaussian backend, since 
+  transformations on states correspond to modifications of the means and 
+  covariances of each Gaussian in the linear combination, along with changes to 
+  the coefficients of the linear combination. Example states that can be 
+  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill, 
+  cat and Fock states.
+  
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('bosonic')
+
+  with prog.context as q:
+      sf.ops.GKP(epsilon=0.1) | q
+      sf.ops.MeasureX | q
+
+  results = eng.run(prog, shots=200)
+  samples = results.samples[:, 0]
+
+  plt.hist(samples, bins=100)
+  plt.show()
+  ```
+  
+* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
+  for the Bosonic backend.
+  [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
+  
+  `MSgate` is an implementation of inline squeezing that can be performed by 
+  interacting the target state with an ancillary squeezed vacuum state at a 
+  beamsplitter, measuring the ancillary mode with homodyne, and then applying 
+  a feed-forward displacement. The channel is implemented either on average 
+  (as a Gaussian CPTP map) or in the single-shot implementation. If the 
+  single-shot implementation is used, the measurement outcome of the ancillary
+  mode is stored in the results object.
+  
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('bosonic')
+  
+  with prog.context as q:
+      sf.ops.Catstate(alpha=2) | q
+      r = 0.3
+      # Average map
+      sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=True) | q
+      # Single-shot map
+      sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
+  
+  results = eng.run(prog)
+  ancilla_samples = results.ancilla_samples
+  
+  xvec = np.arange(-5, 5, 0.01)
+  pvec = np.arange(-5, 5, 0.01)
+  wigner = results.state.wigner(0, xvec, pvec)
+  
+  plt.contourf(xvec, pvec, wigner)
+  plt.show()
+  ```
+  
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -16,7 +83,9 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jeremy Swinarton.
+J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac, 
+Nicolás Quesada, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva, Ilan 
+Tzitrin.
 
 # Release 0.17.0 (current release)
 
