@@ -246,6 +246,31 @@ class TestBosonicCatStates:
             assert np.allclose(parity_complex, -1)
             assert np.allclose(parity_real, -1)
 
+    @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    def test_cat_marginal(self, alpha):
+        """Tests marginal method in BaseBosonicState."""
+        prog = sf.Program(1)
+        with prog.context as q:
+            sf.ops.Catstate(alpha) | q
+
+        backend = bosonic.BosonicBackend()
+        backend.run_prog(prog)
+        state = backend.state()
+
+        scale = np.sqrt(sf.hbar)
+        x = np.linspace(-6, 6, 1000) * scale
+
+        marginal = state.marginal(0, x)
+
+        # Calculate the wavefunction directly
+        disp = np.sqrt(2 * sf.hbar) * alpha
+        norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha) ** 2))
+        psi = np.exp(-((x - disp) ** 2) / (2 * sf.hbar))
+        psi += np.exp(-((x + disp) ** 2) / (2 * sf.hbar))
+        psi *= norm / (np.pi * sf.hbar) ** 0.25
+
+        assert np.allclose(marginal, abs(psi) ** 2)
+
 
 class TestBosonicFockStates:
     r"""Tests fock state method of the BosonicBackend class."""
