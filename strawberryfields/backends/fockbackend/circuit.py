@@ -792,3 +792,14 @@ class Circuit:
 
         # `homodyne_sample` will always be a single value since multiple shots is not supported
         return np.array([[homodyne_sample]])
+
+    def prepare_gkp(self, n, mode):
+        """
+        Prepares a mode in a fock state.
+        """
+
+        if self._pure:
+            self.prepare(ops.fockState(n, self._trunc), mode)
+        else:
+            st = ops.fockState(n, self._trunc)
+            self.prepare(np.outer(st, st.conjugate()), mode)

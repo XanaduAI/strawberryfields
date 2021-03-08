@@ -500,3 +500,66 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
         Hvals[i] = 2 * x * Hvals[i - 1] - 2 * (i - 1) * Hvals[i - 2]
 
     return q_tensor, Hvals
+
+
+def gen_alphas(t, k, epsilon):
+    """
+    Helper function to generate the displacements parameters associated with the teeth of
+    GKP computational basis state k
+    """
+    return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
+
+
+def gen_coeffs(t, k, epsilon):
+    """
+    Helper function to generate the coefficient parameters associated with the teeth of
+    GKP computational basis state k
+    """
+    return np.exp(-0.5 * np.pi * np.tanh(epsilon) * (k + 2 * t) ** 2)
+
+
+@functools.lru_cache()
+def squaregkpBasisState(i, amplepsilon, amplcutoff, cutoff):
+    """
+    Generate the Fock expansion of of the computational GKP basis states in Fock space.
+
+    Args:
+        i (int): a computational basis state label, can be either 0 or 1
+        amplepsilon (float): finite energy parameter of the state
+        amplcutoff (float): this determines how many terms to keep in the Hilbert space expansion
+        cutoff (int): Fock space truncation
+
+    Returns
+        (array): the expansion of the ith computational basis state in the Fock basis
+
+    """
+    z_max = int(np.ceil(np.sqrt(-0.25 / np.pi * np.log(amplcutoff) / np.tanh(amplepsilon))))
+    coeffs = [gen_coeffs(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
+    r = -0.5 * np.log(np.tanh(amplepsilon))
+    alphas = [gen_alphas(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
+    num_kets = len(alphas)
+    ket = [coeffs[j] * displacedSqueezed(alphas[j], 0, r, 0, cutoff) for j in range(num_kets)]
+    ket /= np.linalg.norm(ket)
+    return sum(ket)
+
+
+@functools.lru_cache()
+def squaregkpState(theta, phi, amplepsilon, amplcutoff, cutoff):
+    """
+    Args:
+        theta (float)
+        phi (float)
+        amplepsilon (float): finite energy parameter of the state
+        amplcutoff (float): this determines how many terms to keep
+        cutoff (int)
+
+    Returns:
+        tuple: arrays of the weights, means and covariances for the state
+    """
+    qubit_coeff0 = np.cos(theta / 2)
+    qubit_coeff1 = np.sin(theta / 2) * np.exp(-1j * phi)
+    ket0 = squaregkpState(0, amplepsilon, amplepsilon, cutoff)
+    ket1 = squaregkpState(1, amplepsilon, amplepsilon, cutoff)
+    ket = qubit_coeff0 * ket0 + qubit_coeff1 * ket1
+    ket /= np.linalg.norm(ket)
+    return ket
