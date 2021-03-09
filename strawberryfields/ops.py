@@ -100,10 +100,7 @@ class Operation:
             self._measurement_deps |= par_regref_deps(q)
 
     def __str__(self):
-        """String representation for the GKP operation using Blackbird syntax.
-
-        Assumes that the arguments to GKP can be lists with non-symbolic
-        entries, strings or scalars.
+        """String representation for the Operation using Blackbird syntax.
 
         Returns:
             str: string representation
@@ -113,15 +110,7 @@ class Operation:
             return self.__class__.__name__
 
         # class name and parameter values
-        temp = []
-        for i in self.p:
-            if isinstance(i, list):
-                temp.append(str(i))
-            elif isinstance(i, str):
-                temp.append(i)
-            else:
-                temp.append(par_str(i))
-
+        temp = [par_str(i) for i in self.p]
         return self.__class__.__name__ + "(" + ", ".join(temp) + ")"
 
     @property
