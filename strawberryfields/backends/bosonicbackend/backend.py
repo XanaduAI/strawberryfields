@@ -533,7 +533,7 @@ class BosonicBackend(BaseBosonic):
 
         return weights, means, cov
 
-    def prepare_gkp(self, state, epsilon, amplcutoff, cutoff, representation="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, amplcutoff, representation="real", shape="square"):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
