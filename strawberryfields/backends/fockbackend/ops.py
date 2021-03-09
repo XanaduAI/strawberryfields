@@ -323,7 +323,6 @@ def beamsplitter(theta, phi, trunc):
     .. _`beamsplitter operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html
     """
     # pylint: disable=bad-whitespace
-
     BS_tw = beamsplitter_tw(theta, phi, cutoff=trunc)
 
     # Transpose needed because of different conventions in SF and The Walrus.
