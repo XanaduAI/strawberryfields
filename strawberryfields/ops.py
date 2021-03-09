@@ -920,6 +920,31 @@ class GKP(Preparation):
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_gkp(*self.p, mode=reg[0])
 
+    def __str__(self):
+        """String representation for the GKP operation using Blackbird syntax.
+
+        Assumes that the arguments to GKP can be lists with non-symbolic
+        entries, strings or scalars.
+
+        Returns:
+            str: string representation
+        """
+        # defaults to the class name
+        if not self.p:
+            return self.__class__.__name__
+
+        # class name and parameter values
+        temp = []
+        for i in self.p:
+            if isinstance(i, list):
+                temp.append(str(i)) # Assumes that each value is a scalar
+            elif isinstance(i, str):
+                temp.append(i)
+            else:
+                temp.append(par_str(i))
+
+        return self.__class__.__name__ + "(" + ", ".join(temp) + ")"
+
 class Ket(Preparation):
     r"""Prepare mode(s) using the given ket vector(s) in the Fock basis.
 
