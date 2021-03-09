@@ -291,7 +291,9 @@ class FockBackend(BaseFock):
             )
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)
 
-    def prepare_gkp(self, state, epsilon, amplcutoff, representation="real", shape="square", mode=None):
+    def prepare_gkp(
+        self, state, epsilon, amplcutoff, representation="real", shape="square", mode=None
+    ):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
