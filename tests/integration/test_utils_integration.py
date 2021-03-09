@@ -274,7 +274,29 @@ class TestInitialStatesAgreeFock:
 
         assert np.allclose(expected, ket, atol=tol, rtol=0)
 
+@pytest.mark.backends("fock", "bosonic")
+class TestGKPTestConsistency:
+    def test_gkp_state_parity(self, setup_eng, cutoff, bsize, pure, tol):
+        """Test GKP state function matches in bosonic and fock backend"""
+        eng, prog = setup_eng(1)
 
+        with prog.context as q:
+            ops.GKP() | q[0]
+        state = eng.run(prog).state
+        assert np.allclose(1, state.parity_expectation([0]))
+    def test_gkp_complex_error(self, setup_eng, cutoff, bsize, pure, tol):
+        r"""Checks that trying to call a complex representation
+        raises an error.
+
+        This test can be updated once the complex representation is
+        implemented."""
+        eng, prog = setup_eng(1)
+
+        with prog.context as q:
+            ops.GKP(representation="complex") | q[0]
+
+        with pytest.raises(NotImplementedError):
+            eng.run(prog)
 # ===================================================================================
 # Operation integration tests
 # ===================================================================================
