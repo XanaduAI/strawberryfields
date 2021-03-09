@@ -383,7 +383,7 @@ class BosonicBackend(BaseBosonic):
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
-    def prepare_cat(self, alpha, phi, representation, cutoff, D):
+    def prepare_cat(self, alpha, phi, representation, amplcutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
@@ -392,7 +392,7 @@ class BosonicBackend(BaseBosonic):
             alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
-            cutoff (float): if using the ``'real'`` representation, this determines
+            amplcutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
             D (float): for ``'real'`` representation, quality parameter of approximation
 
@@ -440,9 +440,9 @@ class BosonicBackend(BaseBosonic):
             return weights, means, covs
 
         # The only remaining option is a real-valued cat state
-        return self.prepare_cat_real_rep(alpha, phi, cutoff, D)
+        return self.prepare_cat_real_rep(alpha, phi, amplcutoff, D)
 
-    def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
+    def prepare_cat_real_rep(self, alpha, phi, amplcutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
@@ -452,7 +452,7 @@ class BosonicBackend(BaseBosonic):
         Args:
             alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
-            cutoff (float): this determines how many terms to keep
+            amplcutoff (float): this determines how many terms to keep
             D (float): quality parameter of approximation
 
         Returns:
@@ -478,7 +478,7 @@ class BosonicBackend(BaseBosonic):
                 * np.sqrt(2)
                 * a
                 / (np.pi * np.sqrt(hbar))
-                * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
+                * np.sqrt((-2 * (E + v) * np.log(amplcutoff / prefac)))
             )
         )
 
@@ -520,7 +520,7 @@ class BosonicBackend(BaseBosonic):
         cov = np.concatenate((cov_real, cov))
 
         # filter out 0 components
-        filt = ~np.isclose(weights, 0, atol=cutoff)
+        filt = ~np.isclose(weights, 0, atol=amplcutoff)
         weights = weights[filt]
         means = means[filt]
         cov = cov[filt]
@@ -533,7 +533,7 @@ class BosonicBackend(BaseBosonic):
 
         return weights, means, cov
 
-    def prepare_gkp(self, state, epsilon, cutoff, representation="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, amplcutoff, cutoff, representation="real", shape="square"):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
@@ -545,7 +545,8 @@ class BosonicBackend(BaseBosonic):
         Args:
             state (list): ``[theta,phi]`` for qubit definition above
             epsilon (float): finite energy parameter of the state
-            cutoff (float): this determines how many terms to keep
+            amplcutoff (float): this determines how many terms to keep
+            cutoff (float): Fock cutoff, not used in the bosonic representation
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
 
@@ -616,7 +617,7 @@ class BosonicBackend(BaseBosonic):
                 np.sqrt(
                     -4
                     / np.pi
-                    * np.log(cutoff)
+                    * np.log(amplcutoff)
                     * (1 + np.exp(-2 * epsilon))
                     / (1 - np.exp(-2 * epsilon))
                 )
@@ -643,7 +644,7 @@ class BosonicBackend(BaseBosonic):
 
         # Calculate the weights for each peak
         weights = coeff(means)
-        filt = abs(weights) > cutoff
+        filt = abs(weights) > amplcutoff
         weights = weights[filt]
 
         weights /= np.sum(weights)

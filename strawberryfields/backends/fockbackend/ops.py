@@ -505,7 +505,7 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
 def gen_alphas(t, k, epsilon):
     """
     Helper function to generate the displacements parameters associated with the teeth of
-    GKP computational basis state k
+    GKP computational basis state k.
     """
     return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
 
@@ -513,7 +513,7 @@ def gen_alphas(t, k, epsilon):
 def gen_coeffs(t, k, epsilon):
     """
     Helper function to generate the coefficient parameters associated with the teeth of
-    GKP computational basis state k
+    GKP computational basis state k.
     """
     return np.exp(-0.5 * np.pi * np.tanh(epsilon) * (k + 2 * t) ** 2)
 
@@ -521,7 +521,7 @@ def gen_coeffs(t, k, epsilon):
 @functools.lru_cache()
 def squaregkpBasisState(i, amplepsilon, amplcutoff, cutoff):
     """
-    Generate the Fock expansion of of the computational GKP basis states in Fock space.
+    Generate the Fock expansion of a computational GKP basis state.
 
     Args:
         i (int): a computational basis state label, can be either 0 or 1
@@ -545,21 +545,24 @@ def squaregkpBasisState(i, amplepsilon, amplcutoff, cutoff):
 
 @functools.lru_cache()
 def squaregkpState(theta, phi, amplepsilon, amplcutoff, cutoff):
-    """
+    r"""
+    Generate the Fock expansion of an abitrary GKP state parametrized as
+    :math:`|\psi\rangle = \cos{\tfrac{\theta}{2}} \vert 0 \rangle_{\rm gkp} + e^{-i \phi} \sin{\tfrac{\theta}{2}} \vert 1 \rangle_{\rm gkp}`.
+
     Args:
-        theta (float)
-        phi (float)
+        theta (float): the colatitude with respect to the z-axis in the Bloch phere
+        phi (float): the longitude with respect to the x-axis in the Bloch shere
         amplepsilon (float): finite energy parameter of the state
         amplcutoff (float): this determines how many terms to keep
-        cutoff (int)
+        cutoff (int): Fock space truncation
 
     Returns:
         tuple: arrays of the weights, means and covariances for the state
     """
     qubit_coeff0 = np.cos(theta / 2)
     qubit_coeff1 = np.sin(theta / 2) * np.exp(-1j * phi)
-    ket0 = squaregkpState(0, amplepsilon, amplepsilon, cutoff)
-    ket1 = squaregkpState(1, amplepsilon, amplepsilon, cutoff)
+    ket0 = squaregkpBasisState(0, amplepsilon, amplcutoff, cutoff)
+    ket1 = squaregkpBasisState(1, amplepsilon, amplcutoff, cutoff)
     ket = qubit_coeff0 * ket0 + qubit_coeff1 * ket1
     ket /= np.linalg.norm(ket)
     return ket

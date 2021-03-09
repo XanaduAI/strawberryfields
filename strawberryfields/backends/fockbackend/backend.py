@@ -291,7 +291,7 @@ class FockBackend(BaseFock):
             )
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)
 
-    def prepare_gkp(self, state, amplepsilon, amplcutoff, cutoff, representation="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, amplcutoff, representation="real", shape="square", mode=None):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
@@ -321,4 +321,4 @@ class FockBackend(BaseFock):
             raise NotImplementedError("Only square GKP are implemented for now")
 
         theta, phi = state[0], state[1]
-        self.circuit.prepare_gkp(theta, phi, amplepsilon, amplcutoff, cutoff, self._remap_modes(mode))
+        self.circuit.prepare_gkp(theta, phi, epsilon, amplcutoff, self._remap_modes(mode))

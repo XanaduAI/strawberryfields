@@ -911,12 +911,14 @@ class GKP(Preparation):
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, cutoff=1e-12, representation="real", shape="square"
+        self, state=None, epsilon=0.2, amplcutoff=1e-12, representation="real", shape="square"
     ):
         if state is None:
             state = [0, 0]
-        super().__init__([state, epsilon, cutoff, representation, shape])
+        super().__init__([state, epsilon, amplcutoff, representation, shape])
 
+    def _apply(self, reg, backend, **kwargs):
+        backend.prepare_gkp(*self.p, mode=reg[0])
 
 class Ket(Preparation):
     r"""Prepare mode(s) using the given ket vector(s) in the Fock basis.
