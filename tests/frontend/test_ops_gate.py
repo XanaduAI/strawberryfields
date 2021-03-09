@@ -165,6 +165,18 @@ class TestGateBasics:
         # dagger should negate the first param
         assert applied_params == [-orig_params[0]] + orig_params[1:]
 
+class TestGKPBasics:
+    """Test the basic properties of the GKP state preparation"""
+
+    @pytest.mark.parametrize("state", [[0], [0, 0, 1]])
+    @pytest.mark.parametrize("ampl", [0, 0.001])
+    @pytest.mark.parametrize("eps", [0, 0.001])
+    @pytest.mark.parametrize("representation", ["real", "complex"])
+    @pytest.mark.parametrize("shape", ["square"])
+    def test_gkp_str_representation(self, state, ampl, eps, representation, shape):
+        """Test the string representation of the GKP operation"""
+        assert str(ops.GKP()) == f'GKP({str(state)}, {str(ampl)}, {str(eps)}, {representation}, {shape})'
+
 @pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
 class TestComplexError:
     """Tests for raising an error if a parameter passed is complex"""
