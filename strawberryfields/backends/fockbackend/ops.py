@@ -502,7 +502,7 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
     return q_tensor, Hvals
 
 
-def gen_alphas(t, k, epsilon):
+def gkp_displacements(t, k, epsilon):
     """
     Helper function to generate the displacements parameters associated with the teeth of
     GKP computational basis state k.
@@ -510,7 +510,7 @@ def gen_alphas(t, k, epsilon):
     return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
 
 
-def gen_coeffs(t, k, epsilon):
+def gkp_coeffs(t, k, epsilon):
     """
     Helper function to generate the coefficient parameters associated with the teeth of
     GKP computational basis state k.
@@ -534,9 +534,9 @@ def squaregkpBasisState(i, amplepsilon, amplcutoff, cutoff):
 
     """
     z_max = int(np.ceil(np.sqrt(-0.25 / np.pi * np.log(amplcutoff) / np.tanh(amplepsilon))))
-    coeffs = [gen_coeffs(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
+    coeffs = [gkp_coeffs(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
     r = -0.5 * np.log(np.tanh(amplepsilon))
-    alphas = [gen_alphas(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
+    alphas = [gkp_displacements(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
     num_kets = len(alphas)
     ket = [coeffs[j] * displacedSqueezed(alphas[j], 0, r, 0, cutoff) for j in range(num_kets)]
     ket /= np.linalg.norm(ket)
