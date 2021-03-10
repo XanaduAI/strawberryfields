@@ -278,7 +278,7 @@ def fock_state(n, fock_dim=5):
 
 
 def cat_state(a, phi=0, p=0, fock_dim=5):
-    r""" Returns the cat state
+    r"""Returns the cat state
 
     .. math::
 
