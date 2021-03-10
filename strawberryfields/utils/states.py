@@ -304,7 +304,7 @@ def cat_state(a, p=0, fock_dim=5):
     N = temp / np.sqrt(2 * (1 + np.cos(phi) * temp ** 4))
 
     # coherent states
-    k = np.arange(fock_dim)
+    k = np.arange(fock_dim, dtype='float')
     c1 = (a ** k) / np.sqrt(fac(k))
     c2 = ((-a) ** k) / np.sqrt(fac(k))
 
