@@ -860,15 +860,15 @@ class Catstate(Preparation):
         alpha = self.p[0]
         phi = np.pi * self.p[1]
         D = backend.get_cutoff_dim()
-        l = np.arange(D, dtype="float")[:, np.newaxis]
+        l = np.arange(D)[:, np.newaxis]
 
         # normalization constant
         temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
         N = temp / pf.sqrt(2 * (1 + pf.cos(phi) * temp ** 4))
 
         # coherent states
-        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
-        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
+        c1 = ((1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
+        c2 = ((-1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
         # add them up with a relative phase
         ket = (c1 + pf.exp(1j * phi) * c2) * N
 
