@@ -860,7 +860,7 @@ class Catstate(Preparation):
         alpha = self.p[0]
         phi = np.pi * self.p[1]
         D = backend.get_cutoff_dim()
-        l = np.arange(D)[:, np.newaxis]
+        l = np.arange(D, dtype='float')[:, np.newaxis]
 
         # normalization constant
         temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
