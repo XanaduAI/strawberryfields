@@ -82,22 +82,6 @@ ns1 = 1
 ns2 = 2
 d1 = [is1, t1, U1, w1, ns1, cf]
 d2 = [is2, t2, U2, w2, ns2, cf]
-sample1 = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1], [0, 2]]
-sample2 = [
-    [0, 2, 0],
-    [1, 0, 1],
-    [0, 0, 2],
-    [2, 0, 0],
-    [0, 2, 0],
-    [0, 0, 2],
-    [0, 1, 1],
-    [1, 0, 1],
-    [0, 1, 1],
-    [0, 2, 0],
-]
-prob1 = 0.4
-prob2 = 0.3
-
 
 sq1 = [[0.2, 0.1], [0.8, 0.2]]
 sq2 = [[0.2, 0.1], [0.8, 0.2], [0.2, 0.1]]
@@ -114,24 +98,45 @@ c2 = [alpha2, t2, U2, w2, ns2]
 
 @pytest.mark.parametrize("time, unitary, frequency, prob", [(t1, U1, w1, p1), (t2, U2, w2, p2)])
 def test_evolution(time, unitary, frequency, prob):
-    """Test if the function ``strawberryfields.apps.qchem.dynamics.evolution`` gives the correct
+    """Test if the function ``strawberryfields.apps.qchem.dynamics.TimeEvolution`` gives the correct
     probabilities of all possible Fock basis states when used in a circuit"""
 
     modes = len(unitary)
-    op = dynamics.evolution(modes)
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 4})
-    gbs = sf.Program(modes)
+    prog = sf.Program(modes)
 
-    with gbs.context as q:
+    with prog.context as q:
 
         sf.ops.Fock(2) | q[0]
 
-        op(time, unitary, frequency) | q
+        sf.ops.Interferometer(unitary.T) | q
 
-        p = eng.run(gbs).state.all_fock_probs()
+        dynamics.TimeEvolution(frequency, time) | q
+
+        sf.ops.Interferometer(unitary) | q
+
+        p = eng.run(prog).state.all_fock_probs()
 
     assert np.allclose(p, prob)
+
+
+@pytest.mark.parametrize("time, frequency", [(t2, w2)])
+def test_evolution_order(time, frequency):
+    """Test if function ``strawberryfields.apps.qchem.dynamics.TimeEvolution``correctly applies the
+    operations"""
+
+    modes = len(frequency)
+
+    prog = sf.Program(modes)
+
+    with prog.context as q:
+
+        dynamics.TimeEvolution(frequency, time) | q
+
+    assert isinstance(prog.circuit[0].op, sf.ops.Rgate)
+    assert isinstance(prog.circuit[1].op, sf.ops.Rgate)
+    assert isinstance(prog.circuit[2].op, sf.ops.Rgate)
 
 
 @pytest.mark.parametrize("d", [d1, d2])
@@ -174,7 +179,7 @@ class TestSampleFock:
         mode is not smaller than cutoff."""
         with pytest.raises(
             ValueError,
-            match="Number of photons in each input state mode must be smaller than cutoff",
+            match="Number of photons in each input mode must be smaller than cutoff",
         ):
             in_state, t, U, w, ns, cf = d
             dynamics.sample_fock([i * 2 for i in in_state], t, U, w, ns, 3)
@@ -196,50 +201,6 @@ class TestSampleFock:
             assert isinstance(p_func.circuit[4].op, sf.ops.Rgate)
             assert isinstance(p_func.circuit[5].op, sf.ops.Interferometer)
             assert isinstance(p_func.circuit[6].op, sf.ops.MeasureFock)
-
-
-e1 = [sample1, is1, prob1]
-e2 = [sample2, is2, prob2]
-
-
-@pytest.mark.parametrize("e", [e1, e2])
-class TestProb:
-    """Tests for the function ``strawberryfields.apps.qchem.dynamics.prob``"""
-
-    def test_correct_prob(self, e):
-        """Test if the function returns the correct probability"""
-        samples, state, pref = e
-        p = dynamics.prob(samples, state)
-
-        assert p == pref
-
-    def test_empty_samples(self, e):
-        """Test if function raises a ``ValueError`` when the samples list is empty."""
-        with pytest.raises(ValueError, match="The samples list must not be empty"):
-            _, state, _ = e
-            dynamics.prob([], state)
-
-    def test_empty_state(self, e):
-        """Test if function raises a ``ValueError`` when the given state is empty."""
-        with pytest.raises(ValueError, match="The excited state list must not be empty"):
-            samples, _, _ = e
-            dynamics.prob(samples, [])
-
-    def test_n_modes(self, e):
-        """Test if function raises a ``ValueError`` when the number of modes in the samples and
-        the state are different."""
-        with pytest.raises(
-            ValueError, match="The number of modes in the samples and the excited state must be"
-        ):
-            samples, state, _ = e
-            dynamics.prob(samples, state + [0])
-
-    def test_negative_state(self, e):
-        """Test if function raises a ``ValueError`` when the given excited state contains negative
-        values."""
-        with pytest.raises(ValueError, match="The excited state must not contain negative values"):
-            samples, state, _ = e
-            dynamics.prob(samples, [-i for i in state])
 
 
 @pytest.mark.parametrize("c", [c1, c2])
@@ -369,64 +330,6 @@ class TestCommon:
             assert dims == (par[4], len(par[2]))
         assert samples.dtype == "int"
         assert (samples >= 0).all()
-
-
-class TestMarginals:
-    """Tests for the function ``strawberryfields.apps.qchem.dynamics.marginals``"""
-
-    mu = np.array([0.00000000, 2.82842712, 0.00000000, 0.00000000, 0.00000000, 0.00000000])
-    V = np.array(
-        [
-            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-        ]
-    )
-    n = 10
-    p = np.array(
-        [
-            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            [
-                1.35335284e-01,
-                2.70670567e-01,
-                2.70670566e-01,
-                1.80447044e-01,
-                9.02235216e-02,
-                3.60894085e-02,
-                1.20298028e-02,
-                3.43708650e-03,
-                8.59271622e-04,
-                1.90949249e-04,
-            ],
-            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        ]
-    )
-
-    def test_correct_marginals(self):
-        """Test if the function returns the correct probabilities"""
-        assert np.allclose(dynamics.marginals(self.mu, self.V, self.n), self.p)
-
-    def test_square_covariance(self):
-        """Test if function raises a ``ValueError`` when the covariance matrix is not square."""
-        with pytest.raises(ValueError, match="The covariance matrix must be a square matrix"):
-            dynamics.marginals(self.mu, np.hstack((self.V, np.ones((6, 1)))), self.n)
-
-    def test_incorrect_modes(self):
-        """Test if function raises a ``ValueError`` when the number of modes in the displacement
-        vector and the covariance matrix are different."""
-        with pytest.raises(
-            ValueError, match="The dimension of the displacement vector and the covariance"
-        ):
-            dynamics.marginals(np.append(self.mu, 0), self.V, self.n)
-
-    def test_incorrect_states(self):
-        """Test if function raises a ``ValueError`` when the number of vibrational states is not
-        larger than zero."""
-        with pytest.raises(ValueError, match="The number of vibrational states must be larger"):
-            dynamics.marginals(self.mu, self.V, 0)
 
 
 @pytest.mark.parametrize("tmsv", [tmsv1, tmsv2])

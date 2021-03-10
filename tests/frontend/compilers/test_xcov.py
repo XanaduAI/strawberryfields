@@ -529,3 +529,30 @@ class TestXCompilation:
         # extract the Gaussian symplectic matrix
         res = res.compile(compiler="gaussian_unitary")
         assert not res.circuit
+
+
+    def test_nothing_happens_and_nothing_crashes(self):
+        """Test that even a program that does nothing compiles correctly"""
+        n_modes = 4
+        squeezing_amplitudes = [0] * n_modes
+        unitary = np.identity(n_modes)
+
+        prog = sf.Program(n_modes * 2)
+
+        with prog.context as q:
+            for i in range(n_modes):
+                ops.S2gate(squeezing_amplitudes[i]) | (q[i], q[i + n_modes])
+            for qumodes in (q[:n_modes], q[n_modes:]):
+                ops.Interferometer(unitary) | qumodes
+            ops.MeasureFock() | q
+
+        res = prog.compile(compiler="Xcov")
+
+        # check that all squeezing is 0
+        assert all(cmd.op.p[0] == 0 for cmd in res.circuit if isinstance(cmd.op, ops.S2gate))
+
+        # check that all phase shifts are 0
+        assert all(cmd.op.p[0] == 0 for cmd in res.circuit if isinstance(cmd.op, ops.Rgate))
+
+        # check that all MZgate angles are pi
+        assert all(cmd.op.p[0] == np.pi for cmd in res.circuit if isinstance(cmd.op, ops.MZgate))

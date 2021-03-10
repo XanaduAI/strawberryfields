@@ -144,7 +144,7 @@ Before submitting a pull request, please make sure the following is done:
 
 * Once you have submitted the pull request, three things will automatically occur:
 
-  - The **test suite** will automatically run on [Travis CI](https://travis-ci.org/XanaduAI/strawberryfields)
+  - The **test suite** will automatically run on [GitHub actions](https://github.com/XanaduAI/strawberryfields/actions?query=workflow%3ATests)
     to ensure that the all tests continue to pass.
   - Once the test suite is finished, a **code coverage report** will be generated on
     [Codecov](https://codecov.io/gh/XanaduAI/strawberryfields). This will calculate the percentage of Strawberry Fields

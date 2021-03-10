@@ -3,9 +3,9 @@
 
 ##################################################
 
-.. image:: https://img.shields.io/travis/XanaduAI/strawberryfields/master.svg?style=popout-square
-    :alt: Travis
-    :target: https://travis-ci.org/XanaduAI/strawberryfields
+.. image:: https://img.shields.io/github/workflow/status/XanaduAI/strawberryfields/Tests/master?logo=github&style=flat-square
+    :alt: GitHub Workflow Status (branch)
+    :target: https://github.com/XanaduAI/strawberryfields/actions?query=workflow%3ATests
 
 .. image:: https://img.shields.io/codecov/c/github/xanaduai/strawberryfields/master.svg?style=popout-square
     :alt: Codecov coverage
@@ -28,7 +28,7 @@
     :target: https://pypi.org/project/StrawberryFields
 
 `Strawberry Fields <https://strawberryfields.readthedocs.io>`_ is a full-stack Python library for designing,
-simulating, and optimizing continuous variable quantum
+simulating, and optimizing continuous-variable quantum
 optical circuits.
 
 
@@ -39,15 +39,22 @@ Features
 
     <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/StateLearning.gif" width="300px"  align="right">
 
-* An open-source software architecture for **photonic quantum computing**
+* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware
+  <https://strawberryfields.ai/photonics/hardware/index.html>`__
 
-* Execute algorithms on  **photonic quantum computing chips** via the Xanadu Quantum Cloud
+* `High-level functions <https://strawberryfields.ai/photonics/applications.html>`__ for **solving
+  practical problems** including **graph and network optimization**, **machine learning**, and
+  **chemistry**
 
-* Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**
+* Includes a suite of world-class simulators—based on cutting-edge algorithms—to compile and
+  simulate photonic algorithms
 
-* Includes **quantum simulators** implemented using **NumPy** and **TensorFlow**—with built-in quantum compilation
+* `Train and optimize
+  <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
+  your quantum programs with our end-to-end differentiable TensorFlow backend
 
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
+* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows
+  anyone to run a quantum computing simulation via **drag and drop**
 
 
 Installation
@@ -63,19 +70,34 @@ Strawberry Fields requires Python version 3.6, 3.7, or 3.8. Installation of Stra
 Getting started
 ===============
 
-To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates, and watch your simulation run in real time right in your web browser.
+To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive
+<https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates,
+and watch your simulation run in real time right in your web browser.
 
-For getting started with writing your own Strawberry Fields code, follow the `installation <https://strawberryfields.readthedocs.io/en/stable/_static/install.html>`_ page to get Strawberry Fields up and running, then jump over to the `tutorials <https://strawberryfields.readthedocs.io/en/stable/introduction/tutorials.html>`_ to see what you can do.
+To get started with writing your own Strawberry Fields code, begin with our `photonic circuit
+quickstart guides
+<https://strawberryfields.readthedocs.io/en/stable/introduction/introduction.html>`__, before
+exploring our many `tutorials <https://strawberryfields.ai/photonics/demonstrations.html>`__ and
+`applications <https://strawberryfields.ai/photonics/applications.html>`__.
 
-Users interested in applications of photonic quantum computers should check out the `Graphs and Networks <https://strawberryfields.readthedocs.io/en/stable/introduction/graphs.html>`_, `Machine Learning <https://strawberryfields.readthedocs.io/en/stable/introduction/ml.html>`_ and `Chemistry <https://strawberryfields.readthedocs.io/en/stable/introduction/chemistry.html>`_ pages. Those wanting to dig deeper into the design of circuits can head to the `quantum circuits <https://strawberryfields.readthedocs.io/en/stable/introduction/circuits.html>`_ page.
+.. raw:: html
 
-Developers can head to the `development guide <https://strawberryfields.readthedocs.io/en/stable/development/development_guide.html>`_ to see how they can contribute to Strawberry Fields.
+    <a href="https://strawberryfields.ai/photonics/demonstrations.html">
+    <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/readme_panel1.png" width="900px">
+    </a>
 
+Finally, read more about using Strawberry Fields with `photonic hardware
+<https://strawberryfields.ai/photonics/hardware/index.html>`__, including code demonstrations
+and an overview of Xanadu's quantum photonic hardware.
+
+Developers can head to the `development guide
+<https://strawberryfields.readthedocs.io/en/stable/development/development_guide.html>`_ to see how
+they can contribute to Strawberry Fields.
 
 Contributing to Strawberry Fields
 =================================
 
-We welcome contributions - simply fork the Strawberry Fields repository, and then make a
+We welcome contributions—simply fork the Strawberry Fields repository, and then make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.  All contributors to Strawberry Fields will be listed as authors on the releases.
 
 We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects or applications built on Strawberry Fields.

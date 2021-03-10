@@ -63,80 +63,51 @@ device has the following form:
    (or modes) is computed for time :math:`t`.
 
 This module contains functions for implementing this algorithm.
-
-- The function :func:`~.evolution` returns a custom ``sf`` operation that contains the required
-  unitary and rotation operations explained in steps 2-4 of the algorithm.
-
-- The function :func:`~.sample_fock` generates samples for simulating vibrational quantum dynamics
-  in molecules with a Fock input state.
-
-- The function :func:`~.sample_coherent` generates samples for simulating vibrational quantum
-  dynamics in molecules with a coherent input state.
-
-- The function :func:`~.sample_tmsv` generates samples for simulating vibrational quantum dynamics
-  in molecules with a two-mode squeezed vacuum input state.
-
-- The function :func:`~.prob` estimates the probability of observing a desired excitation in the
-  generated samples.
-
-- The function :func:`~.marginals` generates single-mode marginal distributions from the
-  displacement vector and covariance matrix of a Gaussian state.
 """
 import warnings
 
 import numpy as np
 from scipy.constants import c, pi
-from thewalrus import quantum
 
 import strawberryfields as sf
 from strawberryfields.utils import operation
 
 
-def evolution(modes: int):
-    r"""Generates a custom ``sf`` operation for performing the transformation
-    :math:`U(t) = U_l e^{-i\hat{H}t/\hbar} U_l^\dagger` on a given state.
+def TimeEvolution(w: np.ndarray, t: float):
+    r"""An operation for performing the transformation
+    :math:`e^{-i\hat{H}t/\hbar}` on a given state where :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
+    defines a Hamiltonian of independent quantum harmonic oscillators
 
-    The custom operation returned by this function can be used as part of a Strawberry Fields
-    :class:`~.Program` just like any other operation from the :mod:`~.ops` module. Its arguments
-    are:
-
-    - t (float): time in femtoseconds
-    - Ul (array): normal-to-local transformation matrix :math:`U_l`
-    - w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
-      compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
+    This operation can be used as part of a Strawberry Fields :class:`~.Program` just like any
+    other operation from the :mod:`~.ops` module.
 
     **Example usage:**
 
     >>> modes = 2
-    >>> transform =  evolution(modes)
     >>> p = sf.Program(modes)
     >>> with p.context as q:
-    >>>     sf.ops.Fock(1) | q[0]
-    >>>     sf.ops.Fock(2) | q[1]
-    >>>     transform(t, Ul, w) | q
+    ...     sf.ops.Fock(1) | q[0]
+    ...     sf.ops.Interferometer(Ul.T) | q
+    ...     TimeEvolution(w, t) | q
+    ...     sf.ops.Interferometer(Ul) | q
 
     Args:
-        modes (int): number of modes
-
-    Returns:
-        an ``sf`` operation for enacting the dynamics transformation
-    Return type:
-        op
+        w (array): normal mode frequencies :math:`\omega` in units of :math:`\mbox{cm}^{-1}` that
+            compose the Hamiltonian :math:`\hat{H} = \sum_i \hbar \omega_i a_i^\dagger a_i`
+        t (float): time in femtoseconds
     """
     # pylint: disable=expression-not-assigned
-    @operation(modes)
-    def op(t, Ul, w, q):
+    n_modes = len(w)
+
+    @operation(n_modes)
+    def op(q):
 
         theta = -w * 100.0 * c * 1.0e-15 * t * (2.0 * pi)
 
-        sf.ops.Interferometer(Ul.T) | q
-
-        for i in range(modes):
+        for i in range(n_modes):
             sf.ops.Rgate(theta[i]) | q[i]
 
-        sf.ops.Interferometer(Ul) | q
-
-    return op
+    return op()
 
 
 def sample_fock(
@@ -155,7 +126,7 @@ def sample_fock(
     >>> input_state = [0, 2]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])
+    ...                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> cutoff = 5
@@ -190,10 +161,10 @@ def sample_fock(
         raise ValueError("Input state must not contain negative values")
 
     if max(input_state) >= cutoff:
-        raise ValueError("Number of photons in each input state mode must be smaller than cutoff")
+        raise ValueError("Number of photons in each input mode must be smaller than cutoff")
 
     modes = len(Ul)
-    op = evolution(modes)
+
     s = []
 
     eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff})
@@ -206,7 +177,11 @@ def sample_fock(
         for i in range(modes):
             sf.ops.Fock(input_state[i]) | q[i]
 
-        op(t, Ul, w) | q
+        sf.ops.Interferometer(Ul.T) | q
+
+        TimeEvolution(w, t) | q
+
+        sf.ops.Interferometer(Ul) | q
 
         if loss:
             for _q in q:
@@ -220,59 +195,29 @@ def sample_fock(
     return s
 
 
-def prob(samples: list, excited_state: list) -> float:
-    r"""Estimate probability of observing an excited state.
-
-    The probability is estimated by calculating the relative frequency of the excited
-    state among the samples.
-
-    **Example usage:**
-
-    >>> excited_state = [0, 2]
-    >>> samples = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1]]
-    >>> prob(samples, excited_state)
-    0.3333333333333333
-
-    Args:
-        samples list[list[int]]: a list of samples
-        excited_state (list): a Fock state
-
-    Returns:
-        float: probability of observing a Fock state in the given samples
-    """
-    if len(samples) == 0:
-        raise ValueError("The samples list must not be empty")
-
-    if len(excited_state) == 0:
-        raise ValueError("The excited state list must not be empty")
-
-    if not len(excited_state) == len(samples[0]):
-        raise ValueError("The number of modes in the samples and the excited state must be equal")
-
-    if np.any(np.array(excited_state) < 0):
-        raise ValueError("The excited state must not contain negative values")
-
-    return samples.count(excited_state) / len(samples)
-
-
 def sample_tmsv(
-    r: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
+    r: list,
+    t: float,
+    Ul: np.ndarray,
+    w: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
 ) -> list:
     r"""Generate samples for simulating vibrational quantum dynamics with a two-mode squeezed
     vacuum input state.
 
     This function generates samples from a GBS device with two-mode squeezed vacuum input states.
     Given :math:`N` squeezing parameters and an :math:`N`-dimensional normal-to-local transformation
-    matrix, a GBS device with :math:`2N` modes is simulated. The evolution operator acts on only
-    the first :math:`N` modes in the device. Samples are generated by measuring the number of photons
-    in each of the :math:`2N` modes.
+    matrix, a GBS device with :math:`2N` modes is simulated. The :func:`~.TimeEvolution` operator
+    acts only on the first :math:`N` modes in the device. Samples are generated by measuring the
+    number of photons in each of the :math:`2N` modes.
 
     **Example usage:**
 
     >>> r = [[0.2, 0.1], [0.8, 0.2]]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])
+    ...                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> sample_tmsv(r, t, Ul, w, n_samples)
@@ -302,7 +247,6 @@ def sample_tmsv(
         )
 
     N = len(Ul)
-    op = evolution(N)
 
     eng = sf.LocalEngine(backend="gaussian")
     prog = sf.Program(2 * N)
@@ -313,7 +257,11 @@ def sample_tmsv(
         for i in range(N):
             sf.ops.S2gate(r[i][0], r[i][1]) | (q[i], q[i + N])
 
-        op(t, Ul, w) | q[:N]
+        sf.ops.Interferometer(Ul.T) | q[:N]
+
+        TimeEvolution(w, t) | q[:N]
+
+        sf.ops.Interferometer(Ul) | q[:N]
 
         if loss:
             for _q in q:
@@ -330,7 +278,12 @@ def sample_tmsv(
 
 
 def sample_coherent(
-    alpha: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
+    alpha: list,
+    t: float,
+    Ul: np.ndarray,
+    w: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
 ) -> list:
     r"""Generate samples for simulating vibrational quantum dynamics with an input coherent state.
 
@@ -339,7 +292,7 @@ def sample_coherent(
     >>> alpha = [[0.3, 0.5], [1.4, 0.1]]
     >>> t = 10.0
     >>> Ul = np.array([[0.707106781, -0.707106781],
-    >>>                [0.707106781, 0.707106781]])
+    ...                [0.707106781, 0.707106781]])
     >>> w = np.array([3914.92, 3787.59])
     >>> n_samples = 5
     >>> sample_coherent(alpha, t, Ul, w, n_samples)
@@ -370,7 +323,6 @@ def sample_coherent(
         )
 
     modes = len(Ul)
-    op = evolution(modes)
 
     eng = sf.LocalEngine(backend="gaussian")
 
@@ -382,7 +334,11 @@ def sample_coherent(
         for i in range(modes):
             sf.ops.Dgate(alpha[i][0], alpha[i][1]) | q[i]
 
-        op(t, Ul, w) | q
+        sf.ops.Interferometer(Ul.T) | q
+
+        TimeEvolution(w, t) | q
+
+        sf.ops.Interferometer(Ul) | q
 
         if loss:
             for _q in q:
@@ -396,61 +352,3 @@ def sample_coherent(
         s = eng.run(prog, shots=n_samples).samples
 
     return s.tolist()
-
-
-def marginals(mu: np.ndarray, V: np.ndarray, n_max: int, hbar: float = 2.0) -> np.ndarray:
-    r"""Generate single-mode marginal distributions from the displacement vector and covariance
-    matrix of a Gaussian state.
-
-    **Example usage:**
-
-    >>> mu = np.array([0.00000000, 2.82842712, 0.00000000,
-    >>>                0.00000000, 0.00000000, 0.00000000])
-    >>> V = np.array([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    >>>               [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-    >>>               [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-    >>>               [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-    >>>               [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-    >>>               [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
-    >>> n_max = 10
-    >>> marginals(mu, V, n_max)
-    array([[1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00],
-           [1.35335284e-01, 2.70670567e-01, 2.70670566e-01, 1.80447044e-01,
-            9.02235216e-02, 3.60894085e-02, 1.20298028e-02, 3.43708650e-03,
-            8.59271622e-04, 1.90949249e-04],
-           [1.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
-            0.00000000e+00, 0.00000000e+00]])
-
-    Args:
-        mu (array): displacement vector
-        V (array): covariance matrix
-        n_max (int): maximum number of vibrational quanta in the distribution
-        hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
-
-    Returns:
-        array[list[float]]: marginal distributions
-    """
-    if not V.shape[0] == V.shape[1]:
-        raise ValueError("The covariance matrix must be a square matrix")
-
-    if not len(mu) == len(V):
-        raise ValueError(
-            "The dimension of the displacement vector and the covariance matrix must be equal"
-        )
-
-    if n_max <= 0:
-        raise ValueError("The number of vibrational states must be larger than zero")
-
-    n_modes = len(mu) // 2
-
-    p = np.zeros((n_modes, n_max))
-
-    for mode in range(n_modes):
-        mui, vi = quantum.reduced_gaussian(mu, V, mode)
-        for i in range(n_max):
-            p[mode, i] = np.real(quantum.density_matrix_element(mui, vi, [i], [i], hbar=hbar))
-
-    return p

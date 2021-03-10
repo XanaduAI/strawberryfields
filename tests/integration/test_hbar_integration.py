@@ -33,7 +33,7 @@ HBAR = [0.5, 1]
 @pytest.mark.parametrize("hbar", HBAR, indirect=True)
 class TestIntegration:
     """Tests that go through the frontend and backend, and state object"""
-
+    
     def test_squeeze_variance_frontend(self, setup_eng, hbar, tol):
         """test homodyne measurement of a squeeze state is correct,
         returning a variance of np.exp(-2*r)*h/2, via the frontend"""
@@ -54,30 +54,36 @@ class TestIntegration:
             np.var(res), np.exp(-2 * R) * hbar / 2, atol=STD_10 + tol, rtol=0
         )
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_x_displacement(self, setup_eng, hbar, tol):
-        """test x displacement on the Gaussian backend gives correct displacement"""
+        """test x displacement on the Gaussian and Bosonic backends gives correct displacement"""
         eng, prog = setup_eng(1)
 
         with prog.context as q:
             ops.Xgate(X) | q
 
         state = eng.run(prog).state
-        mu_x = state.means()[0]
+        if eng.backend_name == "gaussian":
+            mu_x = state.means()[0]
+        elif eng.backend_name == "bosonic":
+            mu_x = state.means()[0,0]
 
         assert state.hbar == hbar
         assert np.allclose(mu_x, X, atol=tol, rtol=0)
 
-    @pytest.mark.backends("gaussian")
+    @pytest.mark.backends("gaussian", "bosonic")
     def test_z_displacement(self, setup_eng, hbar, tol):
-        """test x displacement on the Gaussian backend gives correct displacement"""
+        """test x displacement on the Gaussian and Bosonic backends gives correct displacement"""
         eng, prog = setup_eng(1)
 
         with prog.context as q:
             ops.Zgate(P) | q
 
         state = eng.run(prog).state
-        mu_z = state.means()[1]
+        if eng.backend_name == "gaussian":
+            mu_z = state.means()[1]
+        elif eng.backend_name == "bosonic":
+            mu_z = state.means()[0,1]
 
         assert state.hbar == hbar
         assert np.allclose(mu_z, P, atol=tol, rtol=0)

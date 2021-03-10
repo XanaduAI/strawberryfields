@@ -292,7 +292,7 @@ def rotation_matrix(phi):
 
 @functools.lru_cache()
 def sympmat(n):
-    r""" Returns the symplectic matrix of order n
+    r"""Returns the symplectic matrix of order n
 
     Args:
         n (int): order

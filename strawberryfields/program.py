@@ -51,10 +51,10 @@ using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_
 import copy
 import numbers
 import warnings
+import networkx as nx
 
 import blackbird as bb
 from blackbird.utils import match_template
-import networkx as nx
 
 import strawberryfields as sf
 
@@ -138,12 +138,17 @@ class Program:
     def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
+        #: str: program type
+        self.type = None
         #: list[Command]: Commands constituting the quantum circuit in temporal order
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target Compiler template, otherwise None
         self._target = None
+        #: tuple, None: for compiled Programs, the device spec and the short
+        # name of Compiler that was used, otherwise None
+        self._compile_info = None
         #: Program, None: for compiled Programs, this is the original, otherwise None
         self.source = None
         #: dict[str, Parameter]: free circuit parameters owned by this Program
@@ -446,6 +451,71 @@ class Program:
             p.source = self.source
         return p
 
+    def assert_number_of_modes(self, device):
+        """Check that the number of modes in the program is valid for the given device.
+
+        Args:
+            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+                ``device.modes`` must be an integer, containing the allowed number of modes
+                for the target.
+        """
+        # Program subsystems may be created and destroyed during execution. The length
+        # of the program registers represents the total number of modes that has ever existed.
+        modes_total = len(self.reg_refs)
+
+        if modes_total > device.modes:
+            raise CircuitError(
+                f"This program contains {modes_total} modes, but the device '{device.target}' "
+                f"only supports a {device.modes}-mode program."
+            )
+
+    def assert_max_number_of_measurements(self, device):
+        """Check that the number of measurements in the circuit doesn't exceed the number of allowed
+        measurements according to the device specification.
+
+        Args:
+            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+                ``device.modes`` must be a dictionary, containing the maximum number of allowed
+                measurements for the specified target.
+
+        """
+        num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
+
+        try:
+            max_pnr = device.modes["max"]["pnr"]
+            max_homodyne = device.modes["max"]["homodyne"]
+            max_heterodyne = device.modes["max"]["heterodyne"]
+        except (KeyError, TypeError) as e:
+            raise KeyError(
+                "Device specification must contain an entry for the maximum allowed number "
+                "of measurments. Have you specified the correct target?"
+            ) from e
+
+        for c in self.circuit:
+            op_name = str(c.op)
+            if "MeasureFock" in op_name:
+                num_pnr += len(c.reg)
+            elif "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
+                num_homodyne += len(c.reg)
+            elif "MeasureHeterodyne" in op_name or "MeasureHD" in op_name:
+                num_heterodyne += len(c.reg)
+
+        if num_pnr > max_pnr:
+            raise CircuitError(
+                f"This program contains {num_pnr} fock measurements. "
+                f"A maximum of {max_pnr} fock measurements are supported."
+            )
+        if num_homodyne > max_homodyne:
+            raise CircuitError(
+                f"This program contains {num_homodyne} homodyne measurements. "
+                f"A maximum of {max_homodyne} homodyne measurements are supported."
+            )
+        if num_heterodyne > max_heterodyne:
+            raise CircuitError(
+                f"This program contains {num_heterodyne} heterodyne measurements. "
+                f"A maximum of {max_heterodyne} heterodyne measurements are supported."
+            )
+
     def compile(self, *, device=None, compiler=None, **kwargs):
         """Compile the program given a Strawberry Fields photonic compiler, or
         hardware device specification.
@@ -526,17 +596,15 @@ class Program:
                 compiler = _get_compiler(compiler)
 
             if device.modes is not None:
-                # Check that the number of modes in the program is valid for the given device.
+                if isinstance(device.modes, int):
+                    # check that the number of modes is correct, if device.modes
+                    # is provided as an integer
+                    self.assert_number_of_modes(device)
+                else:
+                    # check that the number of measurements is within the allowed
+                    # limits for each measurement type; device.modes will be a dictionary
+                    self.assert_max_number_of_measurements(device)
 
-                # Program subsystems may be created and destroyed during execution. The length
-                # of the program registers represents the total number of modes that has ever existed.
-                modes_total = len(self.reg_refs)
-
-                if modes_total > device.modes:
-                    raise CircuitError(
-                        f"This program contains {modes_total} modes, but the device '{target}' "
-                        f"only supports a {device.modes}-mode program."
-                    )
         else:
             compiler = _get_compiler(compiler)
             target = compiler.short_name
@@ -559,6 +627,7 @@ class Program:
         compiled = self._linked_copy()
         compiled.circuit = seq
         compiled._target = target
+        compiled._compile_info = (device, compiler.short_name)
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -572,7 +641,15 @@ class Program:
         if device is not None and device.gate_parameters:
             bb_device = bb.loads(device.layout)
             bb_compiled = sf.io.to_blackbird(compiled)
-            user_parameters = match_template(bb_device, bb_compiled)
+
+            try:
+                user_parameters = match_template(bb_device, bb_compiled)
+            except bb.utils.TemplateError as e:
+                raise CircuitError(
+                    "Program cannot be used with the compiler '{}' "
+                    "due to incompatible topology.".format(compiler.short_name)
+                ) from e
+
             device.validate_parameters(**user_parameters)
 
         return compiled
@@ -646,6 +723,19 @@ class Program:
             compiled, otherwise None
         """
         return self._target
+
+    @property
+    def compile_info(self):
+        """The device specification and the compiler that was used during
+        compilation.
+
+        If the program has not been compiled, this will return ``None``.
+
+        Returns:
+            tuple or None: device specification and the short name of the
+            Compiler that was used if compiled, otherwise None
+        """
+        return self._compile_info
 
     def params(self, *args):
         """Create and access free circuit parameters.

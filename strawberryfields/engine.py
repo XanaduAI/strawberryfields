@@ -33,7 +33,7 @@ from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["BaseEngine", "LocalEngine"]
+__all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]
 
 
 class BaseEngine(abc.ABC):
@@ -317,6 +317,14 @@ class LocalEngine(BaseEngine):
         backend_options (None, Dict[str, Any]): keyword arguments to be passed to the backend
     """
 
+    def __new__(cls, backend, *, backend_options=None):
+        if backend == "bosonic":
+            bos_eng = super().__new__(BosonicEngine)
+            bos_eng.__init__(backend, backend_options=backend_options)
+            return bos_eng
+
+        return super().__new__(cls)
+
     def __str__(self):
         return self.__class__.__name__ + "({})".format(self.backend_name)
 
@@ -399,6 +407,7 @@ class LocalEngine(BaseEngine):
 
         return samples
 
+    # pylint:disable=too-many-branches
     def run(self, program, *, args=None, compile_options=None, **kwargs):
         """Execute quantum programs by sending them to the backend.
 
@@ -415,17 +424,37 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
+        # pylint: disable=import-outside-toplevel
+        from strawberryfields.tdm.tdmprogram import reshape_samples
+
+        # At this time we do not support lists of tdm programs
+        valid_tdm_program = (
+            not isinstance(program, collections.abc.Sequence) and program.type == "tdm"
+        )
+        if valid_tdm_program:
+            # priority order for the shots value should be kwargs > run_options > 1
+            shots = kwargs.get("shots", program.run_options.get("shots", 1))
+
+            program.unroll(shots=shots)
+            # Shots >1 for a TDM program simply corresponds to creating
+            # multiple copies of the program, and appending them to run sequentially.
+            # As a result, we set the backend shots to 1 for the Gaussian backend.
+            kwargs["shots"] = 1
+
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
 
         if isinstance(program, collections.abc.Sequence):
-            # succesively update all run option defaults.
+            # successively update all run option defaults.
             # the run options of successive programs
             # overwrite the run options of previous programs
             # in the list
             program_lst = program
             for p in program:
+                if p.type == "tdm":
+                    raise NotImplementedError("Lists of TDM programs are not currently supported")
+
                 temp_run_options.update(p.run_options)
         else:
             # single program to execute
@@ -466,6 +495,13 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
+        if valid_tdm_program:
+            result._all_samples = reshape_samples(
+                result.all_samples, program.measured_modes, program.N, program.timebins
+            )
+            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+            result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
+            program.roll()
         modes = temp_run_options["modes"]
 
         if modes is None or modes:
@@ -473,7 +509,8 @@ class LocalEngine(BaseEngine):
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
             result._state = self.backend.state(**temp_run_options)
-
+            if self.backend_name == "bosonic":
+                result._ancilla_samples = self.backend.ancillae_samples_dict.copy()
         return result
 
 
@@ -548,7 +585,9 @@ class RemoteEngine:
             self._spec = self._connection.get_device_spec(self.target)
         return self._spec
 
-    def run(self, program: Program, *, compile_options=None, **kwargs) -> Optional[Result]:
+    def run(
+        self, program: Program, *, compile_options=None, recompile=False, **kwargs
+    ) -> Optional[Result]:
         """Runs a blocking job.
 
         In the blocking mode, the engine blocks until the job is completed, failed, or
@@ -559,16 +598,20 @@ class RemoteEngine:
 
         Args:
             program (strawberryfields.Program): the quantum circuit
+            compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
-            [strawberryfields.api.Result, None]: the job result if successful, and
-            ``None`` otherwise
+            strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
         """
-        job = self.run_async(program, compile_options=compile_options, **kwargs)
+        job = self.run_async(
+            program, compile_options=compile_options, recompile=recompile, **kwargs
+        )
         try:
             while True:
                 job.refresh()
@@ -586,11 +629,13 @@ class RemoteEngine:
                     raise FailedJobError(message)
 
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
             self._connection.cancel_job(job.id)
-            raise KeyboardInterrupt("The job has been cancelled.")
+            raise KeyboardInterrupt("The job has been cancelled.") from e
 
-    def run_async(self, program: Program, *, compile_options=None, **kwargs) -> Job:
+    def run_async(
+        self, program: Program, *, compile_options=None, recompile=False, **kwargs
+    ) -> Job:
         """Runs a non-blocking remote job.
 
         In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
@@ -599,6 +644,8 @@ class RemoteEngine:
         Args:
             program (strawberryfields.Program): the quantum circuit
             compile_options (None, Dict[str, Any]): keyword arguments for :meth:`.Program.compile`
+            recompile (bool): Specifies if ``program`` should be recompiled
+                using ``compile_options``, or if not provided, the default compilation options.
 
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
@@ -612,12 +659,54 @@ class RemoteEngine:
         kwargs.update(self._backend_options)
 
         device = self.device_spec
+        if program.type == "tdm" and not device.layout_is_formatted():
+            device.fill_template(program)
 
-        compiler_name = compile_options.get("force_compiler", device.default_compiler)
-        msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
-        self.log.info(msg)
+        compiler_name = compile_options.get("compiler", device.default_compiler)
 
-        program = program.compile(device=device, **compile_options)
+        program_is_compiled = program.compile_info is not None
+
+        if program_is_compiled and not recompile:
+            # error handling for program compilation:
+            # program was compiled but recompilation was not allowed by the
+            # user
+
+            if (
+                program.compile_info[0].target != device.target
+                or program.compile_info[0]._spec != device._spec
+            ):
+                # program was compiled for a different device
+                raise ValueError(
+                    "Cannot use program compiled with "
+                    f"{program._compile_info[0].target} for target {self.target}. "
+                    'Pass the "recompile=True" keyword argument '
+                    f"to compile with {compiler_name}."
+                )
+
+        if not program_is_compiled:
+            # program is not compiled
+            msg = f"Compiling program for device {device.target} using compiler {compiler_name}."
+            self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
+
+        elif recompile:
+            # recompiling program
+            if compile_options:
+                msg = f"Recompiling program for device {device.target} using the specified compiler options: {compile_options}."
+            else:
+                msg = f"Recompiling program for device {device.target} using compiler {compiler_name}."
+
+            self.log.info(msg)
+            program = program.compile(device=device, **compile_options)
+
+        else:
+            # validating program
+            msg = (
+                f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
+                f"Validating program against the Xstrict compiler."
+            )
+            self.log.info(msg)
+            program = program.compile(device=device, compiler="Xstrict")
 
         # update the run options if provided
         run_options = {}
@@ -643,3 +732,17 @@ class Engine(LocalEngine):
 
     # alias for backwards compatibility
     __doc__ = LocalEngine.__doc__
+
+
+class BosonicEngine(LocalEngine):
+    """Local quantum program executor engine for programs executed on the bosonic backend.
+
+    The BosonicEngine is used to execute :class:`.Program` instances on the bosonic backend,
+    and makes the results available via :class:`.Result`.
+    """
+
+    def _run_program(self, prog, **kwargs):
+        # Custom Bosonic run code
+        applied, samples_dict, all_samples = self.backend.run_prog(prog, **kwargs)
+        samples = self._combine_and_sort_samples(samples_dict)
+        return applied, samples, all_samples

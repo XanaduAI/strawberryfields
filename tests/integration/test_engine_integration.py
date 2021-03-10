@@ -54,7 +54,7 @@ def test_load_backend(name, expected, cutoff):
 
 class TestEngineReset:
     """Test engine reset functionality"""
-
+    
     def test_init_vacuum(self, setup_eng, tol):
         """Test that the engine is initialized to the vacuum state"""
         eng, prog = setup_eng(2)
@@ -128,6 +128,21 @@ class TestProperExecution:
             assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
         assert prog.register[1].val is None
+    
+    @pytest.mark.backends("bosonic")
+    def test_return_ancillae_samples(self, setup_eng):
+        """Engine returns measurement samples from ancillary states
+        used for measurement-based gates."""
+        eng, prog = setup_eng(1)
+        
+        with prog.context as q:
+            ops.MSgate(1, avg=False) | q
+            ops.MSgate(1, avg=False) | q
+        res = eng.run(prog)
+        
+        assert isinstance(eng, sf.engine.BosonicEngine)
+        assert len(res.ancilla_samples[0]) == 2
+        assert str(res) == '<Result: shots=0, num_modes=0, num_ancillae=2, contains state=True>'
 
     # TODO: Some of these tests should probably check *something* after execution
 

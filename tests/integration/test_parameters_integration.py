@@ -38,7 +38,6 @@ scalar_arg_preparations = (
 testset = ops.one_args_gates + ops.two_args_gates + ops.channels + scalar_arg_preparations
 
 
-
 def test_free_parameters(setup_eng, tol):
     """Programs with free parameters."""
 
@@ -90,7 +89,6 @@ def eng_prog_params(batch_size, setup_eng):
         params.append(np.random.uniform(size=(batch_size,)))
 
     return eng, prog, params
-
 
 @pytest.mark.parametrize("G", testset)
 def test_parameters_with_operations(eng_prog_params, G):

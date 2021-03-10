@@ -22,8 +22,7 @@ from scipy.special import factorial
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
-from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal, BSgate, Ket, S2gate
-import strawberryfields.parameters
+from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal, BSgate, Ket, S2gate, Fock
 
 
 # this test file is only supported by the TF backend
@@ -249,7 +248,7 @@ class TestOneMode:
         assert np.allclose(var, ref_var, atol=tol, rtol=0.0)
 
 
-class TestTwoModeSymbolic:
+class TestTwoModes:
     """Tests for workflows on two modes."""
 
     def test_eval_true_state_all_fock_probs(self, setup_eng, cutoff, batch_size, tol):
@@ -300,6 +299,32 @@ class TestTwoModeSymbolic:
         )[n1, n2]
         assert np.allclose(prob, ref_prob, atol=tol, rtol=0.0)
 
+
+class TestThreeModes:
+    """Tests for workflows on three modes."""
+
+    def test_three_mode_fock_state_mean_photon(self, setup_eng, tol):
+        """Tests that the mean photon numbers of a three-mode system,
+        where one mode is prepared in a Fock state, are correct."""
+
+        eng, prog = setup_eng(3)
+
+        with prog.context as q:
+            Fock(1) | q[1]
+
+        result = eng.run(prog)
+        state = result.state
+        nbar0, var_n0 = state.mean_photon(0)
+        nbar1, var_n1 = state.mean_photon(1)
+        nbar2, var_n2 = state.mean_photon(2)
+
+        assert np.allclose(nbar0, 0., atol=tol, rtol=0)
+        assert np.allclose(nbar1, 1., atol=tol, rtol=0)
+        assert np.allclose(nbar2, 0., atol=tol, rtol=0)
+
+        assert np.allclose(var_n0, 0., atol=tol, rtol=0)
+        assert np.allclose(var_n1, 0., atol=tol, rtol=0)
+        assert np.allclose(var_n2, 0., atol=tol, rtol=0)
 
 class TestGradient:
     """Integration tests for the gradient computation"""

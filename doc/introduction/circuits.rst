@@ -78,6 +78,12 @@ the same structure as the above example; in particular,
 
     Visit the :doc:`ops` page to see an overview of available quantum operations.
 
+.. seealso::
+
+    Strawberry Fields also provides support for constructing and simulating photonic
+    time domain multiplexing algorithms. For more details, please see :class:`~.TDMProgram`.
+
+.. _simulating_your_program:
 
 Simulating your program
 -----------------------
@@ -150,12 +156,12 @@ for accessing the results of your program execution:
   .. code-block:: python
 
       >>> print(result.state)
-      <FockState: num_modes=3, cutoff=15, pure=False, hbar=2.0>
+      <FockState: num_modes=3, cutoff=5, pure=True, hbar=2.0>
       >>> state = result.state
       >>> state.trace()    # trace of the quantum state
-      0.999998
+      0.9999999999999999
       >>> state.dm().shape # density matrix
-      [5, 5, 5]
+      (5, 5, 5, 5, 5, 5)
 
 * :attr:`.Result.samples`: Measurement samples from any measurements performed.
 
@@ -256,6 +262,22 @@ specification is used. This can be overridden by also providing the compiler to 
 
 >>> prog2 = prog.compile(device=device, compiler="Xunitary")
 
+For the ``X``-series of chips, available compilers include:
+
+.. raw:: html
+
+  <div class="summary-table">
+
+.. autosummary::
+    ~strawberryfields.compilers.Xstrict
+    ~strawberryfields.compilers.Xunitary
+    ~strawberryfields.compilers.Xcov
+
+.. raw:: html
+
+    </div>
+
+
 For more details on using Strawberry Fields with remote hardware, see the
 :doc:`photonic_hardware` guide.
 
@@ -284,6 +306,11 @@ circuits, see the following tutorials.
     :tooltip: Optimization and machine learning with TensorFlow
     :description: :doc:`demos/run_tutorial_machine_learning`
     :figure: /_static/TF.png
+
+.. customgalleryitem::
+    :tooltip: Simulate massive time-domain quantum systems
+    :description: :doc:`demos/run_time_domain`
+    :figure: /_static/oneloop.svg
 
 .. raw:: html
 

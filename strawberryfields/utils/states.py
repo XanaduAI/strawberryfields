@@ -59,7 +59,7 @@ def squeezed_cov(r, phi, hbar=2):
 
 
 def vacuum_state(basis="fock", fock_dim=5, hbar=2.0):
-    r""" Returns the vacuum state
+    r"""Returns the vacuum state
 
     Args:
         basis (str): If 'fock', calculates the initial state
@@ -85,7 +85,7 @@ def vacuum_state(basis="fock", fock_dim=5, hbar=2.0):
 
 
 def coherent_state(r, phi, basis="fock", fock_dim=5, hbar=2.0):
-    r""" Returns the coherent state
+    r"""Returns the coherent state
 
     This can be returned either in the Fock basis,
 
@@ -131,7 +131,7 @@ def coherent_state(r, phi, basis="fock", fock_dim=5, hbar=2.0):
 
 
 def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
-    r""" Returns the squeezed state
+    r"""Returns the squeezed state
 
     This can be returned either in the Fock basis,
 
@@ -185,7 +185,7 @@ def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
 
 
 def displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=5, hbar=2.0):
-    r""" Returns the squeezed coherent state
+    r"""Returns the squeezed coherent state
 
     This can be returned either in the Fock basis,
 
@@ -264,7 +264,7 @@ def displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=5, h
 
 
 def fock_state(n, fock_dim=5):
-    r""" Returns the Fock state
+    r"""Returns the Fock state
 
     Args:
         n (int): the occupation number

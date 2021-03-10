@@ -30,11 +30,41 @@ from .gaussian_unitary import GaussianUnitary
 
 
 class Xcov(Compiler):
-    """General state compiler for the X class of circuits.
+    r"""General state compiler for the X class of circuits.
 
-    An important property of this compilation routine is that it is done at the covariance matrix level.
-    This implies that one should not use it to compare the interferometers of a given circuit since they may
-    differ by permutations in the unitary and the squeezing parameters.
+    An important property of this compilation routine is that it is done at the covariance matrix
+    level. This implies that one should not use it to compare the interferometers of a given circuit
+    since they may differ by permutations in the unitary and the squeezing parameters.
+
+    This compiler accepts the following gates, decompositions, and measurements:
+
+    * :class:`~.ops.S2gate`
+    * :class:`~.ops.Sgate`
+    * :class:`~.ops.Rgate`
+    * :class:`~.ops.BSgate`
+    * :class:`~.ops.MZgate`
+    * :class:`~.ops.Interferometer`
+    * :class:`~.ops.BipartiteGraphEmbed`
+    * :class:`~.ops.MeasureFock`
+
+    The operations above may be provided in any combination and order, provided that the unitary is
+    identical between the modes :math:`(0, 1,\dots, N-1)`and :math:`(N, N+1, \dots, 2N-1)`, and does
+    not mix between these two sets of modes.
+
+    Finally, the circuit must complete with Fock measurements.
+
+    **Example**
+
+    The compiler may be used on its own:
+
+    >>> prog.compile(compiler="Xcov")
+
+    Alternatively, it can be combined with an X series device specification to include additional
+    information, such as allowed parameter ranges.
+
+    >>> eng = sf.RemoteEngine("X8")
+    >>> spec = eng.device_spec
+    >>> prog.compile(device=spec, compiler="Xcov")
     """
 
     short_name = "Xcov"
@@ -92,8 +122,17 @@ class Xcov(Compiler):
             # determine the modes that are acted on by the symplectic transformation
             used_modes = [x.ind for x in seq[0].reg]
 
+            # Since this compiler does not allow for displacements
+            # when its parameters are passed to the GaussianUnitary compiler,
+            # the latter either returns a GaussianTransform + MeasureFock
+            # or just MeasureFock. This is because the GaussianUnitary checks
+            # if the symplectic matrix is just the identity; if so, it simply elides it
+
             # extract the compiled symplectic matrix
-            S = seq[0].op.p[0]
+            if isinstance(seq[0].op, ops.MeasureFock):
+                S = np.identity(2 * n_modes)
+            else:
+                S = seq[0].op.p[0]
 
             if len(used_modes) != n_modes:
                 # The symplectic transformation acts on a subset of

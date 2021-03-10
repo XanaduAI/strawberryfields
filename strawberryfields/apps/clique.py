@@ -438,7 +438,7 @@ def c_1(clique: list, graph: nx.Graph):
     Returns:
        list[tuple[int]]: A list of tuples. The first node in the tuple is the node in the clique
        and the second node is the outside node it can be swapped with.
-   """
+    """
     if not is_clique(graph.subgraph(clique)):
         raise ValueError("Input subgraph is not a clique")
 

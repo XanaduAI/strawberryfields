@@ -32,6 +32,9 @@ class Result:
 
     * ``results.samples``: Measurement samples from any measurements performed.
 
+    * ``results.ancilla_samples``: Measurement samples from any ancillary states
+      used for measurement-based gates.
+
     **Example:**
 
     The following example runs an existing Strawberry Fields
@@ -44,9 +47,7 @@ class Result:
     >>> eng = sf.Engine("gaussian")
     >>> results = eng.run(prog)
     >>> print(results)
-    Result: 3 subsystems
-        state: <GaussianState: num_modes=3, pure=True, hbar=2>
-        samples: [[0, 0, 0]]
+    <Result: shots=1, num_modes=3, contains state=True>
     >>> results.samples
     np.array([[0, 0, 0]])
     >>> results.state.is_pure()
@@ -60,11 +61,12 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, samples, all_samples=None, is_stateful=True):
+    def __init__(self, samples, all_samples=None, is_stateful=True, ancilla_samples=None):
         self._state = None
         self._is_stateful = is_stateful
         self._samples = samples
         self._all_samples = all_samples
+        self._ancilla_samples = ancilla_samples
 
     @property
     def samples(self):
@@ -88,9 +90,24 @@ class Result:
 
         Returns:
             dict[int, list]: mode index associated with the list of
-                measurement outcomes
+            measurement outcomes
         """
         return self._all_samples
+
+    @property
+    def ancilla_samples(self):
+        """All measurement samples from ancillary modes used for measurement-based
+        gates.
+
+        Returns a dictionary which associates each mode (keys) with the
+        list of measurements outcomes (values) from all the ancilla-assisted
+        gates applied to that mode.
+
+        Returns:
+            dict[int, list]: mode index associated with the list of ancilla
+            measurement outcomes
+        """
+        return self._ancilla_samples
 
     @property
     def state(self):
@@ -118,7 +135,28 @@ class Result:
 
     def __repr__(self):
         """String representation."""
-        shots, modes = self.samples.shape
-        return "<Result: num_modes={}, shots={}, contains state={}>".format(
-            modes, shots, self._is_stateful
-        )
+        if self.samples.ndim == 2:
+            # if samples has dim 2, assume they're from a standard Program
+            shots, modes = self.samples.shape
+
+            if self.ancilla_samples is not None:
+                ancilla_modes = 0
+                for i in self.ancilla_samples.keys():
+                    ancilla_modes += len(self.ancilla_samples[i])
+                return (
+                    f"<Result: shots={shots}, num_modes={modes}, num_ancillae={ancilla_modes}, "
+                    f"contains state={self._is_stateful}>"
+                )
+
+            return "<Result: shots={}, num_modes={}, contains state={}>".format(
+                shots, modes, self._is_stateful
+            )
+
+        if self.samples.ndim == 3:
+            # if samples has dim 3, assume they're TDM
+            shots, modes, timebins = self.samples.shape
+            return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
+                shots, modes, timebins, self._is_stateful
+            )
+
+        return "<Result: contains state={}>".format(self._is_stateful)

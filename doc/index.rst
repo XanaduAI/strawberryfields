@@ -95,23 +95,32 @@ Features
     :width: 300px
     :target: javascript:void(0);
 
-* An open-source software architecture for **photonic quantum computing**
+
+* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware
+  <https://strawberryfields.ai/photonics/hardware/index.html>`__
 
 ..
 
-* Includes high-level functions for **solving practical problems** including **graph and network optimization**, **machine learning** and **chemistry**.
+* `High-level functions <https://strawberryfields.ai/photonics/applications.html>`__ for **solving
+  practical problems** including **graph and network optimization**, **machine learning**, and
+  **chemistry**
 
 ..
 
-* Includes **quantum simulators** implemented using **NumPy** and **TensorFlow**—with built-in quantum compilation
+* Includes a suite of world-class simulators—based on cutting edge algorithms—to compile and
+  simulate photonic algorithms
 
 ..
 
-* Future releases will target experimental backends, including **photonic quantum computing chips**
+* `Train and optimize
+  <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
+  your quantum programs with our end-to-end differentiable TensorFlow backend
 
 ..
 
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows anyone to run a quantum computing simulation via **drag and drop**
+* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows
+  anyone to run a quantum computing simulation via **drag and drop**
+
 
 How to cite
 ===========
@@ -180,8 +189,9 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    code/sf_engine
    code/sf_io
    code/sf_ops
+   code/sf_parameters
    code/sf_program
    code/sf_program_utils
-   code/sf_parameters
+   code/sf_plot
+   code/sf_tdm
    code/sf_utils
-

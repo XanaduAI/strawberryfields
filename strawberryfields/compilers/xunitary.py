@@ -39,14 +39,50 @@ def list_duplicates(seq):
 
 
 class Xunitary(Compiler):
-    """General interferometer or unitary compiler for the X class of circuits."""
+    r"""General interferometer or unitary compiler for the X class of circuits.
 
+    This compilation routine is performed at the interferometer/unitary matrix level.
+
+    This compiler accepts the following gates, decompositions, and measurements:
+
+    * :class:`~.ops.S2gate`
+    * :class:`~.ops.Rgate`
+    * :class:`~.ops.BSgate`
+    * :class:`~.ops.MZgate`
+    * :class:`~.ops.Interferometer`
+    * :class:`~.ops.BipartiteGraphEmbed`
+    * :class:`~.ops.MeasureFock`
+
+    All ``S2gate`` operations, if present, **must** be placed at the start of the program,
+    and match the X-series topology. That is, for a device with :math:`2N` modes, the
+    ``S2gate`` operations can only be applied to modes :math:`(m, m+N)`.
+
+    Subsequent operations represent the interferometer, and may consist of any combination of
+    :class:`~.ops.BSgate`, :class:`~.ops.MZgate`,
+    :class:`~.ops.Interferometer`, :class:`~.ops.BipartiteGraphEmbed`, as long as the unitary
+    on modes :math:`(0, 1,\dots, N-1)` is repeated on modes :math:`(N, N+1, \dots, 2N-1)`.
+    The unitary will automatically be compiled to match the topology of the X-series.
+
+    Finally, the circuit must complete with Fock measurements.
+
+    **Example**
+
+    The compiler may be used on its own:
+
+    >>> prog.compile(compiler="Xunitary")
+
+    Alternatively, it can be combined with an X series device specification to include additional
+    information, such as allowed parameter ranges.
+
+    >>> eng = sf.RemoteEngine("X8")
+    >>> spec = eng.device_spec
+    >>> prog.compile(device=spec, compiler="Xunitary")
+    """
     short_name = "Xunitary"
     interactive = False
 
     primitives = {
         "S2gate",
-        "Sgate",
         "MeasureFock",
         "Rgate",
         "BSgate",
@@ -55,7 +91,10 @@ class Xunitary(Compiler):
     }
 
     decompositions = {
-        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
+        "BipartiteGraphEmbed": {
+            "mesh": "rectangular_symmetric",
+            "drop_identity": False,
+        },
     }
 
     def compile(self, seq, registers):

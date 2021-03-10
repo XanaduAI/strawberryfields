@@ -1,4 +1,425 @@
-# Release 0.15.0-dev0 (development release)
+# Release 0.18.0 (development release)
+
+<h3>New features since last release</h3>
+
+* Adds the Bosonic backend, which can simulate states represented as linear 
+  combinations of Gaussian functions in phase space.   
+  [(#533)](https://github.com/XanaduAI/strawberryfields/pull/533)
+  [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
+  [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
+  
+  It can be regarded as a generalization of the Gaussian backend, since 
+  transformations on states correspond to modifications of the means and 
+  covariances of each Gaussian in the linear combination, along with changes to 
+  the coefficients of the linear combination. Example states that can be 
+  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill, 
+  cat and Fock states.
+  
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('bosonic')
+
+  with prog.context as q:
+      sf.ops.GKP(epsilon=0.1) | q
+      sf.ops.MeasureX | q
+
+  results = eng.run(prog, shots=200)
+  samples = results.samples[:, 0]
+
+  plt.hist(samples, bins=100)
+  plt.show()
+  ```
+  
+* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
+  for the Bosonic backend.
+  [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
+  [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
+  [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
+  
+  `MSgate` is an implementation of inline squeezing that can be performed by 
+  interacting the target state with an ancillary squeezed vacuum state at a 
+  beamsplitter, measuring the ancillary mode with homodyne, and then applying 
+  a feed-forward displacement. The channel is implemented either on average 
+  (as a Gaussian CPTP map) or in the single-shot implementation. If the 
+  single-shot implementation is used, the measurement outcome of the ancillary
+  mode is stored in the results object.
+  
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('bosonic')
+  
+  with prog.context as q:
+      sf.ops.Catstate(alpha=2) | q
+      r = 0.3
+      # Average map
+      sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=True) | q
+      # Single-shot map
+      sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
+  
+  results = eng.run(prog)
+  ancilla_samples = results.ancilla_samples
+  
+  xvec = np.arange(-5, 5, 0.01)
+  pvec = np.arange(-5, 5, 0.01)
+  wigner = results.state.wigner(0, xvec, pvec)
+  
+  plt.contourf(xvec, pvec, wigner)
+  plt.show()
+  ```
+  
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+* `Connection` objects now send requests to the platform API at version `0.2.0`
+  instead of the incorrect version number `1.0.0`.
+  [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac, 
+Nicolás Quesada, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva, Ilan 
+Tzitrin.
+
+# Release 0.17.0 (current release)
+
+<h3>New features since last release</h3>
+
+* `TDMProgram` objects can now be compiled and submitted via the API.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
+
+* Wigner functions can be plotted directly via Strawberry Fields using Plot.ly.
+  [(#495)](https://github.com/XanaduAI/strawberryfields/pull/495)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim": 10})
+
+  with prog.context as q:
+      gamma = 2
+      Vgate(gamma) | q[0]
+
+  state = eng.run(prog).state
+
+  xvec = np.arange(-4, 4, 0.01)
+  pvec = np.arange(-4, 4, 0.01)
+  mode = 0
+
+  sf.plot_wigner(state, mode, xvec, pvec, renderer="browser")
+  ```
+
+* Fock state marginal probabilities can be plotted directly via Strawberry
+  Fields using Plot.ly.
+  [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+  with prog.context as q:
+      Sgate(0.5) | q[0]
+
+  state = eng.run(prog).state
+  state.all_fock_probs()
+
+  modes = [0]
+
+  sf.plot_fock(state, modes, cutoff=5, renderer="browser")
+  ```
+
+* Position and momentum quadrature probabilities can be plotted directly via
+  Strawberry Fields using Plot.ly.
+  [(#510)](https://github.com/XanaduAI/strawberryfields/pull/510)
+
+  ```python
+  prog = sf.Program(1)
+  eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
+
+  with prog.context as q:
+      Sgate(0.5) | q[0]
+
+  state = eng.run(prog).state
+
+  modes = [0]
+  xvec = np.arange(-4, 4, 0.1)
+  pvec = np.arange(-4, 4, 0.1)
+
+  sf.plot_quad(state, modes, xvec, pvec, renderer="browser")
+  ```
+
+* Strawberry Fields code can be generated from a program (and an engine) by
+  calling `sf.io.generate_code(program, eng=engine)`.
+  [(#496)](https://github.com/XanaduAI/strawberryfields/pull/496)
+
+<h3>Improvements</h3>
+
+* `Connection` objects now send versioned requests to the platform API.
+  [(#512)](https://github.com/XanaduAI/strawberryfields/pull/512)
+
+* `TDMProgram` allows application of gates with more than one symbolic parameter.
+  [#492](https://github.com/XanaduAI/strawberryfields/pull/492)
+
+* The `copies` option, when constructing a `TDMProgram`, has been removed. Instead, the number of
+  copies of a TDM algorithm can now be set by passing the `shots` keyword argument to
+  the `eng.run()` method.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+  ```pycon
+  >>> with prog.context([1, 2], [3, 4]) as (p, q):
+  ...     ops.Sgate(0.7, 0) | q[1]
+  ...     ops.BSgate(p[0]) | (q[0], q[1])
+  ...     ops.MeasureHomodyne(p[1]) | q[0]
+  >>> eng = sf.Engine("gaussian")
+  >>> results = eng.run(prog, shots=3)
+  ```
+
+  Furthermore, the `TDMProgram.unrolled_circuit` attribute now only contains the single-shot
+  unrolled circuit. Unrolling with multiple shots can still be specified via the `unroll` method:
+  `TDMProgram.unroll(shots=60)`.
+
+* The `Result.samples` returned by TDM programs has been updated to return
+  samples of shape `(shots, spatial modes, timebins)` instead of `(shots, spatial
+  modes * timebins)`.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* A sample post-processing function is added that allows users to move
+  vacuum mode measurements from the first shots to the last shots, and
+  potentially crop out the final shots containing these measurements.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* `pytest-randomly` is added to the SF tests.
+  [(#480)](https://github.com/XanaduAI/strawberryfields/pull/480)
+
+* `TDMProgram` objects can now be serialized into Blackbird scripts, and vice versa.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
+
+<h3>Breaking Changes</h3>
+
+* Jobs are submitted to the Xanadu Quantum Cloud through a new OAuth based
+  authentication flow using offline refresh tokens and access tokens.
+  [(#520)](https://github.com/XanaduAI/strawberryfields/pull/520)
+
+<h3>Bug fixes</h3>
+
+* Fixes a bug where `Dgate`, `Coherent`, and `DisplacedSqueezed` do not support TensorFlow tensors
+  if the tensor has an added dimension due to the existence of batching.
+  [(#507)](https://github.com/XanaduAI/strawberryfields/pull/507)
+
+* Fixes an issue with `reshape_samples` where the samples were sometimes
+  reshaped in the wrong way.
+  [(#489)](https://github.com/XanaduAI/strawberryfields/pull/489)
+
+* The list of modes is now correctly added to the Blackbird program when using the
+  `io.to_blackbird` function.
+  [(#476)](https://github.com/XanaduAI/strawberryfields/pull/476)
+
+* Fixes a bug where printing the `Result` object containing samples from a time-domain
+  job would result in an error. Printing the result object now correctly displays
+  information about the results.
+  [(#493)](https://github.com/XanaduAI/strawberryfields/pull/493)
+
+* Removes the `antlr4` requirement due to version conflicts.
+  [(#494)](https://github.com/XanaduAI/strawberryfields/pull/494)
+
+* `TDMProgram.run_options` is now correctly used when running a TDM program.
+  [(#500)](https://github.com/XanaduAI/strawberryfields/pull/500)
+
+* Fixes a bug where a single parameter list passed to the `TDMProgram`
+  context results in an error.
+  [(#503)](https://github.com/XanaduAI/strawberryfields/pull/503)
+
+<h3>Documentation</h3>
+
+* `TDMProgram` docstring is updated to make it clear that only Gaussian programs are allowed.
+  [(#519)](https://github.com/XanaduAI/strawberryfields/pull/519)
+
+* Clarifies special cases for the `MZgate` in the docstring.
+  [(#479)](https://github.com/XanaduAI/strawberryfields/pull/479)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Tom Bromley, Jack Brown, Theodor Isacsson, Josh Izaac, Fabian Laudenbach, Tim Leisti,
+Nicolas Quesada, Antal Száva.
+
+# Release 0.16.0
+
+<h3>New features since last release</h3>
+
+* Moves the chemistry utility functions `prob` and `marginals` to the `apps.qchem.utils` module of
+  Applications layer of Strawberry Fields. These functions were initially created as utility
+  functions to help simulating vibrational dynamics. However, they can also be used in other
+  applications and therefore should be moved to the `apps.qchem.utils` module which hosts
+  general-purpose utility functions for chemistry applications.
+  [(#487)](https://github.com/XanaduAI/strawberryfields/pull/487)
+
+* Adds the ability to construct time domain multiplexing algorithms via the new
+  `sf.TDMProgram` class, for highly scalable simulation of Gaussian states.
+  [(#440)](https://github.com/XanaduAI/strawberryfields/pull/440)
+
+  For example, creating and simulating a time domain program with 2 concurrent modes:
+
+  ```pycon
+  >>> import strawberryfields as sf
+  >>> from strawberryfields import ops
+  >>> prog = sf.TDMProgram(N=2)
+  >>> with prog.context([1, 2], [3, 4], copies=3) as (p, q):
+  ...     ops.Sgate(0.7, 0) | q[1]
+  ...     ops.BSgate(p[0]) | (q[0], q[1])
+  ...     ops.MeasureHomodyne(p[1]) | q[0]
+  >>> eng = sf.Engine("gaussian")
+  >>> results = eng.run(prog)
+  >>> print(results.all_samples)
+  {0: [array([1.26208025]), array([1.53910032]), array([-1.29648336]),
+  array([0.75743215]), array([-0.17850101]), array([-1.44751996])]}
+  ```
+
+  For more details, see the [code
+  documentation](https://strawberryfields.readthedocs.io/en/stable/code/api/strawberryfields.TDMProgram.html).
+
+* Adds the function `VibronicTransition` to the `apps.qchem.vibronic` module. This function generates a
+  custom Strawberry Fields operation for applying the Doktorov operator on a given state.
+  [(#451)](https://github.com/XanaduAI/strawberryfields/pull/451)
+
+  ```pycon
+  >>> from strawberryfields.apps.qchem.vibronic import VibronicTransition
+  >>> modes = 2
+  >>> p = sf.Program(modes)
+  >>> with p.context as q:
+  ...     VibronicTransition(U1, r, U2, alpha) | q
+  ```
+
+* Adds the `TimeEvolution` function to the `apps.qchem.dynamics` module. This function
+  generates a custom Strawberry Fields operation for applying a time evolution operator on a given state.
+  [(#455)](https://github.com/XanaduAI/strawberryfields/pull/455)
+
+  ```pycon
+  >>> modes = 2
+  >>> p = sf.Program(modes)
+  >>> with p.context as q:
+  ...     sf.ops.Fock(1) | q[0]
+  ...     sf.ops.Interferometer(Ul.T) | q
+  ...     TimeEvolution(w, t) | q
+  ...     sf.ops.Interferometer(Ul) | q
+  ```
+
+  where `w` is the normal mode frequencies, and `t` the time in femtoseconds.
+
+* Molecular data and pre-generated samples for water and pyrrole have been added to the data module
+  of the Applications layer of Strawberry Fields. For more details, please see the [data module
+  documentation](https://strawberryfields.readthedocs.io/en/stable/introduction/data.html#molecules)
+  [(#463)](https://github.com/XanaduAI/strawberryfields/pull/463)
+
+* Adds the function `read_gamess` to the qchem module to extract the atomic coordinates, atomic
+  masses, vibrational frequencies, and normal modes of a molecule from the output file of a
+  vibrational frequency calculation performed with the GAMESS quantum chemistry package.
+  [(#460)](https://github.com/XanaduAI/strawberryfields/pull/460)
+
+  ```pycon
+  >>> r, m, w, l = read_gamess('../BH_data.out')
+  >>> r # atomic coordinates
+  array([[0.0000000, 0.0000000, 0.0000000],
+         [1.2536039, 0.0000000, 0.0000000]])
+  >>> m # atomic masses
+  array([11.00931,  1.00782])
+  >>> w # vibrational frequencies
+  array([19.74, 19.73, 0.00, 0.00, 0.00, 2320.32])
+  >>> l # normal modes
+  array([[-0.0000000e+00, -7.5322000e-04, -8.7276210e-02,  0.0000000e+00,
+       8.2280900e-03,  9.5339055e-01],
+     [-0.0000000e+00, -8.7276210e-02,  7.5322000e-04,  0.0000000e+00,
+       9.5339055e-01, -8.2280900e-03],
+     [ 2.8846925e-01, -2.0000000e-08,  2.0000000e-08,  2.8846925e-01,
+      -2.0000000e-08,  2.0000000e-08],
+     [ 2.0000000e-08,  2.8846925e-01, -2.0000000e-08,  2.0000000e-08,
+       2.8846925e-01, -2.0000000e-08],
+     [-2.0000000e-08,  2.0000000e-08,  2.8846925e-01, -2.0000000e-08,
+       2.0000000e-08,  2.8846925e-01],
+     [-8.7279460e-02,  0.0000000e+00,  0.0000000e+00,  9.5342606e-01,
+      -0.0000000e+00, -0.0000000e+00]])
+  ```
+
+<h3>Improvements</h3>
+
+* When jobs submitted to the Xanadu Quantum Cloud are canceled, they will now display a
+  `cancel_pending` JobStatus until the cancellation is confirmed.
+  [(#456)](https://github.com/XanaduAI/strawberryfields/pull/456)
+
+<h3>Bug fixes</h3>
+
+* Fixed a bug where the function `reduced_dm` in `backends/tfbackend/states.py` gives the
+  wrong output when passing it several modes.
+  [(#471)](https://github.com/XanaduAI/strawberryfields/pull/471)
+
+* Fixed a bug in the function `reduced_density_matrix` in `backends/tfbackend/ops.py` which caused the
+  wrong subsystems to be traced out.
+  [(#467)](https://github.com/XanaduAI/strawberryfields/issues/467)
+  [(#470)](https://github.com/XanaduAI/strawberryfields/pull/470)
+
+* Fixed a bug where decompositions to Mach-Zehnder interferometers would return
+  incorrect results on NumPy 1.19.
+  [(#473)](https://github.com/XanaduAI/strawberryfields/pull/473)
+
+* The Walrus version 0.14 introduced modified function names. Affected functions have been updated
+  in Strawberry Fields to avoid deprecation warnings.
+  [(#472)](https://github.com/XanaduAI/strawberryfields/pull/472)
+
+<h3>Documentation</h3>
+
+* Adds further testing and coverage descriptions to the developer documentation.
+  This includes details regarding the Strawberry Fields test structure and test decorators.
+  [(#461)](https://github.com/XanaduAI/strawberryfields/pull/461)
+
+* Updates the minimum required version of TensorFlow in the development guide.
+  [(#468)](https://github.com/XanaduAI/strawberryfields/pull/468)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Juan Miguel Arrazola, Tom Bromley, Theodor Isacsson, Josh Izaac, Soran Jahangiri, Nathan Killoran,
+Fabian Laudenbach, Nicolás Quesada, Antal Száva, ‪Ilan Tzitrin.
+
+# Release 0.15.1
+
+<h3>Improvements</h3>
+
+* Adds the ability to bypass recompilation of programs if they have been
+  compiled already to the target device.
+  [(#447)](https://github.com/XanaduAI/strawberryfields/pull/447)
+
+<h3>Breaking Changes</h3>
+
+* Changes the default compiler for devices that don't specify a default from `"Xcov"` to `"Xunitary"`.
+  This compiler is slightly more strict and only compiles the unitary, not the initial squeezers,
+  however avoids any unintentional permutations.
+  [(#445)](https://github.com/XanaduAI/strawberryfields/pull/445)
+
+<h3>Bug fixes</h3>
+
+* Fixes a bug where a program that amounts to the identity operation would cause an error when
+  compiled using the `xcov` compiler.
+  [(#444)](https://github.com/XanaduAI/strawberryfields/pull/444)
+
+<h3>Documentation</h3>
+
+* Updates the `README.rst` file and hardware access links.
+  [(#448)](https://github.com/XanaduAI/strawberryfields/pull/448)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson, Josh Izaac, Nathan Killoran, Nicolás Quesada, Antal Száva
+
+# Release 0.15.0
 
 <h3>New features since last release</h3>
 
@@ -9,9 +430,9 @@
   [(#393)](https://github.com/XanaduAI/strawberryfields/pull/393)
   [(#414)](https://github.com/XanaduAI/strawberryfields/pull/414)
   [(#415)](https://github.com/XanaduAI/strawberryfields/pull/415)
-  
+
   Trainable parameters can be embedded into a VGBS class:
-  
+
   ```python
   from strawberryfields.apps import data, train
 
@@ -21,19 +442,19 @@
 
   vgbs = train.VGBS(d.adj, 5, embedding, threshold=False, samples=np.array(d[:1000]))
   ```
-  
+
   Properties of the variational GBS distribution for different choices of
   trainable parameters can then be inspected:
-  
-  ```python
+
+  ```pycon
   >>> params = 0.1 * np.ones(d.modes)
   >>> vgbs.n_mean(params)
   3.6776094165797364
   ```
 
   A cost function can then be created and its value and gradient accessed:
-  
-  ```python
+
+  ```pycon
   >>> h = lambda x: np.sum(x)
   >>> cost = train.Stochastic(h, vgbs)
   >>> cost(params, n_samples=1000)
@@ -45,30 +466,61 @@
        -0.27188134, -0.26955011])
   ```
 
+  For more details, see the [VGBS training
+  demo](https://strawberryfields.ai/photonics/apps/run_tutorial_training.html).
+
 * Feature vectors of graphs can now be calculated exactly in the `apps.similarity` module of the
   applications layer. Datasets of pre-calculated feature vectors are available in `apps.data`.
   [(#390)](https://github.com/XanaduAI/strawberryfields/pull/390)
   [(#401)](https://github.com/XanaduAI/strawberryfields/pull/401)
 
-* Adds the `apps.qchem.duschinsky()` function for generation of the
-  Duschinsky rotation matrix and displacement vector which are needed to simulate a vibronic process
-  with Strawberry Fields.
-  [(#434)](https://github.com/XanaduAI/strawberryfields/pull/434)
+  ```pycon
+  >>> from strawberryfields.apps import data
+  >>> from strawberryfields.apps.similarity import feature_vector_sampling
+  >>> samples = data.Mutag0()
+  >>> feature_vector_sampling(samples, [2, 4, 6])
+  [0.19035, 0.2047, 0.1539]
+  ```
 
-* Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
-  The `dynamics.evolution()` function provides a custom operation that encodes the input chemical
-  information for use in a Strawberry Fields `Program`. The `dynamics.sample_coherent()`,
-  `dynamics.sample_fock()` and `dynamics.sample_tmsv()` functions allow for generation of samples
-  from a variety of input states. The probability of an excited state can then be estimated with
-  the `dynamics.prob()` function, which calculates the relative frequency of the excited state
-  among the generated samples.  The `dynamics.marginals()` function generates marginal
-  distributions.
-  [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
-  [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
-  [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
-  [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
-  [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
-  [(#430)](https://github.com/XanaduAI/strawberryfields/pull/430)
+  For more details, see the [graph similarlity
+  demo](https://strawberryfields.ai/photonics/apps/run_tutorial_similarity.html).
+
+* A new `strawberryfields.apps.qchem` module has been introduced, centralizing all quantum chemistry
+  applications. This includes various new features and improvements:
+
+  * Adds the `apps.qchem.duschinsky()` function for generation of the
+    Duschinsky rotation matrix and displacement vector which are needed to simulate a vibronic process
+    with Strawberry Fields.
+    [(#434)](https://github.com/XanaduAI/strawberryfields/pull/434)
+
+  * Adds the `apps.qchem.dynamics` module for simulating vibrational quantum dynamics in molecules.
+    [(#402)](https://github.com/XanaduAI/strawberryfields/pull/402)
+    [(#411)](https://github.com/XanaduAI/strawberryfields/pull/411)
+    [(#419)](https://github.com/XanaduAI/strawberryfields/pull/419)
+    [(#421)](https://github.com/XanaduAI/strawberryfields/pull/421)
+    [(#423)](https://github.com/XanaduAI/strawberryfields/pull/423)
+    [(#430)](https://github.com/XanaduAI/strawberryfields/pull/430)
+
+    This includes:
+
+    - `dynamics.evolution()` constructs a custom operation that encodes the input chemical
+      information. This custom operation can then be used within a Strawberry Fields `Program`.
+
+    - `dynamics.sample_coherent()`, `dynamics.sample_fock()` and `dynamics.sample_tmsv()` functions
+      allow for generation of samples from a variety of input states.
+
+    - The probability of an excited state can then be estimated with the `dynamics.prob()` function,
+      which calculates the relative frequency of the excited state among the generated samples.
+
+    - Finally, the `dynamics.marginals()` function generates marginal distributions.
+
+  * The `sf.apps.vibronic` module has been relocated to within the `qchem` module. As a result, the
+    `apps.sample.vibronic()` function is now accessible under `apps.qchem.vibronic.sample()`,
+    providing a single location for quantum chemistry functionality.
+    [(#416)](https://github.com/XanaduAI/strawberryfields/pull/416)
+
+  For more details, please see the [qchem
+  documentation](https://strawberryfields.readthedocs.io/en/latest/code/api/strawberryfields.apps.qchem.html).
 
 * The `GaussianState` returned from simulations using the Gaussian backend
   now has feature parity with the `FockState` object returned from the Fock backends.
@@ -83,13 +535,25 @@
   In addition, the existing `GaussianState.reduced_dm()` method now supports
   multi-mode reduced density matrices.
 
-* Adds the `samples_expectation`, `samples_variance` and `all_fock_probs_pnr`
-  functions for obtaining counting statistics from samples.
+* Adds the `sf.utils.samples_expectation`, `sf.utils.samples_variance` and
+  `sf.utils.all_fock_probs_pnr` functions for obtaining counting statistics from samples.
   [(#399)](https://github.com/XanaduAI/strawberryfields/pull/399)
 
-* Adds new `Xcov` and `Xunitary` compilers for compiling programs into the X
-  architecture.
-  [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+* Compilation of Strawberry Fields programs has been overhauled.
+
+  * Strawberry Fields can now access the Xanadu Cloud device specifications API.
+    The `Connection` class has a new method `Connection.get_device`,
+    which returns a `DeviceSpec` class.
+    [(#429)](https://github.com/XanaduAI/strawberryfields/pull/429)
+    [(#432)](https://github.com/XanaduAI/strawberryfields/pull/432)
+
+  * New `Xstrict`, `Xcov`, and `Xunitary` compilers for compiling programs into the X architecture
+    have been added.
+    [(#358)](https://github.com/XanaduAI/strawberryfields/pull/358)
+    [(#438)](https://github.com/XanaduAI/strawberryfields/pull/438)
+
+  * Finally, the `strawberryfields.circuitspecs` module has been renamed to
+    `strawberryfields.compilers`.
 
 * Adds `diagonal_expectation` method for the `BaseFockState` class, which returns
   the expectation value of any operator that is diagonal in the number basis.
@@ -103,31 +567,26 @@
 
 <h3>Improvements</h3>
 
-* Relocates the `apps.vibronic` module to be a submodule of the new `apps.qchem` module
-  and moves the `apps.sample.vibronic()` function to `apps.qchem.vibronic.sample()`, providing
-  a single location for quantum chemistry functionality.
-  [(#416)](https://github.com/XanaduAI/strawberryfields/pull/416)
-
-* Modifies the rectangular interferometer decomposition to make it more
-  efficient for hardware devices. Rather than decomposing the interferometer
-  using Clements :math:`T` matrices, the decomposition now directly produces
-  Mach-Zehnder interferometers corresponding to on-chip phases.
+* Modifies the rectangular interferometer decomposition to make it more efficient for hardware
+  devices. Rather than decomposing the interferometer using Clements :math:`T` matrices, the
+  decomposition now directly produces Mach-Zehnder interferometers corresponding to on-chip phases.
   [(#363)](https://github.com/XanaduAI/strawberryfields/pull/363)
 
-* Changes the `number_expectation` method for the `BaseFockState` class to be an
-  instance of `diagonal_expectation`.
+* Changes the `number_expectation` method for the `BaseFockState` class to be an instance of
+  `diagonal_expectation`.
   [(#389)](https://github.com/XanaduAI/strawberryfields/pull/389)
 
-* Increases the speed at which the following gates are generated: `Dgate`, `Sgate`,
-  `BSgate` and `S2gate` by relying on a recursive implementation recently introduced
-  in `thewalrus`. This has substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high cutoff values.
+* Increases the speed at which the following gates are generated: `Dgate`, `Sgate`, `BSgate` and
+  `S2gate` by relying on a recursive implementation recently introduced in `thewalrus`. This has
+  substantial effects on the speed of the `Fockbackend` and the `TFbackend`, especially for high
+  cutoff values.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
   [(#381)](https://github.com/XanaduAI/strawberryfields/pull/381)
 
-* Strawberry Fields can now access the Xanadu Cloud device specifications API.
-  The ``Connection`` class has a new method ``Connection.get_device``,
-  which returns a ``DeviceSpec`` class.
-  [(#429)](https://github.com/XanaduAI/strawberryfields/pull/429)
+* All measurement samples can now be accessed via the `results.all_samples` attribute, which returns
+  a dictionary mapping the mod index to a list of measurement values. This is useful for cases where
+  a single mode may be measured multiple times.
+  [(#433)](https://github.com/XanaduAI/strawberryfields/pull/433)
 
 <h3>Breaking Changes</h3>
 
@@ -137,17 +596,15 @@
 * Complex parameters now are expected in polar form as two separate real parameters.
   [(#378)](https://github.com/XanaduAI/strawberryfields/pull/378)
 
-<h3>Bug fixes</h3>
-
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Soran
-Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada, Antal Száva
+Juan Miguel Arrazola, Tom Bromley, Jack Ceroni, Aroosa Ijaz, Theodor Isacsson, Josh Izaac, Nathan
+Killoran, Soran Jahangiri, Shreya P. Kumar, Filippo Miatto, Nicolás Quesada, Antal Száva
 
 
-# Release 0.14.0 (current release)
+# Release 0.14.0
 
 <h3>New features since last release</h3>
 

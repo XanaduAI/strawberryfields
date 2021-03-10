@@ -1,0 +1,67 @@
+name: Tests
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+env:
+  COVERALLS_PARALLEL: true
+  PURE: 1
+  BATCHED: 0
+  LOGGING: info
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      OPTIONS: ${{ matrix.options }}
+      BATCHED: ${{ matrix.batched }}
+
+    strategy:
+      matrix:
+        include:
+            - {BATCHED: 0, OPTIONS: "frontend or apps or api or gaussian"}
+            - {BATCHED: 0, OPTIONS: "fock"}
+            - {BATCHED: 0, OPTIONS: "tf"}
+            - {BATCHED: 1, OPTIONS: "tf and pure"}
+            - {BATCHED: 1, OPTIONS: "tf and mixed"}
+            - {BATCHED: 0, OPTIONS: "bosonic"}
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install wheel codecov pytest pytest-cov pytest-randomly pytest-mock --upgrade
+
+      - name: Install Strawberry Fields
+        run: |
+          pip install -r requirements.txt
+          python3 setup.py bdist_wheel
+          pip install dist/StrawberryFields*.whl
+
+      - name: Run tests
+        run: python3 -m pytest tests --cov=strawberryfields --cov-report=term-missing --cov-report=xml -p no:warnings --randomly-seed=42 --tb=native -m "$OPTIONS"
+
+      - name: Adjust coverage file for Codecov
+        run: bash <(sed -i 's/filename=\"/filename=\"strawberryfields\//g' coverage.xml)
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml

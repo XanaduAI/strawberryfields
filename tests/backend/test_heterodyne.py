@@ -26,7 +26,7 @@ num_stds = 10.0
 std_10 = num_stds / np.sqrt(n_meas)
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian","bosonic")
 class TestHeterodyne:
     """Basic implementation-independent tests."""
 

@@ -5,7 +5,7 @@ Xanadu Swag™? Check out some ideas below to get started. If you get stuck, or 
 simply ask over at our [Slack community](https://u.strawberryfields.ai/slack).
 
 For more details on contributing to Strawberry Fields, see our
-[contributing guidelines](.github/CONTRIBUTING.md).
+[contributing guidelines](CONTRIBUTING.md).
 
 ## Community :strawberry:
 

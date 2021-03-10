@@ -14,12 +14,16 @@
 r"""
 Tests for strawberryfields.apps.qchem.utils
 """
+import os
+
 import numpy as np
 import pytest
 
 from strawberryfields.apps.qchem import utils
 
 pytestmark = pytest.mark.apps
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 Li_1 = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
 Lf_1 = np.array([[-0.28933191], [0.0], [0.0], [0.95711104], [0.0], [0.0]])
@@ -98,3 +102,186 @@ class TestDuschinsky:
 
         assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[0], U)
         assert np.allclose(utils.duschinsky(Li, Lf, ri, rf, wf, m)[1], delta)
+
+
+class TestReadGAMESS:
+    """Tests for the function ``strawberryfields.apps.qchem.utils.read_gamess``"""
+
+    r1 = np.array([[0.0, 0.0, 0.0], [1.2536039, 0.0, 0.0]])
+    m1 = np.array([11.00931, 1.00782])
+    w1 = np.array([19.74, 19.73, 0.0, 0.0, 0.0, 2320.32])
+    l1 = np.array(
+        [
+            [-0.000000e0, -7.532200e-4, -8.727621e-2, 0.000000e0, 8.228090e-3, 9.533905e-1],
+            [-0.000000e0, -8.727621e-2, 7.532200e-4, 0.000000e0, 9.533905e-1, -8.228090e-3],
+            [2.884692e-1, -2.000000e-8, 2.000000e-8, 2.884692e-1, -2.000000e-8, 2.000000e-8],
+            [2.000000e-8, 2.884692e-1, -2.000000e-8, 2.000000e-8, 2.884692e-1, -2.000000e-8],
+            [-2.000000e-8, 2.000000e-8, 2.884692e-1, -2.000000e-8, 2.000000e-8, 2.884692e-1],
+            [-8.727946e-2, 0.000000e0, 0.000000e0, 9.534260e-1, -0.000000e0, -0.000000e0],
+        ]
+    )
+
+    r2 = np.array([[0.0, 0.0, -0.77087574], [0.0, -0.0, 0.77087574]])
+    m2 = np.array([7.016, 1.00782])
+    w2 = np.array([2.2290e01, 2.2290e01, 1.1100e00, 1.1100e00, 1.1100e00, 1.6899e03])
+    l2 = np.array(
+        [
+            [-9.313476e-2, -9.744043e-2, -1.100000e-7, 6.429051e-1, 6.726266e-1, -1.100000e-7],
+            [-9.744023e-2, 9.313474e-2, 8.000000e-8, 6.726268e-1, -6.429052e-1, 8.000000e-8],
+            [4.876110e-3, 7.181940e-3, 3.529211e-1, 4.917520e-3, 7.243290e-3, 3.529206e-1],
+            [3.207159e-1, -1.466350e-1, -1.450200e-3, 3.234367e-1, -1.478789e-1, -1.450200e-3],
+            [1.465611e-1, 3.206387e-1, -8.568300e-3, 1.478046e-1, 3.233594e-1, -8.568290e-3],
+            [-0.000000e0, -0.000000e0, -1.338001e-1, 0.000000e0, 0.000000e0, 9.314543e-1],
+        ]
+    )
+
+    p1 = ["BH_frq.out", r1, m1, w1, l1]
+    p2 = ["lih_hessian_ccsd.out", r2, m2, w2, l2]
+
+    @pytest.mark.parametrize("params", [p1, p2])
+    def test_parameters(self, params):
+        """Test if function outputs the correct parameters."""
+
+        file, ri, mi, wi, li = params
+
+        r, m, w, l = utils.read_gamess(os.path.join(dir_path, file))
+
+        assert np.allclose(r, ri)
+        assert np.allclose(m, mi)
+        assert np.allclose(w, wi)
+        assert np.allclose(l, li)
+
+    def test_no_coordinates(self):
+        """Test if function raises a ``ValueError`` when the atomic coordinates array is empty."""
+        with pytest.raises(ValueError, match="No atomic coordinates found in the output file"):
+            utils.read_gamess(os.path.join(dir_path, "gamess_dummy_r.out"))
+
+    def test_no_masses(self):
+        """Test if function raises a ``ValueError`` when the atomic masses array is empty."""
+        with pytest.raises(ValueError, match="No atomic masses found in the output file"):
+            utils.read_gamess(os.path.join(dir_path, "gamess_dummy_m.out"))
+
+    def test_no_frequencies(self):
+        """Test if function raises a ``ValueError`` when the frequencies array is empty."""
+        with pytest.raises(ValueError, match="No vibrational frequencies found in the output file"):
+            utils.read_gamess(os.path.join(dir_path, "gamess_dummy_w.out"))
+
+
+class TestMarginals:
+    """Tests for the function ``strawberryfields.apps.qchem.utils.marginals``"""
+
+    mu = np.array([0.00000000, 2.82842712, 0.00000000, 0.00000000, 0.00000000, 0.00000000])
+    V = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        ]
+    )
+    n = 10
+    p = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [
+                1.35335284e-01,
+                2.70670567e-01,
+                2.70670566e-01,
+                1.80447044e-01,
+                9.02235216e-02,
+                3.60894085e-02,
+                1.20298028e-02,
+                3.43708650e-03,
+                8.59271622e-04,
+                1.90949249e-04,
+            ],
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    def test_correct_marginals(self):
+        """Test if the function returns the correct probabilities"""
+        assert np.allclose(utils.marginals(self.mu, self.V, self.n), self.p)
+
+    def test_square_covariance(self):
+        """Test if function raises a ``ValueError`` when the covariance matrix is not square."""
+        with pytest.raises(ValueError, match="The covariance matrix must be a square matrix"):
+            utils.marginals(self.mu, np.hstack((self.V, np.ones((6, 1)))), self.n)
+
+    def test_incorrect_modes(self):
+        """Test if function raises a ``ValueError`` when the number of modes in the displacement
+        vector and the covariance matrix are different."""
+        with pytest.raises(
+            ValueError, match="The dimension of the displacement vector and the covariance"
+        ):
+            utils.marginals(np.append(self.mu, 0), self.V, self.n)
+
+    def test_incorrect_states(self):
+        """Test if function raises a ``ValueError`` when the number of vibrational states is not
+        larger than zero."""
+        with pytest.raises(ValueError, match="The number of vibrational states must be larger"):
+            utils.marginals(self.mu, self.V, 0)
+
+
+sample1 = [[0, 2], [1, 1], [0, 2], [2, 0], [1, 1], [0, 2], [1, 1], [1, 1], [1, 1], [0, 2]]
+sample2 = [
+    [0, 2, 0],
+    [1, 0, 1],
+    [0, 0, 2],
+    [2, 0, 0],
+    [0, 2, 0],
+    [0, 0, 2],
+    [0, 1, 1],
+    [1, 0, 1],
+    [0, 1, 1],
+    [0, 2, 0],
+]
+is1 = [0, 2]
+is2 = [0, 2, 0]
+prob1 = 0.4
+prob2 = 0.3
+
+e1 = [sample1, is1, prob1]
+e2 = [sample2, is2, prob2]
+
+
+@pytest.mark.parametrize("e", [e1, e2])
+class TestProb:
+    """Tests for the function ``strawberryfields.apps.qchem.dynamics.prob``"""
+
+    def test_correct_prob(self, e):
+        """Test if the function returns the correct probability"""
+        samples, state, pref = e
+        p = utils.prob(samples, state)
+
+        assert p == pref
+
+    def test_empty_samples(self, e):
+        """Test if function raises a ``ValueError`` when the samples list is empty."""
+        with pytest.raises(ValueError, match="The samples list must not be empty"):
+            _, state, _ = e
+            utils.prob([], state)
+
+    def test_empty_state(self, e):
+        """Test if function raises a ``ValueError`` when the given state is empty."""
+        with pytest.raises(ValueError, match="The excited state list must not be empty"):
+            samples, _, _ = e
+            utils.prob(samples, [])
+
+    def test_n_modes(self, e):
+        """Test if function raises a ``ValueError`` when the number of modes in the samples and
+        the state are different."""
+        with pytest.raises(
+            ValueError, match="The number of modes in the samples and the excited state must be"
+        ):
+            samples, state, _ = e
+            utils.prob(samples, state + [0])
+
+    def test_negative_state(self, e):
+        """Test if function raises a ``ValueError`` when the given excited state contains negative
+        values."""
+        with pytest.raises(ValueError, match="The excited state must not contain negative values"):
+            samples, state, _ = e
+            utils.prob(samples, [-i for i in state])

@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module contains functions for loading and saving Strawberry
-Fields :class:`~.Program` objects from/to Blackbird scripts.
+This module contains functions for loading and saving Strawberry Fields
+:class:`~.Program` objects from/to Blackbird scripts and Strawberry Fields
+code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
+from numbers import Number
+
+import numpy as np
 
 import blackbird
-
 import strawberryfields.program as sfp
 import strawberryfields.parameters as sfpar
 from . import ops
@@ -29,6 +32,7 @@ from . import ops
 __all__ = ["to_blackbird", "to_program", "loads"]
 
 
+# pylint:disable=too-many-branches
 def to_blackbird(prog, version="1.0"):
     """Convert a Strawberry Fields Program to a Blackbird Program.
 
@@ -40,6 +44,7 @@ def to_blackbird(prog, version="1.0"):
         blackbird.BlackbirdProgram:
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
+    bb._modes = list(prog.reg_refs.keys())
 
     # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
@@ -81,7 +86,31 @@ def to_blackbird(prog, version="1.0"):
                     a = str(a)
                 op["args"].append(a)
 
+        # If program type is "tdm" then add the looped-over arrays to the
+        # blackbird program. `prog.loop_vars` are symbolic parameters (e.g.
+        # `{p0}`), which should be replaced with `p.name` (e.g. `p0`) inside the
+        # Blackbird operation (keyword) arguments.
+        if prog.type == "tdm":
+            for p in prog.loop_vars:
+                for i, ar in enumerate(op["args"]):
+                    if str(p) == str(ar):
+                        op["args"][i] = p.name
+                for k, v in op["kwargs"].items():
+                    if str(p) == str(v):
+                        op["kwargs"][k] = p.name
+
         bb._operations.append(op)
+    # add the specific "tdm" metadata to the Blackbird program
+    if prog.type == "tdm":
+        bb._type["name"] = "tdm"
+        bb._type["options"].update(
+            {
+                "temporal_modes": prog.timebins,
+            }
+        )
+        bb._var.update(
+            {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}
+        )
 
     return bb
 
@@ -100,6 +129,9 @@ def to_program(bb):
         # we can't return an empty program, since we don't know how many modes
         # to initialize the Program object with.
         raise ValueError("Blackbird program contains no quantum operations!")
+
+    if bb.programtype["name"] == "tdm":
+        return _to_tdm_program(bb)
 
     prog = sfp.Program(max(bb.modes) + 1, name=bb.name)
 
@@ -120,7 +152,7 @@ def to_program(bb):
             # create the list of regrefs
             regrefs = [q[i] for i in op["modes"]]
 
-            if "args" in op:
+            if "args" in op and "kwargs" in op:
                 # the gate has arguments
                 args = op["args"]
                 kwargs = op["kwargs"]
@@ -144,6 +176,213 @@ def to_program(bb):
         prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
 
     return prog
+
+
+# pylint:disable=too-many-branches
+def _to_tdm_program(bb):
+    # pylint: disable=import-outside-toplevel
+    from strawberryfields.tdm.tdmprogram import TDMProgram
+
+    prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
+
+    def is_free_param(param):
+        return isinstance(param, str) and param[0] == "p" and param[1:].isdigit()
+
+    # retrieve all the free parameters in the Blackbird program (e.g. "p0", "p1"
+    # etc.) and add their corresponding values to args
+    args = []
+    for k in bb._var.keys():
+        if is_free_param(k):
+            v = bb._var[k].flatten()
+            args.append(v)
+
+    # append the quantum operations
+    with prog.context(*args) as (p, q):
+        for op in bb.operations:
+            # check if operation name is in the list of
+            # defined StrawberryFields operations.
+            # This is used by checking against the ops.py __all__
+            # module attribute, which contains the names
+            # of all defined quantum operations
+            if op["op"] in ops.__all__:
+                # get the quantum operation from the sf.ops module
+                gate = getattr(ops, op["op"])
+            else:
+                raise NameError("Quantum operation {} not defined!".format(op["op"]))
+
+            # create the list of regrefs
+            regrefs = [q[i] for i in op["modes"]]
+
+            if "args" in op:
+                # the gate has arguments
+                args = op["args"]
+                kwargs = op["kwargs"]
+
+                for i, p in enumerate(args):
+                    if is_free_param(p):
+                        args[i] = sfpar.FreeParameter(p)
+                for k, v in kwargs.items():
+                    if is_free_param(v):
+                        kwargs[k] = sfpar.FreeParameter(v)
+
+                # Convert symbolic expressions in args/kwargs containing measured and free parameters to
+                # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
+                args = sfpar.par_convert(args, prog)
+                vals = sfpar.par_convert(kwargs.values(), prog)
+                kwargs = dict(zip(kwargs.keys(), vals))
+                gate(*args, **kwargs) | regrefs  # pylint:disable=expression-not-assigned
+            else:
+                # the gate has no arguments
+                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+
+    prog._target = bb.target["name"]
+
+    if "shots" in bb.target["options"]:
+        prog.run_options["shots"] = bb.target["options"]["shots"]
+
+    if "cutoff_dim" in bb.target["options"]:
+        prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
+
+    return prog
+
+
+def generate_code(prog, eng=None):
+    """Converts a Strawberry Fields program into valid Strawberry Fields code.
+
+    **Example:**
+
+    .. code-block:: python3
+
+        prog = sf.Program(3)
+        eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+        with prog.context as q:
+            ops.Sgate(2*np.pi/3) | q[1]
+            ops.BSgate(0.6, 0.1) | (q[2], q[0])
+            ops.MeasureFock() | q
+
+        results = eng.run(prog)
+
+        code_str = sf.io.generate_code(prog, eng=eng)
+
+    This will create the following string:
+
+    .. code-block:: pycon
+
+        >>> print(code_str)
+        import strawberryfields as sf
+        from strawberryfields import ops
+
+        prog = sf.Program(3)
+        eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+
+        with prog.context as q:
+            ops.Sgate(2*np.pi/3, 0.0) | q[1]
+            ops.BSgate(0.6, 0.1) | (q[2], q[0])
+            ops.MeasureFock() | (q[0], q[1], q[2])
+
+        results = eng.run(prog)
+
+    Args:
+        prog (Program): the Strawberry Fields program
+        eng (Engine): The Strawberryfields engine. If ``None``, only the Program
+            parts will be in the resulting code-string.
+
+    Returns:
+        str: the Strawberry Fields code, for constructing the program, as a string
+    """
+    code_seq = ["import strawberryfields as sf", "from strawberryfields import ops\n"]
+
+    if prog.type == "tdm":
+        code_seq.append(f"prog = sf.TDMProgram(N={prog.N})")
+    else:
+        code_seq.append(f"prog = sf.Program({prog.num_subsystems})")
+
+    # check if an engine is supplied; if so, format and add backend/target
+    # along with backend options
+    if eng:
+        eng_type = eng.__class__.__name__
+        if eng_type == "RemoteEngine":
+            code_seq.append(f'eng = sf.RemoteEngine("{eng.target}")')
+        else:
+            if "cutoff_dim" in eng.backend_options:
+                formatting_str = (
+                    f'"{eng.backend_name}", backend_options='
+                    + f'{{"cutoff_dim": {eng.backend_options["cutoff_dim"]}}}'
+                )
+                code_seq.append(f"eng = sf.Engine({formatting_str})")
+            else:
+                code_seq.append(f'eng = sf.Engine("{eng.backend_name}")')
+
+    # check if program is of TDM type and format the context as appropriate
+    if prog.type == "tdm":
+        # if the context arrays contain pi-values, factor out multiples of np.pi
+        tdm_params = [f"[{_factor_out_pi(par)}]" for par in prog.tdm_params]
+        code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
+    else:
+        code_seq.append("\nwith prog.context as q:")
+
+    # add the operations, and replace any free parameters with e.g. `p[0]`, `p[1]`
+    for cmd in prog.circuit:
+        name = cmd.op.__class__.__name__
+        if prog.type == "tdm":
+            format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
+            params_str = _factor_out_pi(cmd.op.p).format(**format_dict)
+        else:
+            params_str = _factor_out_pi(cmd.op.p)
+
+        modes = [f"q[{r.ind}]" for r in cmd.reg]
+        if len(modes) == 1:
+            modes_str = ", ".join(modes)
+        else:
+            modes_str = "(" + ", ".join(modes) + ")"
+        op = f"    ops.{name}({params_str}) | {modes_str}"
+
+        code_seq.append(op)
+
+    if eng:
+        code_seq.append("\nresults = eng.run(prog)")
+
+    return "\n".join(code_seq)
+
+
+def _factor_out_pi(num_list, denominator=12):
+    """Factors out pi, divided by the denominator value, from all number in a list
+    and returns a string representation.
+
+    Args:
+        num_list (list[Number, string]): a list of numbers and/or strings
+        denominator (int): factor out pi divided by denominator;
+            e.g. default would be to factor out np.pi/12
+
+    Return:
+        string: containing strings of values and/or input string objects
+    """
+    factor = np.pi / denominator
+
+    a = []
+    for p in num_list:
+        # if list element is not a number then append its string representation
+        if not isinstance(p, Number):
+            a.append(str(p))
+            continue
+
+        if np.isclose(p % factor, [0, factor]).any() and p != 0:
+            gcd = np.gcd(int(p / factor), denominator)
+            if gcd == denominator:
+                if int(p / np.pi) == 1:
+                    a.append("np.pi")
+                else:
+                    a.append(f"{int(p/np.pi)}*np.pi")
+            else:
+                coeff = int(p / factor / gcd)
+                if coeff == 1:
+                    a.append(f"np.pi/{int(denominator/gcd)}")
+                else:
+                    a.append(f"{coeff}*np.pi/{int(denominator / gcd)}")
+        else:
+            a.append(str(p))
+    return ", ".join(a)
 
 
 def save(f, prog):
@@ -271,8 +510,8 @@ def load(f):
             fid = open(filename, "r")
             own_file = True
 
-    except TypeError:
-        raise ValueError("file must be a string, pathlib.Path, or file-like object")
+    except TypeError as e:
+        raise ValueError("file must be a string, pathlib.Path, or file-like object") from e
 
     try:
         bb_str = fid.read()
