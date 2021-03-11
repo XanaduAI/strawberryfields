@@ -537,7 +537,6 @@ def squaregkpBasisState(i, amplepsilon, amplcutoff, cutoff):
     alphas = [gkp_displacements(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
     num_kets = len(alphas)
     ket = [coeffs[j] * displacedSqueezed(alphas[j], 0, r, 0, cutoff) for j in range(num_kets)]
-    ket /= np.linalg.norm(ket)
     return sum(ket)
 
 

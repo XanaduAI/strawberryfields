@@ -546,7 +546,6 @@ class BosonicBackend(BaseBosonic):
             state (list): ``[theta,phi]`` for qubit definition above
             epsilon (float): finite energy parameter of the state
             amplcutoff (float): this determines how many terms to keep
-            cutoff (float): Fock cutoff, not used in the bosonic representation
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
 
