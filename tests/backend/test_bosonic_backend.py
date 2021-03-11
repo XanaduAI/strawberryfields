@@ -457,8 +457,8 @@ class TestBosonicGKPStates:
             sf.ops.GKP(epsilon=eps, state=ket) | q
         hbar = 2
         eng_bosonic = sf.Engine("bosonic", backend_options={"hbar": hbar})
-        gkp_bosonic = eng_fock.run(prog_bosonic).state
-        W_bosonic = gkp_fock.wigner(0, xvec, xvec)
+        gkp_bosonic = eng_bosonic.run(prog_bosonic).state
+        W_bosonic = gkp_bosonic.wigner(0, xvec, xvec)
         np.allclose(W_fock, W_bosonic)
 
 
