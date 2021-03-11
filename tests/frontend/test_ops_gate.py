@@ -175,7 +175,7 @@ class TestGKPBasics:
     @pytest.mark.parametrize("s", ["square"])
     def test_gkp_str_representation(self, state, ampl, eps, r, s):
         """Test the string representation of the GKP operation"""
-        assert str(ops.GKP(state=state, amplcutoff=ampl, epsilon=eps, representation=r, shape=s)) == f'GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s})'
+        assert str(ops.GKP(state=state, ampl_cutoff=ampl, epsilon=eps, representation=r, shape=s)) == f'GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s})'
 
 @pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
 class TestComplexError:

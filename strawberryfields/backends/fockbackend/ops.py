@@ -517,31 +517,31 @@ def gkp_coeffs(t, k, epsilon):
 
 
 @functools.lru_cache()
-def squaregkpBasisState(i, amplepsilon, amplcutoff, cutoff):
+def squaregkpBasisState(i, epsilon, ampl_cutoff, cutoff):
     """
     Generate the Fock expansion of a computational GKP basis state.
 
     Args:
         i (int): a computational basis state label, can be either 0 or 1
-        amplepsilon (float): finite energy parameter of the state
-        amplcutoff (float): this determines how many terms to keep in the Hilbert space expansion
+        epsilon (float): finite energy parameter of the state
+        ampl_cutoff (float): this determines how many terms to keep in the Hilbert space expansion
         cutoff (int): Fock space truncation
 
     Returns
         (array): the expansion of the ith computational basis state in the Fock basis
 
     """
-    z_max = int(np.ceil(np.sqrt(-0.25 / np.pi * np.log(amplcutoff) / np.tanh(amplepsilon))))
-    coeffs = [gkp_coeffs(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
-    r = -0.5 * np.log(np.tanh(amplepsilon))
-    alphas = [gkp_displacements(t, i, amplepsilon) for t in range(-z_max, z_max + 1)]
+    z_max = int(np.ceil(np.sqrt(-0.25 / np.pi * np.log(ampl_cutoff) / np.tanh(epsilon))))
+    coeffs = [gkp_coeffs(t, i, epsilon) for t in range(-z_max, z_max + 1)]
+    r = -0.5 * np.log(np.tanh(epsilon))
+    alphas = [gkp_displacements(t, i, epsilon) for t in range(-z_max, z_max + 1)]
     num_kets = len(alphas)
     ket = [coeffs[j] * displacedSqueezed(alphas[j], 0, r, 0, cutoff) for j in range(num_kets)]
     return sum(ket)
 
 
 @functools.lru_cache()
-def squaregkpState(theta, phi, amplepsilon, amplcutoff, cutoff):
+def squaregkpState(theta, phi, epsilon, ampl_cutoff, cutoff):
     r"""
     Generate the Fock expansion of an abitrary GKP state parametrized as
     :math:`|\psi\rangle = \cos{\tfrac{\theta}{2}} \vert 0 \rangle_{\rm gkp} + e^{-i \phi} \sin{\tfrac{\theta}{2}} \vert 1 \rangle_{\rm gkp}`.
@@ -549,8 +549,8 @@ def squaregkpState(theta, phi, amplepsilon, amplcutoff, cutoff):
     Args:
         theta (float): the colatitude with respect to the z-axis in the Bloch phere
         phi (float): the longitude with respect to the x-axis in the Bloch shere
-        amplepsilon (float): finite energy parameter of the state
-        amplcutoff (float): this determines how many terms to keep
+        epsilon (float): finite energy parameter of the state
+        ampl_cutoff (float): this determines how many terms to keep
         cutoff (int): Fock space truncation
 
     Returns:
@@ -558,8 +558,8 @@ def squaregkpState(theta, phi, amplepsilon, amplcutoff, cutoff):
     """
     qubit_coeff0 = np.cos(theta / 2)
     qubit_coeff1 = np.sin(theta / 2) * np.exp(-1j * phi)
-    ket0 = squaregkpBasisState(0, amplepsilon, amplcutoff, cutoff)
-    ket1 = squaregkpBasisState(1, amplepsilon, amplcutoff, cutoff)
+    ket0 = squaregkpBasisState(0, epsilon, ampl_cutoff, cutoff)
+    ket1 = squaregkpBasisState(1, epsilon, ampl_cutoff, cutoff)
     ket = qubit_coeff0 * ket0 + qubit_coeff1 * ket1
     ket /= np.linalg.norm(ket)
     return ket
