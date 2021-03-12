@@ -305,6 +305,7 @@ def cat_state(a, p=0, fock_dim=5):
 
     # coherent states
     k = np.arange(fock_dim)
+    # Need to cast a to float before exponentiation to avoid overflow
     c1 = ((1.0 * a) ** k) / np.sqrt(fac(k))
     c2 = ((-1.0 * a) ** k) / np.sqrt(fac(k))
 

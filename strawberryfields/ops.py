@@ -867,6 +867,7 @@ class Catstate(Preparation):
         N = temp / pf.sqrt(2 * (1 + pf.cos(phi) * temp ** 4))
 
         # coherent states
+        # Need to cast  alpha to float before exponentiation to avoid overflow
         c1 = ((1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
         c2 = ((-1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
         # add them up with a relative phase
