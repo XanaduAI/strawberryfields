@@ -853,8 +853,8 @@ class Catstate(Preparation):
         the squeezed single photon state :math:`S\ket{1}`.
     """
 
-    def __init__(self, alpha=0, p=0, representation="complex", cutoff=1e-12, D=2):
-        super().__init__([alpha, p, representation, cutoff, D])
+    def __init__(self, alpha=0, p=0, representation="complex", ampl_cutoff=1e-12, D=2):
+        super().__init__([alpha, p, representation, ampl_cutoff, D])
 
     def _apply(self, reg, backend, **kwargs):
         alpha = self.p[0]
@@ -911,11 +911,39 @@ class GKP(Preparation):
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, cutoff=1e-12, representation="real", shape="square"
+        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", shape="square"
     ):
         if state is None:
             state = [0, 0]
-        super().__init__([state, epsilon, cutoff, representation, shape])
+        super().__init__([state, epsilon, ampl_cutoff, representation, shape])
+
+    def _apply(self, reg, backend, **kwargs):
+        backend.prepare_gkp(*self.p, mode=reg[0])
+
+    def __str__(self):
+        """String representation for the GKP operation using Blackbird syntax.
+
+        Assumes that the arguments to GKP can be lists with non-symbolic
+        entries, strings or scalars.
+
+        Returns:
+            str: string representation
+        """
+        # defaults to the class name
+        if not self.p:
+            return self.__class__.__name__
+
+        # class name and parameter values
+        temp = []
+        for i in self.p:
+            if isinstance(i, list):
+                temp.append(str(i))  # Assumes that each value is a scalar
+            elif isinstance(i, str):
+                temp.append(i)
+            else:
+                temp.append(par_str(i))
+
+        return self.__class__.__name__ + "(" + ", ".join(temp) + ")"
 
 
 class Ket(Preparation):

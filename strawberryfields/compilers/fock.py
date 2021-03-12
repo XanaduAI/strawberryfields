@@ -34,6 +34,7 @@ class Fock(Compiler):
         "Thermal",
         "Fock",
         "Catstate",
+        "GKP",
         "Ket",
         "DensityMatrix",
         # measurements
