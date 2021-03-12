@@ -68,7 +68,9 @@
   plt.contourf(xvec, pvec, wigner)
   plt.show()
   ```
-  
+* The `fock` backend now supports the `GKP` preparation [(#553)](https://github.com/XanaduAI/strawberryfields/pull/553)
+
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
