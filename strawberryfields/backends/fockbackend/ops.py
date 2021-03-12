@@ -501,17 +501,30 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
 
 
 def gkp_displacements(t, k, epsilon):
-    """
-    Helper function to generate the displacements parameters associated with the teeth of
+    """Helper function to generate the displacements parameters associated with the teeth of
     GKP computational basis state k.
-    """
+    
+    Args:
+        t (array): the teeth of GKP computational basis
+        k (int): a computational basis state label, can be either 0 or 1
+        epsilon (float): finite energy parameter of the state
+
+    Returns:
+        array: the displacements
     return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
 
 
 def gkp_coeffs(t, k, epsilon):
-    """
-    Helper function to generate the coefficient parameters associated with the teeth of
+    """Helper function to generate the coefficient parameters associated with the teeth of
     GKP computational basis state k.
+    
+    Args:
+        t (array): the teeth of GKP computational basis
+        k (int): a computational basis state label, can be either 0 or 1
+        epsilon (float): finite energy parameter of the state
+
+    Returns:
+        array: the coefficients
     """
     return np.exp(-0.5 * np.pi * np.tanh(epsilon) * (k + 2 * t) ** 2)
 
