@@ -305,7 +305,7 @@ class FockBackend(BaseFock):
         Args:
             state (list): ``[theta,phi]`` for qubit definition above
             epsilon (float): finite energy parameter of the state
-            cutoff (float): this determines how many terms to keep
+            amplcutoff (float): this determines how many terms to keep
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
 

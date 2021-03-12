@@ -547,8 +547,8 @@ def squaregkpState(theta, phi, epsilon, ampl_cutoff, cutoff):
     :math:`|\psi\rangle = \cos{\tfrac{\theta}{2}} \vert 0 \rangle_{\rm gkp} + e^{-i \phi} \sin{\tfrac{\theta}{2}} \vert 1 \rangle_{\rm gkp}`.
 
     Args:
-        theta (float): the colatitude with respect to the z-axis in the Bloch phere
-        phi (float): the longitude with respect to the x-axis in the Bloch shere
+        theta (float): the colatitude with respect to the z-axis in the Bloch sphere
+        phi (float): the longitude with respect to the x-axis in the Bloch sphere
         epsilon (float): finite energy parameter of the state
         ampl_cutoff (float): this determines how many terms to keep
         cutoff (int): Fock space truncation
