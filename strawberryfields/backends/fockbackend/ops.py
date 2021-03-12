@@ -535,7 +535,7 @@ def gkp_coeffs(t, k, epsilon):
 @functools.lru_cache()
 def square_gkp_basis_state(i, epsilon, ampl_cutoff, cutoff):
     """
-    Generate the Fock expansion of a computational GKP basis state.
+    Generate the Fock expansion of a (subnormalized) computational GKP basis state. Normalization occurs in the ``square_gkp_state`` method.
 
     Args:
         i (int): a computational basis state label, can be either 0 or 1
