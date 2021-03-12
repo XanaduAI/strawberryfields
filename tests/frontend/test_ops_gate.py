@@ -168,7 +168,7 @@ class TestGateBasics:
 class TestGKPBasics:
     """Test the basic properties of the GKP state preparation"""
 
-    @pytest.mark.parametrize("state", [[0,2], [1, 0]])
+    @pytest.mark.parametrize("state", [[0, 2], [1, 0]])
     @pytest.mark.parametrize("ampl", [0, 0.001])
     @pytest.mark.parametrize("eps", [0, 0.001])
     @pytest.mark.parametrize("r", ["real", "complex"])
