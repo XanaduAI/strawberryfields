@@ -110,7 +110,7 @@ class TestBosonicCatStates:
         means and covariances."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", ampl_cutoff=1e-6, D=1) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -133,7 +133,7 @@ class TestBosonicCatStates:
         low cutoff and low D produce fewer weights when alpha !=0."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", ampl_cutoff=1e-6, D=1) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -142,7 +142,7 @@ class TestBosonicCatStates:
 
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=10) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", ampl_cutoff=1e-6, D=10) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
