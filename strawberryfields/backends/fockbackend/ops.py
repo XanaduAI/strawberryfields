@@ -501,9 +501,10 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
 
 
 def gkp_displacements(t, k, epsilon):
-    """Helper function to generate the displacements parameters associated with the teeth of
+    """
+    Helper function to generate the displacements parameters associated with the teeth of
     GKP computational basis state k.
-    
+
     Args:
         t (array): the teeth of GKP computational basis
         k (int): a computational basis state label, can be either 0 or 1
@@ -511,13 +512,15 @@ def gkp_displacements(t, k, epsilon):
 
     Returns:
         array: the displacements
+    """
     return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
 
 
 def gkp_coeffs(t, k, epsilon):
-    """Helper function to generate the coefficient parameters associated with the teeth of
+    """
+    Helper function to generate the coefficient parameters associated with the teeth of
     GKP computational basis state k.
-    
+
     Args:
         t (array): the teeth of GKP computational basis
         k (int): a computational basis state label, can be either 0 or 1
@@ -530,7 +533,7 @@ def gkp_coeffs(t, k, epsilon):
 
 
 @functools.lru_cache()
-def squaregkpBasisState(i, epsilon, ampl_cutoff, cutoff):
+def square_gkp_basis_state(i, epsilon, ampl_cutoff, cutoff):
     """
     Generate the Fock expansion of a computational GKP basis state.
 
@@ -554,7 +557,7 @@ def squaregkpBasisState(i, epsilon, ampl_cutoff, cutoff):
 
 
 @functools.lru_cache()
-def squaregkpState(theta, phi, epsilon, ampl_cutoff, cutoff):
+def square_gkp_state(theta, phi, epsilon, ampl_cutoff, cutoff):
     r"""
     Generate the Fock expansion of an abitrary GKP state parametrized as
     :math:`|\psi\rangle = \cos{\tfrac{\theta}{2}} \vert 0 \rangle_{\rm gkp} + e^{-i \phi} \sin{\tfrac{\theta}{2}} \vert 1 \rangle_{\rm gkp}`.
@@ -571,8 +574,8 @@ def squaregkpState(theta, phi, epsilon, ampl_cutoff, cutoff):
     """
     qubit_coeff0 = np.cos(theta / 2)
     qubit_coeff1 = np.sin(theta / 2) * np.exp(-1j * phi)
-    ket0 = squaregkpBasisState(0, epsilon, ampl_cutoff, cutoff)
-    ket1 = squaregkpBasisState(1, epsilon, ampl_cutoff, cutoff)
+    ket0 = square_gkp_basis_state(0, epsilon, ampl_cutoff, cutoff)
+    ket1 = square_gkp_basis_state(1, epsilon, ampl_cutoff, cutoff)
     ket = qubit_coeff0 * ket0 + qubit_coeff1 * ket1
     ket /= np.linalg.norm(ket)
     return ket

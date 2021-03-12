@@ -799,7 +799,7 @@ class Circuit:
         """
 
         if self._pure:
-            self.prepare(ops.squaregkpState(theta, phi, epsilon, ampl_cutoff, self._trunc), mode)
+            self.prepare(ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc), mode)
         else:
-            st = ops.squaregkpState(theta, phi, epsilon, ampl_cutoff, self._trunc)
+            st = ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc)
             self.prepare(np.outer(st, st.conjugate()), mode)
