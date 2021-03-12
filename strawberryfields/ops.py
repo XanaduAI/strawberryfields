@@ -854,7 +854,7 @@ class Catstate(Preparation):
     """
 
     def __init__(self, alpha=0, p=0, representation="complex", ampl_cutoff=1e-12, D=2):
-        super().__init__([alpha, p, representation, cutoff, D])
+        super().__init__([alpha, p, representation, ampl_cutoff, D])
 
     def _apply(self, reg, backend, **kwargs):
         alpha = self.p[0]
