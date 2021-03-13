@@ -218,10 +218,9 @@ class TestInitialStates:
         state = utils.fock_state(n, fock_dim=cutoff)
         assert np.all(state == np.eye(1, cutoff, n))
 
-    def test_even_cat_state(self, tol):
+    @pytest.mark.parametrize("a, cutoff", [(0.212, 10), (4., 50)])
+    def test_even_cat_state(self, a, cutoff, tol):
         """test correct even cat state returned"""
-        a = 0.212
-        cutoff = 10
         p = 0
 
         state = utils.cat_state(a, p, fock_dim=cutoff)
