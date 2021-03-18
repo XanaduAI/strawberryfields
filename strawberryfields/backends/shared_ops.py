@@ -33,6 +33,7 @@ def rotation_matrix(phi):
 
     Args:
         phi (float): rotation angle
+
     Returns:
         array: :math:`2\times 2` rotation matrix
     """
@@ -45,8 +46,7 @@ def sympmat(n):
 
     Args:
         n (int): order
-        hbar (float): the value of hbar used in the definition
-            of the quadrature operators
+
     Returns:
         array: symplectic matrix
     """
@@ -74,21 +74,3 @@ def changebasis(n):
         m[2 * i, i] = 1
         m[2 * i + 1, i + n] = 1
     return m
-
-
-def haar_measure(n):
-    """A Random matrix distributed with the Haar measure.
-
-    For more details, see :cite:`mezzadri2006`.
-
-    Args:
-        n (int): matrix size
-    Returns:
-        array: an nxn random matrix
-    """
-    z = (sp.randn(n, n) + 1j * sp.randn(n, n)) / np.sqrt(2.0)
-    q, r = qr(z)
-    d = sp.diagonal(r)
-    ph = d / np.abs(d)
-    q = np.multiply(q, ph, q)
-    return q

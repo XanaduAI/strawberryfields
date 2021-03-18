@@ -22,6 +22,7 @@ import scipy as sp
 from scipy.linalg import qr, block_diag
 
 from strawberryfields import decompositions as dec
+from strawberryfields.decompositions import random_interferometer as haar_measure
 
 N_SAMPLES = 10
 
@@ -37,24 +38,6 @@ def omega(n):
         (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1),), axis=0,
     )
     return O
-
-
-def haar_measure(n):
-    """A Random matrix distributed with the Haar measure.
-
-    For more details, see :cite:`mezzadri2006`.
-
-    Args:
-        n (int): matrix size
-    Returns:
-        array: an nxn random matrix
-    """
-    z = (sp.randn(n, n) + 1j * sp.randn(n, n)) / np.sqrt(2.0)
-    q, r = qr(z)
-    d = sp.diagonal(r)
-    ph = d / np.abs(d)
-    q = np.multiply(q, ph, q)
-    return q
 
 
 class TestTakagi:
