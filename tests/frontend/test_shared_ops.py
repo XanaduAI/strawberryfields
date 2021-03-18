@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the Strawberry Fields shared_ops module"""
-import os
 import pytest
 
 pytestmark = pytest.mark.frontend
