@@ -13,17 +13,10 @@
 # limitations under the License.
 """Common shared operations that can be used by backends"""
 
-import os
 import functools
-import re
-import itertools
-from bisect import bisect
-import pkg_resources
 
 import numpy as np
 import scipy as sp
-from scipy.special import binom
-from scipy.special import gammaln as lg
 from scipy.linalg import qr
 
 def_type = np.complex128
