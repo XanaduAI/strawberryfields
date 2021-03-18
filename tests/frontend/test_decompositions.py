@@ -22,7 +22,7 @@ import scipy as sp
 from scipy.linalg import qr, block_diag
 
 from strawberryfields import decompositions as dec
-from strawberryfields.decompositions import random_interferometer as haar_measure
+from strawberryfields.utils import random_interferometer as haar_measure
 
 N_SAMPLES = 10
 
