@@ -322,8 +322,6 @@ def beamsplitter(theta, phi, trunc):
 
     .. _`beamsplitter operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.beamsplitter.html
     """
-    # pylint: disable=bad-whitespace
-
     BS_tw = beamsplitter_tw(theta, phi, cutoff=trunc)
 
     # Transpose needed because of different conventions in SF and The Walrus.
@@ -500,3 +498,84 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
         Hvals[i] = 2 * x * Hvals[i - 1] - 2 * (i - 1) * Hvals[i - 2]
 
     return q_tensor, Hvals
+
+
+def gkp_displacements(t, k, epsilon):
+    """
+    Helper function to generate the displacements parameters associated with the teeth of
+    GKP computational basis state k.
+
+    Args:
+        t (array): the teeth of GKP computational basis
+        k (int): a computational basis state label, can be either 0 or 1
+        epsilon (float): finite energy parameter of the state
+
+    Returns:
+        array: the displacements
+    """
+    return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
+
+
+def gkp_coeffs(t, k, epsilon):
+    """
+    Helper function to generate the coefficient parameters associated with the teeth of
+    GKP computational basis state k.
+
+    Args:
+        t (array): the teeth of GKP computational basis
+        k (int): a computational basis state label, can be either 0 or 1
+        epsilon (float): finite energy parameter of the state
+
+    Returns:
+        array: the coefficients
+    """
+    return np.exp(-0.5 * np.pi * np.tanh(epsilon) * (k + 2 * t) ** 2)
+
+
+@functools.lru_cache()
+def square_gkp_basis_state(i, epsilon, ampl_cutoff, cutoff):
+    """
+    Generate the Fock expansion of a (subnormalized) computational GKP basis state. Normalization occurs in the ``square_gkp_state`` method.
+
+    Args:
+        i (int): a computational basis state label, can be either 0 or 1
+        epsilon (float): finite energy parameter of the state
+        ampl_cutoff (float): this determines how many terms to keep in the Hilbert space expansion
+        cutoff (int): Fock space truncation
+
+    Returns
+        (array): the expansion of the ith computational basis state in the Fock basis
+
+    """
+    z_max = int(np.ceil(np.sqrt(-0.25 / np.pi * np.log(ampl_cutoff) / np.tanh(epsilon))))
+    coeffs = [gkp_coeffs(t, i, epsilon) for t in range(-z_max, z_max + 1)]
+    r = -0.5 * np.log(np.tanh(epsilon))
+    alphas = [gkp_displacements(t, i, epsilon) for t in range(-z_max, z_max + 1)]
+    num_kets = len(alphas)
+    ket = [coeffs[j] * displacedSqueezed(alphas[j], 0, r, 0, cutoff) for j in range(num_kets)]
+    return sum(ket)
+
+
+@functools.lru_cache()
+def square_gkp_state(theta, phi, epsilon, ampl_cutoff, cutoff):
+    r"""
+    Generate the Fock expansion of an abitrary GKP state parametrized as
+    :math:`|\psi\rangle = \cos{\tfrac{\theta}{2}} \vert 0 \rangle_{\rm gkp} + e^{-i \phi} \sin{\tfrac{\theta}{2}} \vert 1 \rangle_{\rm gkp}`.
+
+    Args:
+        theta (float): the colatitude with respect to the z-axis in the Bloch sphere
+        phi (float): the longitude with respect to the x-axis in the Bloch sphere
+        epsilon (float): finite energy parameter of the state
+        ampl_cutoff (float): this determines how many terms to keep
+        cutoff (int): Fock space truncation
+
+    Returns:
+        tuple: arrays of the weights, means and covariances for the state
+    """
+    qubit_coeff0 = np.cos(theta / 2)
+    qubit_coeff1 = np.sin(theta / 2) * np.exp(-1j * phi)
+    ket0 = square_gkp_basis_state(0, epsilon, ampl_cutoff, cutoff)
+    ket1 = square_gkp_basis_state(1, epsilon, ampl_cutoff, cutoff)
+    ket = qubit_coeff0 * ket0 + qubit_coeff1 * ket1
+    ket /= np.linalg.norm(ket)
+    return ket

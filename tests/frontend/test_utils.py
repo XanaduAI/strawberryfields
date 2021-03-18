@@ -218,14 +218,16 @@ class TestInitialStates:
         state = utils.fock_state(n, fock_dim=cutoff)
         assert np.all(state == np.eye(1, cutoff, n))
 
-    def test_even_cat_state(self, tol):
+    @pytest.mark.parametrize("a, cutoff", [(0.212, 10), (4, 50)])
+    def test_even_cat_state(self, a, cutoff, tol):
         """test correct even cat state returned"""
-        a = 0.212
-        cutoff = 10
         p = 0
 
         state = utils.cat_state(a, p, fock_dim=cutoff)
 
+        # For the analytic expression, cast the integer parameter to float so
+        # that there's no overflow
+        a = float(a)
         n = np.arange(cutoff)
         expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) + np.exp(
             -0.5 * np.abs(-a) ** 2
@@ -234,14 +236,16 @@ class TestInitialStates:
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
-    def test_odd_cat_state(self, tol):
-        """test correct even cat state returned"""
-        a = 0.212
-        cutoff = 10
+    @pytest.mark.parametrize("a, cutoff", [(0.212, 10), (4, 50)])
+    def test_odd_cat_state(self, a, cutoff, tol):
+        """test correct odd cat state returned"""
         p = 1
 
         state = utils.cat_state(a, p, fock_dim=cutoff)
 
+        # For the analytic expression, cast the integer parameter to float so
+        # that there's no overflow
+        a = float(a)
         n = np.arange(cutoff)
         expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) - np.exp(
             -0.5 * np.abs(-a) ** 2

@@ -290,3 +290,37 @@ class FockBackend(BaseFock):
                 "fock backend currently does not support " "shots != 1 for Fock measurement"
             )
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)
+
+    def prepare_gkp(
+        self, state, epsilon, ampl_cutoff, representation="real", shape="square", mode=None
+    ):
+        r"""Prepares the Fock representation of a finite energy GKP state.
+
+        GKP states are qubits, with the qubit state defined by:
+
+        :math:`\ket{\psi}_{gkp} = \cos\frac{\theta}{2}\ket{0}_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}_{gkp}`
+
+        where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
+
+        Args:
+            state (list): ``[theta,phi]`` for qubit definition above
+            epsilon (float): finite energy parameter of the state
+            amplcutoff (float): this determines how many terms to keep
+            representation (str): ``'real'`` or ``'complex'`` reprsentation
+            shape (str): shape of the lattice; default 'square'
+
+        Returns:
+            tuple: arrays of the weights, means and covariances for the state
+
+        Raises:
+            NotImplementedError: if the complex representation or a non-square lattice is attempted
+        """
+
+        if representation == "complex":
+            raise NotImplementedError("The complex description of GKP is not implemented")
+
+        if shape != "square":
+            raise NotImplementedError("Only square GKP are implemented for now")
+
+        theta, phi = state[0], state[1]
+        self.circuit.prepare_gkp(theta, phi, epsilon, ampl_cutoff, self._remap_modes(mode))
