@@ -29,7 +29,6 @@ Contents
 # pylint: disable=too-many-arguments
 
 from string import ascii_lowercase as indices
-from functools import lru_cache
 
 import tensorflow as tf
 import numpy as np
