@@ -16,11 +16,6 @@
 import functools
 
 import numpy as np
-import scipy as sp
-from scipy.linalg import qr
-
-def_type = np.complex128
-
 
 # ================================+
 # Phase space shared operations  |
