@@ -64,7 +64,7 @@ The Strawberry Fields test suite requires `pytest <https://docs.pytest.org/en/la
 `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_,
 `pytest-randomly <https://github.com/pytest-dev/pytest-randomly>`_,
 and `pytest-mocks <https://github.com/pytest-dev/pytest-mock/>`_ for coverage reports.
-These can both be installed via ``pip``:
+These can be installed via ``pip``:
 
 .. code-block:: bash
 
