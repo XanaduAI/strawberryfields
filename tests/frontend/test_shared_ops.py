@@ -23,24 +23,6 @@ import strawberryfields.backends.shared_ops as so
 class TestPhaseSpaceFunctions:
     """Tests for the shared phase space operations"""
 
-    @pytest.mark.parametrize("phi", np.linspace(0, np.pi, 4))
-    def test_rotation_matrix(self, phi):
-        """Test the function rotation_matrix"""
-        res = so.rotation_matrix(phi)
-        expected = np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
-
-        assert np.all(res == expected)
-
-    @pytest.mark.parametrize("n", [1, 2, 4])
-    def test_sympmat(self, n):
-        """Test the symplectic matrix function"""
-        res = so.sympmat(n)
-        O = np.zeros([n, n])
-        I = np.identity(n)
-        expected = np.block([[O, I], [-I, O]])
-
-        assert np.all(res == expected)
-
     def test_means_changebasis(self):
         """Test the change of basis function applied to vectors. This function
         converts from xp to symmetric ordering, and vice versa."""

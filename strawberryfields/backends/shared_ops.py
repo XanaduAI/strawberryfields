@@ -23,36 +23,6 @@ import numpy as np
 
 
 @functools.lru_cache()
-def rotation_matrix(phi):
-    r"""Rotation matrix.
-
-    Args:
-        phi (float): rotation angle
-
-    Returns:
-        array: :math:`2\times 2` rotation matrix
-    """
-    return np.array([[np.cos(phi), -np.sin(phi)], [np.sin(phi), np.cos(phi)]])
-
-
-@functools.lru_cache()
-def sympmat(n):
-    r"""Returns the symplectic matrix of order n
-
-    Args:
-        n (int): order
-
-    Returns:
-        array: symplectic matrix
-    """
-    idm = np.identity(n)
-    omega = np.concatenate(
-        (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)), axis=0
-    )
-    return omega
-
-
-@functools.lru_cache()
 def changebasis(n):
     r"""Change of basis matrix between the two Gaussian representation orderings.
 

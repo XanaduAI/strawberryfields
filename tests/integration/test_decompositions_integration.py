@@ -17,6 +17,8 @@ import pytest
 import numpy as np
 from scipy.linalg import qr, block_diag
 
+from thewalrus.symplectic import rotation as rot
+
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import (
@@ -26,10 +28,7 @@ from strawberryfields.utils import (
     squeezed_state,
 )
 from strawberryfields import ops
-from strawberryfields.backends.shared_ops import (
-    changebasis,
-    rotation_matrix as rot,
-)
+from strawberryfields.backends.shared_ops import changebasis
 
 from strawberryfields.utils import random_interferometer as haar_measure
 # make the test file deterministic

@@ -17,9 +17,10 @@ import pytest
 import numpy as np
 from scipy.stats import multivariate_normal
 
+from thewalrus.symplectic import rotation as rotm
+
 from strawberryfields import backends
 from strawberryfields import utils
-from strawberryfields.backends.shared_ops import rotation_matrix as rotm
 
 
 A = 0.3 + 0.1j

@@ -21,8 +21,9 @@ from itertools import groupby
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
 from thewalrus.quantum import adj_scaling
+from thewalrus.symplectic import sympmat
 
-from .backends.shared_ops import sympmat, changebasis
+from .backends.shared_ops import changebasis
 
 
 def takagi(N, tol=1e-13, rounding=13):
