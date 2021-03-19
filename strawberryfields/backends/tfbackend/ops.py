@@ -29,7 +29,6 @@ Contents
 # pylint: disable=too-many-arguments
 
 from string import ascii_lowercase as indices
-from functools import lru_cache
 
 import tensorflow as tf
 import numpy as np
@@ -57,12 +56,6 @@ try:
     tf.einsum = _einsum_v1
 except ImportError:
     pass
-
-from strawberryfields.backends.shared_ops import (
-    generate_bs_factors,
-    load_bs_factors,
-    save_bs_factors,
-)
 
 def_type = tf.complex64  # NOTE: what if a user wants higher accuracy?
 max_num_indices = len(indices)
@@ -126,23 +119,6 @@ def unravel_index(ind, tensor_shape):
     strides_shifted = tf.math.cumprod(tensor_shape, exclusive=True, reverse=True)
     unraveled_coords = (ind % strides) // strides_shifted
     return tf.transpose(unraveled_coords)
-
-
-@lru_cache()
-def get_prefac_tensor(cutoff, directory, save):
-    """Equivalent to the functionality of shared_ops the bs_factors functions from shared_ops,
-    but caches the return value as a tensor. This allows us to re-use the same prefactors and save
-    space on the computational graph."""
-    try:
-        prefac = load_bs_factors(cutoff, directory)
-    except FileNotFoundError:
-        prefac = generate_bs_factors(cutoff)
-        if save:
-            save_bs_factors(prefac, directory)
-    prefac = tf.expand_dims(
-        tf.cast(prefac[:cutoff, :cutoff, :cutoff, :cutoff, :cutoff], def_type), 0
-    )
-    return prefac
 
 
 ###################################################################
