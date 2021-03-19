@@ -120,6 +120,7 @@ def unravel_index(ind, tensor_shape):
     unraveled_coords = (ind % strides) // strides_shifted
     return tf.transpose(unraveled_coords)
 
+
 ###################################################################
 
 # Matrices:
