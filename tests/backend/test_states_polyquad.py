@@ -19,9 +19,11 @@ from scipy.stats import multivariate_normal
 from scipy.integrate import simps
 from scipy.linalg import block_diag
 
+from thewalrus.symplectic import rotation as R
+
 from strawberryfields import backends
 from strawberryfields import utils
-from strawberryfields.backends.shared_ops import rotation_matrix as R, changebasis
+from strawberryfields.backends.shared_ops import changebasis
 
 # some tests require a higher cutoff for accuracy
 CUTOFF = 12

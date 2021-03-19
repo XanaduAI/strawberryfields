@@ -26,11 +26,12 @@ from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
 
+from thewalrus.symplectic import rotation as _R
+
 import thewalrus.quantum as twq
 
 import strawberryfields as sf
 
-from .shared_ops import rotation_matrix as _R
 from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
