@@ -1374,6 +1374,15 @@ class ThermalLossChannel(Channel):
         p = par_evaluate(self.p)
         backend.thermal_loss(p[0], p[1], *reg)
 
+class PhaseNoise(Channel):
+    r"""DON'T TAKE THIS SERIOUSLY, I'M JUST TRYING TO HAVE FUN"""
+
+    def __init__(self, sigma):
+        super().__init__([sigma])
+
+    def _apply(self, reg, backend, **kwargs):
+        p = par_evaluate(self.p)
+        backend.phase_noise(p[0], *reg)
 
 class MSgate(Channel):
     r"""Phase space measurement-based squeezing gate.

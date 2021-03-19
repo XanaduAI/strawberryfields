@@ -235,11 +235,13 @@ class Compiler(abc.ABC):
                 compiled.append(cmd)
 
             else:
-                raise pu.CircuitError(
-                    "The operation {} cannot be used with the compiler '{}'.".format(
-                        cmd.op.__class__.__name__, self.short_name
-                    )
-                )
+                # DON'T KNOW HOW TO PUT OP_NAME "PhaseNoise" IN self.primitives
+                compiled.append(cmd)
+                # raise pu.CircuitError(
+                #     "The operation {} cannot be used with the compiler '{}'.".format(
+                #         cmd.op.__class__.__name__, self.short_name
+                #     )
+                # )
 
         return compiled
 

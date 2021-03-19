@@ -453,6 +453,17 @@ class GaussianModes:
         self.loss(T, k)
         self.nmat += (1 - T) * nbar
 
+    def phase_noise(self, sigma, k):
+
+        self.nmat[k][k] -= 0
+        self.mmat[k][k] -= 2*sigma**2 * self.mmat[k][k]
+
+        for l in np.delete(np.arange(self.nlen), k):
+            self.nmat[k][l] -= 0.5*sigma**2 * self.nmat[k][l]
+            self.mmat[k][l] -= 0.5*sigma**2 * self.mmat[k][l]
+            self.nmat[l][k] -= 0.5*sigma**2 * self.nmat[l][k]
+            self.mmat[l][k] -= 0.5*sigma**2 * self.mmat[l][k]
+
     def init_thermal(self, population, mode):
         """ Initializes a state of mode in a thermal state with the given population"""
         self.loss(0.0, mode)

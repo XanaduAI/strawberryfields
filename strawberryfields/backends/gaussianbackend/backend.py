@@ -214,6 +214,9 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
+    def phase_noise(self, sigma, mode):
+        self.circuit.phase_noise(sigma, mode)
+
     def measure_fock(self, modes, shots=1, select=None, **kwargs):
         if select is not None:
             raise NotImplementedError(
