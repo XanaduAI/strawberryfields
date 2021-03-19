@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the Strawberry Fields shared_ops module"""
-import os
 import pytest
 
 pytestmark = pytest.mark.frontend
@@ -20,143 +19,6 @@ pytestmark = pytest.mark.frontend
 import numpy as np
 
 import strawberryfields.backends.shared_ops as so
-
-# fmt: off
-BS_4_VAL = np.array([ 1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j,
-        1.00000000+0.j,  1.41421356+0.j,  1.73205081+0.j,  1.00000000+0.j,
-        1.73205081+0.j,  1.00000000+0.j, -1.00000000+0.j, -1.41421356+0.j,
-       -1.73205081+0.j,  1.00000000+0.j, -1.00000000+0.j,  1.00000000+0.j,
-       -2.00000000+0.j,  1.00000000+0.j, -3.00000000+0.j,  1.00000000+0.j,
-        1.41421356+0.j, -1.00000000+0.j,  2.00000000+0.j, -2.44948974+0.j,
-        2.44948974+0.j,  1.73205081+0.j, -1.00000000+0.j,  3.00000000+0.j,
-        1.00000000+0.j,  1.73205081+0.j, -1.41421356+0.j,  1.00000000+0.j,
-       -2.00000000+0.j,  2.44948974+0.j, -2.44948974+0.j,  1.00000000+0.j,
-       -2.00000000+0.j,  1.00000000+0.j,  1.00000000+0.j, -4.00000000+0.j,
-        1.00000000+0.j,  3.00000000+0.j, -6.00000000+0.j,  1.00000000+0.j,
-        1.73205081+0.j, -2.44948974+0.j,  2.44948974+0.j,  1.00000000+0.j,
-       -6.00000000+0.j,  3.00000000+0.j, -1.00000000+0.j,  1.73205081+0.j,
-       -1.00000000+0.j,  3.00000000+0.j, -1.73205081+0.j,  2.44948974+0.j,
-       -2.44948974+0.j, -1.00000000+0.j,  6.00000000+0.j, -3.00000000+0.j,
-        1.00000000+0.j, -3.00000000+0.j,  1.00000000+0.j,  3.00000000+0.j,
-       -6.00000000+0.j,  1.00000000+0.j, -1.00000000+0.j,  9.00000000+0.j,
-       -9.00000000+0.j,  1.00000000+0.j])
-
-BS_4_IDX = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3],
-       [0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2,
-        2, 2, 2, 3, 3, 3, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        3, 3, 3, 3, 3, 3, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3],
-       [0, 1, 2, 3, 1, 2, 3, 2, 3, 3, 0, 1, 2, 0, 1, 1, 2, 2, 3, 3, 1, 2,
-        2, 3, 3, 2, 3, 3, 0, 1, 0, 1, 1, 2, 2, 0, 1, 1, 2, 2, 2, 3, 3, 3,
-        1, 2, 2, 3, 3, 3, 0, 0, 1, 1, 0, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2, 2,
-        3, 3, 3, 3],
-       [0, 1, 2, 3, 0, 1, 2, 0, 1, 0, 1, 2, 3, 0, 1, 1, 2, 2, 3, 3, 0, 1,
-        1, 2, 2, 0, 1, 1, 2, 3, 1, 2, 2, 3, 3, 0, 1, 1, 2, 2, 2, 3, 3, 3,
-        0, 1, 1, 2, 2, 2, 3, 2, 3, 3, 1, 2, 2, 3, 3, 3, 0, 1, 1, 2, 2, 2,
-        3, 3, 3, 3],
-       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0,
-        1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 2, 1, 2, 0, 1, 2, 0, 1, 2,
-        2, 1, 2, 0, 1, 2, 0, 1, 0, 1, 2, 1, 2, 0, 1, 2, 3, 2, 3, 1, 2, 3,
-        0, 1, 2, 3]])
-
-# fmt: on
-
-SQUEEZE_PARITY_8 = np.array(
-    [
-        [1, 0, -1, 0, 1, 0, -1, 0],
-        [0, 1, 0, -1, 0, 1, 0, -1],
-        [-1, 0, 1, 0, -1, 0, 1, 0],
-        [0, -1, 0, 1, 0, -1, 0, 1],
-        [1, 0, -1, 0, 1, 0, -1, 0],
-        [0, 1, 0, -1, 0, 1, 0, -1],
-        [-1, 0, 1, 0, -1, 0, 1, 0],
-        [0, -1, 0, 1, 0, -1, 0, 1],
-    ]
-)
-
-
-SQUEEZE_FACTOR_4 = np.array(
-    [
-        [
-            [1.0, 0.0, -0.0, 0.0],
-            [0.0, 0.0, -0.0, 0.0],
-            [1.41421356, 0.0, -0.0, 0.0],
-            [0.0, 0.0, -0.0, 0.0],
-        ],
-        [
-            [0.0, 0.0, 0.0, -0.0],
-            [0.0, 1.0, 0.0, -0.0],
-            [0.0, 0.0, 0.0, -0.0],
-            [0.0, 2.44948974, 0.0, -0.0],
-        ],
-        [
-            [-1.41421356, 0.0, 0.0, 0.0],
-            [-0.0, 0.0, 0.0, 0.0],
-            [-2.0, 0.0, 1.0, 0.0],
-            [-0.0, 0.0, 0.0, 0.0],
-        ],
-        [
-            [0.0, -0.0, 0.0, 0.0],
-            [0.0, -2.44948974, 0.0, 0.0],
-            [0.0, -0.0, 0.0, 0.0],
-            [0.0, -6.0, 0.0, 1.0],
-        ],
-    ]
-)
-
-
-# TODO: write unit tests for find_dim_files function
-
-
-class TestBeamsplitterFactors:
-    """Tests for the beamsplitter prefactors"""
-
-    def test_generate(self, tol):
-        """test generating beamsplitter factors gives expected results"""
-        factors = so.generate_bs_factors(4)
-        factors_val = factors[factors != 0.0]
-        factors_idx = np.array(np.nonzero(factors))
-
-        assert np.allclose(factors_val, BS_4_VAL, atol=tol, rtol=0)
-        assert np.allclose(factors_idx, BS_4_IDX, atol=tol, rtol=0)
-
-    def test_save_load(self, tmpdir, tol):
-        """test saving and loading of beamsplitter factors"""
-        factors = so.generate_bs_factors(4)
-        so.save_bs_factors(factors, directory=str(tmpdir))
-
-        factors = so.load_bs_factors(4, directory=str(tmpdir))
-        factors_val = factors[factors != 0.0]
-        factors_idx = np.array(np.nonzero(factors))
-
-        assert np.allclose(factors_val, BS_4_VAL, atol=tol, rtol=0)
-        assert np.allclose(factors_idx, BS_4_IDX, atol=tol, rtol=0)
-
-
-class TestSqueezingFactors:
-    """Tests for the squeezing prefactors"""
-
-    def test_squeeze_parity(self, tol):
-        """Test the squeeze parity function returns the correct result"""
-        parity = so.squeeze_parity(8)
-        assert np.allclose(parity, SQUEEZE_PARITY_8, atol=tol, rtol=0)
-
-    def test_generate(self, tol):
-        """test generating squeezoing factors gives expected results"""
-        factors = so.generate_squeeze_factors(4)
-        assert np.allclose(factors, SQUEEZE_FACTOR_4, atol=tol, rtol=0)
-
-    def test_save_load(self, tmpdir, tol):
-        """test saving and loading of squeezoing factors"""
-        factors_in = so.generate_squeeze_factors(4)
-        so.save_squeeze_factors(factors_in, directory=str(tmpdir))
-        factors_out = so.load_squeeze_factors(4, directory=str(tmpdir))
-
-        assert np.allclose(factors_out, SQUEEZE_FACTOR_4, atol=tol, rtol=0)
-
 
 class TestPhaseSpaceFunctions:
     """Tests for the shared phase space operations"""
@@ -203,9 +65,3 @@ class TestPhaseSpaceFunctions:
 
         assert np.all(C @ cov_xp @ C.T == cov_symmetric)
         assert np.all(C.T @ cov_symmetric @ C == cov_xp)
-
-    @pytest.mark.parametrize("n", [1, 2, 4, 10])
-    def test_haar_measure(self, n, tol):
-        """test that the haar measure function returns unitary matrices"""
-        U = so.haar_measure(n)
-        assert np.allclose(U @ U.conj().T, np.identity(n), atol=tol, rtol=0)

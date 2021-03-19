@@ -27,12 +27,11 @@ from strawberryfields.utils import (
 )
 from strawberryfields import ops
 from strawberryfields.backends.shared_ops import (
-    haar_measure,
     changebasis,
     rotation_matrix as rot,
 )
 
-
+from strawberryfields.utils import random_interferometer as haar_measure
 # make the test file deterministic
 np.random.seed(42)
 
