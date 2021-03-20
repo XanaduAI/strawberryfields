@@ -51,7 +51,7 @@ engines = [
     sf.Engine("gaussian", backend_options={"cutoff_dim": 6}),
     sf.Engine("fock", backend_options={"cutoff_dim": 6}),
     sf.Engine("tf", backend_options={"cutoff_dim": 6}),
-    sf.Engine("tf", backend_options={"batch_size": 2, "cutoff_dim": 6, "dtype": tf.float64}),
+    sf.Engine("tf", backend_options={"cutoff_dim": 6, "dtype": tf.float64}),
 ]
 
 
