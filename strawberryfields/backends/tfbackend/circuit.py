@@ -37,7 +37,7 @@ from string import ascii_lowercase as indices
 import numpy as np
 from scipy.special import factorial
 import tensorflow as tf
-
+from tensorflow import DType
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
 # will dynamically patch TensorFlow versions where _einsum_v1 exists, to make it the
@@ -62,10 +62,10 @@ class Circuit:
     The state of the modes is manipulated by calling the various methods."""
 
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
-    def __init__(self, num_modes, cutoff_dim, pure, batch_size):
+    def __init__(self, num_modes, cutoff_dim, pure, batch_size, dtype):
         self._hbar = 2
         self.reset(
-            num_subsystems=num_modes, pure=pure, cutoff_dim=cutoff_dim, batch_size=batch_size
+            num_subsystems=num_modes, pure=pure, cutoff_dim=cutoff_dim, batch_size=batch_size, dtype=dtype
         )
 
     def _make_vac_states(self, cutoff_dim):
@@ -222,6 +222,7 @@ class Circuit:
             pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
             cutoff_dim (int): new Fock space cutoff dimension to use.
             batch_size (None, int): None means no batching. An integer value >= 2 sets the batch size to use.
+            dtype (DType): Default is tf.complex64. 
         """
         if "pure" in kwargs:
             pure = kwargs["pure"]
@@ -248,6 +249,13 @@ class Circuit:
                     raise ValueError("Argument 'batch_size' must be either None or an integer > 1")
             self._batch_size = batch_size
             self._batched = batch_size is not None
+
+        if "dtype" in kwargs:
+            dtype = kwargs["dtype"]
+            if dtype is not None:
+                if not isinstance(dtype, DType):
+                    raise ValueError("Argument 'dtype' must be a Tensorflow DType")
+            self._dtype = dtype
 
         self._state_history = []
         self._cache = {}

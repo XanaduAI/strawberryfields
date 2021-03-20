@@ -83,6 +83,7 @@ class TFBackend(BaseFock):
                 For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\text{cutoff_dim}-1}`.
             pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
             batch_size (None or int): Size of the batch-axis dimension. If None, no batch-axis will be used.
+            dtype (DType): Tensorflow element types in a tensor. 
         """
         cutoff_dim = kwargs.get("cutoff_dim", None)
         pure = kwargs.get("pure", True)
@@ -99,7 +100,7 @@ class TFBackend(BaseFock):
         if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
         if not isinstance(dtype, DType):
-            raise ValueError("Argument 'dtype' must be a positive integer")
+            raise ValueError("Argument 'dtype' must be a Tensorflow DType")
         if batch_size == 1:
             raise ValueError(
                 "batch_size of 1 not supported, please use different batch_size or set batch_size=None"
@@ -107,7 +108,7 @@ class TFBackend(BaseFock):
 
         with tf.name_scope("Begin_circuit"):
             self._modemap = ModeMap(num_subsystems)
-            circuit = Circuit(num_subsystems, cutoff_dim, pure, batch_size)
+            circuit = Circuit(num_subsystems, cutoff_dim, pure, batch_size, dtype)
 
         self._init_modes = num_subsystems
         self.circuit = circuit
