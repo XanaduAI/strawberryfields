@@ -21,6 +21,7 @@ TensorFlow backend interface
 import numpy as np
 import tensorflow as tf
 
+from tensorflow import DType
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
 from .ops import mixed, partial_trace, reorder_modes
@@ -86,6 +87,7 @@ class TFBackend(BaseFock):
         cutoff_dim = kwargs.get("cutoff_dim", None)
         pure = kwargs.get("pure", True)
         batch_size = kwargs.get("batch_size", None)
+        dtype = kwargs.get("dtype", tf.complex64)
 
         if cutoff_dim is None:
             raise ValueError("Argument 'cutoff_dim' must be passed to the TensorFlow backend")
@@ -96,6 +98,8 @@ class TFBackend(BaseFock):
             raise ValueError("Argument 'cutoff_dim' must be a positive integer")
         if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
+        if not isinstance(dtype, DType):
+            raise ValueError("Argument 'dtype' must be a positive integer")
         if batch_size == 1:
             raise ValueError(
                 "batch_size of 1 not supported, please use different batch_size or set batch_size=None"
