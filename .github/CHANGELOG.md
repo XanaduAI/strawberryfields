@@ -81,13 +81,16 @@
 
 <h3>Documentation</h3>
 
+* Cleanup docs to make contribution easier.
+  [(#561)](https://github.com/XanaduAI/strawberryfields/pull/561)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
 J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac, 
-Nicolás Quesada, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva, Ilan 
-Tzitrin.
+Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva,
+Ilan Tzitrin.
 
 # Release 0.17.0 (current release)
 
