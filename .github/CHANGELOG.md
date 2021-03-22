@@ -83,6 +83,8 @@
 
 * Cleanup docs to make contribution easier.
   [(#561)](https://github.com/XanaduAI/strawberryfields/pull/561)
+* Add development requirements and format script to make contribution easier.
+  [(#563)](https://github.com/XanaduAI/strawberryfields/pull/563)
 
 <h3>Contributors</h3>
 
