@@ -12,6 +12,8 @@ Please complete the following checklist when submitting a PR:
 
 - [ ] Ensure that the test suite passes, by running `make test`.
 
+- [ ] Ensure that code is properly formatted, by running `make format`.
+
 - [ ] Add a new entry to the `.github/CHANGELOG.md` file, summarizing the
       change, and including a link back to the PR.
 
