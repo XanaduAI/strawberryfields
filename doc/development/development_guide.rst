@@ -222,11 +222,17 @@ Format
 ------
 
 Contributions are checked for format alignment in the pipeline. With ``black``
-installed, changes can be checked for format locally using:
+installed, changes can be formatted locally using:
 
 .. code-block:: bash
 
     make format
+
+Contributors without ``make`` installed can run ``black`` directly using:
+
+.. code-block:: bash
+
+    black -l 100 strawberryfields
 
 Documentation
 -------------
