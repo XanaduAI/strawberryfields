@@ -57,7 +57,7 @@ try:
 except ImportError:
     pass
 
-def_type = tf.complex64  # NOTE: what if a user wants higher accuracy?
+def_type = tf.float64  # NOTE: what if a user wants higher accuracy?
 max_num_indices = len(indices)
 
 ###################################################################
