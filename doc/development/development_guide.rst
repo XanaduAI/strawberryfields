@@ -56,20 +56,23 @@ Or, to install Strawberry Fields and TensorFlow with GPU and CUDA support:
 
     pip install strawberryfields tensorflow-gpu
 
+Development environment
+-----------------------
+
+Strawberry fields uses a ``pytest`` suite for testing and ``black`` for formatting. These
+dependencies can be installed via ``pip``:
+
+.. code-block:: bash
+
+    pip install -r dev_requirements.txt
 
 Software tests
 --------------
 
-The Strawberry Fields test suite requires `pytest <https://docs.pytest.org/en/latest/>`_,
-`pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_,
+The Strawberry Fields test suite includes `pytest <https://docs.pytest.org/en/latest/>`_,
+`pytest-mocks <https://github.com/pytest-dev/pytest-mock/>`_, 
 `pytest-randomly <https://github.com/pytest-dev/pytest-randomly>`_,
-and `pytest-mocks <https://github.com/pytest-dev/pytest-mock/>`_ for coverage reports.
-These can be installed via ``pip``:
-
-.. code-block:: bash
-
-    pip install pytest pytest-cov pytest-randomly pytest-mock
-
+and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ for coverage reports.
 
 To ensure that Strawberry Fields is working correctly after installation, the test suite
 can be run by navigating to the source code folder and running
@@ -214,6 +217,22 @@ filtering out certain tests:
 
 Passing the ``--cov`` option without any modules specified will generate a
 coverage report for all modules of Strawberry Fields.
+
+Format
+------
+
+Contributions are checked for format alignment in the pipeline. With ``black``
+installed, changes can be formatted locally using:
+
+.. code-block:: bash
+
+    make format
+
+Contributors without ``make`` installed can run ``black`` directly using:
+
+.. code-block:: bash
+
+    black -l 100 strawberryfields
 
 Documentation
 -------------
