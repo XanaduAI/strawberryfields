@@ -1630,9 +1630,9 @@ class BaseBosonicState(BaseState):
         wigner = 0
         for i, weight_i in enumerate(weights):
             exp_arg = (
-                np.array([X - means[i, 0], P - means[i, 1]])
+                np.array([X - means[i, 0], P - means[i, 1]], dtype=object)
                 @ np.linalg.inv(covs[i])
-                @ np.array([X - means[i, 0], P - means[i, 1]])
+                @ np.array([X - means[i, 0], P - means[i, 1]], dtype=object)
             )
             prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
             wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
