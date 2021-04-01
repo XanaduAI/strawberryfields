@@ -57,18 +57,15 @@ try:
 except ImportError:
     pass
 
-def_type = tf.float64  # NOTE: what if a user wants higher accuracy?
 max_num_indices = len(indices)
 
 ###################################################################
 
 # Helper functions:
-
-
-def _numer_safe_power(base, exponent):
+def _numer_safe_power(base, exponent, dtype):
     """gives the desired behaviour of 0**0=1"""
     if exponent == 0:
-        return tf.ones_like(base, dtype=def_type)
+        return tf.ones_like(base, dtype=dtype)
 
     return base ** exponent
 
@@ -129,12 +126,12 @@ def unravel_index(ind, tensor_shape):
 # output (truncated) Fock basis.
 
 
-def squeezed_vacuum_vector(r, theta, cutoff, batched=False, eps=1e-32):
+def squeezed_vacuum_vector(r, theta, cutoff, batched=False, eps=1e-32, dtype=tf.complex64):
     """returns the ket representing a single mode squeezed vacuum state"""
     if batched:
         batch_size = r.shape[0]
-    r = tf.cast(r, def_type)
-    theta = tf.cast(theta, def_type)
+    r = tf.cast(r, dtype)
+    theta = tf.cast(theta, dtype)
     c1 = tf.cast(
         tf.stack(
             [
@@ -143,11 +140,11 @@ def squeezed_vacuum_vector(r, theta, cutoff, batched=False, eps=1e-32):
             ],
             axis=-1,
         ),
-        def_type,
+        dtype,
     )
     c2 = tf.stack(
         [
-            (-0.5 * tf.exp(1j * theta) * tf.cast(tf.tanh(r + eps), def_type)) ** (k / 2.0)
+            (-0.5 * tf.exp(1j * theta) * tf.cast(tf.tanh(r + eps), dtype)) ** (k / 2.0)
             for k in range(0, cutoff, 2)
         ],
         axis=-1,
@@ -163,7 +160,7 @@ def squeezed_vacuum_vector(r, theta, cutoff, batched=False, eps=1e-32):
 
 
 @tf.custom_gradient
-def single_squeezing_matrix(r, phi, cutoff, dtype=def_type.as_numpy_dtype):
+def single_squeezing_matrix(r, phi, cutoff, dtype):
     """creates a single-mode squeezing matrix"""
     r = r.numpy()
     phi = phi.numpy()
@@ -179,26 +176,26 @@ def single_squeezing_matrix(r, phi, cutoff, dtype=def_type.as_numpy_dtype):
     return gate, grad
 
 
-def squeezer_matrix(r, phi, cutoff, batched=False):
+def squeezer_matrix(r, phi, cutoff, batched=False, dtype=tf.complex64):
     """creates a single mode squeezing matrix accounting for batching"""
-    r = tf.cast(r, def_type)
-    phi = tf.cast(phi, def_type)
+    r = tf.cast(r, dtype)
+    phi = tf.cast(phi, dtype)
     if batched:
         return tf.stack(
-            [single_squeezing_matrix(r_, phi_, cutoff) for r_, phi_ in tf.transpose([r, phi])]
+            [single_squeezing_matrix(r_, phi_, cutoff, dtype=dtype.as_numpy_dtype) for r_, phi_ in tf.transpose([r, phi])]
         )
-    return single_squeezing_matrix(r, phi, cutoff)
+    return single_squeezing_matrix(r, phi, cutoff, dtype=dtype.as_numpy_dtype)
 
 
-def phase_shifter_matrix(theta, cutoff, batched=False):
+def phase_shifter_matrix(theta, cutoff, batched=False, dtype=tf.complex64):
     """creates the single mode phase shifter matrix"""
     if batched:
         batch_size = theta.shape[0]
-    theta = tf.cast(theta, def_type)
+    theta = tf.cast(theta, dtype)
     shape = [cutoff, cutoff]
     if batched:
         shape = [batch_size] + shape
-    zero_matrix = tf.zeros(shape=shape, dtype=def_type)
+    zero_matrix = tf.zeros(shape=shape, dtype=dtype)
     diag = [tf.exp(1j * theta * k) for k in np.arange(cutoff, dtype=np.complex64)]
     if batched:
         diag = tf.stack(diag, axis=1)
@@ -228,10 +225,10 @@ def cross_kerr_interaction_matrix(kappa, cutoff, batched=False):
     return output
 
 
-def cubic_phase_matrix(gamma, cutoff, hbar, batched=False, method="self_adjoint_eig"):
+def cubic_phase_matrix(gamma, cutoff, hbar, batched=False, method="self_adjoint_eig", dtype=tf.complex64):
     """creates the single mode cubic phase matrix"""
     a, ad = ladder_ops(cutoff)
-    x = np.sqrt(hbar / 2) * tf.cast(a + ad, def_type)
+    x = np.sqrt(hbar / 2) * tf.cast(a + ad, dtype)
     x3 = x @ x @ x
     if batched:
         x3 = tf.expand_dims(x3, 0)
@@ -255,7 +252,7 @@ def cubic_phase_matrix(gamma, cutoff, hbar, batched=False, method="self_adjoint_
     return V
 
 
-def loss_superop(T, cutoff, batched=False):
+def loss_superop(T, cutoff, batched=False, dtype=tf.complex64):
     """creates the single mode loss channel matrix"""
     # indices are abcd, corresponding to action |a><b| (.) |c><d|
     if not batched:
@@ -279,14 +276,14 @@ def loss_superop(T, cutoff, batched=False):
     fact_denom_masked = np.where(fact_denom > 0, fact_denom, 1)
     factors = mask * fact_numer / fact_denom_masked
     l_terms = T_numer * factors
-    output = tf.cast(tf.reduce_sum(l_terms, -1), def_type)
+    output = tf.cast(tf.reduce_sum(l_terms, -1), dtype)
     if not batched:
         output = tf.squeeze(output, 0)  # drop artificial batch dimension
     return output
 
 
 @tf.custom_gradient
-def single_displacement_matrix(r, phi, cutoff, dtype=def_type.as_numpy_dtype):
+def single_displacement_matrix(r, phi, cutoff, dtype):
     """creates a single mode displacement matrix"""
     r = r.numpy()
     phi = phi.numpy()
@@ -302,19 +299,19 @@ def single_displacement_matrix(r, phi, cutoff, dtype=def_type.as_numpy_dtype):
     return gate, grad
 
 
-def displacement_matrix(r, phi, cutoff, batched=False):
+def displacement_matrix(r, phi, cutoff, batched=False, dtype=tf.complex64):
     """creates a single mode displacement matrix accounting for batching"""
-    r = tf.cast(r, def_type)
-    phi = tf.cast(phi, def_type)
+    r = tf.cast(r, dtype)
+    phi = tf.cast(phi, dtype)
     if batched:
         return tf.stack(
-            [single_displacement_matrix(r_, phi_, cutoff) for r_, phi_ in tf.transpose([r, phi])]
+            [single_displacement_matrix(r_, phi_, cutoff, dtype=dtype.as_numpy_dtype) for r_, phi_ in tf.transpose([r, phi])]
         )
-    return single_displacement_matrix(r, phi, cutoff)
+    return single_displacement_matrix(r, phi, cutoff, dtype=dtype.as_numpy_dtype)
 
 
 @tf.custom_gradient
-def single_beamsplitter_matrix(theta, phi, cutoff, dtype=def_type.as_numpy_dtype):
+def single_beamsplitter_matrix(theta, phi, cutoff, dtype):
     """creates a single mode beamsplitter matrix"""
     theta = theta.numpy()
     phi = phi.numpy()
@@ -333,22 +330,22 @@ def single_beamsplitter_matrix(theta, phi, cutoff, dtype=def_type.as_numpy_dtype
     return gate, grad
 
 
-def beamsplitter_matrix(theta, phi, cutoff, batched=False):
+def beamsplitter_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex64):
     """creates a single mode beamsplitter matrix accounting for batching"""
-    theta = tf.cast(theta, def_type)
-    phi = tf.cast(phi, def_type)
+    theta = tf.cast(theta, dtype)
+    phi = tf.cast(phi, dtype)
     if batched:
         return tf.stack(
             [
-                single_beamsplitter_matrix(theta_, phi_, cutoff)
+                single_beamsplitter_matrix(theta_, phi_, cutoff, dtype=dtype.as_numpy_dtype)
                 for theta_, phi_ in tf.transpose([theta, phi])
             ]
         )
-    return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, cutoff))
+    return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype))
 
 
 @tf.custom_gradient
-def single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=def_type.as_numpy_dtype):
+def single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype):
     """creates a single mode two-mode squeezing matrix"""
     theta = theta.numpy()
     phi = phi.numpy()
@@ -367,18 +364,18 @@ def single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=def_type.as_numpy
     return gate, grad
 
 
-def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False):
+def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex64):
     """creates a single mode two-mode squeezing matrix accounting for batching"""
-    theta = tf.cast(theta, def_type)
-    phi = tf.cast(phi, def_type)
+    theta = tf.cast(theta, dtype)
+    phi = tf.cast(phi, dtype)
     if batched:
         return tf.stack(
             [
-                single_two_mode_squeezing_matrix(theta_, phi_, cutoff)
+                single_two_mode_squeezing_matrix(theta_, phi_, cutoff, dtype=dtype.as_numpy_dtype)
                 for theta_, phi_ in tf.transpose([theta, phi])
             ]
         )
-    return tf.convert_to_tensor(single_two_mode_squeezing_matrix(theta, phi, cutoff))
+    return tf.convert_to_tensor(single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype))
 
 
 ###################################################################
@@ -387,7 +384,7 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False):
 # Creates input states on a single mode
 
 
-def fock_state(n, cutoff, pure=True, batched=False):
+def fock_state(n, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """creates a single mode input Fock state"""
     if not isinstance(n, (np.ndarray, int)):
         raise ValueError("'n' is expected to be either an int or a numpy array")
@@ -401,20 +398,20 @@ def fock_state(n, cutoff, pure=True, batched=False):
         values = [1.0]
         shape = [cutoff]
     fock_sparse = tf.scatter_nd(idxs, values, shape)
-    fock = tf.cast(fock_sparse, def_type)
+    fock = tf.cast(fock_sparse, dtype)
     if not pure:
         fock = mixed(fock, batched)
     return fock
 
 
-def coherent_state(r, phi, cutoff, pure=True, batched=False):
+def coherent_state(r, phi, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """creates a single mode input coherent state"""
-    alpha = tf.cast(r, def_type) * tf.exp(1j * tf.cast(phi, def_type))
+    alpha = tf.cast(r, dtype) * tf.exp(1j * tf.cast(phi, dtype))
     coh = tf.stack(
         [
-            tf.cast(tf.exp(-0.5 * tf.abs(r) ** 2), def_type)
-            * _numer_safe_power(alpha, n)
-            / tf.cast(np.sqrt(factorial(n)), def_type)
+            tf.cast(tf.exp(-0.5 * tf.abs(r) ** 2), dtype)
+            * _numer_safe_power(alpha, n, dtype)
+            / tf.cast(np.sqrt(factorial(n)), dtype)
             for n in range(cutoff)
         ],
         axis=-1,
@@ -424,21 +421,21 @@ def coherent_state(r, phi, cutoff, pure=True, batched=False):
     return coh
 
 
-def squeezed_vacuum(r, theta, cutoff, pure=True, batched=False):
+def squeezed_vacuum(r, theta, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """creates a single mode input squeezed vacuum state"""
-    squeezed = squeezed_vacuum_vector(r, theta, cutoff, batched=batched)
+    squeezed = squeezed_vacuum_vector(r, theta, cutoff, batched=batched, dtype=dtype)
     if not pure:
         squeezed = mixed(squeezed, batched)
     return squeezed
 
 
-def displaced_squeezed(r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False, eps=1e-12):
+def displaced_squeezed(r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False, eps=1e-12, dtype=tf.complex64):
     """creates a single mode input displaced squeezed state"""
-    alpha = tf.cast(r_d, def_type) * tf.exp(1j * tf.cast(phi_d, def_type))
+    alpha = tf.cast(r_d, dtype) * tf.exp(1j * tf.cast(phi_d, dtype))
     r_s = (
-        tf.cast(r_s, def_type) + eps
+        tf.cast(r_s, dtype) + eps
     )  # to prevent nans if r==0, we add an epsilon (default is miniscule)
-    phi_s = tf.cast(phi_s, def_type)
+    phi_s = tf.cast(phi_s, dtype)
 
     phase = tf.exp(1j * phi_s)
     sinh = tf.sinh(r_s)
@@ -455,12 +452,12 @@ def displaced_squeezed(r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False,
     )
     coeff = tf.stack(
         [
-            _numer_safe_power(0.5 * phase * tanh, n / 2.0) / tf.sqrt(factorial(n) * cosh)
+            _numer_safe_power(0.5 * phase * tanh, n / 2.0, dtype) / tf.sqrt(factorial(n) * cosh)
             for n in range(cutoff)
         ],
         axis=-1,
     )
-    hermite_terms = tf.stack([tf.cast(H(n, hermite_arg), def_type) for n in range(cutoff)], axis=-1)
+    hermite_terms = tf.stack([tf.cast(H(n, hermite_arg, dtype), dtype) for n in range(cutoff)], axis=-1)
     squeezed_coh = prefactor * coeff * hermite_terms
 
     if not pure:
@@ -468,13 +465,13 @@ def displaced_squeezed(r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False,
     return squeezed_coh
 
 
-def thermal_state(nbar, cutoff):
+def thermal_state(nbar, cutoff, dtype=tf.complex64):
     """creates a single mode input thermal state.
     Note that the batch dimension is determined by argument nbar.
     """
-    nbar = tf.cast(nbar, def_type)
+    nbar = tf.cast(nbar, dtype)
     coeffs = tf.stack(
-        [_numer_safe_power(nbar, n) / _numer_safe_power(nbar + 1, n + 1) for n in range(cutoff)],
+        [_numer_safe_power(nbar, n, dtype) / _numer_safe_power(nbar + 1, n + 1, dtype) for n in range(cutoff)],
         axis=-1,
     )
     thermal = tf.linalg.diag(coeffs)
@@ -713,27 +710,27 @@ def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
 # Primary quantum optical gates implemented as transformations on 'in_modes'
 
 
-def phase_shifter(theta, mode, in_modes, cutoff, pure=True, batched=False):
+def phase_shifter(theta, mode, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns phase shift unitary matrix on specified input modes"""
-    matrix = phase_shifter_matrix(theta, cutoff, batched=batched)
+    matrix = phase_shifter_matrix(theta, cutoff, batched=batched, dtype=dtype)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
 
-def displacement(r, phi, mode, in_modes, cutoff, pure=True, batched=False):
+def displacement(r, phi, mode, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns displacement unitary matrix on specified input modes"""
-    r = tf.cast(r, def_type)
-    phi = tf.cast(phi, def_type)
-    matrix = displacement_matrix(r, phi, cutoff, batched)
+    r = tf.cast(r, dtype)
+    phi = tf.cast(phi, dtype)
+    matrix = displacement_matrix(r, phi, cutoff, batched, dtype=dtype)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
 
-def squeezer(r, theta, mode, in_modes, cutoff, pure=True, batched=False):
+def squeezer(r, theta, mode, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns squeezer unitary matrix on specified input modes"""
-    r = tf.cast(r, def_type)
-    theta = tf.cast(theta, def_type)
-    matrix = squeezer_matrix(r, theta, cutoff, batched)
+    r = tf.cast(r, dtype)
+    theta = tf.cast(theta, dtype)
+    matrix = squeezer_matrix(r, theta, cutoff, batched, dtype=dtype)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
@@ -753,33 +750,33 @@ def cross_kerr_interaction(kappa, mode1, mode2, in_modes, cutoff, pure=True, bat
 
 
 def cubic_phase(
-    gamma, mode, in_modes, cutoff, hbar=2, pure=True, batched=False, method="self_adjoint_eig"
+    gamma, mode, in_modes, cutoff, hbar=2, pure=True, batched=False, method="self_adjoint_eig", dtype=tf.complex64
 ):
     """returns cubic phase unitary matrix on specified input modes"""
-    matrix = cubic_phase_matrix(gamma, cutoff, hbar, batched, method=method)
+    matrix = cubic_phase_matrix(gamma, cutoff, hbar, batched, method=method, dtype=dtype)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
 
-def beamsplitter(theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=False):
+def beamsplitter(theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns beamsplitter unitary matrix on specified input modes"""
-    theta = tf.cast(theta, def_type)
-    phi = tf.cast(phi, def_type)
-    matrix = beamsplitter_matrix(theta, phi, cutoff, batched)
+    theta = tf.cast(theta, dtype)
+    phi = tf.cast(phi, dtype)
+    matrix = beamsplitter_matrix(theta, phi, cutoff, batched, dtype=dtype.as_numpy_dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
 
-def two_mode_squeeze(r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False):
+def two_mode_squeeze(r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns beamsplitter unitary matrix on specified input modes"""
-    matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched)
+    matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype=dtype.as_numpy_dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
 
-def loss_channel(T, mode, in_modes, cutoff, pure=True, batched=False):
+def loss_channel(T, mode, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns loss channel matrix on specified input modes"""
-    superop = loss_superop(T, cutoff, batched)
+    superop = loss_superop(T, cutoff, batched, dtype)
     output = single_mode_superop(superop, mode, in_modes, pure, batched)
     return output
 
@@ -1137,15 +1134,15 @@ def ladder_ops(cutoff):
     return a, ad
 
 
-def H(n, x):
+def H(n, x, dtype=tf.complex64):
     """Explicit expression for Hermite polynomials."""
     prefactor = factorial(n)
     terms = tf.reduce_sum(
         tf.stack(
             [
-                _numer_safe_power(-1, m)
+                _numer_safe_power(-1, m, dtype)
                 / (factorial(m) * factorial(n - 2 * m))
-                * _numer_safe_power(2 * x, n - 2 * m)
+                * _numer_safe_power(2 * x, n - 2 * m, dtype)
                 for m in range(int(np.floor(n / 2)) + 1)
             ],
             axis=0,

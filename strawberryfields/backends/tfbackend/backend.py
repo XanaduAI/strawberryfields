@@ -21,7 +21,7 @@ TensorFlow backend interface
 import numpy as np
 import tensorflow as tf
 
-from tensorflow import DType
+# from tensorflow import DType
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
 from .ops import mixed, partial_trace, reorder_modes
@@ -83,7 +83,8 @@ class TFBackend(BaseFock):
                 For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\text{cutoff_dim}-1}`.
             pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
             batch_size (None or int): Size of the batch-axis dimension. If None, no batch-axis will be used.
-            dtype (DType): Tensorflow element types in a tensor.
+            dtype (DType): Complex Tensorflow Tensor type representation, either complex64 (default) or complex128.
+                Note, complex128 will increase memory usage substantially.
         """
         cutoff_dim = kwargs.get("cutoff_dim", None)
         pure = kwargs.get("pure", True)
@@ -99,8 +100,8 @@ class TFBackend(BaseFock):
             raise ValueError("Argument 'cutoff_dim' must be a positive integer")
         if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
-        if not isinstance(dtype, DType):
-            raise ValueError("Argument 'dtype' must be a Tensorflow DType")
+        if not (dtype == tf.complex64 or dtype == tf.complex128):
+            raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
         if batch_size == 1:
             raise ValueError(
                 "batch_size of 1 not supported, please use different batch_size or set batch_size=None"
@@ -236,6 +237,7 @@ class TFBackend(BaseFock):
             pure = self.circuit.state_is_pure
             num_modes = self.circuit.num_modes
             batched = self.circuit.batched
+            dtype = self.circuit.dtype
 
             # reduce rho down to specified subsystems
             if modes is None:
@@ -276,7 +278,7 @@ class TFBackend(BaseFock):
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(
-                s, len(modes), pure, self.circuit.cutoff_dim, batched=batched, mode_names=modenames
+                s, len(modes), pure, self.circuit.cutoff_dim, batched=batched, mode_names=modenames, dtype=dtype
             )
         return state_
 

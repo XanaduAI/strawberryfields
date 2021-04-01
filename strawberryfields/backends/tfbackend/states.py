@@ -32,7 +32,7 @@ except ImportError:
     pass
 
 from strawberryfields.backends.states import BaseFockState
-from .ops import def_type, ladder_ops, phase_shifter_matrix, reduced_density_matrix
+from .ops import ladder_ops, phase_shifter_matrix, reduced_density_matrix
 
 
 class FockStateTF(BaseFockState):
@@ -43,19 +43,23 @@ class FockStateTF(BaseFockState):
             num_modes (int): the number of modes in the state
             pure (bool): True if the state is a pure state, false if the state is mixed
             cutoff_dim (int): the Fock basis truncation size
+            batched (bool): (optional) default False means no batching
             mode_names (Sequence): (optional) this argument contains a list providing mode names
-                    for each mode in the state.
+                    for each mode in the state
+            dtype (DType): (optional) complex Tensorflow Tensor type representation, either
+                    complex64 (default) or complex128
     """
 
-    def __init__(self, state_data, num_modes, pure, cutoff_dim, batched=False, mode_names=None):
+    def __init__(self, state_data, num_modes, pure, cutoff_dim, batched=False, mode_names=None, dtype=tf.complex64):
         # pylint: disable=too-many-arguments
         state_data = tf.convert_to_tensor(
             state_data, name="state_data"
         )  # convert everything to a Tensor so we have the option to do symbolic evaluations
         super().__init__(state_data, num_modes, pure, cutoff_dim, mode_names)
         self._batched = batched
-        self._str = "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}>".format(
-            self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar
+        self._dtype = dtype
+        self._str = "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}, dtype={}>".format(
+            self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar, self._dtype
         )
 
     def trace(self, **kwargs):
@@ -180,7 +184,7 @@ class FockStateTF(BaseFockState):
         if len(other_state.shape) == 1:
             other_state = tf.expand_dims(other_state, 0)  # add batch dimension for state
 
-        other_state = tf.cast(other_state, def_type)
+        other_state = tf.cast(other_state, self.dtype)
         state_dm = tf.einsum("bi,bj->bij", tf.math.conj(other_state), other_state)
         flat_state_dm = tf.reshape(state_dm, [1, -1])
         flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
@@ -349,7 +353,7 @@ class FockStateTF(BaseFockState):
         if self.batched and len(phi.shape) == 0:  # pylint: disable=len-as-condition
             phi = tf.expand_dims(phi, 0)
         larger_cutoff = self.cutoff_dim + 1  # start one dimension higher to avoid truncation errors
-        R = phase_shifter_matrix(phi, larger_cutoff, batched=self.batched)
+        R = phase_shifter_matrix(phi, larger_cutoff, batched=self.batched, dtype=self.dtype)
         if not self.batched:
             R = tf.expand_dims(R, 0)  # add fake batch dimension
 
@@ -556,3 +560,8 @@ class FockStateTF(BaseFockState):
     def batched(self):
         """The number of batches."""
         return self._batched
+
+    @property
+    def dtype(self):
+        """The circuit dtype"""
+        return self._dtype

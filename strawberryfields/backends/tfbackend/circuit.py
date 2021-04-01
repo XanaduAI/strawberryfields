@@ -37,7 +37,6 @@ from string import ascii_lowercase as indices
 import numpy as np
 from scipy.special import factorial
 import tensorflow as tf
-from tensorflow import DType
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -75,7 +74,7 @@ class Circuit:
 
     def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
-        one = tf.cast([1.0], ops.def_type)
+        one = tf.cast([1.0], self._dtype)
         v = tf.scatter_nd([[0]], one, [cutoff_dim])
         self._single_mode_pure_vac = v
         self._single_mode_mixed_vac = tf.einsum("i,j->ij", v, v)
@@ -227,7 +226,7 @@ class Circuit:
             pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
             cutoff_dim (int): new Fock space cutoff dimension to use.
             batch_size (None, int): None means no batching. An integer value >= 2 sets the batch size to use.
-            dtype (DType): Default is tf.complex64.
+            dtype (DType): Complex Tensorflow Tensor type representation, either complex64 (default) or complex128.
         """
         if "pure" in kwargs:
             pure = kwargs["pure"]
@@ -258,8 +257,8 @@ class Circuit:
         if "dtype" in kwargs:
             dtype = kwargs["dtype"]
             if dtype is not None:
-                if not isinstance(dtype, DType):
-                    raise ValueError("Argument 'dtype' must be a Tensorflow DType")
+                if not (dtype == tf.complex64 or dtype == tf.complex128):
+                    raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
             self._dtype = dtype
 
         self._state_history = []
@@ -292,7 +291,7 @@ class Circuit:
         if self._valid_modes(mode):
             n = self._maybe_batch(n, convert_to_tensor=False)
             fock_state = ops.fock_state(
-                n, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                n, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched, dtype=self._dtype
             )
             self._replace_and_update(fock_state, mode)
 
@@ -304,7 +303,7 @@ class Circuit:
             r = self._maybe_batch(r)
             phi = self._maybe_batch(phi)
             coherent_state = ops.coherent_state(
-                r, phi, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r, phi, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched, dtype=self._dtype
             )
             self._replace_and_update(coherent_state, mode)
 
@@ -317,7 +316,7 @@ class Circuit:
             theta = self._maybe_batch(theta)
             self._check_incompatible_batches(r, theta)
             squeezed_state = ops.squeezed_vacuum(
-                r, theta, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched
+                r, theta, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched, dtype=self._dtype
             )
             self._replace_and_update(squeezed_state, mode)
 
@@ -339,6 +338,7 @@ class Circuit:
                 cutoff=self._cutoff_dim,
                 pure=self._state_is_pure,
                 batched=self._batched,
+                dtype=self._dtype,
             )
             self._replace_and_update(displaced_squeezed, mode)
 
@@ -396,7 +396,7 @@ class Circuit:
             elif state.shape == mixed_shape_as_matrix:
                 state = tf.reshape(state, mixed_shape)
 
-            state = tf.cast(tf.convert_to_tensor(state), ops.def_type)
+            state = tf.cast(tf.convert_to_tensor(state), self._dtype)
             # batch state now if not already batched and self._batched
             if self._batched and not input_is_batched:
                 state = tf.stack([state] * self._batch_size)
@@ -408,7 +408,7 @@ class Circuit:
         """
         if self._valid_modes(mode):
             nbar = self._maybe_batch(nbar)
-            thermal = ops.thermal_state(nbar, cutoff=self._cutoff_dim)
+            thermal = ops.thermal_state(nbar, cutoff=self._cutoff_dim, dtype=self._dtype)
             self._replace_and_update(thermal, mode)
 
     def phase_shift(self, theta, mode):
@@ -417,7 +417,7 @@ class Circuit:
         """
         theta = self._maybe_batch(theta)
         new_state = ops.phase_shifter(
-            theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
         )
         self._update_state(new_state)
 
@@ -428,7 +428,7 @@ class Circuit:
         r = self._maybe_batch(r)
         phi = self._maybe_batch(phi)
         new_state = ops.displacement(
-            r, phi, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            r, phi, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
         )
         self._update_state(new_state)
 
@@ -440,7 +440,7 @@ class Circuit:
         theta = self._maybe_batch(theta)
         self._check_incompatible_batches(r, theta)
         new_state = ops.squeezer(
-            r, theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            r, theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
         )
         self._update_state(new_state)
 
@@ -460,6 +460,7 @@ class Circuit:
             self._cutoff_dim,
             self._state_is_pure,
             self._batched,
+            self._dtype,
         )
         self._update_state(new_state)
 
@@ -479,6 +480,7 @@ class Circuit:
             self._cutoff_dim,
             self._state_is_pure,
             self._batched,
+            self._dtype,
         )
         self._update_state(new_state)
 
@@ -486,7 +488,7 @@ class Circuit:
         """
         Apply the Kerr interaction operator to the specified mode.
         """
-        k = tf.cast(kappa, ops.def_type)
+        k = tf.cast(kappa, self._dtype)
         k = self._maybe_batch(k)
         new_state = ops.kerr_interaction(
             k, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
@@ -497,7 +499,7 @@ class Circuit:
         """
         Apply the cross-Kerr interaction operator to the specified mode.
         """
-        k = tf.cast(kappa, ops.def_type)
+        k = tf.cast(kappa, self._dtype)
         k = self._maybe_batch(k)
         new_state = ops.cross_kerr_interaction(
             k, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched
@@ -508,10 +510,10 @@ class Circuit:
         """
         Apply the cubic phase operator to the specified mode.
         """
-        g = tf.cast(gamma, ops.def_type)
+        g = tf.cast(gamma, self._dtype)
         g = self._maybe_batch(g)
         new_state = ops.cubic_phase(
-            g, mode, self._state, self._cutoff_dim, self._hbar, self._state_is_pure, self._batched
+            g, mode, self._state, self._cutoff_dim, self._hbar, self._state_is_pure, self._batched, self._dtype
         )
         self._update_state(new_state)
 
@@ -519,10 +521,10 @@ class Circuit:
         """
         Apply a loss channel  to the specified mode.
         """
-        T = tf.cast(T, ops.def_type)
+        T = tf.cast(T, self._dtype)
         T = self._maybe_batch(T)
         new_state = ops.loss_channel(
-            T, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            T, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
         )
         self._update_state(new_state)
         self._state_is_pure = False  # loss output always in mixed state representation
@@ -678,7 +680,7 @@ class Circuit:
             self.reset(pure=self._state_is_pure)
         else:
             # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
-            fock_state = tf.one_hot(meas_result[0], depth=self._cutoff_dim, dtype=ops.def_type)
+            fock_state = tf.one_hot(meas_result[0], depth=self._cutoff_dim, dtype=self._dtype)
             conditional_state = self._state
             for idx, mode in enumerate(modes):
                 if self._batched:
@@ -776,7 +778,7 @@ class Circuit:
             batch_offset = 0
             batch_size = 1
 
-        phi = tf.cast(phi, ops.def_type)
+        phi = tf.cast(phi, self._dtype)
         phi = self._maybe_batch(phi)
 
         if select is not None:
@@ -791,7 +793,7 @@ class Circuit:
             # rotate to homodyne basis
             # pylint: disable=invalid-unary-operand-type
             reduced_state = ops.phase_shifter(
-                -phi, 0, reduced_state, self._cutoff_dim, False, self._batched
+                -phi, 0, reduced_state, self._cutoff_dim, False, self._batched, self._dtype
             )
 
             # create pdf for homodyne measurement
@@ -843,7 +845,7 @@ class Circuit:
             )
             hermite_terms = tf.multiply(
                 tf.expand_dims(reduced_state, -1),
-                tf.expand_dims(tf.cast(hermite_matrix, ops.def_type), 0),
+                tf.expand_dims(tf.cast(hermite_matrix, self._dtype), 0),
             )
             rho_dist = (
                 tf.cast(tf.reduce_sum(hermite_terms, axis=[1, 2]), tf.float64)
@@ -873,7 +875,7 @@ class Circuit:
                     else 0.0
                     for m in range(self._cutoff_dim)
                 ],
-                dtype=ops.def_type,
+                dtype=self._dtype,
             )
             if self._batched:
                 inf_squeezed_vac = tf.tile(tf.expand_dims(inf_squeezed_vac, 0), [batch_size, 1])
@@ -888,9 +890,10 @@ class Circuit:
                 self._cutoff_dim,
                 True,
                 self._batched,
+                self._dtype,
             )
             homodyne_eigenstate = ops.phase_shifter(
-                phi, 0, quad_eigenstate, self._cutoff_dim, True, self._batched
+                phi, 0, quad_eigenstate, self._cutoff_dim, True, self._batched, self._dtype
             )
 
             conditional_state = ops.conditional_state(
@@ -947,7 +950,7 @@ class Circuit:
         # `meas_result` will always be a single value since multiple shots is not supported
         if self.batched:
             return tf.reshape(meas_result, (len(meas_result), 1, 1))
-        return tf.cast([[meas_result]], dtype=ops.def_type)
+        return tf.cast([[meas_result]], dtype=self._dtype)
 
     @property
     def num_modes(self):
@@ -978,6 +981,11 @@ class Circuit:
     def batch_size(self):
         """Returns the batch size"""
         return self._batch_size
+
+    @property
+    def dtype(self):
+        """Returns the circuit dtype"""
+        return self._dtype
 
     @property
     def state(self):

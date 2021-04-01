@@ -169,4 +169,3 @@ if not (tf_available and tf_version[:2] == "2."):
 
 
 from .backend import TFBackend
-from .ops import def_type as tf_complex_type
