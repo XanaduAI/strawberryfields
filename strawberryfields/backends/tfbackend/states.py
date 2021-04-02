@@ -195,7 +195,7 @@ class FockStateTF(BaseFockState):
         if len(other_state.shape) == 1:
             other_state = tf.expand_dims(other_state, 0)  # add batch dimension for state
 
-        other_state = tf.cast(other_state, dtype=self.dtype)
+        other_state = tf.cast(other_state, self.dtype)
         state_dm = tf.einsum("bi,bj->bij", tf.math.conj(other_state), other_state)
         flat_state_dm = tf.reshape(state_dm, [1, -1])
         flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
@@ -370,7 +370,7 @@ class FockStateTF(BaseFockState):
 
         a, ad = ladder_ops(larger_cutoff)
         x = np.sqrt(self._hbar / 2.0) * (a + ad)
-        x = tf.expand_dims(tf.cast(x, dtype=self.dtype), 0)  # add batch dimension to x
+        x = tf.expand_dims(tf.cast(x, self.dtype), 0)  # add batch dimension to x
         quad = tf.math.conj(R) @ x @ R
         quad2 = (quad @ quad)[:, : self.cutoff_dim, : self.cutoff_dim]
         quad = quad[

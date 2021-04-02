@@ -74,7 +74,7 @@ class Circuit:
 
     def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
-        one = tf.cast([1.0], dtype=self._dtype)
+        one = tf.cast([1.0], self._dtype)
         v = tf.scatter_nd([[0]], one, [cutoff_dim])
         self._single_mode_pure_vac = v
         self._single_mode_mixed_vac = tf.einsum("i,j->ij", v, v)
@@ -257,7 +257,7 @@ class Circuit:
         if "dtype" in kwargs:
             dtype = kwargs["dtype"]
             if dtype is not None:
-                if not (dtype == tf.complex64 or dtype == tf.complex128):
+                if not dtype in (tf.complex64, tf.complex128):
                     raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
             self._dtype = dtype
 
@@ -410,7 +410,7 @@ class Circuit:
             elif state.shape == mixed_shape_as_matrix:
                 state = tf.reshape(state, mixed_shape)
 
-            state = tf.cast(tf.convert_to_tensor(state), dtype=self._dtype)
+            state = tf.cast(tf.convert_to_tensor(state), self._dtype)
             # batch state now if not already batched and self._batched
             if self._batched and not input_is_batched:
                 state = tf.stack([state] * self._batch_size)
@@ -997,7 +997,7 @@ class Circuit:
         # `meas_result` will always be a single value since multiple shots is not supported
         if self.batched:
             return tf.reshape(meas_result, (len(meas_result), 1, 1))
-        return tf.cast([[meas_result]], dtype=self._dtype)
+        return tf.cast([[meas_result]], self._dtype)
 
     @property
     def num_modes(self):

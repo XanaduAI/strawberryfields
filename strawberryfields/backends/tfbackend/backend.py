@@ -100,7 +100,7 @@ class TFBackend(BaseFock):
             raise ValueError("Argument 'cutoff_dim' must be a positive integer")
         if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
-        if not (dtype == tf.complex64 or dtype == tf.complex128):
+        if not dtype in (tf.complex64, tf.complex128):
             raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
         if batch_size == 1:
             raise ValueError(
