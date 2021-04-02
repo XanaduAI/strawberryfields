@@ -40,6 +40,7 @@ A number of factors determine the shape and dimensionality of the state tensor:
 * the number of modes :math:`n` actively being simulated
 * the cutoff dimension :math:`D` for the Fock basis
 * whether the circuit is operating in *batched mode* (with batch size :math:`B`)
+* the Tensor DType passed to the circuit
 
 When not operating in batched mode, the state tensor corresponds to a single multimode quantum system. If the
 representation is a pure state, the state tensor has shape
@@ -127,6 +128,7 @@ is that it returns TensorFlow ``Tensor`` objects
    mean_photon
    batched
    cutoff_dim
+   dtype
 
 
 Code details
