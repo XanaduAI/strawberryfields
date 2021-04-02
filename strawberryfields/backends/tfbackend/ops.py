@@ -62,10 +62,10 @@ max_num_indices = len(indices)
 ###################################################################
 
 # Helper functions:
-def _numer_safe_power(base, exponent, dtype):
+def _numer_safe_power(base, exponent, dtype=tf.complex64):
     """gives the desired behaviour of 0**0=1"""
     if exponent == 0:
-        return tf.ones_like(base, dtype=dtype)
+        return tf.ones_like(base, dtype)
 
     return base ** exponent
 
@@ -160,7 +160,7 @@ def squeezed_vacuum_vector(r, theta, cutoff, batched=False, eps=1e-32, dtype=tf.
 
 
 @tf.custom_gradient
-def single_squeezing_matrix(r, phi, cutoff, dtype):
+def single_squeezing_matrix(r, phi, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a single-mode squeezing matrix"""
     r = r.numpy()
     phi = phi.numpy()
@@ -283,7 +283,7 @@ def loss_superop(T, cutoff, batched=False, dtype=tf.complex64):
 
 
 @tf.custom_gradient
-def single_displacement_matrix(r, phi, cutoff, dtype):
+def single_displacement_matrix(r, phi, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a single mode displacement matrix"""
     r = r.numpy()
     phi = phi.numpy()
@@ -311,7 +311,7 @@ def displacement_matrix(r, phi, cutoff, batched=False, dtype=tf.complex64):
 
 
 @tf.custom_gradient
-def single_beamsplitter_matrix(theta, phi, cutoff, dtype):
+def single_beamsplitter_matrix(theta, phi, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a single mode beamsplitter matrix"""
     theta = theta.numpy()
     phi = phi.numpy()
@@ -345,7 +345,7 @@ def beamsplitter_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex64):
 
 
 @tf.custom_gradient
-def single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype):
+def single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a single mode two-mode squeezing matrix"""
     theta = theta.numpy()
     phi = phi.numpy()
@@ -721,7 +721,7 @@ def displacement(r, phi, mode, in_modes, cutoff, pure=True, batched=False, dtype
     """returns displacement unitary matrix on specified input modes"""
     r = tf.cast(r, dtype)
     phi = tf.cast(phi, dtype)
-    matrix = displacement_matrix(r, phi, cutoff, batched, dtype=dtype)
+    matrix = displacement_matrix(r, phi, cutoff, batched, dtype)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
@@ -730,7 +730,7 @@ def squeezer(r, theta, mode, in_modes, cutoff, pure=True, batched=False, dtype=t
     """returns squeezer unitary matrix on specified input modes"""
     r = tf.cast(r, dtype)
     theta = tf.cast(theta, dtype)
-    matrix = squeezer_matrix(r, theta, cutoff, batched, dtype=dtype)
+    matrix = squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = single_mode_gate(matrix, mode, in_modes, pure, batched)
     return output
 
@@ -762,14 +762,14 @@ def beamsplitter(theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=
     """returns beamsplitter unitary matrix on specified input modes"""
     theta = tf.cast(theta, dtype)
     phi = tf.cast(phi, dtype)
-    matrix = beamsplitter_matrix(theta, phi, cutoff, batched, dtype=dtype.as_numpy_dtype)
+    matrix = beamsplitter_matrix(theta, phi, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
 
 def two_mode_squeeze(r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns beamsplitter unitary matrix on specified input modes"""
-    matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype=dtype.as_numpy_dtype)
+    matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 

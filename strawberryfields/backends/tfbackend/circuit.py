@@ -74,7 +74,7 @@ class Circuit:
 
     def _make_vac_states(self, cutoff_dim):
         """Make vacuum state tensors for the underlying graph"""
-        one = tf.cast([1.0], self._dtype)
+        one = tf.cast([1.0], dtype=self._dtype)
         v = tf.scatter_nd([[0]], one, [cutoff_dim])
         self._single_mode_pure_vac = v
         self._single_mode_mixed_vac = tf.einsum("i,j->ij", v, v)
@@ -396,7 +396,7 @@ class Circuit:
             elif state.shape == mixed_shape_as_matrix:
                 state = tf.reshape(state, mixed_shape)
 
-            state = tf.cast(tf.convert_to_tensor(state), self._dtype)
+            state = tf.cast(tf.convert_to_tensor(state), dtype=self._dtype)
             # batch state now if not already batched and self._batched
             if self._batched and not input_is_batched:
                 state = tf.stack([state] * self._batch_size)
@@ -417,7 +417,7 @@ class Circuit:
         """
         theta = self._maybe_batch(theta)
         new_state = ops.phase_shifter(
-            theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
+            theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
         )
         self._update_state(new_state)
 
@@ -428,7 +428,7 @@ class Circuit:
         r = self._maybe_batch(r)
         phi = self._maybe_batch(phi)
         new_state = ops.displacement(
-            r, phi, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
+            r, phi, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
         )
         self._update_state(new_state)
 
@@ -440,7 +440,7 @@ class Circuit:
         theta = self._maybe_batch(theta)
         self._check_incompatible_batches(r, theta)
         new_state = ops.squeezer(
-            r, theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
+            r, theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
         )
         self._update_state(new_state)
 
@@ -460,7 +460,7 @@ class Circuit:
             self._cutoff_dim,
             self._state_is_pure,
             self._batched,
-            self._dtype,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
@@ -480,7 +480,7 @@ class Circuit:
             self._cutoff_dim,
             self._state_is_pure,
             self._batched,
-            self._dtype,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
@@ -513,7 +513,7 @@ class Circuit:
         g = tf.cast(gamma, self._dtype)
         g = self._maybe_batch(g)
         new_state = ops.cubic_phase(
-            g, mode, self._state, self._cutoff_dim, self._hbar, self._state_is_pure, self._batched, self._dtype
+            g, mode, self._state, self._cutoff_dim, self._hbar, self._state_is_pure, self._batched, dtype=self._dtype
         )
         self._update_state(new_state)
 
@@ -524,7 +524,7 @@ class Circuit:
         T = tf.cast(T, self._dtype)
         T = self._maybe_batch(T)
         new_state = ops.loss_channel(
-            T, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, self._dtype
+            T, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
         )
         self._update_state(new_state)
         self._state_is_pure = False  # loss output always in mixed state representation
