@@ -21,7 +21,6 @@ TensorFlow backend interface
 import numpy as np
 import tensorflow as tf
 
-# from tensorflow import DType
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
 from .ops import mixed, partial_trace, reorder_modes
