@@ -291,7 +291,11 @@ class Circuit:
         if self._valid_modes(mode):
             n = self._maybe_batch(n, convert_to_tensor=False)
             fock_state = ops.fock_state(
-                n, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched, dtype=self._dtype
+                n,
+                cutoff=self._cutoff_dim,
+                pure=self._state_is_pure,
+                batched=self._batched,
+                dtype=self._dtype,
             )
             self._replace_and_update(fock_state, mode)
 
@@ -303,7 +307,12 @@ class Circuit:
             r = self._maybe_batch(r)
             phi = self._maybe_batch(phi)
             coherent_state = ops.coherent_state(
-                r, phi, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched, dtype=self._dtype
+                r,
+                phi,
+                cutoff=self._cutoff_dim,
+                pure=self._state_is_pure,
+                batched=self._batched,
+                dtype=self._dtype,
             )
             self._replace_and_update(coherent_state, mode)
 
@@ -316,7 +325,12 @@ class Circuit:
             theta = self._maybe_batch(theta)
             self._check_incompatible_batches(r, theta)
             squeezed_state = ops.squeezed_vacuum(
-                r, theta, cutoff=self._cutoff_dim, pure=self._state_is_pure, batched=self._batched, dtype=self._dtype
+                r,
+                theta,
+                cutoff=self._cutoff_dim,
+                pure=self._state_is_pure,
+                batched=self._batched,
+                dtype=self._dtype,
             )
             self._replace_and_update(squeezed_state, mode)
 
@@ -417,7 +431,13 @@ class Circuit:
         """
         theta = self._maybe_batch(theta)
         new_state = ops.phase_shifter(
-            theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
+            theta,
+            mode,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
@@ -428,7 +448,14 @@ class Circuit:
         r = self._maybe_batch(r)
         phi = self._maybe_batch(phi)
         new_state = ops.displacement(
-            r, phi, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
+            r,
+            phi,
+            mode,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
@@ -440,7 +467,14 @@ class Circuit:
         theta = self._maybe_batch(theta)
         self._check_incompatible_batches(r, theta)
         new_state = ops.squeezer(
-            r, theta, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
+            r,
+            theta,
+            mode,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
@@ -513,7 +547,14 @@ class Circuit:
         g = tf.cast(gamma, self._dtype)
         g = self._maybe_batch(g)
         new_state = ops.cubic_phase(
-            g, mode, self._state, self._cutoff_dim, self._hbar, self._state_is_pure, self._batched, dtype=self._dtype
+            g,
+            mode,
+            self._state,
+            self._cutoff_dim,
+            self._hbar,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
@@ -524,7 +565,13 @@ class Circuit:
         T = tf.cast(T, self._dtype)
         T = self._maybe_batch(T)
         new_state = ops.loss_channel(
-            T, mode, self._state, self._cutoff_dim, self._state_is_pure, self._batched, dtype=self._dtype
+            T,
+            mode,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
         self._state_is_pure = False  # loss output always in mixed state representation

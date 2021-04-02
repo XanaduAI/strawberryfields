@@ -278,7 +278,13 @@ class TFBackend(BaseFock):
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(
-                s, len(modes), pure, self.circuit.cutoff_dim, batched=batched, mode_names=modenames, dtype=dtype
+                s,
+                len(modes),
+                pure,
+                self.circuit.cutoff_dim,
+                batched=batched,
+                mode_names=modenames,
+                dtype=dtype,
             )
         return state_
 

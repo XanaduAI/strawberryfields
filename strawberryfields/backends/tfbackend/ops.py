@@ -182,7 +182,10 @@ def squeezer_matrix(r, phi, cutoff, batched=False, dtype=tf.complex64):
     phi = tf.cast(phi, dtype)
     if batched:
         return tf.stack(
-            [single_squeezing_matrix(r_, phi_, cutoff, dtype=dtype.as_numpy_dtype) for r_, phi_ in tf.transpose([r, phi])]
+            [
+                single_squeezing_matrix(r_, phi_, cutoff, dtype=dtype.as_numpy_dtype)
+                for r_, phi_ in tf.transpose([r, phi])
+            ]
         )
     return single_squeezing_matrix(r, phi, cutoff, dtype=dtype.as_numpy_dtype)
 
@@ -225,7 +228,9 @@ def cross_kerr_interaction_matrix(kappa, cutoff, batched=False):
     return output
 
 
-def cubic_phase_matrix(gamma, cutoff, hbar, batched=False, method="self_adjoint_eig", dtype=tf.complex64):
+def cubic_phase_matrix(
+    gamma, cutoff, hbar, batched=False, method="self_adjoint_eig", dtype=tf.complex64
+):
     """creates the single mode cubic phase matrix"""
     a, ad = ladder_ops(cutoff)
     x = np.sqrt(hbar / 2) * tf.cast(a + ad, dtype)
@@ -305,7 +310,10 @@ def displacement_matrix(r, phi, cutoff, batched=False, dtype=tf.complex64):
     phi = tf.cast(phi, dtype)
     if batched:
         return tf.stack(
-            [single_displacement_matrix(r_, phi_, cutoff, dtype=dtype.as_numpy_dtype) for r_, phi_ in tf.transpose([r, phi])]
+            [
+                single_displacement_matrix(r_, phi_, cutoff, dtype=dtype.as_numpy_dtype)
+                for r_, phi_ in tf.transpose([r, phi])
+            ]
         )
     return single_displacement_matrix(r, phi, cutoff, dtype=dtype.as_numpy_dtype)
 
@@ -341,7 +349,9 @@ def beamsplitter_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex64):
                 for theta_, phi_ in tf.transpose([theta, phi])
             ]
         )
-    return tf.convert_to_tensor(single_beamsplitter_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype))
+    return tf.convert_to_tensor(
+        single_beamsplitter_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
+    )
 
 
 @tf.custom_gradient
@@ -375,7 +385,9 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
                 for theta_, phi_ in tf.transpose([theta, phi])
             ]
         )
-    return tf.convert_to_tensor(single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype))
+    return tf.convert_to_tensor(
+        single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
+    )
 
 
 ###################################################################
@@ -429,7 +441,9 @@ def squeezed_vacuum(r, theta, cutoff, pure=True, batched=False, dtype=tf.complex
     return squeezed
 
 
-def displaced_squeezed(r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False, eps=1e-12, dtype=tf.complex64):
+def displaced_squeezed(
+    r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False, eps=1e-12, dtype=tf.complex64
+):
     """creates a single mode input displaced squeezed state"""
     alpha = tf.cast(r_d, dtype) * tf.exp(1j * tf.cast(phi_d, dtype))
     r_s = (
@@ -457,7 +471,9 @@ def displaced_squeezed(r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False,
         ],
         axis=-1,
     )
-    hermite_terms = tf.stack([tf.cast(H(n, hermite_arg, dtype), dtype) for n in range(cutoff)], axis=-1)
+    hermite_terms = tf.stack(
+        [tf.cast(H(n, hermite_arg, dtype), dtype) for n in range(cutoff)], axis=-1
+    )
     squeezed_coh = prefactor * coeff * hermite_terms
 
     if not pure:
@@ -471,7 +487,10 @@ def thermal_state(nbar, cutoff, dtype=tf.complex64):
     """
     nbar = tf.cast(nbar, dtype)
     coeffs = tf.stack(
-        [_numer_safe_power(nbar, n, dtype) / _numer_safe_power(nbar + 1, n + 1, dtype) for n in range(cutoff)],
+        [
+            _numer_safe_power(nbar, n, dtype) / _numer_safe_power(nbar + 1, n + 1, dtype)
+            for n in range(cutoff)
+        ],
         axis=-1,
     )
     thermal = tf.linalg.diag(coeffs)
@@ -750,7 +769,15 @@ def cross_kerr_interaction(kappa, mode1, mode2, in_modes, cutoff, pure=True, bat
 
 
 def cubic_phase(
-    gamma, mode, in_modes, cutoff, hbar=2, pure=True, batched=False, method="self_adjoint_eig", dtype=tf.complex64
+    gamma,
+    mode,
+    in_modes,
+    cutoff,
+    hbar=2,
+    pure=True,
+    batched=False,
+    method="self_adjoint_eig",
+    dtype=tf.complex64,
 ):
     """returns cubic phase unitary matrix on specified input modes"""
     matrix = cubic_phase_matrix(gamma, cutoff, hbar, batched, method=method, dtype=dtype)
@@ -758,7 +785,9 @@ def cubic_phase(
     return output
 
 
-def beamsplitter(theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
+def beamsplitter(
+    theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+):
     """returns beamsplitter unitary matrix on specified input modes"""
     theta = tf.cast(theta, dtype)
     phi = tf.cast(phi, dtype)
@@ -767,7 +796,9 @@ def beamsplitter(theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=
     return output
 
 
-def two_mode_squeeze(r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
+def two_mode_squeeze(
+    r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+):
     """returns beamsplitter unitary matrix on specified input modes"""
     matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)

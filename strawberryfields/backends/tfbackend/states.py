@@ -50,7 +50,16 @@ class FockStateTF(BaseFockState):
                     complex64 (default) or complex128
     """
 
-    def __init__(self, state_data, num_modes, pure, cutoff_dim, batched=False, mode_names=None, dtype=tf.complex64):
+    def __init__(
+        self,
+        state_data,
+        num_modes,
+        pure,
+        cutoff_dim,
+        batched=False,
+        mode_names=None,
+        dtype=tf.complex64,
+    ):
         # pylint: disable=too-many-arguments
         state_data = tf.convert_to_tensor(
             state_data, name="state_data"
@@ -58,8 +67,10 @@ class FockStateTF(BaseFockState):
         super().__init__(state_data, num_modes, pure, cutoff_dim, mode_names)
         self._batched = batched
         self._dtype = dtype
-        self._str = "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}, dtype={}>".format(
-            self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar, self._dtype
+        self._str = (
+            "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}, dtype={}>".format(
+                self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar, self._dtype
+            )
         )
 
     def trace(self, **kwargs):
