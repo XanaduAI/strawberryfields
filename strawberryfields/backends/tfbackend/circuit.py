@@ -98,7 +98,7 @@ class Circuit:
         for mode in modes:
             if mode < 0:
                 raise ValueError("Specified mode number(s) cannot be negative.")
-            elif mode >= self._num_modes:
+            if mode >= self._num_modes:
                 raise ValueError(
                     "Specified mode number(s) are not compatible with number of modes."
                 )
@@ -182,8 +182,7 @@ class Circuit:
                     self._batch_size
                 )
             )
-        else:
-            return broadcast_p
+        return broadcast_p
 
     def _check_incompatible_batches(self, *params):
         """Helper function for verifying that all the params from a list have the same batch size. Only does something
@@ -809,9 +808,8 @@ class Circuit:
 
         if not isinstance(mode, int):
             raise ValueError("Specified modes are not valid.")
-        else:
-            if mode < 0 or mode >= self._num_modes:
-                raise ValueError("Specified modes are not valid.")
+        if mode < 0 or mode >= self._num_modes:
+            raise ValueError("Specified modes are not valid.")
 
         m_omega_over_hbar = 1 / self._hbar
         if self._state_is_pure:
@@ -879,7 +877,7 @@ class Circuit:
                     Hn = Hn_p1
                 self._cache["hermite_polys"] = hermite_polys
 
-            number_state_indices = [k for k in product(range(self._cutoff_dim), repeat=2)]
+            number_state_indices = list(product(range(self._cutoff_dim), repeat=2))
             terms = [
                 1
                 / np.sqrt(2 ** n * factorial(n) * 2 ** m * factorial(m))
