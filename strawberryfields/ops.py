@@ -908,15 +908,15 @@ class GKP(Preparation):
         epsilon (float): finite energy parameter of the state
         cutoff (float): this determines how many terms to keep
         representation (str): ``'real'`` or ``'complex'`` reprsentation
-        shape (str): shape of the lattice; default ``'square'``
+        period (tuple): periodicity in phase-space; default :math:`(2\sqrt{\pi}, 2\sqrt{\pi})`
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", shape="square"
+        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", period=(2*np.sqrt, 2*np.sqrt)
     ):
         if state is None:
             state = [0, 0]
-        super().__init__([state, epsilon, ampl_cutoff, representation, shape])
+        super().__init__([state, epsilon, ampl_cutoff, representation, period])
 
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_gkp(*self.p, mode=reg[0])
