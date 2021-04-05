@@ -225,7 +225,7 @@ class Circuit:
             pure (bool): if True, the reset circuit will represent its state as a pure state. If False, the representation will be mixed.
             cutoff_dim (int): new Fock space cutoff dimension to use.
             batch_size (None, int): None means no batching. An integer value >= 2 sets the batch size to use.
-            dtype (DType): Complex Tensorflow Tensor type representation, either complex64 (default) or complex128.
+            dtype (tf.DType): Complex Tensorflow Tensor type representation, either ``tf.complex64`` (default) or ``tf.complex128``.
         """
         if "pure" in kwargs:
             pure = kwargs["pure"]
@@ -245,20 +245,15 @@ class Circuit:
                 raise ValueError("Argument 'cutoff_dim' must be a positive integer")
             self._cutoff_dim = cutoff_dim
 
-        if "batch_size" in kwargs:
-            batch_size = kwargs["batch_size"]
-            if batch_size is not None:
-                if not isinstance(batch_size, int) or batch_size < 2:
-                    raise ValueError("Argument 'batch_size' must be either None or an integer > 1")
-            self._batch_size = batch_size
-            self._batched = batch_size is not None
+        self._batch_size = kwargs.get("batch_size", None)
+        if self._batch_size is not None:
+            if not isinstance(self._batch_size, int) or self._batch_size < 2:
+                raise ValueError("Argument 'batch_size' must be either None or an integer > 1")
+        self._batched = self._batch_size is not None
 
-        if "dtype" in kwargs:
-            dtype = kwargs["dtype"]
-            if dtype is not None:
-                if not dtype in (tf.complex64, tf.complex128):
-                    raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
-            self._dtype = dtype
+        self._dtype = kwargs.get("dtype", tf.complex64)
+        if self._dtype not in (tf.complex64, tf.complex128):
+            raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
 
         self._state_history = []
         self._cache = {}

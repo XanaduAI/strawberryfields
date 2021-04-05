@@ -80,16 +80,16 @@
   prog = sf.Program(2)
   eng  = sf.Engine("tf", backend_options={"cutoff_dim": 50, "dtype": tf.complex128})
   with prog.context as q:
-      Sgate(0.8)         | q[0]
-      Sgate(0.8)         | q[1]
-      BSgate(0.5,0.5)  | (q[0], q[1])
-      BSgate(0.5,0.5)  | (q[0], q[1])
-  state    = eng.run(prog).state
-  N0,N0var = state.mean_photon(0)
-  N1,N1var = state.mean_photon(1)
+      Sgate(0.8) | q[0]
+      Sgate(0.8) | q[1]
+      BSgate(0.5,0.5) | (q[0], q[1])
+      BSgate(0.5,0.5) | (q[0], q[1])
+  state = eng.run(prog).state
+  N0, N0var = state.mean_photon(0)
+  N1, N1var = state.mean_photon(1)
   print(N0)
   print(N1)
-  print('analytical:',np.sinh(0.8)**2)
+  print("analytical:" ,np.sinh(0.8)**2)
   ```
 
 <h3>Breaking Changes</h3>

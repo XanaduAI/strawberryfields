@@ -46,8 +46,8 @@ class FockStateTF(BaseFockState):
             batched (bool): (optional) default False means no batching
             mode_names (Sequence): (optional) this argument contains a list providing mode names
                     for each mode in the state
-            dtype (DType): (optional) complex Tensorflow Tensor type representation, either
-                    complex64 (default) or complex128
+            dtype (tf.DType): (optional) complex Tensorflow Tensor type representation, either
+                    ``tf.complex64`` (default) or ``tf.complex128``
     """
 
     def __init__(
