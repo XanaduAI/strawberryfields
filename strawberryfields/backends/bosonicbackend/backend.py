@@ -533,7 +533,7 @@ class BosonicBackend(BaseBosonic):
 
         return weights, means, cov
 
-    def prepare_gkp(self, state, epsilon, ampl_cutoff, representation="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, ampl_cutoff, representation="real", period=(2*np.sqrt(np.pi), 2*np.sqrt(np.pi))):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
@@ -547,7 +547,7 @@ class BosonicBackend(BaseBosonic):
             epsilon (float): finite energy parameter of the state
             ampl_cutoff (float): this determines how many terms to keep
             representation (str): ``'real'`` or ``'complex'`` reprsentation
-            shape (str): shape of the lattice; default 'square'
+            period (tuple): periodicity of the lattice in phase-space; default :math:`(2\sqrt{\pi}, 2\sqrt{\pi})`
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -559,10 +559,11 @@ class BosonicBackend(BaseBosonic):
         if representation == "complex":
             raise NotImplementedError("The complex description of GKP is not implemented")
 
-        if shape != "square":
+        if not np.isclose(period[0] * period[1], 4 * np.pi) :
             raise NotImplementedError("Only square GKP are implemented for now")
 
         theta, phi = state[0], state[1]
+        a, b = period[0]/2, period[1]/2
 
         def coeff(peak_loc):
             """Returns the value of the weight for a given peak.
@@ -601,9 +602,8 @@ class BosonicBackend(BaseBosonic):
                 * np.sin(phi)
             )
             prefactor = np.exp(
-                -np.pi
-                * 0.25
-                * (l ** 2 + m ** 2)
+                - 0.25
+                * ( ( a * l ) ** 2 + ( b * m ) ** 2)
                 * (1 - np.exp(-2 * epsilon))
                 / (1 + np.exp(-2 * epsilon))
             )
@@ -615,7 +615,7 @@ class BosonicBackend(BaseBosonic):
             np.ceil(
                 np.sqrt(
                     -4
-                    / np.pi
+                    * min(1/a**2, 1/b**2)
                     * np.log(ampl_cutoff)
                     * (1 + np.exp(-2 * epsilon))
                     / (1 - np.exp(-2 * epsilon))
@@ -650,7 +650,9 @@ class BosonicBackend(BaseBosonic):
         # Apply finite energy effect to means
         means = means[filt]
 
-        means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
+        means *= np.array(period) / 2 
+        # means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
+        means *= 0.5 * damping * np.sqrt(self.circuit.hbar)
         # Covariances all the same
         covs = (
             0.5

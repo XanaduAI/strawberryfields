@@ -912,7 +912,7 @@ class GKP(Preparation):
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", period=(2*np.sqrt, 2*np.sqrt)
+        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", period=(2*np.sqrt(np.pi), 2*np.sqrt(np.pi))
     ):
         if state is None:
             state = [0, 0]
