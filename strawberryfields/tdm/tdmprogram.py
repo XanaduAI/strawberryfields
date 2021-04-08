@@ -643,7 +643,6 @@ class TDMProgram(sf.Program):
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
 
     def assert_number_of_modes(self, device):
-        return
         if self.timebins > device.modes["temporal_max"]:
             raise CircuitError(
                 f"This program contains {self.timebins} temporal modes, but the device '{device.target}' "
