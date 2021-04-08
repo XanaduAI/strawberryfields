@@ -101,6 +101,7 @@
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
 * TDM programs now expect a flat (not nested) dictionary of `modes` in device 
   specifications obtained from the XQC platform API.
+  [(#566)](https://github.com/XanaduAI/strawberryfields/pull/566)
 
 <h3>Documentation</h3>
 
