@@ -99,6 +99,8 @@
 * `Connection` objects now send requests to the platform API at version `0.2.0`
   instead of the incorrect version number `1.0.0`.
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
+* TDM programs now expect a flat (not nested) dictionary of `modes` in device 
+  specifications obtained from the XQC platform API.
 
 <h3>Documentation</h3>
 
