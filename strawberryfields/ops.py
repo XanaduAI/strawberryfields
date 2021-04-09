@@ -1290,8 +1290,7 @@ class MeasureGeneraldyne(Measurement):
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         covmat = par_evaluate(self.p)
-        select = self.select
-        return backend.measure_generaldyne(*reg, covmat, shots=shots, select=select)
+        return backend.measure_generaldyne(reg, *covmat, shots=shots, select=self.select)
 
 
 # ====================================================================
