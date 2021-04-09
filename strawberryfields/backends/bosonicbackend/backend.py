@@ -786,6 +786,9 @@ class BosonicBackend(BaseBosonic):
         self.circuit.post_select_heterodyne(mode, select)
         return np.array([[res]])
 
+    def measure_generaldyne(self, mode, covmat, shots=1, select=None):
+        return self.circuit.measure_dyne(covmat, mode, shots=shots)
+
     def is_vacuum(self, tol=1e-10, **kwargs):
         return self.circuit.is_vacuum(tol=tol)
 

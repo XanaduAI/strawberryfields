@@ -1227,7 +1227,7 @@ class MeasureHomodyne(Measurement):
         if select is not None:
             select = select / s
 
-        return s * backend.measure_homodyne(p[0], *reg, shots=shots, select=select, **kwargs)
+        return s * backend.measure_homodyne(p[0], *reg, shots=shots, select=select)
 
     def __str__(self):
         if self.select is None:
@@ -1269,12 +1269,29 @@ class MeasureHeterodyne(Measurement):
         super().__init__([], select)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
-        return backend.measure_heterodyne(*reg, shots=shots, select=self.select, **kwargs)
+        select = self.select
+        return backend.measure_heterodyne(*reg, shots=shots, select=select, **kwargs)
 
     def __str__(self):
         if self.select is None:
             return "MeasureHD"
         return "MeasureHeterodyne(select={})".format(self.select)
+
+class MeasureGeneraldyne(Measurement):
+    r"""Performs a multimode generaldyne measurement.
+
+    .. warning:: The generaldyne measurement can only be performed in the Bosonic backend.
+
+    """
+
+    ns = None
+    def __init__(self, covmat, select=None):
+        super().__init__([covmat], select)
+
+    def _apply(self, reg, backend, shots=1, **kwargs):
+        covmat = par_evaluate(self.p)
+        select = self.select
+        return backend.measure_generaldyne(*reg, covmat, shots=shots, select=select)
 
 
 # ====================================================================
