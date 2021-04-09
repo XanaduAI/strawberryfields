@@ -115,9 +115,9 @@
 
 This release contains contributions from (in alphabetical order):
 
-J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac, 
-Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva,
-Ilan Tzitrin.
+J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac,
+Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy, 
+Jeremy Swinarton, Antal Száva, Ilan Tzitrin.
 
 # Release 0.17.0 (current release)
 
