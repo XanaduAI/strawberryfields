@@ -646,7 +646,7 @@ class TDMProgram(sf.Program):
         if self.timebins > device.modes["temporal_max"]:
             raise CircuitError(
                 f"This program contains {self.timebins} temporal modes, but the device '{device.target}' "
-                f"only supports up to {device.modes['temporal']['max']} modes."
+                f"only supports up to {device.modes['temporal_max']} modes."
             )
         if self.concurr_modes != device.modes["concurrent"]:
             raise CircuitError(
