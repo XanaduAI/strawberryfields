@@ -153,14 +153,16 @@ class BosonicBackend(BaseBosonic):
                 try:
                     # try to apply it to the backend and if op is a measurement, store outcome in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
+                    print(f'val = {val}')
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val[:, i]
+                            # print(f'i, r = {i}, {r}')
+                            samples_dict[r.ind] = val
 
                             # Internally also store all the measurement outcomes
                             if r.ind not in all_samples:
                                 all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, i])
+                            all_samples[r.ind].append(val)
 
                     applied.append(cmd)
 
@@ -787,7 +789,8 @@ class BosonicBackend(BaseBosonic):
         return np.array([[res]])
 
     def measure_generaldyne(self, mode, covmat, shots=1, **kwargs):
-        return self.circuit.measure_dyne(covmat, mode, shots=shots)
+        val = self.circuit.measure_dyne(covmat, mode, shots=shots)
+        return val * np.sqrt(2 * self.circuit.hbar) / 2
 
     def is_vacuum(self, tol=1e-10, **kwargs):
         return self.circuit.is_vacuum(tol=tol)

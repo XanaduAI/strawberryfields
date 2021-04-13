@@ -672,11 +672,14 @@ class BosonicModes:
         if covmat.shape != (2 * len(modes), 2 * len(modes)):
             raise ValueError("Covariance matrix size does not match indices provided.")
 
-        if np.linalg.det(covmat) < (self.hbar / 2) ** (2 * len(modes)):
-            raise ValueError("Measurement covariance matrix is unphysical.")
-
         if self.covs.imag.any():
             raise NotImplementedError("Covariance matrices must be real.")
+
+        if not np.isclose(covmat, covmat.T).all():
+            raise ValueError("Measurement covariance matrix is not symmetric.")
+
+        if (np.linalg.eig(covmat)[0] < 0).any() :
+            raise ValueError("Measurement covariance matrix is not positive semi-definite.")
 
         for i in modes:
             if self.active[i] is None:
@@ -770,7 +773,10 @@ class BosonicModes:
 
                 # Calculate the value of the probability distribution at the sampled point
                 # Prefactors for each exponential in the sum
+
+                ###### Potential dimensionality problem in here
                 prefactors = 1 / np.sqrt(np.linalg.det(2 * np.pi * covs_quad))
+                
                 # Sum Gaussians
                 prob_dist_val = np.sum(self.weights * prefactors * np.exp(-0.5 * exp_arg))
                 # Should be real-valued

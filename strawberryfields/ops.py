@@ -1290,7 +1290,8 @@ class MeasureGeneraldyne(Measurement):
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         covmat = par_evaluate(self.p)
-        return backend.measure_generaldyne(reg, *covmat, shots=shots, select=self.select)
+        s = np.sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
+        return s * backend.measure_generaldyne(reg, *covmat, shots=shots, select=self.select)
 
 
 # ====================================================================
