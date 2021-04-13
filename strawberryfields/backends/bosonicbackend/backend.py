@@ -153,10 +153,8 @@ class BosonicBackend(BaseBosonic):
                 try:
                     # try to apply it to the backend and if op is a measurement, store outcome in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
-                    print(f'val = {val}')
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            # print(f'i, r = {i}, {r}')
                             samples_dict[r.ind] = val
 
                             # Internally also store all the measurement outcomes
