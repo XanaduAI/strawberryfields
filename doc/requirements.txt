@@ -1,3 +1,4 @@
+docutils==0.16
 appdirs
 ipykernel
 sphinx==2.2.2
