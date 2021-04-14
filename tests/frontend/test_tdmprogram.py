@@ -525,7 +525,7 @@ target = "TD2"
 tm = 4
 device_spec = {
     "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
-    "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
+    "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
     "compiler": ["TD2"],
     "gate_parameters": {
         "p1": [0, [0, 6.283185307179586]],
