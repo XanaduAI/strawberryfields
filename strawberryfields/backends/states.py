@@ -1637,7 +1637,7 @@ class BaseBosonicState(BaseState):
                 # sequences
                 arr = np.array([X - means[i, 0], P - means[i, 1]], dtype=object)
 
-            exp_arg = ( arr @ np.linalg.inv(covs[i]) @ arr )
+            exp_arg = arr @ np.linalg.inv(covs[i]) @ arr
             prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
             wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
 
