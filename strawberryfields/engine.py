@@ -391,8 +391,11 @@ class LocalEngine(BaseEngine):
         if not samples_dict:
             return np.empty((0, 0))
 
-        samples = np.transpose([i for _, i in sorted(samples_dict.items())])
-
+        # print(f'[i for _, i in sorted(samples_dict.items())] = {[i for _, i in sorted(samples_dict.items())]}')
+        if self.backend_name == "bosonic":
+            samples = np.array([i for _, i in sorted(samples_dict.items())])
+        else:
+            samples = np.transpose([i for _, i in sorted(samples_dict.items())])
         # pylint: disable=import-outside-toplevel
         if self.backend_name == "tf":
             from tensorflow import convert_to_tensor
