@@ -433,6 +433,60 @@ class Program:
         self.circuit.append(Command(op, reg))
         return reg
 
+    def _is_select(self, op):
+        """Check if the quantum operation uses post-selection.
+
+        A quantum operation uses post-selection if it has the attribute `select`
+        and this attribute is not None.
+
+        Args:
+            op (Operation): quantum operation
+        Returns
+            (bool): boolean indicating if the quantum operation uses post-selection
+                or not
+        """
+
+        return hasattr(op, "select") and getattr(op, "select") is not None
+
+    def _is_feed_forward(self, op):
+        """Check if the quantum operation uses feed-forwarding.
+
+        A quantum operation uses feed-forwarding if its attribute
+        `measurement_deps` is a non empty set.
+
+        Args:
+            op (Operation): quantum operation
+        Returns
+            (bool): boolean indicating if the quantum operation uses feed-forwarding
+                or not
+        """
+
+        return bool(op.measurement_deps)
+
+    @property
+    def post_selection(self):
+        """Return a boolean to indicate if any program's operation uses
+        post-selection or not
+
+        Returns:
+            (bool)
+        """
+
+        is_select_ops = [self._is_select(c.op) for c in self.circuit]
+        return any(is_select_ops)
+
+    @property
+    def feed_forward(self):
+        """Return a boolean to indicate if any program's operation uses
+        feed-forwarding or not
+
+        Returns:
+            (bool)
+        """
+
+        is_feed_forward_ops = [self._is_feed_forward(c.op) for c in self.circuit]
+        return any(is_feed_forward_ops)
+
     def _linked_copy(self):
         """Create a copy of the Program, linked to the original.
 

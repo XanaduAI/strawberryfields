@@ -265,6 +265,52 @@ class TestProgram:
 
         with pytest.raises(KeyError, match="Have you specified the correct target?"):
             prog.assert_max_number_of_measurements(spec)
+    
+    def test_post_selection(self):
+        """Check that the `post_selection` property behaves as expected when it uses
+        post-selection or not.
+        """
+        # instantiate two programs for testing
+        prog_1, prog_2 = sf.Program(2), sf.Program(2)
+
+        # program with post-selection
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureHomodyne(select=0, phi=np.pi) | q[0]
+            ops.MeasureFock() | q[1]
+        
+        # program without post-selection
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+        assert prog_1.post_selection
+        assert prog_2.post_selection is False
+
+    def test_feed_forward(self):
+        """Check that the `feed_forward` property behaves as expected when it uses
+        feed-forwarding or not.
+        """
+        # instantiate two programs for testing
+        prog_1, prog_2 = sf.Program(2), sf.Program(2)
+
+        # program with feed-forwarding
+        with prog_1.context as q:
+            ops.Sgate(0.54) | q[1]
+            ops.BSgate(0.42, 0.1) | (q[0], q[1])
+            ops.Sgate(q[0].par) | q[1]
+            ops.MeasureHeterodyne() | q[1]
+        
+        # program without feed-forwarding
+        with prog_2.context as q:
+            ops.Sgate(0.54) | q[1]
+            ops.BSgate(0.42, 0.1) | (q[0], q[1])
+            ops.MeasureHomodyne(phi=np.pi) | q[1]
+        assert prog_1.feed_forward
+        assert prog_1.post_selection is False
+        assert prog_2.feed_forward is False
+        assert prog_2.post_selection is False
 
 class TestRegRefs:
     """Testing register references."""
