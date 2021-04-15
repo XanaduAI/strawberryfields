@@ -92,6 +92,12 @@
   print("analytical:" ,np.sinh(0.8)**2)
   ```
 
+<h3>Improvements</h3>
+
+* No `VisibleDeprecationWarning` is raised when using the state `wigner`
+  method.
+  [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
