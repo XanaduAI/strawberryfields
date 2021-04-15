@@ -154,14 +154,17 @@ class BosonicBackend(BaseBosonic):
                     # try to apply it to the backend and if op is a measurement, store outcome in values
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
                     if val is not None:
-                        for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val
+                        # print(f'cmd.reg = {cmd.reg}')
+                        meas_modes = []
+                        for _, r in enumerate(cmd.reg):
+                            meas_modes += [r.ind]
 
-                            # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val)
+                        # Internally also store all the measurement outcomes
+                        if tuple(meas_modes) not in all_samples:
+                                all_samples[tuple(meas_modes)] = list()
+                        all_samples[tuple(meas_modes)].append(val)
 
+                        samples_dict[tuple(meas_modes)] = val
                     applied.append(cmd)
 
                 except NotApplicableError as e:
@@ -178,6 +181,8 @@ class BosonicBackend(BaseBosonic):
                         )
                     ) from e
 
+        # print(f'all_samples = {all_samples}')
+        # print(f'samples_dict = {samples_dict}')
         return applied, samples_dict, all_samples
 
     # pylint: disable=import-outside-toplevel

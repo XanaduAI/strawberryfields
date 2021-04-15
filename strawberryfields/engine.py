@@ -391,9 +391,13 @@ class LocalEngine(BaseEngine):
         if not samples_dict:
             return np.empty((0, 0))
 
-        # print(f'[i for _, i in sorted(samples_dict.items())] = {[i for _, i in sorted(samples_dict.items())]}')
         if self.backend_name == "bosonic":
-            samples = np.array([i for _, i in sorted(samples_dict.items())])
+            # Outputing results in a convenient format for the bosonic backend
+            try:
+                samples = np.array([i for _, i in sorted(samples_dict.items())])
+            # If measurement outcomes have different dimensions, keep them as a list
+            except:
+                samples = [i for _, i in sorted(samples_dict.items())]
         else:
             samples = np.transpose([i for _, i in sorted(samples_dict.items())])
         # pylint: disable=import-outside-toplevel

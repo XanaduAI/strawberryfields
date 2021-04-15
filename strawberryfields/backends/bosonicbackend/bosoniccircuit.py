@@ -687,6 +687,9 @@ class BosonicModes:
 
         # Indices for the relevant quadratures
         quad_ind = np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
+        # Relabeling indices for the case where more than 1 mode is present
+        if len(modes) > 1:
+            quad_ind = np.array(self.from_xp)[quad_ind]    
         # Associated means and covs, already adding the covmat to the state covariances
         means_quad = self.means[:, quad_ind]
         covs_quad = self.covs[:, quad_ind, :][:, :, quad_ind].real + covmat
@@ -774,7 +777,6 @@ class BosonicModes:
                 # Calculate the value of the probability distribution at the sampled point
                 # Prefactors for each exponential in the sum
 
-                ###### Potential dimensionality problem in here
                 prefactors = 1 / np.sqrt(np.linalg.det(2 * np.pi * covs_quad))
                 
                 # Sum Gaussians
