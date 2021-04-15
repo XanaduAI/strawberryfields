@@ -1632,6 +1632,7 @@ class BaseBosonicState(BaseState):
 
             if X.shape == P.shape:
                 arr = np.array([X - means[i, 0], P - means[i, 1]])
+                arr = arr.squeeze()
             else:
                 # need to specify dtype for creating an ndarray from ragged
                 # sequences
