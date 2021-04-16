@@ -454,11 +454,9 @@ class Program:
 
         Args:
             op (Operation): quantum operation
-        Returns
-            (bool): boolean indicating if the quantum operation uses feed-forwarding
-                or not
+        Returns:
+            bool: whether the quantum operation uses feed-forwarding or not
         """
-
         return bool(op.measurement_deps)
 
     @property
