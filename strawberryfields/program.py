@@ -178,9 +178,7 @@ class Program:
             # copy the RegRef state from the parent program
             parent.lock()  # make sure the parent isn't accidentally updated by the user
             self.init_num_subsystems = parent.num_subsystems
-            self.reg_refs = copy.deepcopy(
-                parent.reg_refs
-            )  # independent copy of the RegRefs
+            self.reg_refs = copy.deepcopy(parent.reg_refs)  # independent copy of the RegRefs
             self.unused_indices = copy.copy(parent.unused_indices)
         else:
             raise TypeError(
@@ -195,11 +193,8 @@ class Program:
 
     def __str__(self):
         """String representation."""
-        return (
-            self.__class__.__name__
-            + "({}, {}->{} subsystems, compiled for '{}')".format(
-                self.name, self.init_num_subsystems, self.num_subsystems, self.target
-            )
+        return self.__class__.__name__ + "({}, {}->{} subsystems, compiled for '{}')".format(
+            self.name, self.init_num_subsystems, self.num_subsystems, self.target
         )
 
     def __len__(self):
@@ -310,13 +305,9 @@ class Program:
             tuple[RegRef]: tuple of the newly added subsystem references
         """
         if self.locked:
-            raise CircuitError(
-                "The Program is locked, no new subsystems can be created."
-            )
+            raise CircuitError("The Program is locked, no new subsystems can be created.")
         if not isinstance(n, numbers.Integral) or n < 1:
-            raise ValueError(
-                "Number of added subsystems {} is not a positive integer.".format(n)
-            )
+            raise ValueError("Number of added subsystems {} is not a positive integer.".format(n))
 
         first_unassigned_index = len(self.reg_refs)
         # create a list of RegRefs
@@ -411,14 +402,10 @@ class Program:
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
-                raise RegRefError(
-                    "Subsystems can only be indexed using integers and RegRefs."
-                )
+                raise RegRefError("Subsystems can only be indexed using integers and RegRefs.")
 
             if not rr.active:
-                raise RegRefError(
-                    "Subsystem {} has already been deleted.".format(rr.ind)
-                )
+                raise RegRefError("Subsystem {} has already been deleted.".format(rr.ind))
             if rr in temp:
                 raise RegRefError("Trying to act on the same subsystem more than once.")
             temp.append(rr)
@@ -434,9 +421,7 @@ class Program:
             list[RegRef]: subsystem list as RegRefs
         """
         if self.locked:
-            raise CircuitError(
-                "The Program is locked, no more Commands can be appended to it."
-            )
+            raise CircuitError("The Program is locked, no more Commands can be appended to it.")
 
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
@@ -558,11 +543,7 @@ class Program:
             op_name = str(c.op)
             if "MeasureFock" in op_name:
                 num_pnr += len(c.reg)
-            elif (
-                "MeasureHomodyne" in op_name
-                or "MeasureX" in op_name
-                or "MeasureP" in op_name
-            ):
+            elif "MeasureHomodyne" in op_name or "MeasureX" in op_name or "MeasureP" in op_name:
                 num_homodyne += len(c.reg)
             elif "MeasureHeterodyne" in op_name or "MeasureHD" in op_name:
                 num_heterodyne += len(c.reg)
@@ -634,9 +615,7 @@ class Program:
         """
         # pylint: disable=too-many-branches
         if device is None and compiler is None:
-            raise ValueError(
-                "Either one or both of 'device' and 'compiler' must be specified"
-            )
+            raise ValueError("Either one or both of 'device' and 'compiler' must be specified")
 
         def _get_compiler(compiler_or_name):
             if compiler_or_name in compiler_db:
@@ -684,9 +663,7 @@ class Program:
             DAG = pu.list_to_DAG(seq)
             temp = nx.algorithms.components.number_weakly_connected_components(DAG)
             if temp > 1:
-                warnings.warn(
-                    "The circuit consists of {} disconnected components.".format(temp)
-                )
+                warnings.warn("The circuit consists of {} disconnected components.".format(temp))
 
         # run optimizations
         if kwargs.get("optimize", False):
