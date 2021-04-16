@@ -457,7 +457,7 @@ class Program:
         Returns:
             bool: whether the quantum operation uses feed-forwarding or not
         """
-        return bool(op.measurement_deps)
+        return len(op.measurement_deps) != 0
 
     @property
     def post_selection(self):
