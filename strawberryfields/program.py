@@ -441,11 +441,9 @@ class Program:
 
         Args:
             op (Operation): quantum operation
-        Returns
-            (bool): boolean indicating if the quantum operation uses post-selection
-                or not
+        Returns:
+            bool: whether the quantum operation uses post-selection or not
         """
-
         return hasattr(op, "select") and getattr(op, "select") is not None
 
     def _is_feed_forward(self, op):
