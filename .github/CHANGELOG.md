@@ -98,6 +98,9 @@
   method.
   [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
 
+* Cleanup `backends/tfbackend/ops.py` todo items.
+  [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
