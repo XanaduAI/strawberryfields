@@ -465,9 +465,8 @@ class Program:
         post-selection or not
 
         Returns:
-            (bool)
+            bool: whether post-selection is used anywhere in the circuit
         """
-
         is_select_ops = [self._is_select(c.op) for c in self.circuit]
         return any(is_select_ops)
 
