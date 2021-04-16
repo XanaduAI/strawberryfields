@@ -476,9 +476,8 @@ class Program:
         feed-forwarding or not
 
         Returns:
-            (bool)
+            bool: whether feed-forwarding is used anywhere in the circuit
         """
-
         is_feed_forward_ops = [self._is_feed_forward(c.op) for c in self.circuit]
         return any(is_feed_forward_ops)
 
