@@ -121,6 +121,10 @@
   calls to `pop` with fancy indexing.
   [(#548)](https://github.com/XanaduAI/strawberryfields/pull/548)
 
+* No `VisibleDeprecationWarning` is raised when using the state `wigner`
+  method.
+  [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
+
 <h3>Bug fixes</h3>
 
 * `Connection` objects now send requests to the platform API at version `0.2.0`
