@@ -1629,11 +1629,16 @@ class BaseBosonicState(BaseState):
 
         wigner = 0
         for i, weight_i in enumerate(weights):
-            exp_arg = (
-                np.array([X - means[i, 0], P - means[i, 1]])
-                @ np.linalg.inv(covs[i])
-                @ np.array([X - means[i, 0], P - means[i, 1]])
-            )
+
+            if X.shape == P.shape:
+                arr = np.array([X - means[i, 0], P - means[i, 1]])
+                arr = arr.squeeze()
+            else:
+                # need to specify dtype for creating an ndarray from ragged
+                # sequences
+                arr = np.array([X - means[i, 0], P - means[i, 1]], dtype=object)
+
+            exp_arg = arr @ np.linalg.inv(covs[i]) @ arr
             prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
             wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
 

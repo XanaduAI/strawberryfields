@@ -67,6 +67,27 @@ def test_vacuum(setup_backend, hbar, tol):
     assert np.allclose(W, Wexact, atol=tol, rtol=0)
 
 
+def test_vacuum_one_point(setup_backend, hbar, tol):
+    """Test Wigner function for a Vacuum state is a standard
+    normal Gaussian at a single point"""
+    backend = setup_backend(1)
+    state = backend.state()
+    vec = np.array([0])
+    W = state.wigner(0, vec, vec)
+
+    X, P = np.meshgrid(vec, vec)
+    GRID = np.empty(X.shape + (2,))
+    GRID[:, :, 0] = X
+    GRID[:, :, 1] = P
+
+    # exact wigner function
+    mu = [0, 0]
+    cov = np.identity(2) * hbar / 2.0
+    Wexact = wigner(GRID, mu, cov)
+
+    assert np.allclose(W, Wexact, atol=tol, rtol=0)
+
+
 def test_squeezed_coherent(setup_backend, hbar, tol):
     """Test Wigner function for a squeezed coherent state
     matches the analytic result"""
