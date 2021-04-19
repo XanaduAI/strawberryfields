@@ -437,7 +437,7 @@ class Program:
         """Check if the quantum operation uses post-selection.
 
         A quantum operation uses post-selection if it has the attribute `select`
-        and this attribute is not None.
+        and this attribute is not ``None``.
 
         Args:
             op (Operation): quantum operation
