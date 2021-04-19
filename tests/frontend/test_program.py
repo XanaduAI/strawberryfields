@@ -603,6 +603,7 @@ class TestValidation:
             """\
             name mock
             version 1.0
+
             S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
             """
         )
@@ -720,7 +721,8 @@ class TestValidation:
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
         contains a primitive not allowed on the circuit spec.
-        Here, we can simply use the guassian circuit spec and
+
+        Here, we can simply use the gaussian circuit spec and
         the Kerr gate as an existing example.
         """
         prog = sf.Program(3)
@@ -734,6 +736,7 @@ class TestValidation:
         """Test that an operation that is both a primitive AND
         a decomposition (for instance, ops.Gaussian in the gaussian
         backend) can have it's decomposition behaviour user defined.
+
         In this case, the Gaussian operation should remain after compilation.
         """
         prog = sf.Program(2)
@@ -755,6 +758,7 @@ class TestValidation:
         """Test that an operation that is both a primitive AND
         a decomposition (for instance, ops.Gaussian in the gaussian
         backend) can have it's decomposition behaviour user defined.
+
         In this case, the Gaussian operation should compile
         to a Squeezed preparation.
         """
@@ -787,6 +791,7 @@ class TestValidation:
                 """\
                 name test
                 version 0.0
+
                 Sgate({sq}, 0) | 0
                 Dgate(-7.123) | 1
                 BSgate({theta}) | 0, 1
@@ -826,6 +831,7 @@ class TestValidation:
                 """\
                 name test
                 version 0.0
+
                 Sgate({sq}, 0) | 0
                 Dgate(-7.123, 0) | 1
                 BSgate({theta}) | 0, 1
