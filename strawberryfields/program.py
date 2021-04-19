@@ -450,7 +450,7 @@ class Program:
         """Check if the quantum operation uses feed-forwarding.
 
         A quantum operation uses feed-forwarding if its attribute
-        `measurement_deps` is a non empty set.
+        ``measurement_deps`` is a non empty set.
 
         Args:
             op (Operation): quantum operation
