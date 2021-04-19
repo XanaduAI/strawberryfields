@@ -142,7 +142,7 @@
 
 <h3>Documentation</h3>
 
-* The "Hardware" quickstart page has renamed to "Xanadu Quantum Cloud" to encompass both hardware
+* The "Hardware" quickstart page has been renamed to "Xanadu Quantum Cloud" to encompass both hardware
   and cloud simulators. A new "Cloud simulator" entry has been added, describing how to submit
   programs to be executed via the XQC simulator.
   [(#547)](https://github.com/XanaduAI/strawberryfields/pull/547)

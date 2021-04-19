@@ -322,11 +322,6 @@ circuits, see the following tutorials.
     :figure: /_static/oneloop.svg
 
 .. customgalleryitem::
-    :tooltip: Simulate massive time-domain quantum systems
-    :description: :doc:`demos/run_time_domain`
-    :figure: /_static/oneloop.svg
-
-.. customgalleryitem::
     :tooltip: Introduction to the bosonic backend
     :description: :doc:`demos/run_intro_bosonic`
     :figure: /_static/cats.png
