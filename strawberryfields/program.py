@@ -461,8 +461,7 @@ class Program:
 
     @property
     def has_post_selection(self):
-        """Return a boolean to indicate if any program's operation uses
-        post-selection or not
+        """Indicate if any operation in the program uses post-selection or not.
 
         Returns:
             bool: whether post-selection is used anywhere in the circuit
