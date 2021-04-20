@@ -769,12 +769,12 @@ class BosonicBackend(BaseBosonic):
             X2 = self.circuit.expandS(modes, X)
             self.circuit.apply_channel(X, Y)
 
-    def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
+    def measure_homodyne(self, phi, mode, shots=1, select=None, update=True, **kwargs):
         # Phi is the rotation of the measurement operator, hence the minus
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
+            val = self.circuit.homodyne(mode, shots=shots, update=update, **kwargs)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             self.circuit.post_select_homodyne(mode, val)
@@ -791,8 +791,8 @@ class BosonicBackend(BaseBosonic):
         self.circuit.post_select_heterodyne(mode, select)
         return np.array([[res]])
 
-    def measure_generaldyne(self, mode, covmat, shots=1, **kwargs):
-        val = self.circuit.measure_dyne(covmat, mode, shots=shots)
+    def measure_generaldyne(self, mode, covmat, shots=1, update=True, **kwargs):
+        val = self.circuit.measure_dyne(covmat, mode, shots=shots, update=update)
         return val * np.sqrt(2 * self.circuit.hbar) / 2
 
     def is_vacuum(self, tol=1e-10, **kwargs):

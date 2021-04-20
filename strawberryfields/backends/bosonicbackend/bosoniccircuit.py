@@ -644,7 +644,7 @@ class BosonicModes:
         fid = self.fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
-    def measure_dyne(self, covmat, modes, shots=1):
+    def measure_dyne(self, covmat, modes, shots=1, update=True):
         r"""Performs general-dyne measurements on a set of modes.
 
         For more information on definition of general-dyne see
@@ -800,18 +800,18 @@ class BosonicModes:
 
         # The next line is a hack in that it only updates conditioned on the first samples value
         # should still work if shots = 1
-        if len(modes) < len(self.active):
+        if len(modes) < len(self.active) and update:
             # Update other modes based on phase space sample
             self.post_select_generaldyne(covmat, modes, vals[0])
 
         # If all modes are measured, set them to vacuum
-        if len(modes) == len(self.active):
+        if len(modes) == len(self.active) and update:
             for i in modes:
                 self.loss(0, i)
 
         return vals
 
-    def homodyne(self, mode, shots=1, eps=0.0002):
+    def homodyne(self, mode, shots=1, eps=0.0002, update=True):
         r"""Performs an x-homodyne measurement on a mode, simulated by a generaldyne
         onto a highly squeezed state.
 
@@ -824,9 +824,9 @@ class BosonicModes:
             array: homodyne outcome
         """
         covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
-        return self.measure_dyne(covmat, [mode], shots=shots)
+        return self.measure_dyne(covmat, [mode], shots=shots, update=update)
 
-    def heterodyne(self, mode, shots=1):
+    def heterodyne(self, mode, shots=1, update=True):
         r"""Performs a heterodyne measurement on a mode, simulated by a generaldyne
         onto a coherent state.
 
@@ -838,7 +838,7 @@ class BosonicModes:
             array: heterodyne outcome
         """
         covmat = self.hbar * np.eye(2) / 2
-        return self.measure_dyne(covmat, [mode], shots=shots)
+        return self.measure_dyne(covmat, [mode], shots=shots, update=update)
 
     def post_select_generaldyne(self, covmat, modes, vals):
         r"""Simulates a general-dyne measurement on a set of modes with a specified measurement

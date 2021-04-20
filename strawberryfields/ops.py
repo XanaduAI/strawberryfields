@@ -269,10 +269,11 @@ class Measurement(Operation):
     # todo: self.select could support :class:`~strawberryfields.parameters.Parameter` instances.
     ns = None
 
-    def __init__(self, par, select=None):
+    def __init__(self, par, select=None, update=True):
         super().__init__(par)
         #: None, Sequence[Number]: postselection values, one for each measured subsystem
         self.select = select
+        self.update = update
 
     def __str__(self):
         # class name, parameter values, and possibly the select parameter
@@ -1217,8 +1218,8 @@ class MeasureHomodyne(Measurement):
     """
     ns = 1
 
-    def __init__(self, phi, select=None):
-        super().__init__([phi], select)
+    def __init__(self, phi, select=None, update=True):
+        super().__init__([phi], select, update)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         p = par_evaluate(self.p)
@@ -1227,7 +1228,10 @@ class MeasureHomodyne(Measurement):
         if select is not None:
             select = select / s
 
-        return s * backend.measure_homodyne(p[0], *reg, shots=shots, select=select)
+        if backend.short_name == 'bosonic':
+            return s * backend.measure_homodyne(p[0], *reg, shots=shots, select=select, update=self.update)
+        else:
+            return s * backend.measure_homodyne(p[0], *reg, shots=shots, select=select)
 
     def __str__(self):
         if self.select is None:
@@ -1285,13 +1289,13 @@ class MeasureGeneraldyne(Measurement):
     """
 
     ns = None
-    def __init__(self, covmat, select=None):
-        super().__init__([covmat], select)
+    def __init__(self, covmat, select=None, update=True):
+        super().__init__([covmat], select, update)
 
     def _apply(self, reg, backend, shots=1, **kwargs):
         covmat = par_evaluate(self.p)
         s = np.sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
-        return s * backend.measure_generaldyne(reg, *covmat, shots=shots, select=self.select)
+        return s * backend.measure_generaldyne(reg, *covmat, shots=shots, select=self.select, update=self.update)
 
 
 # ====================================================================
