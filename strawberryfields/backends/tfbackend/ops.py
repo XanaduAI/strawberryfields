@@ -72,7 +72,6 @@ def _numer_safe_power(base, exponent, dtype=tf.complex64):
 
 def mix(pure_state, batched=False):
     """Converts the state from pure to mixed"""
-    # todo: In the fock backend mixing is done by ops.mix(), maybe the functions should be named identically?
     if not batched:
         pure_state = tf.expand_dims(pure_state, 0)  # add in fake batch dimension
 
@@ -930,13 +929,11 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
         # append mode and insert state (There is also insert_state(), but it seemed unnecessarily complicated to try to generalize this function, which does a lot of manual list comprehension, to the multi mode case than to write the two liner below)
         # todo: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
-        if not batched:
-            revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
-        else:
-            batch_size = reduced_state.shape[0]
-            revised_modes = tf.stack(
-                [tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)]
-            )
+        idx1 = (slice(None, None),) * batched + (Ellipsis,) + (None,) * (replacement.ndim - batched)
+        idx2 = (
+            (slice(None, None),) * batched + (None,) * (reduced_state.ndim - batched) + (Ellipsis,)
+        )
+        revised_modes = reduced_state[idx1] * replacement[idx2]
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around

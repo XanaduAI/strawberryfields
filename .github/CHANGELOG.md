@@ -98,7 +98,8 @@
   method.
   [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
 
-* Cleanup `backends/tfbackend/ops.py` todo items.
+* Cleanup `backends/tfbackend/ops.py` reduce line count, clarify function similarity
+  across backend ops, and replace tensorflow.tensordot with broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
 <h3>Breaking Changes</h3>
