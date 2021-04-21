@@ -123,8 +123,8 @@ backend options. Available backends include:
   combination of Gaussian functions in phase space. It provides very succinct descriptions of
   Gaussian states, just like the ``gaussian`` backend, but it can also provide descriptions of
   non-Gaussian states as well. Moreover, like in the gaussian backend, the application of the most
-  common active and passive linear optical operations, like the displacement Dgate, squeezing Sgate
-  and beamsplitter BSgate gates, is extremely efficient.
+  common active and passive linear optical operations, like the displacement (:class:`~.Dgate`, squeezing
+  (:class:`~.Sgate`), and beamsplitter (:class:`~.BSgate`) gates, is extremely efficient.
 
 * The ``'tf'`` backend, written in TensorFlow 2.
 
