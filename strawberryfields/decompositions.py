@@ -696,7 +696,8 @@ def williamson(V, tol=1e-11):
     Kt = K @ p
     s1t = p @ s1 @ p
     dd = xpxp_to_xxpp(s1t)
-    Ktt = Kt @ rotmat
+    perm_indices = xpxp_to_xxpp(np.arange(2 * n))
+    Ktt = Kt[:, perm_indices]
     Db = np.diag([1 / dd[i, i + n] for i in range(n)] + [1 / dd[i, i + n] for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
     return Db, np.linalg.inv(S).T
