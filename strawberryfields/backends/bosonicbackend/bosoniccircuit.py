@@ -935,7 +935,7 @@ class BosonicModes:
 
         Returns:
             qubit_dm (numpy array): qubit density matrix
-            dm_err (numpy array): error on density matrix due to finite sampling
+            dm_std (numpy array): error on density matrix due to finite sampling
 
         Raises:
             NotImplementedError: if number of modes is greater than 2
@@ -952,39 +952,44 @@ class BosonicModes:
         if len(modes) == 1:
             # defining useful quantities
             eps = 0.0002
-            covX = self.hbar * np.array([[1/eps**2, 0],[0, eps**2]]) / 2
-            covY = self.hbar * np.array([[eps**2+1/eps**2, eps**2-1/eps**2],[eps**2-1/eps**2, eps**2+1/eps**2]]) / 2
-            covZ = self.hbar * np.array([[eps**2, 0],[0, 1/eps**2]]) / 2
-            Xmat = np.array([[0, 1],[1, 0]], dtype=complex)
-            Ymat = np.array([[0, -1j],[1j, 0]], dtype=complex)
-            Zmat = np.array([[1, 0],[0, -1]], dtype=complex)
-            Imat = np.identity(2, dtype=complex)
+            covX = self.hbar * np.array( [ [ 1/eps**2, 0] , [ 0, eps ** 2 ] ] ) / 2
+            covY = self.hbar * np.array( [ [ eps ** 2 + 1 / eps ** 2 , eps ** 2 - 1 / eps ** 2 ], [ eps ** 2 - 1 / eps ** 2, eps ** 2 + 1 / eps ** 2 ] ] ) / 2
+            covZ = self.hbar * np.array( [ [ eps ** 2, 0 ], [ 0, 1 / eps ** 2 ] ] ) / 2
+            X = np.array( [ [0, 1], [1, 0] ] )
+            Y = np.array( [ [0, -1j], [1j, 0] ] )
+            Z = np.array( [ [1, 0], [0, -1] ] )
+            I = np.identity(2)
             # performing the measurements
-            measX = np.sqrt(self.hbar / 2) * self.measure_dyne(covX, modes, shots=stats, update=False)
-            measY = np.sqrt(self.hbar / 2) * self.measure_dyne(covY, modes, shots=stats, update=False)
-            measZ = np.sqrt(self.hbar / 2) * self.measure_dyne(covZ, modes, shots=stats, update=False)
+            measX = np.sqrt( self.hbar / 2 ) * self.measure_dyne( covX, modes, shots=stats, update=False )
+            measY = np.sqrt( self.hbar / 2 ) * self.measure_dyne( covY, modes, shots=stats, update=False )
+            measZ = np.sqrt( self.hbar / 2 ) * self.measure_dyne( covZ, modes, shots=stats, update=False )
             #computing the trace
-            traceI = np.sum(self.weights)
+            traceI = np.sum( self.weights )
             # Computing the relevant traces
             # X
-            frac, integ = np.modf(measX[:,1]/np.sqrt(self.hbar*np.pi))
-            binned = (integ + np.rint(frac)) % 2           
-            traceX = np.sum((-1)**binned)/binned.size
+            frac, integ = np.modf( measX[:,1] / np.sqrt( self.hbar*np.pi ) )
+            binned = ( integ + np.rint( frac ) ) % 2           
+            traceX = 1 - 2 * np.mean( binned )
+            varX = 4*np.mean(binned)*(1-np.mean(binned))/binned.size 
             # Y
-            frac, integ = np.modf((measY[:,0]+measY[:,1])/np.sqrt(self.hbar*np.pi))
-            binned = (integ + np.rint(frac)) % 2
-            traceY = np.sum((-1)**binned)/binned.size
+            frac, integ = np.modf( ( measY[:,0] + measY[:,1] ) / np.sqrt( self.hbar * np.pi ) )
+            binned = ( integ + np.rint( frac ) ) % 2
+            traceY = 1 - 2 * np.mean( binned )
+            varY = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
             # Z
-            frac, integ = np.modf(measZ[:,0]/np.sqrt(self.hbar*np.pi))
-            binned = (integ + np.rint(frac)) % 2
-            traceZ = np.sum((-1)**binned)/binned.size
+            frac, integ = np.modf( measZ[:,0] / np.sqrt( self.hbar * np.pi ) )
+            binned = ( integ + np.rint( frac ) ) % 2
+            traceZ = 1 - 2 * np.mean( binned )
+            varZ = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
             # constructing the density matrix
-            qubit_dm = ((traceI * Imat) + (traceX * Xmat) + (traceY * Ymat) + (traceZ * Zmat))/2
-
+            qubit_dm = ( (traceI * I) + (traceX * X) + (traceY * Y) + (traceZ * Z) ) / 2
+            # finding the error on the density matrix
+            dm_std = np.sqrt(varX) * X + 1j * np.sqrt(varY) * X + np.sqrt(varZ) * I
+            
         # 2-qubit tomography
         # else:
 
-        return qubit_dm, None
+        return qubit_dm, dm_std
 
     def apply_u(self, U):
         r"""Transforms the state according to the linear optical unitary that
