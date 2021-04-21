@@ -21,7 +21,6 @@ from numpy import (
     array,
     identity,
     arctan2,
-    angle,
     sqrt,
     vstack,
     zeros_like,
