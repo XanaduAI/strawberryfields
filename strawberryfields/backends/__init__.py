@@ -76,7 +76,6 @@ backend development.
 .. autosummary::
     :toctree: api
 
-    shared_ops
 """
 
 from .base import BaseBackend, BaseFock, BaseGaussian, BaseBosonic, ModeMap
