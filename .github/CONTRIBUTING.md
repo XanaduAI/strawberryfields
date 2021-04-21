@@ -21,14 +21,6 @@ To chat directly with the team designing and building Strawberry Fields, as well
 community - ranging from professors of quantum physics, to students, to those just interested in being a
 part of a rapidly growing industry - you can join our [Slack channel](https://u.strawberryfields.ai/slack).
 
-Available channels:
-
-* `#strawberryfields`: For general discussion regarding Strawberry Fields
-* `#sf_projects`: For discussion of research ideas and projects built on Strawberry Fields
-* `#sf_bugs`: For discussion of any bugs and issues you run into using Strawberry Fields
-* `#sf_interactive`: For discussion relating to the [Strawberry Fields Interactive](https://strawberryfields.ai) web application
-* `#sf_docs`: For discussion of the Strawberry Fields [documentation](https://strawberryfields.readthedocs.io)
-
 Sometimes, it might take us a couple of hours to reply - please be patient!
 
 ## How can I contribute?
@@ -62,7 +54,7 @@ It's up to you!
   as a base. Ask us if you have any questions, and send a link to your application to support@xanadu.ai so we can highlight it in
   our documentation!
 
-For some inspiration, you can also check out some preprepared [contribution challenges](.github/CHALLENGES.md).
+For some inspiration, you can also check out some preprepared [contribution challenges](./CHALLENGES.md).
 
 Appetite whetted? Keep reading below for all the nitty-gritty on reporting bugs, contributing to the documentation,
 and submitting pull requests.
@@ -80,7 +72,7 @@ To submit a bug report, please work your way through the following checklist:
   `#sf_bug` channel.
 
 * **Fill out the issue template**. If you cannot find an existing issue addressing the problem, create a new
-  issue by filling out the [issue template](.github/ISSUE_TEMPLATE.md). This template is added automatically to the comment
+  issue by filling out the [issue template](./ISSUE_TEMPLATE.md). This template is added automatically to the comment
   box when you create a new issue. Please try and add as many details as possible!
 
 * Try and make your issue as **clear, concise, and descriptive** as possible. Include a clear and descriptive title,
@@ -136,7 +128,7 @@ Before submitting a pull request, please make sure the following is done:
 
 ### Submitting the pull request
 * When ready, submit your fork as a [pull request](https://help.github.com/articles/about-pull-requests) to the Strawberry
-  Fields repository, filling out the [pull request template](.github/PULL_REQUEST_TEMPLATE.md). This template is added automatically
+  Fields repository, filling out the [pull request template](./PULL_REQUEST_TEMPLATE.md). This template is added automatically
   to the comment box when you create a new issue.
 
 * When describing the pull request, please include as much detail as possible regarding the changes made/new features

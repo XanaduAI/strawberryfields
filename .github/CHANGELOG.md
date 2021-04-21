@@ -68,8 +68,35 @@
   plt.contourf(xvec, pvec, wigner)
   plt.show()
   ```
+
 * The `fock` backend now supports the `GKP` preparation [(#553)](https://github.com/XanaduAI/strawberryfields/pull/553)
 
+* The `tf` backend now accepts the Tensor DType as argument.
+  [(#562)](https://github.com/XanaduAI/strawberryfields/pull/562)
+
+  Allows high cutoff dimension to give numerically correct calculations:
+
+  ```python
+  prog = sf.Program(2)
+  eng  = sf.Engine("tf", backend_options={"cutoff_dim": 50, "dtype": tf.complex128})
+  with prog.context as q:
+      Sgate(0.8) | q[0]
+      Sgate(0.8) | q[1]
+      BSgate(0.5,0.5) | (q[0], q[1])
+      BSgate(0.5,0.5) | (q[0], q[1])
+  state = eng.run(prog).state
+  N0, N0var = state.mean_photon(0)
+  N1, N1var = state.mean_photon(1)
+  print(N0)
+  print(N1)
+  print("analytical:" ,np.sinh(0.8)**2)
+  ```
+
+<h3>Improvements</h3>
+
+* No `VisibleDeprecationWarning` is raised when using the state `wigner`
+  method.
+  [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
 
 <h3>Breaking Changes</h3>
 
@@ -79,15 +106,24 @@
   instead of the incorrect version number `1.0.0`.
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
 
+* TDM programs now expect a flat (not nested) dictionary of `modes` in device 
+  specifications obtained from the XQC platform API.
+  [(#566)](https://github.com/XanaduAI/strawberryfields/pull/566)
+
 <h3>Documentation</h3>
+
+* Cleanup docs to make contribution easier.
+  [(#561)](https://github.com/XanaduAI/strawberryfields/pull/561)
+* Add development requirements and format script to make contribution easier.
+  [(#563)](https://github.com/XanaduAI/strawberryfields/pull/563)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac, 
-Nicolás Quesada, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva, Ilan 
-Tzitrin.
+J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac,
+Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy, 
+Jeremy Swinarton, Antal Száva, Ilan Tzitrin.
 
 # Release 0.17.0 (current release)
 
