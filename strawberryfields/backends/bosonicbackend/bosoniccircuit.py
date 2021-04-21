@@ -948,17 +948,25 @@ class BosonicModes:
         # This function needs to be generalized for implementing more than 2 modes tomography
         if len(modes) > 2:
             raise NotImplementedError("Qubit tomography for more than 2 modes is not implemented.")
+        # defining useful quantities
+        eps = 0.0002
+        # Covariance matrices
+        covX = self.hbar * np.array( [ [ 1/eps**2, 0] , [ 0, eps ** 2 ] ] ) / 2
+        covY = self.hbar * np.array( [ [ eps ** 2 + 1 / eps ** 2 , eps ** 2 - 1 / eps ** 2 ], [ eps ** 2 - 1 / eps ** 2, eps ** 2 + 1 / eps ** 2 ] ] ) / 2
+        covZ = self.hbar * np.array( [ [ eps ** 2, 0 ], [ 0, 1 / eps ** 2 ] ] ) / 2
+        covXX = self.hbar * np.array([[1/eps**2, 0, 1/eps**2, 0],[0, eps**2, 0, eps**2],[1/eps**2, 0, 1/eps**2, 0],[0, eps**2, 0, eps**2]])
+        # Pauli matrices
+        X = np.array( [ [0, 1], [1, 0] ] )
+        Y = np.array( [ [0, -1j], [1j, 0] ] )
+        Z = np.array( [ [1, 0], [0, -1] ] )
+        I = np.identity(2)
+        # Basic simplectic transformations 
+        P = np.array( [ [1, 0], [-1, 1] ] )
+        H = np.array( [ [0, 1], [-1, 0] ] )
+        # Dictionary of the simplectic transformations
+        simp_trans = {1 : I, 2 : P, 3 : H}
         # 1-qubit tomography
         if len(modes) == 1:
-            # defining useful quantities
-            eps = 0.0002
-            covX = self.hbar * np.array( [ [ 1/eps**2, 0] , [ 0, eps ** 2 ] ] ) / 2
-            covY = self.hbar * np.array( [ [ eps ** 2 + 1 / eps ** 2 , eps ** 2 - 1 / eps ** 2 ], [ eps ** 2 - 1 / eps ** 2, eps ** 2 + 1 / eps ** 2 ] ] ) / 2
-            covZ = self.hbar * np.array( [ [ eps ** 2, 0 ], [ 0, 1 / eps ** 2 ] ] ) / 2
-            X = np.array( [ [0, 1], [1, 0] ] )
-            Y = np.array( [ [0, -1j], [1j, 0] ] )
-            Z = np.array( [ [1, 0], [0, -1] ] )
-            I = np.identity(2)
             # performing the measurements
             measX = np.sqrt( self.hbar / 2 ) * self.measure_dyne( covX, modes, shots=stats, update=False )
             measY = np.sqrt( self.hbar / 2 ) * self.measure_dyne( covY, modes, shots=stats, update=False )
@@ -985,9 +993,33 @@ class BosonicModes:
             qubit_dm = ( (traceI * I) + (traceX * X) + (traceY * Y) + (traceZ * Z) ) / 2
             # finding the error on the density matrix
             dm_std = np.sqrt(varX) * X + 1j * np.sqrt(varY) * X + np.sqrt(varZ) * I
-            
         # 2-qubit tomography
-        # else:
+        else if len(modes) == 2:
+            # mapping of the axes to sum over to get the qubit results
+            sum_indices = {}
+            # building the relevant covariance matrices
+            covs_2qubits = {}
+            covs_1qubit = {}
+            for key1, value1 in simp_trans.items():
+                covs_1qubit[(key1,)] = value1 @ covX @ value1.T
+                if key1 == 1:
+                    sum_indices[(key1,)] = (1,)
+                elif key1 == 2:
+                    sum_indices[(key1,)] = (0, 1)
+                elif key1 == 3:
+                    sum_indices[(key1,)] = (0,)
+                for key2, value2 in simp_trans.items():
+                    covs_2qubits[(key1, key2)] = block_diag(value1, value2) @ covXX @ block_diag(value1, value2).T
+            # performing the measurements
+            measurements = { (0, 0) = np.sum( self.weights ) }
+            # 1-qubit measurements
+            for pauli, cov in covs_1qubit.items():
+                measurements[(pauli, 0)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes[0], shots=stats, update=False )
+                measurements[(0, pauli)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes[1], shots=stats, update=False )
+            # 2-qubit measurements
+            for pauli, cov in covs_2qubits.items():
+                measurements[pauli] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes, shots=stats, update=False )
+            # computing the traces
 
         return qubit_dm, dm_std
 
