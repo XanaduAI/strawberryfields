@@ -1297,6 +1297,18 @@ class MeasureGeneraldyne(Measurement):
         s = np.sqrt(sf.hbar / 2)  # scaling factor, since the backend API call is hbar-independent
         return s * backend.measure_generaldyne(reg, *covmat, shots=shots, select=self.select, update=self.update)
 
+class QubitTomography(Measurement):
+    r"""Performs qubit tomography for GKP encoding.
+
+    .. warning:: QubitTomography can only be performed in the Bosonic backend.
+
+    """
+    def __init__(self, stats):
+        super().__init__([stats])
+
+    def _apply(self, reg, backend, **kwargs):
+        stats = par_evaluate(self.p)
+        return backend.qubit_tomography(reg, *stats)
 
 # ====================================================================
 # Channels

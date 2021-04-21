@@ -44,6 +44,7 @@ class Bosonic(Compiler):
         "MeasureHomodyne",
         "MeasureHeterodyne",
         "MeasureGeneraldyne",
+        "QubitTomography",
         # TODO: "MeasureFock",
         # TODO: "MeasureThreshold",
         # channels

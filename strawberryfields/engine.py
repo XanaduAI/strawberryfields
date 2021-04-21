@@ -394,7 +394,7 @@ class LocalEngine(BaseEngine):
         if self.backend_name == "bosonic":
             # Outputing results in a convenient format for the bosonic backend
             try:
-                samples = np.array([i for _, i in sorted(samples_dict.items())])
+                samples = np.array([i for _, i in sorted(samples_dict.items())], dtype=object)
             # If measurement outcomes have different dimensions, keep them as a list
             except:
                 samples = [i for _, i in sorted(samples_dict.items())]

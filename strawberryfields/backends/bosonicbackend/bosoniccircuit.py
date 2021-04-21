@@ -926,6 +926,66 @@ class BosonicModes:
         vals = np.array([alpha_val.real, alpha_val.imag])
         self.post_select_generaldyne(covmat, [mode], vals)
 
+    def qubit_tomography(self, modes, stats):
+        r"""Performs qubit tomography assuming square GKPs. Does not update the state.
+        
+        Args:
+            modes (list): modes on which to perform tomography
+            shots (int): number of measurements to perform for each 
+
+        Returns:
+            qubit_dm (numpy array): qubit density matrix
+            dm_err (numpy array): error on density matrix due to finite sampling
+
+        Raises:
+            NotImplementedError: if number of modes is greater than 2
+            ValueError: if one of the modes is not in the list of acvtive modes
+        """
+        # Checking if modes are active
+        for mode in modes:
+            if self.active[mode] is None:
+                raise ValueError("Cannot perform qubit tomography, one of the mode does not exist")
+        # This function needs to be generalized for implementing more than 2 modes tomography
+        if len(modes) > 2:
+            raise NotImplementedError("Qubit tomography for more than 2 modes is not implemented.")
+        # 1-qubit tomography
+        if len(modes) == 1:
+            # defining useful quantities
+            eps = 0.0002
+            covX = self.hbar * np.array([[1/eps**2, 0],[0, eps**2]]) / 2
+            covY = self.hbar * np.array([[eps**2+1/eps**2, eps**2-1/eps**2],[eps**2-1/eps**2, eps**2+1/eps**2]]) / 2
+            covZ = self.hbar * np.array([[eps**2, 0],[0, 1/eps**2]]) / 2
+            Xmat = np.array([[0, 1],[1, 0]], dtype=complex)
+            Ymat = np.array([[0, -1j],[1j, 0]], dtype=complex)
+            Zmat = np.array([[1, 0],[0, -1]], dtype=complex)
+            Imat = np.identity(2, dtype=complex)
+            # performing the measurements
+            measX = np.sqrt(self.hbar / 2) * self.measure_dyne(covX, modes, shots=stats, update=False)
+            measY = np.sqrt(self.hbar / 2) * self.measure_dyne(covY, modes, shots=stats, update=False)
+            measZ = np.sqrt(self.hbar / 2) * self.measure_dyne(covZ, modes, shots=stats, update=False)
+            #computing the trace
+            traceI = np.sum(self.weights)
+            # Computing the relevant traces
+            # X
+            frac, integ = np.modf(measX[:,1]/np.sqrt(self.hbar*np.pi))
+            binned = (integ + np.rint(frac)) % 2           
+            traceX = np.sum((-1)**binned)/binned.size
+            # Y
+            frac, integ = np.modf((measY[:,0]+measY[:,1])/np.sqrt(self.hbar*np.pi))
+            binned = (integ + np.rint(frac)) % 2
+            traceY = np.sum((-1)**binned)/binned.size
+            # Z
+            frac, integ = np.modf(measZ[:,0]/np.sqrt(self.hbar*np.pi))
+            binned = (integ + np.rint(frac)) % 2
+            traceZ = np.sum((-1)**binned)/binned.size
+            # constructing the density matrix
+            qubit_dm = ((traceI * Imat) + (traceX * Xmat) + (traceY * Ymat) + (traceZ * Zmat))/2
+
+        # 2-qubit tomography
+        # else:
+
+        return qubit_dm, None
+
     def apply_u(self, U):
         r"""Transforms the state according to the linear optical unitary that
         maps a[i] \to U[i, j]^*a[j].
