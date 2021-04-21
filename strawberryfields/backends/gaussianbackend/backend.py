@@ -20,7 +20,6 @@ from numpy import (
     concatenate,
     array,
     identity,
-    arctan2,
     sqrt,
     vstack,
     zeros_like,
