@@ -21,6 +21,8 @@ import thewalrus.symplectic as symp
 
 from strawberryfields.backends.bosonicbackend import ops
 
+# Small negative value for the purpose of checking that generaldyne measurements asked by the user are physical
+small_neg_value = -1e-5
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(num_modes, num_gauss):
@@ -678,7 +680,8 @@ class BosonicModes:
         if not np.isclose(covmat, covmat.T).all():
             raise ValueError("Measurement covariance matrix is not symmetric.")
 
-        if (np.linalg.eig(covmat)[0] < 0).any() :
+        if (np.linalg.eig(covmat)[0] < small_neg_value).any() :
+            # print(f'eigenvalues = {np.linalg.eig(covmat)[0]}')
             raise ValueError("Measurement covariance matrix is not positive semi-definite.")
 
         for i in modes:
@@ -961,7 +964,7 @@ class BosonicModes:
         Z = np.array( [ [1, 0], [0, -1] ] )
         I = np.identity(2)
         # Basic simplectic transformations 
-        P = np.array( [ [1, 0], [-1, 1] ] )
+        P = np.array( [ [1, 1], [-1, 1] ] )
         H = np.array( [ [0, 1], [-1, 0] ] )
         # Dictionary of the simplectic transformations
         simp_trans = {1 : I, 2 : P, 3 : H}
@@ -994,7 +997,7 @@ class BosonicModes:
             # finding the error on the density matrix
             dm_std = np.sqrt(varX) * X + 1j * np.sqrt(varY) * X + np.sqrt(varZ) * I
         # 2-qubit tomography
-        else if len(modes) == 2:
+        elif len(modes) == 2:
             # mapping of the axes to sum over to get the qubit results
             sum_indices = {}
             # building the relevant covariance matrices
@@ -1002,24 +1005,61 @@ class BosonicModes:
             covs_1qubit = {}
             for key1, value1 in simp_trans.items():
                 covs_1qubit[(key1,)] = value1 @ covX @ value1.T
-                if key1 == 1:
-                    sum_indices[(key1,)] = (1,)
-                elif key1 == 2:
-                    sum_indices[(key1,)] = (0, 1)
-                elif key1 == 3:
-                    sum_indices[(key1,)] = (0,)
                 for key2, value2 in simp_trans.items():
                     covs_2qubits[(key1, key2)] = block_diag(value1, value2) @ covXX @ block_diag(value1, value2).T
+                    # Axis to sum over for obtaining the qubit result
+                    if key1 == 1:
+                        sum_indices[ ( key1, 0 ) ] = ( 1, )
+                        sum_indices[ ( 0, key1 ) ] = ( 1, )
+                        if key2 == 1:
+                            sum_indices[ ( key1, key2 ) ] = ( 1, 3 )
+                        elif key2 == 2:
+                            sum_indices[ ( key1, key2 ) ] = ( 1, 2, 3 )
+                        elif key2 == 3:
+                            sum_indices[ ( key1, key2 ) ] = ( 1, 2 )
+                    elif key1 == 2:
+                        sum_indices[ ( key1, 0 ) ] = ( 0, 1 )
+                        sum_indices[ ( 0, key1 ) ] = ( 0, 1 )
+                        if key2 == 1:
+                            sum_indices[ ( key1, key2 ) ] = ( 0, 1, 3 )
+                        elif key2 == 2:
+                            sum_indices[ ( key1, key2 ) ] = ( 0, 1, 2, 3 )
+                        elif key2 == 3:
+                            sum_indices[ ( key1, key2) ] = ( 0, 1, 2 )
+                    elif key1 == 3:
+                        sum_indices[ ( key1, 0 ) ] = ( 0, )
+                        sum_indices[ ( 0, key1 ) ] = ( 0, )
+                        if key2 == 1:
+                            sum_indices[ ( key1, key2 ) ] = ( 0, 3 )
+                        elif key2 == 2:
+                            sum_indices[ ( key1, key2 ) ] = ( 0, 2, 3 )
+                        elif key2 == 3:
+                            sum_indices[ ( key1, key2 ) ] = ( 0, 2 )
+
             # performing the measurements
-            measurements = { (0, 0) = np.sum( self.weights ) }
+            measurements = {}
+            paulis = []
             # 1-qubit measurements
             for pauli, cov in covs_1qubit.items():
+                paulis += [(pauli, 0), (0, pauli)]
                 measurements[(pauli, 0)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes[0], shots=stats, update=False )
                 measurements[(0, pauli)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes[1], shots=stats, update=False )
             # 2-qubit measurements
             for pauli, cov in covs_2qubits.items():
+                paulis += [pauli]
                 measurements[pauli] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes, shots=stats, update=False )
-            # computing the traces
+            # computing the traces and variances for all the pauli operators
+            trace = {}
+            var = {}
+            for pauli in paulis:
+                frac, integ = np.modf( np.sum(measurements[pauli], sum_indices[pauli]) / np.sqrt( self.hbar*np.pi ) )
+                binned = ( integ + np.rint( frac ) ) % 2
+                trace[pauli] = 1 - 2 * np.mean( binned )
+                var[pauli] = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
+            trace[ ( 0, 0 ) ] = np.sum(self.weights)
+            var[ (0, 0) ] = 0
+            # building the density matrix
+            
 
         return qubit_dm, dm_std
 
