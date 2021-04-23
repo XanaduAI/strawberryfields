@@ -1,5 +1,5 @@
-numpy>=1.17.4
-scipy==1.4.1
+numpy>=1.20
+scipy
 sympy>=1.5
 tensorflow>=2.0
 tensorboard>=2.0
