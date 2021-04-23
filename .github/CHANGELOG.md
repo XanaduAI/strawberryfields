@@ -1,8 +1,22 @@
+# Release 0.19.0 (development release)
+
+<h3>New features since last release</h3>
+
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
 # Release 0.18.0 (current release)
 
 <h3>New features since last release</h3>
 
-* Adds the Bosonic backend, which can simulate states represented as linear 
+* Adds the Bosonic backend, which can simulate states represented as linear
   combinations of Gaussian functions in phase space.
   [(#533)](https://github.com/XanaduAI/strawberryfields/pull/533)
   [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
@@ -10,14 +24,14 @@
   [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
   [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
   [(#549)](https://github.com/XanaduAI/strawberryfields/pull/549)
-  
-  It can be regarded as a generalization of the Gaussian backend, since 
-  transformations on states correspond to modifications of the means and 
-  covariances of each Gaussian in the linear combination, along with changes to 
-  the coefficients of the linear combination. Example states that can be 
-  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill, 
+
+  It can be regarded as a generalization of the Gaussian backend, since
+  transformations on states correspond to modifications of the means and
+  covariances of each Gaussian in the linear combination, along with changes to
+  the coefficients of the linear combination. Example states that can be
+  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill,
   cat and Fock states.
-  
+
   ```python
   prog = sf.Program(1)
   eng = sf.Engine('bosonic')
@@ -41,27 +55,27 @@
   GKP states are qubits, with the qubit state defined by:
 
   .. math:: \ket{\psi}\_{gkp} = \cos\frac{\theta}{2}\ket{0}\_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}\_{gkp},
-  
+
   where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
-  
-* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
+
+* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation
   for the Bosonic backend.
   [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
   [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
   [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
-  
-  `MSgate` is an implementation of inline squeezing that can be performed by 
-  interacting the target state with an ancillary squeezed vacuum state at a 
-  beamsplitter, measuring the ancillary mode with homodyne, and then applying 
-  a feed-forward displacement. The channel is implemented either on average 
-  (as a Gaussian CPTP map) or in the single-shot implementation. If the 
+
+  `MSgate` is an implementation of inline squeezing that can be performed by
+  interacting the target state with an ancillary squeezed vacuum state at a
+  beamsplitter, measuring the ancillary mode with homodyne, and then applying
+  a feed-forward displacement. The channel is implemented either on average
+  (as a Gaussian CPTP map) or in the single-shot implementation. If the
   single-shot implementation is used, the measurement outcome of the ancillary
   mode is stored in the results object.
-  
+
   ```python
   prog = sf.Program(1)
   eng = sf.Engine('bosonic')
-  
+
   with prog.context as q:
       sf.ops.Catstate(alpha=2) | q
       r = 0.3
@@ -69,14 +83,14 @@
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=True) | q
       # Single-shot map
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
-  
+
   results = eng.run(prog)
   ancilla_samples = results.ancilla_samples
-  
+
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)
   wigner = results.state.wigner(0, xvec, pvec)
-  
+
   plt.contourf(xvec, pvec, wigner)
   plt.show()
   ```
@@ -138,7 +152,7 @@
   instead of the incorrect version number `1.0.0`.
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
 
-* TDM programs now expect a flat (not nested) dictionary of `modes` in device 
+* TDM programs now expect a flat (not nested) dictionary of `modes` in device
   specifications obtained from the XQC platform API.
   [(#566)](https://github.com/XanaduAI/strawberryfields/pull/566)
 
@@ -165,7 +179,7 @@
 This release contains contributions from (in alphabetical order):
 
 J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac,
-Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy, 
+Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy,
 Jeremy Swinarton, Antal Száva, Ilan Tzitrin.
 
 # Release 0.17.0
