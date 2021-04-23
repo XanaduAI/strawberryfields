@@ -11,7 +11,7 @@ Strawberry Fields is an open-source framework for photonic quantum computing.
 In particular, Strawberry Fields allows for the following workflows:
 
 * Construct and simulate continuous-variable quantum photonic circuits.
-  Provided simulators include highly optimized Gaussian- and Fock-representation
+  Provided simulators include highly optimized Gaussian, Fock, and Bosonic
   numeric backends, as well as a TensorFlow backend for backpropagation.
 
 * Compile and submit photonic circuits for remote execution on Xanadu's quantum hardware,
