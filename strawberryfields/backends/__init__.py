@@ -65,7 +65,7 @@ statevector backend API
     BaseFock
     BaseGaussian
     BaseBosonic
- 
+
 """
 
 from .base import BaseBackend, BaseFock, BaseGaussian, BaseBosonic, ModeMap
