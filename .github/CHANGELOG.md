@@ -98,6 +98,8 @@
   method.
   [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
 
+* The module `shared_ops.py` is eliminated, all its functionality is provided by The Walrus. [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
