@@ -18,7 +18,7 @@ import numpy as np
 from scipy.linalg import qr, block_diag
 
 from thewalrus.symplectic import rotation as rot
-from thewalrus.symplectic import xpxp_to_xxpp
+from thewalrus.symplectic import xpxp_to_xxpp, xxpp_to_xpxp
 
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
