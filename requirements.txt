@@ -1,12 +1,12 @@
-numpy>=1.17.4
-scipy==1.4.1
+numpy>=1.20
+scipy
 sympy>=1.5
 tensorflow>=2.0
 tensorboard>=2.0
 networkx>=2.0
 quantum-blackbird>=0.3.0
 python-dateutil==2.8.0
-thewalrus>=0.14.0
+thewalrus>=0.15.0
 toml
 appdirs
 numba>=0.48.0

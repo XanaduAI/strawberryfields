@@ -20,8 +20,6 @@ from numpy import (
     concatenate,
     array,
     identity,
-    arctan2,
-    angle,
     sqrt,
     vstack,
     zeros_like,
@@ -29,9 +27,9 @@ from numpy import (
     ix_,
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
+from thewalrus.symplectic import xxpp_to_xpxp
 
 from strawberryfields.backends import BaseGaussian
-from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseGaussianState
 
 from .gaussiancircuit import GaussianModes
@@ -199,8 +197,7 @@ class GaussianBackend(BaseGaussian):
 
         # convert xp-ordering to symmetric ordering
         means = vstack([r[:N], r[N:]]).reshape(-1, order="F")
-        C = changebasis(N)
-        cov = C @ V @ C.T
+        cov = xxpp_to_xpxp(V)
 
         self.circuit.fromscovmat(cov, modes)
         self.circuit.fromsmean(means, modes)

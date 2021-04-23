@@ -25,11 +25,12 @@ import numpy as np
 from scipy.linalg import block_diag
 import scipy.special as ssp
 
+from thewalrus.symplectic import xxpp_to_xpxp
+
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
 import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState, BaseBosonicState
-from .backends.shared_ops import changebasis
 from .program_utils import Command, RegRef, MergeFailure
 from .parameters import (
     par_regref_deps,
@@ -2842,7 +2843,7 @@ class Gaussian(Preparation, Decomposition):
         D = np.diag(V)
         is_diag = np.all(V == np.diag(D))
 
-        BD = changebasis(self.ns) @ V @ changebasis(self.ns).T
+        BD = xxpp_to_xpxp(V)
         BD_modes = [BD[i * 2 : (i + 1) * 2, i * 2 : (i + 1) * 2] for i in range(BD.shape[0] // 2)]
         is_block_diag = (not is_diag) and np.all(BD == block_diag(*BD_modes))
 
