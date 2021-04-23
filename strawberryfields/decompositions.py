@@ -21,9 +21,7 @@ from itertools import groupby
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
 from thewalrus.quantum import adj_scaling
-from thewalrus.symplectic import sympmat
-
-from .backends.shared_ops import changebasis
+from thewalrus.symplectic import sympmat, xpxp_to_xxpp
 
 
 def takagi(N, tol=1e-13, rounding=13):
@@ -670,7 +668,6 @@ def williamson(V, tol=1e-11):
 
     n = n // 2
     omega = sympmat(n)
-    rotmat = changebasis(n)
     vals = np.linalg.eigvalsh(V)
 
     for val in vals:
@@ -698,8 +695,9 @@ def williamson(V, tol=1e-11):
     p = block_diag(*seq)
     Kt = K @ p
     s1t = p @ s1 @ p
-    dd = np.transpose(rotmat) @ s1t @ rotmat
-    Ktt = Kt @ rotmat
+    dd = xpxp_to_xxpp(s1t)
+    perm_indices = xpxp_to_xxpp(np.arange(2 * n))
+    Ktt = Kt[:, perm_indices]
     Db = np.diag([1 / dd[i, i + n] for i in range(n)] + [1 / dd[i, i + n] for i in range(n)])
     S = Mm12 @ Ktt @ sqrtm(Db)
     return Db, np.linalg.inv(S).T
