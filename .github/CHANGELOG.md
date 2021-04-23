@@ -127,6 +127,11 @@
   functionality now provided by The Walrus.
   [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
 
+<h3>Breaking changes</h3>
+
+* Removes support for Python 3.6.
+  [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
+
 <h3>Bug fixes</h3>
 
 * `Connection` objects now send requests to the platform API at version `0.2.0`
