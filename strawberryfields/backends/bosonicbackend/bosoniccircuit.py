@@ -963,8 +963,10 @@ class BosonicModes:
         Y = np.array( [ [0, -1j], [1j, 0] ] )
         Z = np.array( [ [1, 0], [0, -1] ] )
         I = np.identity(2)
+        # Dictionary of the Pauli operators
+        pauli_dict = {0 : I, 1 : X, 2 : Y, 3 : Z}
         # Basic simplectic transformations 
-        P = np.array( [ [1, 1], [-1, 1] ] )
+        P = np.array( [ [1, 1], [-1, 1] ] ) / np.sqrt(2)
         H = np.array( [ [0, 1], [-1, 0] ] )
         # Dictionary of the simplectic transformations
         simp_trans = {1 : I, 2 : P, 3 : H}
@@ -1041,9 +1043,9 @@ class BosonicModes:
             paulis = []
             # 1-qubit measurements
             for pauli, cov in covs_1qubit.items():
-                paulis += [(pauli, 0), (0, pauli)]
-                measurements[(pauli, 0)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes[0], shots=stats, update=False )
-                measurements[(0, pauli)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes[1], shots=stats, update=False )
+                paulis += [(pauli[0], 0), (0, pauli[0])]
+                measurements[(pauli[0], 0)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, [modes[0]], shots=stats, update=False )
+                measurements[(0, pauli[0])] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, [modes[1]], shots=stats, update=False )
             # 2-qubit measurements
             for pauli, cov in covs_2qubits.items():
                 paulis += [pauli]
@@ -1052,14 +1054,22 @@ class BosonicModes:
             trace = {}
             var = {}
             for pauli in paulis:
-                frac, integ = np.modf( np.sum(measurements[pauli], sum_indices[pauli]) / np.sqrt( self.hbar*np.pi ) )
+                frac, integ = np.modf( np.sum(measurements[pauli][:,sum_indices[pauli]], axis=1) / np.sqrt( self.hbar*np.pi ) )
                 binned = ( integ + np.rint( frac ) ) % 2
                 trace[pauli] = 1 - 2 * np.mean( binned )
                 var[pauli] = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
             trace[ ( 0, 0 ) ] = np.sum(self.weights)
+            paulis += [ ( 0, 0 ) ]
             var[ (0, 0) ] = 0
             # building the density matrix
-            
+            qubit_dm = np.zeros((4, 4), dtype=complex)
+            for pauli in paulis:
+                qubit_dm += trace[pauli]/4 * np.kron(pauli_dict[pauli[0]], pauli_dict[pauli[1]])
+
+            dm_std = None
+            print(f'qubit_dm =')
+            print(f'{qubit_dm}')
+            quit()
 
         return qubit_dm, dm_std
 
