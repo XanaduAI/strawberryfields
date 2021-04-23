@@ -19,6 +19,7 @@ from thewalrus.symplectic import xxpp_to_xpxp, xpxp_to_xxpp
 
 from . import ops
 
+
 class GaussianModes:
     """Base class for representing and operating on a collection of
     continuous variable modes in the symplectic basis as encoded in a
