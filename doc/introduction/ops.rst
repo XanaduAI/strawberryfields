@@ -75,6 +75,7 @@ State preparation
     Thermal
     Fock
     Catstate
+    GKP
     Ket
     DensityMatrix
     Gaussian
@@ -111,6 +112,7 @@ Channels
 .. autosummary::
     LossChannel
     ThermalLossChannel
+    MSgate
 
 :html:`</div>`
 

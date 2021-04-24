@@ -1,0 +1,5 @@
+pytest>=6.2.2
+pytest-cov>=2.11.1
+pytest-mock>=3.5.1
+pytest-randomly>=3.5.0
+black>=20.8b1

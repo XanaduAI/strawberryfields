@@ -117,6 +117,15 @@ backend options. Available backends include:
   However, it cannot represent non-Gaussian operations and states, with the exception of
   terminal Fock measurements.
 
+* The ``'bosonic'`` backend, written in NumPy.
+
+  The bosonic backend is tailored to simulate states which can be represented as a linear
+  combination of Gaussian functions in phase space. It provides very succinct descriptions of
+  Gaussian states, just like the ``gaussian`` backend, but it can also provide descriptions of
+  non-Gaussian states as well. Moreover, like in the gaussian backend, the application of the most
+  common active and passive linear optical operations, like the displacement (:class:`~.Dgate`, squeezing
+  (:class:`~.Sgate`), and beamsplitter (:class:`~.BSgate`) gates, is extremely efficient.
+
 * The ``'tf'`` backend, written in TensorFlow 2.
 
   This backend represents the quantum
@@ -311,6 +320,11 @@ circuits, see the following tutorials.
     :tooltip: Simulate massive time-domain quantum systems
     :description: :doc:`demos/run_time_domain`
     :figure: /_static/oneloop.svg
+
+.. customgalleryitem::
+    :tooltip: Introduction to the bosonic backend
+    :description: :doc:`demos/run_intro_bosonic`
+    :figure: /_static/cats.png
 
 .. raw:: html
 

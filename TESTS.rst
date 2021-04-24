@@ -1,10 +1,10 @@
 Software tests
 ==============
 
-The Strawberry Fields test suite requires `pytest <https://docs.pytest.org/en/latest/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ for coverage reports. These can both be installed via ``pip``:
+The Strawberry Fields test suite requires `pytest <https://docs.pytest.org/en/latest/>`_, `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_, `pytest-randomly <https://github.com/pytest-dev/pytest-randomly>`_, and `pytest-mocks <https://github.com/pytest-dev/pytest-mock/>`_ for coverage reports. These can be installed via ``pip``:
 ::
 
-    $ pip install pytest pytest-cov
+    $ pip install pytest pytest-cov pytest-randomly pytest-mock
 
 
 To ensure that Strawberry Fields is working correctly after installation, the test suite can be run by navigating to the source code folder and running
