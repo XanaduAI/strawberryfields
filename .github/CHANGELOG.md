@@ -1,22 +1,37 @@
-# Release 0.18.0 (development release)
+# Release 0.19.0 (development release)
 
 <h3>New features since last release</h3>
 
-* Adds the Bosonic backend, which can simulate states represented as linear 
-  combinations of Gaussian functions in phase space.   
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+# Release 0.18.0 (current release)
+
+<h3>New features since last release</h3>
+
+* Adds the Bosonic backend, which can simulate states represented as linear
+  combinations of Gaussian functions in phase space.
   [(#533)](https://github.com/XanaduAI/strawberryfields/pull/533)
   [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
   [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
   [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
   [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
-  
-  It can be regarded as a generalization of the Gaussian backend, since 
-  transformations on states correspond to modifications of the means and 
-  covariances of each Gaussian in the linear combination, along with changes to 
-  the coefficients of the linear combination. Example states that can be 
-  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill, 
+  [(#549)](https://github.com/XanaduAI/strawberryfields/pull/549)
+
+  It can be regarded as a generalization of the Gaussian backend, since
+  transformations on states correspond to modifications of the means and
+  covariances of each Gaussian in the linear combination, along with changes to
+  the coefficients of the linear combination. Example states that can be
+  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill,
   cat and Fock states.
-  
+
   ```python
   prog = sf.Program(1)
   eng = sf.Engine('bosonic')
@@ -31,25 +46,36 @@
   plt.hist(samples, bins=100)
   plt.show()
   ```
-  
-* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
+
+* Adds the `sf.ops.GKP` operation, which allows the Gottesman-Kitaev-Preskill
+  state to be initialized on both the Bosonic and Fock backends.
+  [(#553)](https://github.com/XanaduAI/strawberryfields/pull/553)
+  [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
+
+  GKP states are qubits, with the qubit state defined by:
+
+  .. math:: \ket{\psi}\_{gkp} = \cos\frac{\theta}{2}\ket{0}\_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}\_{gkp},
+
+  where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
+
+* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation
   for the Bosonic backend.
   [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
   [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
   [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
-  
-  `MSgate` is an implementation of inline squeezing that can be performed by 
-  interacting the target state with an ancillary squeezed vacuum state at a 
-  beamsplitter, measuring the ancillary mode with homodyne, and then applying 
-  a feed-forward displacement. The channel is implemented either on average 
-  (as a Gaussian CPTP map) or in the single-shot implementation. If the 
+
+  `MSgate` is an implementation of inline squeezing that can be performed by
+  interacting the target state with an ancillary squeezed vacuum state at a
+  beamsplitter, measuring the ancillary mode with homodyne, and then applying
+  a feed-forward displacement. The channel is implemented either on average
+  (as a Gaussian CPTP map) or in the single-shot implementation. If the
   single-shot implementation is used, the measurement outcome of the ancillary
   mode is stored in the results object.
-  
+
   ```python
   prog = sf.Program(1)
   eng = sf.Engine('bosonic')
-  
+
   with prog.context as q:
       sf.ops.Catstate(alpha=2) | q
       r = 0.3
@@ -57,19 +83,17 @@
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=True) | q
       # Single-shot map
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
-  
+
   results = eng.run(prog)
   ancilla_samples = results.ancilla_samples
-  
+
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)
   wigner = results.state.wigner(0, xvec, pvec)
-  
+
   plt.contourf(xvec, pvec, wigner)
   plt.show()
   ```
-
-* The `fock` backend now supports the `GKP` preparation [(#553)](https://github.com/XanaduAI/strawberryfields/pull/553)
 
 * The `tf` backend now accepts the Tensor DType as argument.
   [(#562)](https://github.com/XanaduAI/strawberryfields/pull/562)
@@ -94,6 +118,21 @@
 
 <h3>Improvements</h3>
 
+* Program compilation has been modified to support the XQC simulation service,
+  Simulon.
+  [(#545)](https://github.com/XanaduAI/strawberryfields/pull/545)
+
+* The `sympmat`, `rotation_matrix`, and `haar_measure` functions have been removed from
+  `backends/shared_ops.py`. These functions are now imported from The Walrus.
+  In addition, various outdated functionality from the `shared_ops.py` file has been removed,
+  including the caching of beamsplitter and squeezing pre-factors.
+  [(#560)](https://github.com/XanaduAI/strawberryfields/pull/560)
+  [(#558)](https://github.com/XanaduAI/strawberryfields/pull/558)
+
+* Sample processing in the `TDMProgram` is now more efficient, by replacing
+  calls to `pop` with fancy indexing.
+  [(#548)](https://github.com/XanaduAI/strawberryfields/pull/548)
+
 * No `VisibleDeprecationWarning` is raised when using the state `wigner`
   method.
   [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
@@ -103,7 +142,14 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
-<h3>Breaking Changes</h3>
+* The backend utility module `shared_ops.py` has been removed, with all of its
+  functionality now provided by The Walrus.
+  [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
+
+<h3>Breaking changes</h3>
+
+* Removes support for Python 3.6.
+  [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
 
 <h3>Bug fixes</h3>
 
@@ -111,14 +157,25 @@
   instead of the incorrect version number `1.0.0`.
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
 
-* TDM programs now expect a flat (not nested) dictionary of `modes` in device 
+* TDM programs now expect a flat (not nested) dictionary of `modes` in device
   specifications obtained from the XQC platform API.
   [(#566)](https://github.com/XanaduAI/strawberryfields/pull/566)
 
+* Fixes a bug in the `CatState` operation, whereby the operation would return incorrect
+  results for a high cutoff value.
+  [(#557)](https://github.com/XanaduAI/strawberryfields/pull/557)
+  [(#556)](https://github.com/XanaduAI/strawberryfields/pull/556)
+
 <h3>Documentation</h3>
+
+* The "Hardware" quickstart page has been renamed to "Xanadu Quantum Cloud" to encompass both hardware
+  and cloud simulators. A new "Cloud simulator" entry has been added, describing how to submit
+  programs to be executed via the XQC simulator.
+  [(#547)](https://github.com/XanaduAI/strawberryfields/pull/547)
 
 * Cleanup docs to make contribution easier.
   [(#561)](https://github.com/XanaduAI/strawberryfields/pull/561)
+
 * Add development requirements and format script to make contribution easier.
   [(#563)](https://github.com/XanaduAI/strawberryfields/pull/563)
 
@@ -127,10 +184,10 @@
 This release contains contributions from (in alphabetical order):
 
 J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac,
-Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy, 
+Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy,
 Jeremy Swinarton, Antal Száva, Ilan Tzitrin.
 
-# Release 0.17.0 (current release)
+# Release 0.17.0
 
 <h3>New features since last release</h3>
 

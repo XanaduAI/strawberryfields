@@ -27,12 +27,11 @@ from scipy.special import factorial
 from scipy.integrate import simps
 
 from thewalrus.symplectic import rotation as _R
+from thewalrus.symplectic import xpxp_to_xxpp
 
 import thewalrus.quantum as twq
 
 import strawberryfields as sf
-
-from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
 
@@ -1257,8 +1256,7 @@ class BaseGaussianState(BaseState):
         if phi != 0:
             # rotate all modes of the covariance matrix and vector of means
             R = _R(phi)
-            C = changebasis(self._modes)
-            rot = C.T @ block_diag(*([R] * self._modes)) @ C
+            rot = xpxp_to_xxpp(block_diag(*([R] * self._modes)))
 
             mu = rot.T @ mu
             cov = rot.T @ cov @ rot

@@ -15,9 +15,9 @@
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
 from thewalrus.quantum import Xmat
+from thewalrus.symplectic import xxpp_to_xpxp, xpxp_to_xxpp
 
 from . import ops
-from ..shared_ops import changebasis
 
 
 class GaussianModes:
@@ -250,9 +250,6 @@ class GaussianModes:
         The order for the canonical operators is :math:`q_1,..,q_n, p_1,...,p_n`.
         This differs from the ordering used in [1] which is :math:`q_1,p_1,q_2,p_2,...,q_n,p_n`
         Note that one ordering can be obtained from the other by using a permutation matrix.
-
-        Said permutation matrix is implemented in the function changebasis(n) where n is
-        the number of modes.
         """
         mm11 = (
             self.nmat
@@ -288,9 +285,6 @@ class GaussianModes:
         The order for the canonical operators is :math:`q_1, \ldots, q_n, p_1, \ldots, p_n`.
         This differs from the ordering used in [1] which is :math:`q_1, p_1, q_2, p_2, \ldots, q_n, p_n`.
         Note that one ordering can be obtained from the other by using a permutation matrix.
-
-        Said permutation matrix is implemented in the function changebasis(n) where n is
-        the number of modes.
         """
         nmodes = self.nlen
         r = np.empty(2 * nmodes)
@@ -300,8 +294,7 @@ class GaussianModes:
 
     def scovmat(self):
         """Constructs and returns the symmetric ordered covariance matrix as defined in [1]"""
-        rotmat = changebasis(self.nlen)
-        return np.dot(np.dot(rotmat, self.scovmatxp()), np.transpose(rotmat))
+        return xxpp_to_xpxp(self.scovmatxp())
 
     def smean(self):
         r"""the symmetric mean $[q_1,p_1,q_2,p_2,...,q_n,p_n]$"""
@@ -347,8 +340,7 @@ class GaussianModes:
                 raise ValueError("Covariance matrix is larger than the number of subsystems.")
 
         # convert to xp ordering
-        rotmat = changebasis(n)
-        VV = np.dot(np.dot(np.transpose(rotmat), V), rotmat)
+        VV = xpxp_to_xxpp(V)
 
         A = VV[0:n, 0:n]
         B = VV[0:n, n : 2 * n]

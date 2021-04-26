@@ -66,17 +66,6 @@ statevector backend API
     BaseGaussian
     BaseBosonic
 
-Utility modules
----------------
-
-The following utility modules are provided for
-backend development.
-
-.. currentmodule:: strawberryfields.backends
-.. autosummary::
-    :toctree: api
-
-    shared_ops
 """
 
 from .base import BaseBackend, BaseFock, BaseGaussian, BaseBosonic, ModeMap

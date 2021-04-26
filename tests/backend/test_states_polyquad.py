@@ -20,10 +20,10 @@ from scipy.integrate import simps
 from scipy.linalg import block_diag
 
 from thewalrus.symplectic import rotation as R
+from thewalrus.symplectic import xpxp_to_xxpp
 
 from strawberryfields import backends
 from strawberryfields import utils
-from strawberryfields.backends.shared_ops import changebasis
 
 # some tests require a higher cutoff for accuracy
 CUTOFF = 12
@@ -453,9 +453,8 @@ class TestMultiModePolyQuadratureExpectations:
         S1 = block_diag(BS, np.identity(2))
         S2 = block_diag(np.identity(2), BS)
 
-        C = changebasis(3)
-        mu = C.T @ S2 @ S1 @ mu
-        cov = C.T @ S2 @ S1 @ cov @ S1.T @ S2.T @ C
+        mu = xpxp_to_xxpp(S2 @ S1 @ mu)
+        cov = xpxp_to_xxpp(S2 @ S1 @ cov @ S1.T @ S2.T)
 
         modes = list(np.arange(6).reshape(2, -1).T)
 
