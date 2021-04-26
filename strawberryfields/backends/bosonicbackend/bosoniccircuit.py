@@ -1067,9 +1067,9 @@ class BosonicModes:
                 qubit_dm += trace[pauli]/4 * np.kron(pauli_dict[pauli[0]], pauli_dict[pauli[1]])
 
             dm_std = None
-            print(f'qubit_dm =')
-            print(f'{qubit_dm}')
-            quit()
+            # print(f'qubit_dm =')
+            # print(f'{qubit_dm}')
+            # quit()
 
         return qubit_dm, dm_std
 
