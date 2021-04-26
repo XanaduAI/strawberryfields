@@ -138,7 +138,7 @@ This release contains contributions from (in alphabetical order):
   [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
 
 * Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
-  similarity across backend ops, and replace tensorflow.tensordot with
+  similarity across backend ops, and replace `tensorflow.tensordot` with
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
