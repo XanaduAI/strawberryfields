@@ -8,9 +8,16 @@
 
 <h3>Documentation</h3>
 
+* References to the ``simulon`` simulator target have been rewritten to
+  ``simulon_gaussian`` to reflect changes made on the Xanadu Quantum Cloud. The
+  language has been modified to suggest that multiple simulators could be
+  available.
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Jeremy Swinarton.
 
 # Release 0.18.0 (current release)
 
