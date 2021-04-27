@@ -18,11 +18,36 @@ import itertools as it
 import numpy as np
 from scipy.linalg import block_diag
 import thewalrus.symplectic as symp
-
+from time import perf_counter
 from strawberryfields.backends.bosonicbackend import ops
+
+from multiprocessing import Pool
+from multiprocessing import cpu_count
 
 # Small negative value for the purpose of checking that generaldyne measurements asked by the user are physical
 small_neg_value = -1e-5
+
+def meas_para(inputs):
+    r"""helper function to perform the generaldyne measurements
+
+    Args:
+        input (list): arguments for the measure_dyne function
+
+    Returns:
+        dict: {pauli: meas_results}
+    """
+    pauli = inputs[0]
+    cov = inputs[1]
+    if pauli[0] == 0:
+        modes = [inputs[2][0]]
+    elif pauli[1] == 0:
+        modes = [inputs[2][1]]
+    else:
+        modes = inputs[2]
+    hbar = inputs[3]
+    measure_dyne = inputs[4]
+    stats = inputs[5]
+    return {pauli: np.sqrt( hbar / 2) * measure_dyne( cov, modes, shots=stats, update=False )}
 
 # Shape of the weights, means, and covs arrays.
 def w_shape(num_modes, num_gauss):
@@ -944,6 +969,7 @@ class BosonicModes:
             NotImplementedError: if number of modes is greater than 2
             ValueError: if one of the modes is not in the list of acvtive modes
         """
+        t_start = perf_counter()
         # Checking if modes are active
         for mode in modes:
             if self.active[mode] is None:
@@ -983,17 +1009,17 @@ class BosonicModes:
             frac, integ = np.modf( measX[:,1] / np.sqrt( self.hbar*np.pi ) )
             binned = ( integ + np.rint( frac ) ) % 2           
             traceX = 1 - 2 * np.mean( binned )
-            varX = 4*np.mean(binned)*(1-np.mean(binned))/binned.size 
+            varX = np.mean(binned)*(1-np.mean(binned))/binned.size 
             # Y
             frac, integ = np.modf( ( measY[:,0] + measY[:,1] ) / np.sqrt( self.hbar * np.pi ) )
             binned = ( integ + np.rint( frac ) ) % 2
             traceY = 1 - 2 * np.mean( binned )
-            varY = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
+            varY = np.mean(binned)*(1-np.mean(binned))/binned.size
             # Z
             frac, integ = np.modf( measZ[:,0] / np.sqrt( self.hbar * np.pi ) )
             binned = ( integ + np.rint( frac ) ) % 2
             traceZ = 1 - 2 * np.mean( binned )
-            varZ = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
+            varZ = np.mean(binned)*(1-np.mean(binned))/binned.size
             # constructing the density matrix
             qubit_dm = ( (traceI * I) + (traceX * X) + (traceY * Y) + (traceZ * Z) ) / 2
             # finding the error on the density matrix
@@ -1041,15 +1067,36 @@ class BosonicModes:
             # performing the measurements
             measurements = {}
             paulis = []
+            covs = []
             # 1-qubit measurements
             for pauli, cov in covs_1qubit.items():
                 paulis += [(pauli[0], 0), (0, pauli[0])]
-                measurements[(pauli[0], 0)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, [modes[0]], shots=stats, update=False )
-                measurements[(0, pauli[0])] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, [modes[1]], shots=stats, update=False )
+                covs += [cov, cov]
+                # measurements[(pauli[0], 0)] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, [modes[0]], shots=stats, update=False )
+                # measurements[(0, pauli[0])] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, [modes[1]], shots=stats, update=False )
             # 2-qubit measurements
             for pauli, cov in covs_2qubits.items():
                 paulis += [pauli]
-                measurements[pauli] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes, shots=stats, update=False )
+                covs += [cov]
+                # measurements[pauli] = np.sqrt( self.hbar / 2 ) * self.measure_dyne( cov, modes, shots=stats, update=False )
+            # creating the list of inputs
+            inputs = []
+            for i in range(len(paulis)):
+                inputs += [[paulis[i], covs[i], modes, self.hbar, self.measure_dyne, stats]]
+
+            # if cpu_count() > len(inputs):
+                # ncpus = len(inputs)
+            # else:
+                # ncpus = cpu_count()
+            ncpus = 1
+            with Pool(processes=ncpus) as pool:
+                results = pool.map(meas_para, inputs)
+
+            measurements = {}
+            for res in results:
+                measurements.update(res)
+            # print(f'results = {results}')
+            # quit()
             # computing the traces and variances for all the pauli operators
             trace = {}
             var = {}
@@ -1057,7 +1104,8 @@ class BosonicModes:
                 frac, integ = np.modf( np.sum(measurements[pauli][:,sum_indices[pauli]], axis=1) / np.sqrt( self.hbar*np.pi ) )
                 binned = ( integ + np.rint( frac ) ) % 2
                 trace[pauli] = 1 - 2 * np.mean( binned )
-                var[pauli] = 4*np.mean(binned)*(1-np.mean(binned))/binned.size
+                # The 0.25 factor comes from the numerator in the construction of density matrix 
+                var[pauli] = 0.25*np.mean(binned)*(1-np.mean(binned))/binned.size
             trace[ ( 0, 0 ) ] = np.sum(self.weights)
             paulis += [ ( 0, 0 ) ]
             var[ (0, 0) ] = 0
@@ -1065,13 +1113,39 @@ class BosonicModes:
             qubit_dm = np.zeros((4, 4), dtype=complex)
             for pauli in paulis:
                 qubit_dm += trace[pauli]/4 * np.kron(pauli_dict[pauli[0]], pauli_dict[pauli[1]])
-
-            dm_std = None
-            # print(f'qubit_dm =')
-            # print(f'{qubit_dm}')
+            # building the variance
+            phases = {}
+            std_mats = {}
+            dm_std = np.zeros((4, 4), dtype=complex)
+            for pauli in paulis:
+                if (pauli[0] == 2 and pauli[1] != 2) or (pauli[0] != 2 and pauli[1] == 2):
+                    phases[pauli] = 1j
+                else:
+                    phases[pauli] = 1
+                std_mats[pauli] = (int(bool(pauli[0]%3)), int(bool(pauli[1]%3)))
+                # print(f'pauli = {pauli}')
+                # print(f'phases[pauli] = {phases[pauli]}')
+                # print(f'std_mats[pauli] = {std_mats[pauli]}')
+                # print(f'phases[pauli] * var[pauli] = {phases[pauli] * var[pauli]}')
+                # print(f'dm+ = {phases[pauli] * var[pauli] * np.kron(pauli_dict[std_mats[pauli][0]], pauli_dict[std_mats[pauli][1]])}')
+                # print(f'np.kron = {np.kron(pauli_dict[std_mats[pauli][0]], pauli_dict[std_mats[pauli][1]])}')
+                dm_std += phases[pauli] * var[pauli] * np.kron(pauli_dict[std_mats[pauli][0]], pauli_dict[std_mats[pauli][1]])
+            real_dm_std = np.real(dm_std)
+            imag_dm_std = np.imag(dm_std)
+            # for pauli in paulis:
+                # print(f'pauli = {pauli}')
+                # print(f'phases[pauli] = {phases[pauli]}')
+                # print(f'std_mats[pauli] = {std_mats[pauli]}')
             # quit()
+            # print(f'qubit_dm = ')
+            # print(f'{qubit_dm}')
+            # print(f'dm_std = ')
+            # print(f'{dm_std}')
+            # quit()
+            t_end = perf_counter()
+            print(f'time ran in tomography = {t_end - t_start} s')
 
-        return qubit_dm, dm_std
+        return qubit_dm, np.sqrt(real_dm_std) + 1j * np.sqrt(imag_dm_std)
 
     def apply_u(self, U):
         r"""Transforms the state according to the linear optical unitary that
