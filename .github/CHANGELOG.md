@@ -10,8 +10,9 @@
 
 * References to the ``simulon`` simulator target have been rewritten to
   ``simulon_gaussian`` to reflect changes made on the Xanadu Quantum Cloud. The
-  language has been modified to suggest that multiple simulators could be
-  available.
+  language has been modified to imply that multiple simulators could be
+  available on XQC.
+  [(#576)](https://github.com/XanaduAI/strawberryfields/pull/576)
 
 <h3>Contributors</h3>
 
