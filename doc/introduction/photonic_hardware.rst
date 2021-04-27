@@ -133,10 +133,12 @@ You can also omit the ``--output`` parameter to print the result to the screen.
 Cloud simulator
 ---------------
 
-In addition to submitting jobs to be run on quantum hardware, it is also possible to run jobs on
-simulators via the Xanadu Quantum Cloud. The process is very similar to running jobs on hardware. You
-will need to configure your account, as described above, and submit a job via the ``RemoteEngine``,
-using a simulator (a "simulon") as the target instead of a specific chip:
+In addition to submitting jobs to be run on quantum hardware, it is also
+possible to run jobs on cloud simulators (which we refer to as "simulons") via
+the Xanadu Quantum Cloud. The process is very similar to running jobs on
+hardware. You will need to configure your account, as described above, and
+submit a job via the ``RemoteEngine``, using a simulator as the target instead
+of a specific chip:
 
 >>> eng = sf.RemoteEngine("simulon_gaussian")
 >>> result = eng.run(prog)
