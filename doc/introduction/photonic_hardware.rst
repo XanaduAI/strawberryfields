@@ -136,13 +136,14 @@ Cloud simulator
 In addition to submitting jobs to be run on quantum hardware, it is also possible to run jobs on
 simulators via the Xanadu Quantum Cloud. The process is very similar to running jobs on hardware. You
 will need to configure your account, as described above, and submit a job via the ``RemoteEngine``,
-using a simulator as the target instead of a specific chip:
+using a simulator (a "simulon") as the target instead of a specific chip:
 
 >>> eng = sf.RemoteEngine("simulon_gaussian")
 >>> result = eng.run(prog)
 
-Simulon jobs can also be submitted asynchronously using ``eng.run_async``, or by submitting a
-Blackbird script with the ``target`` set to a simulator target in the Blackbird header.
+Simulator jobs can also be submitted asynchronously using ``eng.run_async``, or
+by submitting a Blackbird script with the ``target`` set to a simulator target
+in the Blackbird header.
 
 See the `Submitting jobs on hardware`_ section above for more details.
 
