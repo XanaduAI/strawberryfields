@@ -771,8 +771,7 @@ class BosonicModes:
                 mean_sample = means_quad[peak_ind_sample].real
                 cov_sample = covs_quad[peak_ind_sample]
                 # Sample a phase space value from the peak
-                peak_sample = np.random.multivariate_normal(mean_sample, cov_sample)
-
+                peak_sample = np.random.multivariate_normal(mean_sample, cov_sample,tol=1e-7)
                 # Differences between the sample and the means
                 diff_sample = peak_sample - means_quad
                 # Calculate arguments for the Gaussian functions used to calculate
