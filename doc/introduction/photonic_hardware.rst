@@ -133,26 +133,31 @@ You can also omit the ``--output`` parameter to print the result to the screen.
 Cloud simulator
 ---------------
 
-In addition to submitting jobs to be run on quantum hardware, it is also possible to run jobs on
-the Xanadu Quantum Cloud simulator Simulon. The process is very similar to running jobs on hardware. You
-will need to configure your account, as described above, and submit a job via the ``RemoteEngine``,
-using ``"simulon"`` as the target instead of a specific chip:
+In addition to submitting jobs to be run on quantum hardware, it is also
+possible to run jobs on cloud simulators (which we refer to as "simulons") via
+the Xanadu Quantum Cloud. The process is very similar to running jobs on
+hardware. You will need to configure your account, as described above, and
+submit a job via the ``RemoteEngine``, using a simulator as the target instead
+of a specific chip:
 
->>> eng = sf.RemoteEngine("simulon")
+>>> eng = sf.RemoteEngine("simulon_gaussian")
 >>> result = eng.run(prog)
 
-Simulon jobs can also be submitted asynchronously using ``eng.run_async``, or by submitting a
-Blackbird script with the ``target`` set to ``simulon`` in the Blackbird header.
+Simulator jobs can also be submitted asynchronously using ``eng.run_async``, or
+by submitting a Blackbird script with the ``target`` set to a simulator target
+in the Blackbird header.
 
 See the `Submitting jobs on hardware`_ section above for more details.
 
 .. note::
 
-    Simulon runs on the ``gaussian`` backend (see :ref:`simulating_your_program`) and thus only supports
-    Gaussian operations, including homodyne and heterodyne measurements, as well terminal
-    Fock measurements. Note that there are limits to how many measurements a circuit can have depending
-    on the type of measurement. These can be retrieved by calling ``engine.device_spec.modes`` with
-    ``engine = sf.RemoteEngine("simulon")``.
+    The ``simulon_gaussian`` simulator runs on the ``gaussian`` backend (see
+    :ref:`simulating_your_program`) and thus only supports Gaussian operations,
+    including homodyne and heterodyne measurements, as well terminal Fock
+    measurements. Note that there are limits to how many measurements a circuit
+    can have depending on the type of measurement. These can be retrieved by
+    calling ``engine.device_spec.modes`` with ``engine =
+    sf.RemoteEngine("simulon_gaussian")``.
 
 Tutorials
 ---------

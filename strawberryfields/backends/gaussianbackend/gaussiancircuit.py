@@ -77,7 +77,7 @@ class GaussianModes:
         self.nlen = newnlen
 
     def del_mode(self, modes):
-        """ delete mode from the circuit"""
+        """delete mode from the circuit"""
         if isinstance(modes, int):
             modes = [modes]
 
@@ -110,7 +110,7 @@ class GaussianModes:
         return [x for x in self.active if x is not None]
 
     def displace(self, r, phi, i):
-        """ Implements a displacement operation by the complex number `beta = r * np.exp(1j * phi)` in mode i"""
+        """Implements a displacement operation by the complex number `beta = r * np.exp(1j * phi)` in mode i"""
         # Update displacement of mode i by the complex amount bet
         if self.active[i] is None:
             raise ValueError("Cannot displace mode, mode does not exist")
@@ -118,7 +118,7 @@ class GaussianModes:
         self.mean[i] += r * np.exp(1j * phi)
 
     def squeeze(self, r, phi, k):
-        """ Implements a squeezing operation in mode k by the amount z = r*exp(1j*phi)."""
+        """Implements a squeezing operation in mode k by the amount z = r*exp(1j*phi)."""
         if self.active[k] is None:
             raise ValueError("Cannot squeeze mode, mode does not exist")
 
@@ -158,7 +158,7 @@ class GaussianModes:
         self.mmat[:, k] = self.mmat[k]
 
     def phase_shift(self, phi, k):
-        """ Implements a phase shift in mode k by the amount phi."""
+        """Implements a phase shift in mode k by the amount phi."""
         if self.active[k] is None:
             raise ValueError("Cannot phase shift mode, mode does not exist")
 
@@ -181,7 +181,7 @@ class GaussianModes:
         self.mmat[:, k] = self.mmat[k]
 
     def beamsplitter(self, theta, phi, k, l):
-        """ Implements a beam splitter operation between modes k and l by the amount theta, phi"""
+        """Implements a beam splitter operation between modes k and l by the amount theta, phi"""
         if self.active[k] is None or self.active[l] is None:
             raise ValueError("Cannot perform beamsplitter, mode(s) do not exist")
 
@@ -358,7 +358,7 @@ class GaussianModes:
         self.mmat[rows, cols] = 0.25 * (A - C + 1j * (B + Bt))
 
     def qmat(self, modes=None):
-        """ Construct the covariance matrix for the Q function"""
+        """Construct the covariance matrix for the Q function"""
         if modes is None:
             modes = list(range(self.nlen))
 
@@ -382,7 +382,7 @@ class GaussianModes:
         return sigmaq
 
     def fidelity_coherent(self, alpha, modes=None):
-        """ Returns a function that evaluates the Q function of the given state """
+        """Returns a function that evaluates the Q function of the given state"""
         if modes is None:
             modes = list(range(self.nlen))
 
@@ -404,7 +404,7 @@ class GaussianModes:
         return self.fidelity_coherent(alpha)
 
     def Amat(self):
-        """ Constructs the A matrix from Hamilton's paper"""
+        """Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
         sigmaq = (
             np.concatenate(
@@ -446,12 +446,12 @@ class GaussianModes:
         self.nmat += (1 - T) * nbar
 
     def init_thermal(self, population, mode):
-        """ Initializes a state of mode in a thermal state with the given population"""
+        """Initializes a state of mode in a thermal state with the given population"""
         self.loss(0.0, mode)
         self.nmat[mode][mode] = population
 
     def is_vacuum(self, tol=0.0):
-        """ Checks if the state is vacuum by calculating its fidelity with vacuum """
+        """Checks if the state is vacuum by calculating its fidelity with vacuum"""
         fid = self.fidelity_vacuum()
         return np.abs(fid - 1) <= tol
 
@@ -495,7 +495,7 @@ class GaussianModes:
         return res
 
     def post_select_homodyne(self, n, val, eps=0.0002):
-        """ Performs a homodyne measurement but postelecting on the value vals for mode n """
+        """Performs a homodyne measurement but postelecting on the value vals for mode n"""
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
         covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
@@ -517,7 +517,7 @@ class GaussianModes:
         return val
 
     def post_select_heterodyne(self, n, alpha_val):
-        """ Performs a homodyne measurement but postelecting on the value vals for mode n """
+        """Performs a homodyne measurement but postelecting on the value vals for mode n"""
         if self.active[n] is None:
             raise ValueError("Cannot apply heterodyne measurement, mode does not exist")
 
@@ -539,7 +539,7 @@ class GaussianModes:
         return alpha_val
 
     def apply_u(self, U):
-        """ Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j]"""
+        """Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j]"""
         self.mean = np.dot(np.conj(U), self.mean)
         self.nmat = np.dot(np.dot(U, self.nmat), np.conj(np.transpose(U)))
         self.mmat = np.dot(np.dot(np.conj(U), self.mmat), np.conj(np.transpose(U)))
