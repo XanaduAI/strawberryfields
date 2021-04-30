@@ -953,7 +953,7 @@ class BosonicModes:
         vals = np.array([alpha_val.real, alpha_val.imag])
         self.post_select_generaldyne(covmat, [mode], vals)
 
-    def qubit_tomography(self, modes, stats):
+    def qubit_tomography(self, modes, stats, ncores):
         r"""Performs qubit tomography assuming square GKPs. Does not update the state.
         
         Args:
@@ -1087,8 +1087,8 @@ class BosonicModes:
                 # ncpus = len(inputs)
             # else:
                 # ncpus = cpu_count()
-            ncpus = 1
-            with Pool(processes=ncpus) as pool:
+            # ncpus = 1
+            with Pool(processes=ncores) as pool:
                 results = pool.map(meas_para, inputs)
 
             measurements = {}

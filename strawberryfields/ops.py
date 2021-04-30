@@ -1303,12 +1303,12 @@ class QubitTomography(Measurement):
     .. warning:: QubitTomography can only be performed in the Bosonic backend.
 
     """
-    def __init__(self, stats):
-        super().__init__([stats])
+    def __init__(self, stats, ncores=1):
+        super().__init__([stats, ncores])
 
     def _apply(self, reg, backend, **kwargs):
-        stats = par_evaluate(self.p)
-        return backend.qubit_tomography(reg, *stats)
+        p = par_evaluate(self.p)
+        return backend.qubit_tomography(reg, *p)
 
 # ====================================================================
 # Channels

@@ -810,8 +810,8 @@ class BosonicBackend(BaseBosonic):
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         raise NotImplementedError("Bosonic backend does not yet support threshold measurements.")
 
-    def qubit_tomography(self, modes, stats):
-        qubit_dm, dm_err = self.circuit.qubit_tomography(modes, stats)
+    def qubit_tomography(self, modes, stats, ncores):
+        qubit_dm, dm_err = self.circuit.qubit_tomography(modes, stats, ncores)
         return qubit_dm, dm_err
 
     def state(self, modes=None, **kwargs):
