@@ -968,7 +968,6 @@ class BosonicModes:
             NotImplementedError: if number of modes is greater than 2
             ValueError: if one of the modes is not in the list of acvtive modes
         """
-        t_start = perf_counter()
         # Checking if modes are active
         for mode in modes:
             if self.active[mode] is None:
@@ -1141,8 +1140,6 @@ class BosonicModes:
             # print(f'dm_std = ')
             # print(f'{dm_std}')
             # quit()
-            t_end = perf_counter()
-            print(f'time ran in tomography = {t_end - t_start} s')
 
         return qubit_dm, np.sqrt(real_dm_std) + 1j * np.sqrt(imag_dm_std)
 
