@@ -2,6 +2,13 @@
 
 <h3>New features since last release</h3>
 
+<h3>Improvements</h3>
+
+* Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
+  similarity across backend ops, and replace `tensorflow.tensordot` with
+  broadcasting.
+  [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -18,7 +25,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jeremy Swinarton.
+Aaron Robertson, Jeremy Swinarton.
 
 # Release 0.18.0 (current release)
 
@@ -144,11 +151,6 @@ Jeremy Swinarton.
 * No `VisibleDeprecationWarning` is raised when using the state `wigner`
   method.
   [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
-
-* Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
-  similarity across backend ops, and replace `tensorflow.tensordot` with
-  broadcasting.
-  [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
 * The backend utility module `shared_ops.py` has been removed, with all of its
   functionality now provided by The Walrus.
