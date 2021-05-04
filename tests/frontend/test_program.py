@@ -240,7 +240,7 @@ class TestProgram:
             },
             "layout": None, "gate_parameters": {}, "compiler": [None]
         }
-        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+        spec = sf.api.DeviceSpec(target="simulon_gaussian", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -256,7 +256,7 @@ class TestProgram:
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect type of device spec mode entry."""
         device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
-        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+        spec = sf.api.DeviceSpec(target="simulon_gaussian", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -547,7 +547,7 @@ class TestValidation:
             },
             "layout": None, "gate_parameters": {}, "compiler": [None]
         }
-        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+        spec = sf.api.DeviceSpec(target="simulon_gaussian", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
