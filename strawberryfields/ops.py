@@ -1908,7 +1908,38 @@ class MZgate(Gate):
             Command(Rgate(self.p[0]), reg[0]),
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
         ]
+        
+class sMZgate(Gate):
+    r"""Mach-Zehnder interferometer.
 
+    .. math::
+
+        \mathrm{MZ}(\phi_{in}, \phi_{ex}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            (R(\phi_{ex})\otimes I)
+
+    Args:
+        phi_in (float): internal phase
+        phi_ex (float): external phase
+
+
+    This gate becomes the identity for ``phi_in=np.pi`` and ``phi_ex=0``, and permutes the modes
+    for ``phi_in=0`` and ``phi_ex=0``.
+
+    """
+    ns = 2
+
+    def __init__(self, phi_in, phi_ex):
+        super().__init__([phi_in, phi_ex])
+
+    def _decompose(self, reg, **kwargs):
+        # into local phase shifts and two 50-50 beamsplitters
+        return [
+            Command(BSgate(np.pi / 4, np.pi / 2), reg),
+            Command(Rgate(self.p[1]), reg[0]),
+            Command(Rgate(self.p[0]), reg[0]),
+            Command(BSgate(np.pi / 4, np.pi / 2), reg),
+        ]
 
 class S2gate(Gate):
     r"""Two-mode squeezing gate.
