@@ -193,6 +193,8 @@ def par_evaluate(params, dtype=None):
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
 
         if not atoms:
+            # If there are not atomic values, we just convert to elementary
+            # Python types
             return float(p) if p.is_real else complex(p)
 
         # evaluate the atoms of the expression
@@ -203,6 +205,12 @@ def par_evaluate(params, dtype=None):
         printer = "tensorflow" if any(is_tf) else "numpy"
 
         func = sympy.lambdify(atoms, p, printer)
+
+        # sympy.lambdify caches data using linecache, if called many times this
+        # can make up for a lot of memory used. We clear the cache here to
+        # avoid that.
+        import linecache
+        linecache.clearcache()
 
         if dtype is not None:
             # cast the input values
@@ -216,9 +224,7 @@ def par_evaluate(params, dtype=None):
 
         return func(*vals)
 
-    import linecache
     ret = list(map(do_evaluate, params))
-    linecache.clearcache()
     if scalar:
         return ret[0]
     return ret
