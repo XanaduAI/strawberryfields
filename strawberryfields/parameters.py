@@ -216,7 +216,9 @@ def par_evaluate(params, dtype=None):
 
         return func(*vals)
 
+    import linecache
     ret = list(map(do_evaluate, params))
+    linecache.clearcache()
     if scalar:
         return ret[0]
     return ret
