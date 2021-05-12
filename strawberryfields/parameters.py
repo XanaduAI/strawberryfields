@@ -191,12 +191,17 @@ def par_evaluate(params, dtype=None):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
+
+        if not atoms:
+            return float(p) if p.is_real else complex(p)
+
         # evaluate the atoms of the expression
         vals = [k._eval_evalf(None) for k in atoms]
         # use the tensorflow printer if any of the symbolic parameter values are TF objects
         # (we do it like this to avoid importing tensorflow if it's not needed)
         is_tf = (type(v).__module__.startswith("tensorflow") for v in vals)
         printer = "tensorflow" if any(is_tf) else "numpy"
+
         func = sympy.lambdify(atoms, p, printer)
 
         if dtype is not None:
