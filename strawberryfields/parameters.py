@@ -96,6 +96,7 @@ What we cannot do at the moment:
 import collections.abc
 import functools
 import types
+import linecache
 
 import numpy as np
 import sympy
@@ -209,8 +210,6 @@ def par_evaluate(params, dtype=None):
         # sympy.lambdify caches data using linecache, if called many times this
         # can make up for a lot of memory used. We clear the cache here to
         # avoid that.
-        import linecache
-
         linecache.clearcache()
 
         if dtype is not None:
