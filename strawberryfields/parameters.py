@@ -210,6 +210,7 @@ def par_evaluate(params, dtype=None):
         # can make up for a lot of memory used. We clear the cache here to
         # avoid that.
         import linecache
+
         linecache.clearcache()
 
         if dtype is not None:
