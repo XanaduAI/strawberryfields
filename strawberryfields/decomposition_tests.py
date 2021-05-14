@@ -1,8 +1,18 @@
 import numpy as np 
-
+#############Utils##############
 def M(n, sigma, delta, m):
-    r"""The Bell M matrix from Eq 1 of the paper
-    n here represents the starting mode of MZI, and n = k-j
+    r"""To generate the sMZI matrix.
+    
+    The Bell M matrix from Eq 1 of the paper (arXiv:2104.0756).
+    
+    Args:
+        n (int): the starting mode of sMZI
+        sigma (complex): parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`
+        delta (complex): parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`
+        m (int): the length of the unitary matrix to be decomposed
+        
+    Returns:
+        array[complex,complex]: the sMZI matrix between n-th and (n+1)-th mode
     """
     mat = np.identity(m, dtype=np.complex128)
     mat[n, n] = np.exp(1j * sigma) * np.sin(delta)
@@ -12,24 +22,53 @@ def M(n, sigma, delta, m):
     return mat
 
 def P(j, phi, m):
+    r"""To generate the phase shifter matrix.
+
+    Args:
+        j (int): the starting mode of phase-shifter
+        phi (complex): parameter of the phase-shifter
+        m (int): the length of the unitary matrix to be decomposed
+        
+    Returns:
+        array[complex,complex]: the phase-shifter matrix on the j-th mode
+    """
     mat = np.identity(m, dtype=np.complex128)
     mat[j,j] = np.exp(1j * phi)
     return mat
     
 def is_unitary(U):
+    r"""To check the matrix whether is unitary or not
+    """
     return np.allclose(U @ U.conj().T, np.eye(U.shape[0]))
+    
+def check_square(U):
+    r"""To check the matrix whether is a square matrix or not
+    """
+    return U.shape[0] == U.shape[1]
 
 def Reck_decomposition(U):
-    V = U.conj()
-    #TODO : Check if it is a square matrix or not
+    r"""Decomposition of a unitary into the Reck scheme with sMZIs and phase-shifters.
+
+    Args:
+        U (array): unitary matrix
+
+    Returns:
+        dict[]: returns a dictionary contains all parameters
+            where the keywords:
+            * ``m``: the length of the matrix
+            * ``phi_ins``:
+            * ``deltas``:
+            * ``sigmas``:
+            * ``zetas``:
+            * ``phi_outs``:
+
+    """
     
+    assert check_square(U), "The matrix given is not square"
+    
+    V = U.conj()
     m = U.shape[0]
     
-    #{"P":[P1,...Pj],
-    #"Q":[Q1,...Qj],
-    #"j=0":[[delta_0,sigma_0],],
-    #"j=1":[[delta_0,sigma_0],[delta_1,sigma_1]]}
-    #...
     params_list = {}
     params_list["P_"] = []
     params_list["Q_"] = []
