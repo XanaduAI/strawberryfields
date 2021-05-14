@@ -1915,8 +1915,8 @@ class sMZgate(Gate):
     .. math::
 
         \mathrm{MZ}(\phi_{in}, \phi_{ex}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
-            (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
-            (R(\phi_{ex})\otimes I)
+            (R(\phi_{in})\otimes I) (I\otimes R(\phi_{ex}))  BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
+            
 
     Args:
         phi_in (float): internal phase
