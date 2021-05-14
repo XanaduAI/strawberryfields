@@ -1,4 +1,4 @@
-numpy>=1.20
+numpy>=1.19.2
 scipy
 sympy>=1.5
 tensorflow>=2.0
