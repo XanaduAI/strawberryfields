@@ -1936,8 +1936,8 @@ class sMZgate(Gate):
         # into local phase shifts and two 50-50 beamsplitters
         return [
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
-            Command(Rgate(self.p[1]), reg[0]),
-            Command(Rgate(self.p[0]), reg[0]),
+            Command(Rgate(self.p[1]-np.pi/2), reg[0]),
+            Command(Rgate(self.p[0]-np.pi/2), reg[0]),
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
         ]
 
