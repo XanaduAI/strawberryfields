@@ -11,5 +11,5 @@ toml
 appdirs
 numba>=0.48.0
 requests==2.22.0
-urllib3==1.25.3
+urllib3==1.25.8
 plotly==4.4.1
