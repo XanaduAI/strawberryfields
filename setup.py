@@ -22,7 +22,7 @@ with open("strawberryfields/_version.py") as f:
 
 
 requirements = [
-    "numpy>=1.19.2",
+    "numpy>=1.17.4",
     "scipy>=1.0.0",
     "sympy>=1.5",
     "networkx>=2.0",
