@@ -1910,23 +1910,7 @@ class MZgate(Gate):
         ]
         
 class sMZgate(Gate):
-    r"""Mach-Zehnder interferometer.
-
-    .. math::
-
-        \mathrm{MZ}(\phi_{in}, \phi_{ex}) = BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
-            (R(\phi_{in})\otimes I) (I\otimes R(\phi_{ex}))  BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
-            
-
-    Args:
-        phi_in (float): internal phase
-        phi_ex (float): external phase
-
-
-    This gate becomes the identity for ``phi_in=np.pi`` and ``phi_ex=0``, and permutes the modes
-    for ``phi_in=0`` and ``phi_ex=0``.
-
-    """
+    r"""Symmetric Mach-Zehnder interferometer"""
     ns = 2
 
     def __init__(self, phi_in, phi_ex):
@@ -1936,7 +1920,7 @@ class sMZgate(Gate):
         # into local phase shifts and two 50-50 beamsplitters
         return [
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
-            Command(Rgate(self.p[1]-np.pi/2), reg[0]),
+            Command(Rgate(self.p[1]-np.pi/2), reg[1]),
             Command(Rgate(self.p[0]-np.pi/2), reg[0]),
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
         ]
@@ -2441,6 +2425,8 @@ class Interferometer(Decomposition):
             "rectangular_phase_end",
             "rectangular_symmetric",
             "triangular",
+            "rectangular_compact",
+            "triangular_compact"
         }
 
         if mesh not in allowed_meshes:
@@ -2474,7 +2460,6 @@ class Interferometer(Decomposition):
                     phi2 = sigma-delta
                     cmds.append(Command(sMZgate(phi1, phi2), (reg[mode], reg[mode+1])))
             for j, phi_j in phases['phi_outs'].items():
-                Rgate(phi_j) | q[j]
                 cmds.append(Command(Rgate(phi_j), reg[j]))
 
         elif mesh == 'triangular_compact':

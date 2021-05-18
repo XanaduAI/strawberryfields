@@ -17,12 +17,12 @@ used to perform gate decompositions.
 """
 
 from itertools import groupby
+from collections import defaultdict
 
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, polar, schur
 from thewalrus.quantum import adj_scaling
 from thewalrus.symplectic import sympmat, xpxp_to_xxpp
-
 
 def takagi(N, tol=1e-13, rounding=13):
     r"""Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
@@ -736,7 +736,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         
     return phases
 
-def _rectangular_compact_init(U):
+def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
     r"""Decomposition of a unitary into the Clements scheme with sMZIs and phase-shifters.
 
     As given in FIG. 3 and "The Clements Scheme" section of (arXiv:2104.0756)
@@ -823,7 +823,7 @@ def _rectangular_compact_init(U):
         V = V @ P(j, zeta, m)
         phases['zetas'][j] = zeta
         
-    if not np.allclose(V, np.eye(m)): #is_unitary(V):
+    if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol): 
         raise Exception('decomposition failed')
     return phases
     
@@ -879,7 +879,7 @@ def _absorb_zeta(phases):
                 new_phases['phi_edges'][m-1, layer-1] -= zeta
     return new_phases
     
-def rectangular_compact(U):
+def rectangular_compact(U, rtol=1e-12, atol=1e-12):
     r"""Decomposition of a unitary into a compact rectangular interferometer, 
     as described in (arXiv:2104.0756)
 
@@ -896,7 +896,7 @@ def rectangular_compact(U):
             * ``phi_edges``: parameters for the edge phase shifters
             * ``phi_outs``: parameters for the phase-shifters
     """
-    phases_temp = _rectangular_compact_init(U)
+    phases_temp = _rectangular_compact_init(U, rtol=1e-12, atol=1e-12)
     return _absorb_zeta(phases_temp)
 
 def williamson(V, tol=1e-11):
