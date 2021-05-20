@@ -633,15 +633,15 @@ def triangular(V, tol=1e-11):
 
 def M(n, sigma, delta, m):
     r"""To generate the sMZI matrix.
-    
+
     The Bell M matrix from Eq 1 of the paper (arXiv:2104.0756).
-    
+
     Args:
         n (int): the starting mode of sMZI
         sigma (complex): parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`
         delta (complex): parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`
         m (int): the length of the unitary matrix to be decomposed
-        
+
     Returns:
         array[complex,complex]: the sMZI matrix between n-th and (n+1)-th mode
     """
@@ -661,7 +661,7 @@ def P(j, phi, m):
         j (int): the starting mode of phase-shifter
         phi (complex): parameter of the phase-shifter
         m (int): the length of the unitary matrix to be decomposed
-        
+
     Returns:
         array[complex,complex]: the phase-shifter matrix on the j-th mode
     """
@@ -686,16 +686,16 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
             * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`
             * ``zetas``: parameter of the phase-shifter
     """
-    
+
     if not U.shape[0] == U.shape[1]:
         raise Exception('Matrix is not square')
 
     if not np.allclose(U @ U.conj().T, np.eye(U.shape[0]), rtol=rtol, atol=atol):
         raise ValueError('input matrix is not unitary')
-    
+
     V = U.conj()
     m = U.shape[0]
-    
+
     phases = dict()
     phases['m'] = m
     phases['phi_ins'] = dict() # mode : phi
@@ -730,10 +730,10 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         zeta = np.angle(V[0,0]) - np.angle(V[j,j])
         phases['zetas'][j] = zeta
         V = V @ P(j, zeta, m)
-        
+
     if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol):
         raise Exception('decomposition failed')
-        
+
     return phases
 
 def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
@@ -757,11 +757,10 @@ def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
     """
     if not U.shape[0] == U.shape[1]:
         raise Exception('Matrix is not square')
-            
+
     V = U.conj()
-    
     m = U.shape[0]
-        
+
     phases = dict()
     phases['m'] = m
     phases['phi_ins'] = dict() # mode : phi
@@ -769,7 +768,7 @@ def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
     phases['sigmas'] = dict() # (mode, layer) : sigma
     phases['zetas'] = dict() # mode : zeta
     phases['phi_outs'] = dict() # mode : phi
-        
+
     for j in range(m-1):
         if j % 2 == 0:
             x = m - 1
@@ -822,11 +821,11 @@ def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
         zeta = np.angle(V[0,0]) - np.angle(V[j,j])
         V = V @ P(j, zeta, m)
         phases['zetas'][j] = zeta
-        
+
     if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol): 
         raise Exception('decomposition failed')
     return phases
-    
+
 
 def _absorb_zeta(phases):
     r"""Adjust decomposition to move zeta phases to edge of interferometer.
@@ -851,7 +850,7 @@ def _absorb_zeta(phases):
     new_phases = phases.copy()
     del new_phases['zetas']
     new_phases['phi_edges'] = defaultdict(float) # (mode, layer) : phi
-    
+
     if m % 2 == 0:
         new_phases['phi_outs'][0] = phases['zetas'][0]
         for j in range(1,m):
@@ -878,9 +877,9 @@ def _absorb_zeta(phases):
             else:
                 new_phases['phi_edges'][m-1, layer-1] -= zeta
     return new_phases
-    
+
 def rectangular_compact(U, rtol=1e-12, atol=1e-12):
-    r"""Decomposition of a unitary into a compact rectangular interferometer, 
+    r"""Decomposition of a unitary into a compact rectangular interferometer,
     as described in (arXiv:2104.0756)
 
     Args:
@@ -896,7 +895,7 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
             * ``phi_edges``: parameters for the edge phase shifters
             * ``phi_outs``: parameters for the phase-shifters
     """
-    phases_temp = _rectangular_compact_init(U, rtol=1e-12, atol=1e-12)
+    phases_temp = _rectangular_compact_init(U, rtol=rtol, atol=atol)
     return _absorb_zeta(phases_temp)
 
 def williamson(V, tol=1e-11):
