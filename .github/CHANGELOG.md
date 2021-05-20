@@ -13,6 +13,10 @@
 
 <h3>Bug fixes</h3>
 
+* Fixed an unexpected behaviour that can result in increasing memory usage due
+  to ``sympy.lambdify`` caching too much data using ``linecache``.
+  [(#579)](https://github.com/XanaduAI/strawberryfields/pull/579)
+
 <h3>Documentation</h3>
 
 * References to the ``simulon`` simulator target have been rewritten to
@@ -25,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Aaron Robertson, Jeremy Swinarton.
+Aaron Robertson, Jeremy Swinarton, Antal Száva.
 
 # Release 0.18.0 (current release)
 
