@@ -2,6 +2,10 @@
 
 <h3>New features since last release</h3>
 
+* "compact" decompositions as described in <https://arxiv.org/abs/2104.07561>,
+ (``rectangle_compact`` and ``triangle_compact``) are now available in
+ ``decompositions`` and as options in ``ops.Interferometer``.
+
 <h3>Improvements</h3>
 
 * Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
@@ -29,7 +33,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Aaron Robertson, Jeremy Swinarton, Antal Száva.
+Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
