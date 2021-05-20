@@ -633,7 +633,6 @@ def triangular(V, tol=1e-11):
 
 def M(n, sigma, delta, m):
     r"""To generate the sMZI matrix.
-
     The Bell M matrix from Eq 1 of the paper (arXiv:2104.0756).
 
     Args:
@@ -822,7 +821,7 @@ def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
         V = V @ P(j, zeta, m)
         phases['zetas'][j] = zeta
 
-    if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol): 
+    if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol):
         raise Exception('decomposition failed')
     return phases
 
