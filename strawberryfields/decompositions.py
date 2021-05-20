@@ -690,7 +690,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         raise Exception('Matrix is not square')
 
     if not np.allclose(U @ U.conj().T, np.eye(U.shape[0]), rtol=rtol, atol=atol):
-        raise ValueError('input matrix is not unitary')
+        raise ValueError("The input matrix is not unitary")
 
     V = U.conj()
     m = U.shape[0]
@@ -711,7 +711,10 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         V = V @ Pj
         for k in range(j+1):
             n = j - k
-            delta = np.arctan(-V[x,y+1] / V[x,y]).real
+            if V[x,y] == 0:
+                delta = 0.5 * np.pi
+            else:
+                delta = np.arctan2(-abs(V[x,y+1]), abs(V[x,y]))
             V_temp = V @ M(n, 0, delta, m)
             sigma = np.angle(V_temp[x-1, y-1]) - np.angle(V_temp[x-1,y])
             phases['deltas'][n,k] = delta
@@ -734,6 +737,38 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         raise Exception('decomposition failed')
 
     return phases
+
+def _triangular_compact_recompose(phases):
+    r"""
+    calculates the unitary of a triangular compact interferometer,
+    using the phases provided in phases dict.
+
+    Args:
+        phases (dict[]): 
+            where the keywords:
+            * ``m``: the length of the matrix
+            * ``phi_ins``: parameter of the phase-shifter
+            * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`
+            * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`
+            * ``zetas``: parameter of the phase-shifter
+
+    Returns:
+        U (array) : unitary matrix of the interferometer
+    """
+    m = phases['m']
+    U = np.identity(m, dtype=np.complex128)
+    for j in range(m-1):
+        phi_j = phases['phi_ins'][j]
+        U = P(j+1, phi_j, m) @ U
+        for k in range(j+1):
+            n = j - k
+            delta = phases['deltas'][n,k]
+            sigma = phases['sigmas'][n,k]
+            U = M(n, sigma, delta, m) @ U
+    for j in range(m):
+        zeta = phases['zetas'][j]
+        U = P(j, zeta, m) @ U
+    return U
 
 def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
     r"""Decomposition of a unitary into the Clements scheme with sMZIs and phase-shifters.
@@ -889,13 +924,52 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
             where the keywords:
             * ``m``: the length of the matrix
             * ``phi_ins``: parameters for the phase-shifters
-            * ``sigmas``: parameters for the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`
-            * ``deltas``: parameters for the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`
+            * ``sigmas``: parameters for the sMZI
+            * ``deltas``: parameters for the sMZI 
             * ``phi_edges``: parameters for the edge phase shifters
             * ``phi_outs``: parameters for the phase-shifters
     """
+
+    if not np.allclose(U @ U.conj().T, np.eye(U.shape[0]), rtol=rtol, atol=atol):
+        raise ValueError("The input matrix is not unitary")
+
     phases_temp = _rectangular_compact_init(U, rtol=rtol, atol=atol)
     return _absorb_zeta(phases_temp)
+
+def _rectangular_compact_recompose(phases):
+    r"""
+    calculates the unitary of a rectangular compact interferometer,
+    using the phases provided in phases dict.
+
+    Args:
+        phases (dict[]): 
+            where the keywords:
+            * ``m``: the length of the matrix
+            * ``phi_ins``: parameters for the phase-shifters
+            * ``sigmas``: parameters for the sMZI
+            * ``deltas``: parameters for the sMZI 
+            * ``phi_edges``: parameters for the edge phase shifters
+            * ``phi_outs``: parameters for the phase-shifters
+
+    Returns:
+        U (array) : unitary matrix of the interferometer
+    """
+    m = phases['m']
+    U = np.eye(m, dtype=np.complex128)
+    for j in range(0,m-1,2):
+        phi = phases['phi_ins'][j]
+        U = P(j, phi, m) @ U
+    for layer in range(m):
+        if (layer + m + 1) % 2 == 0:
+            phi_bottom = phases['phi_edges'][m-1, layer]
+            U = P(m-1, phi_bottom, m) @ U
+        for mode in range(layer % 2, m-1, 2):
+            delta = phases['deltas'][mode, layer]
+            sigma = phases['sigmas'][mode, layer]
+            U = M(mode, sigma, delta, m) @ U
+    for j, phi_j in phases['phi_outs'].items():
+        U = P(j, phi_j, m) @ U
+    return U
 
 def williamson(V, tol=1e-11):
     r"""Williamson decomposition of positive-definite (real) symmetric matrix.
