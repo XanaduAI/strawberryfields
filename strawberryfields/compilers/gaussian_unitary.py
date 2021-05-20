@@ -177,9 +177,11 @@ class GaussianUnitary(Compiler):
                         nmodes,
                     )
                 elif name == "sMZgate":
-                    exp_sigma = np.exp(1j * (params[0]+params[1])/2)
-                    delta = (params[0]-params[1])/2
-                    U = exp_sigma * np.array([[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]])
+                    exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
+                    delta = (params[0] - params[1]) / 2
+                    U = exp_sigma * np.array(
+                        [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
+                    )
                     S = expand(
                         interferometer(U),
                         [dict_indices[modes[0]], dict_indices[modes[1]]],

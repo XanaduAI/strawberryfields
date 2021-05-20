@@ -35,7 +35,11 @@ def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)
     O = np.concatenate(
-        (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1),), axis=0,
+        (
+            np.concatenate((0 * idm, idm), axis=1),
+            np.concatenate((-idm, 0 * idm), axis=1),
+        ),
+        axis=0,
     )
     return O
 
@@ -380,6 +384,7 @@ class TestTriangularDecomposition:
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
+
 class TestRectangularCompactDecomposition:
     """Tests for linear interferometer decomposition into rectangular grid of
     phase-shifters and pairs of symmetric beamsplitters"""
@@ -407,7 +412,7 @@ class TestRectangularCompactDecomposition:
             pytest.param(haar_measure(20), id="random20"),
             pytest.param(np.identity(7), id="identity7"),
             pytest.param(np.identity(7)[::-1], id="antiidentity7"),
-            pytest.param(haar_measure(7), id="random7")
+            pytest.param(haar_measure(7), id="random7"),
         ],
     )
     def test_decomposition(self, U, tol):
@@ -425,6 +430,7 @@ class TestRectangularCompactDecomposition:
         phases = dec.rectangular_compact(U)
         Uout = dec._rectangular_compact_recompose(phases)
         assert np.allclose(U, Uout, atol=tol, rtol=0)
+
 
 class TestTriangularCompactDecomposition:
     """Tests for linear interferometer decomposition into rectangular grid of
@@ -451,9 +457,9 @@ class TestTriangularCompactDecomposition:
             pytest.param(np.identity(20), id="identity20"),
             pytest.param(np.identity(20)[::-1], id="antiidentity20"),
             pytest.param(haar_measure(20), id="random20"),
-            pytest.param(np.identity(7), id="identity7"), 
+            pytest.param(np.identity(7), id="identity7"),
             pytest.param(np.identity(7)[::-1], id="antiidentity7"),
-            pytest.param(haar_measure(7), id="random7")
+            pytest.param(haar_measure(7), id="random7"),
         ],
     )
     def test_decomposition(self, U, tol):
@@ -471,6 +477,7 @@ class TestTriangularCompactDecomposition:
         phases = dec.triangular_compact(U)
         Uout = dec._triangular_compact_recompose(phases)
         assert np.allclose(U, Uout, atol=tol, rtol=0)
+
 
 class TestWilliamsonDecomposition:
     """Tests for the Williamson decomposition"""

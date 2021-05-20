@@ -76,36 +76,38 @@ class CustomGalleryItemDirective(Directive):
     required_arguments = 0
     optional_arguments = 0
     final_argument_whitespace = True
-    option_spec = {'tooltip': directives.unchanged,
-                   'figure': directives.unchanged,
-                   'description': directives.unchanged,
-                   'tags': directives.unchanged}
+    option_spec = {
+        "tooltip": directives.unchanged,
+        "figure": directives.unchanged,
+        "description": directives.unchanged,
+        "tags": directives.unchanged,
+    }
 
     has_content = False
     add_index = False
 
     def run(self):
         try:
-            if 'tooltip' in self.options:
-                tooltip = self.options['tooltip'][:195]
+            if "tooltip" in self.options:
+                tooltip = self.options["tooltip"][:195]
             else:
-                raise ValueError('tooltip not found')
+                raise ValueError("tooltip not found")
 
             tags = ""
-            if 'tags' in self.options:
-                tags = self.options['tags']
+            if "tags" in self.options:
+                tags = self.options["tags"]
 
-            if 'figure' in self.options:
+            if "figure" in self.options:
                 env = self.state.document.settings.env
-                rel_figname, figname = env.relfn2path(self.options['figure'])
+                rel_figname, figname = env.relfn2path(self.options["figure"])
                 thumbnail = "/" + rel_figname
             else:
-                thumbnail = '/_static/code.png'
+                thumbnail = "/_static/code.png"
 
-            if 'description' in self.options:
-                description = self.options['description']
+            if "description" in self.options:
+                description = self.options["description"]
             else:
-                raise ValueError('description not doc found')
+                raise ValueError("description not doc found")
 
         except FileNotFoundError as e:
             print(e)
@@ -115,11 +117,10 @@ class CustomGalleryItemDirective(Directive):
             raise
             return []
 
-        thumbnail_rst = GALLERY_TEMPLATE.format(tooltip=tooltip,
-                                                thumbnail=thumbnail,
-                                                description=description,
-                                                tags=tags)
-        thumbnail = StringList(thumbnail_rst.split('\n'))
+        thumbnail_rst = GALLERY_TEMPLATE.format(
+            tooltip=tooltip, thumbnail=thumbnail, description=description, tags=tags
+        )
+        thumbnail = StringList(thumbnail_rst.split("\n"))
         thumb = nodes.paragraph()
         self.state.nested_parse(thumbnail, self.content_offset, thumb)
         return [thumb]
@@ -145,17 +146,18 @@ DETAILS_TEMPLATE = """
 
 class DetailsDirective(Directive):
     """Create a collapsed details section in the documentation."""
+
     required_arguments = 0
     optional_arguments = 1
     final_argument_whitespace = False
-    option_spec = {'name': directives.unchanged}
+    option_spec = {"name": directives.unchanged}
     has_content = True
     add_index = False
 
     def run(self):
         name = self.options.get("name", "Details and conventions")
         rst = DETAILS_TEMPLATE.format(title=name, content="\n".join(self.content))
-        string_list = StringList(rst.split('\n'))
+        string_list = StringList(rst.split("\n"))
         node = nodes.tbody()
         self.state.nested_parse(string_list, self.content_offset, node)
         return [node]

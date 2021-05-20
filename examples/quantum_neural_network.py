@@ -25,9 +25,9 @@ def interferometer(params, q):
             is to be applied to
     """
     N = len(q)
-    theta = params[:N*(N-1)//2]
-    phi = params[N*(N-1)//2:N*(N-1)]
-    rphi = params[-N+1:]
+    theta = params[: N * (N - 1) // 2]
+    phi = params[N * (N - 1) // 2 : N * (N - 1)]
+    rphi = params[-N + 1 :]
 
     if N == 1:
         # the interferometer is a single rotation
@@ -65,11 +65,11 @@ def layer(params, q):
     M = int(N * (N - 1)) + max(1, N - 1)
 
     int1 = params[:M]
-    s = params[M:M+N]
-    int2 = params[M+N:2*M+N]
-    dr = params[2*M+N:2*M+2*N]
-    dp = params[2*M+2*N:2*M+3*N]
-    k = params[2*M+3*N:2*M+4*N]
+    s = params[M : M + N]
+    int2 = params[M + N : 2 * M + N]
+    dr = params[2 * M + N : 2 * M + 2 * N]
+    dp = params[2 * M + 2 * N : 2 * M + 3 * N]
+    k = params[2 * M + 3 * N : 2 * M + 4 * N]
 
     # begin layer
     interferometer(int1, q)
@@ -115,7 +115,9 @@ def init_weights(modes, layers, active_sd=0.0001, passive_sd=0.1):
     dp_weights = tf.random.normal(shape=[layers, modes], stddev=passive_sd)
     k_weights = tf.random.normal(shape=[layers, modes], stddev=active_sd)
 
-    weights = tf.concat([int1_weights, s_weights, int2_weights, dr_weights, dp_weights, k_weights], axis=1)
+    weights = tf.concat(
+        [int1_weights, s_weights, int2_weights, dr_weights, dp_weights, k_weights], axis=1
+    )
     weights = tf.Variable(weights)
 
     return weights

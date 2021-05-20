@@ -1909,6 +1909,7 @@ class MZgate(Gate):
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
         ]
 
+
 class sMZgate(Gate):
     r"""Symmetric Mach-Zehnder interferometer"""
     ns = 2
@@ -1920,10 +1921,11 @@ class sMZgate(Gate):
         # into local phase shifts and two 50-50 beamsplitters
         return [
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
-            Command(Rgate(self.p[1]-np.pi/2), reg[1]),
-            Command(Rgate(self.p[0]-np.pi/2), reg[0]),
+            Command(Rgate(self.p[1] - np.pi / 2), reg[1]),
+            Command(Rgate(self.p[0] - np.pi / 2), reg[0]),
             Command(BSgate(np.pi / 4, np.pi / 2), reg),
         ]
+
 
 class S2gate(Gate):
     r"""Two-mode squeezing gate.
@@ -2427,7 +2429,7 @@ class Interferometer(Decomposition):
             "rectangular_symmetric",
             "triangular",
             "rectangular_compact",
-            "triangular_compact"
+            "triangular_compact",
         }
 
         if mesh not in allowed_meshes:
@@ -2444,41 +2446,41 @@ class Interferometer(Decomposition):
 
         cmds = []
 
-        if mesh == 'rectangular_compact':
+        if mesh == "rectangular_compact":
             phases = dec.rectangular_compact(self.p[0], rtol=tol, atol=tol)
-            m = phases['m']
-            for j in range(0,m-1,2):
-                phi = phases['phi_ins'][j]
-                cmds.append(Command(Rgate(phi),reg[j]))
+            m = phases["m"]
+            for j in range(0, m - 1, 2):
+                phi = phases["phi_ins"][j]
+                cmds.append(Command(Rgate(phi), reg[j]))
             for layer in range(m):
                 if (layer + m + 1) % 2 == 0:
-                    phi_bottom = phases['phi_edges'][m-1, layer]
-                    cmds.append(Command(Rgate(phi_bottom), reg[m-1]))
-                for mode in range(layer % 2, m-1, 2):
-                    delta = phases['deltas'][mode, layer]
-                    sigma = phases['sigmas'][mode, layer]
-                    phi1 = sigma+delta
-                    phi2 = sigma-delta
-                    cmds.append(Command(sMZgate(phi1, phi2), (reg[mode], reg[mode+1])))
-            for j, phi_j in phases['phi_outs'].items():
+                    phi_bottom = phases["phi_edges"][m - 1, layer]
+                    cmds.append(Command(Rgate(phi_bottom), reg[m - 1]))
+                for mode in range(layer % 2, m - 1, 2):
+                    delta = phases["deltas"][mode, layer]
+                    sigma = phases["sigmas"][mode, layer]
+                    phi1 = sigma + delta
+                    phi2 = sigma - delta
+                    cmds.append(Command(sMZgate(phi1, phi2), (reg[mode], reg[mode + 1])))
+            for j, phi_j in phases["phi_outs"].items():
                 cmds.append(Command(Rgate(phi_j), reg[j]))
 
-        elif mesh == 'triangular_compact':
+        elif mesh == "triangular_compact":
             phases = dec.triangular_compact(self.p[0], rtol=tol, atol=tol)
-            m = phases['m']
-            for j in range(m-1):
-                phi_j = phases['phi_ins'][j]
-                cmds.append(Command(Rgate(phi_j),reg[j+1]))
-                for k in range(j+1):
+            m = phases["m"]
+            for j in range(m - 1):
+                phi_j = phases["phi_ins"][j]
+                cmds.append(Command(Rgate(phi_j), reg[j + 1]))
+                for k in range(j + 1):
                     n = j - k
-                    delta = phases['deltas'][n,k]
-                    sigma = phases['sigmas'][n,k]
-                    phi1 = sigma+delta
-                    phi2 = sigma-delta
-                    cmds.append(Command(sMZgate(phi1, phi2),(reg[n], reg[n+1])))
+                    delta = phases["deltas"][n, k]
+                    sigma = phases["sigmas"][n, k]
+                    phi1 = sigma + delta
+                    phi2 = sigma - delta
+                    cmds.append(Command(sMZgate(phi1, phi2), (reg[n], reg[n + 1])))
 
             for j in range(m):
-                zeta = phases['zetas'][j]
+                zeta = phases["zetas"][j]
                 cmds.append(Command(Rgate(zeta), reg[j]))
 
         elif not self.identity or not drop_identity:

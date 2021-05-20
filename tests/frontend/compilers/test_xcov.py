@@ -492,7 +492,9 @@ class TestXCompilation:
         """Test that an error is raised if the number of modes provided is odd"""
         prog = sf.Program(5)
 
-        with pytest.raises(CircuitError, match="only supports programs with an even number of modes"):
+        with pytest.raises(
+            CircuitError, match="only supports programs with an even number of modes"
+        ):
             res = prog.compile(compiler="Xcov")
 
     def test_symplectic_smaller_than_program(self):
@@ -529,7 +531,6 @@ class TestXCompilation:
         # extract the Gaussian symplectic matrix
         res = res.compile(compiler="gaussian_unitary")
         assert not res.circuit
-
 
     def test_nothing_happens_and_nothing_crashes(self):
         """Test that even a program that does nothing compiles correctly"""

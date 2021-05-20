@@ -74,20 +74,14 @@ mock_layout_tdm = textwrap.dedent(
 
 device_dict_tdm = {
     "layout": mock_layout_tdm,
-    "modes": {
-        "concurrent": 2,
-        "spatial": 1,
-        "temporal": {
-            "max": 100
-        }
-    },
+    "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
     "compiler": ["TD2"],
     "gate_parameters": {
         "p0": [0.56],
         "p1": [0, [0, 6.28]],
         "p2": [0, [0, 3.14], 3.14],
-        "p3": [0, [0, 6.28]]
-    }
+        "p3": [0, [0, 6.28]],
+    },
 }
 
 

@@ -12,10 +12,10 @@ with teleportation.context as q:
     psi, alice, bob = q[0], q[1], q[2]
 
     # state to be teleported:
-    Coherent(1+0.5j) | psi
+    Coherent(1 + 0.5j) | psi
 
     # 50-50 beamsplitter
-    BS = BSgate(pi/4, 0)
+    BS = BSgate(pi / 4, 0)
 
     # maximally entangled states
     Squeezed(-2) | alice
@@ -30,12 +30,12 @@ with teleportation.context as q:
 
     # Bob conditionally displaces his mode
     # based on Alice's measurement result
-    Xgate(psi.par*sqrt(2)) | bob
-    Zgate(alice.par*sqrt(2)) | bob
+    Xgate(psi.par * sqrt(2)) | bob
+    Zgate(alice.par * sqrt(2)) | bob
     # end circuit
 
 results = eng.run(teleportation)
 # view Bob's output state and fidelity
 print(results.samples)
 print(results.state.displacement([2]))
-print(results.state.fidelity_coherent([0, 0, 1+0.5j]))
+print(results.state.fidelity_coherent([0, 0, 1 + 0.5j]))

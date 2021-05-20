@@ -80,7 +80,7 @@ def test_symplectic_composition(depth, width):
     Snet = np.identity(2 * width)
     with circuit.context as q:
         for _ in range(depth):
-            S = random_symplectic(width, scale = 0.2)
+            S = random_symplectic(width, scale=0.2)
             Snet = S @ Snet
             ops.GaussianTransform(S) | q
     compiled_circuit = circuit.compile(compiler="gaussian_unitary")
@@ -151,7 +151,6 @@ def test_non_primitive_gates():
     assert np.allclose(mean, mean1)
 
 
-
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
 def test_displacements_only(depth, width):
@@ -162,7 +161,7 @@ def test_displacements_only(depth, width):
     circuit = sf.Program(width)
     with circuit.context as q:
         for _ in range(depth):
-            alphas = np.random.rand(width)+1j*np.random.rand(width)
+            alphas = np.random.rand(width) + 1j * np.random.rand(width)
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
     compiled_circuit = circuit.compile(compiler="gaussian_unitary")

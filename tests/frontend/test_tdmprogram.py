@@ -156,7 +156,7 @@ def test_single_parameter_list_program():
     eng.run(prog)
 
     assert isinstance(prog.loop_vars, Iterable)
-    assert prog.parameters == {'p0': [1, 2]}
+    assert prog.parameters == {"p0": [1, 2]}
 
 
 class TestSingleLoopNullifier:
@@ -677,42 +677,35 @@ class TestTDMcompiler:
         with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
 
+
 class TestTDMProgramFunctions:
     """Test functions in the ``tdmprogram`` module"""
 
-    @pytest.mark.parametrize("N, crop, expected", [
-        (
-            1,
-            False,
-            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
-        ),
-        (
-            1,
-            True,
-            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
-        ),
-        (
-            3,
-            False,
-            [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]
-        ),
-        (
-            [1, 4],
-            False,
-            [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]
-        ),
-        (
-            [4],
-            True,
-            [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]
-        ),
-    ])
+    @pytest.mark.parametrize(
+        "N, crop, expected",
+        [
+            (
+                1,
+                False,
+                [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+            ),
+            (
+                1,
+                True,
+                [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+            ),
+            (3, False, [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]),
+            ([1, 4], False, [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]),
+            ([4], True, [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]),
+        ],
+    )
     def test_move_vac_modes(self, N, crop, expected):
         """Test the `move_vac_modes` function"""
         samples = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]])
         res = move_vac_modes(samples, N, crop=crop)
 
         assert np.all(res == expected)
+
 
 class TestEngineTDMProgramInteraction:
     """Test the Engine class and its interaction with TDMProgram instances."""
@@ -722,7 +715,7 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
@@ -734,7 +727,7 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
@@ -748,7 +741,7 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 

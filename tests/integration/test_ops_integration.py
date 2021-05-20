@@ -28,6 +28,7 @@ np.random.seed(42)
 A = 0.1234
 B = -0.543
 
+
 @pytest.mark.parametrize("gate", ops.gates)
 class TestGateApplication:
     """tests that involve gate application"""
@@ -48,8 +49,9 @@ class TestGateApplication:
         """Test applying gate inverses after the gate cancels out"""
         eng, prog = setup_eng(2)
 
-        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and\
-           isinstance(eng.backend, BaseGaussian):
+        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and isinstance(
+            eng.backend, BaseGaussian
+        ):
             pytest.skip("Non-Gaussian gates cannot be applied to the Gaussian backend")
 
         with prog.context as q:
@@ -126,7 +128,7 @@ class TestPreparationApplication:
     @pytest.mark.backends("tf", "fock")
     def test_ket_gaussian_state_object(self, setup_eng):
         """Test exception if loading a ket from a Gaussian state object"""
-        eng = sf.Engine('gaussian')
+        eng = sf.Engine("gaussian")
         prog = sf.Program(1)
         state = eng.run(prog).state
 
@@ -181,7 +183,7 @@ class TestPreparationApplication:
     @pytest.mark.backends("tf", "fock")
     def test_dm_gaussian_state_object(self, setup_eng):
         """Test exception if loading a ket from a Gaussian state object"""
-        eng = sf.Engine('gaussian')
+        eng = sf.Engine("gaussian")
         prog = sf.Program(1)
         state = eng.run(prog).state
 
@@ -219,7 +221,7 @@ class TestKetDensityMatrixIntegration:
         ket0 = ket0 / np.linalg.norm(ket0)
         with prog.context as q:
             ops.Ket(ket0) | q[0]
-        state = eng.run(prog, **{'modes': [0]}).state
+        state = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state.dm(), np.outer(ket0, ket0.conj()), atol=tol, rtol=0)
 
         eng.reset()
@@ -228,7 +230,7 @@ class TestKetDensityMatrixIntegration:
         state1 = BaseFockState(ket0, 1, True, cutoff)
         with prog.context as q:
             ops.Ket(state1) | q[0]
-        state2 = eng.run(prog, **{'modes': [0]}).state
+        state2 = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
     def test_ket_two_mode(self, setup_eng, hbar, cutoff, tol):
@@ -243,9 +245,7 @@ class TestKetDensityMatrixIntegration:
         with prog.context as q:
             ops.Ket(ket) | q
         state = eng.run(prog).state
-        assert np.allclose(
-            state.dm(), np.einsum("ij,kl->ikjl", ket, ket.conj()), atol=tol, rtol=0
-        )
+        assert np.allclose(state.dm(), np.einsum("ij,kl->ikjl", ket, ket.conj()), atol=tol, rtol=0)
 
         eng.reset()
 
@@ -277,7 +277,7 @@ class TestKetDensityMatrixIntegration:
         rho = np.outer(ket, ket.conj())
         with prog.context as q:
             ops.DensityMatrix(rho) | q[0]
-        state = eng.run(prog, **{'modes': [0]}).state
+        state = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state.dm(), rho, atol=tol, rtol=0)
 
         eng.reset()
@@ -286,7 +286,7 @@ class TestKetDensityMatrixIntegration:
         state1 = BaseFockState(rho, 1, False, cutoff)
         with prog.context as q:
             ops.DensityMatrix(state1) | q[0]
-        state2 = eng.run(prog, **{'modes': [0]}).state
+        state2 = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
     def test_dm_two_mode(self, setup_eng, hbar, cutoff, tol):
