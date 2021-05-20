@@ -776,7 +776,7 @@ def _triangular_compact_recompose(phases):
     return U
 
 
-def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12):
+def _rectangular_compact_init(U, rtol=1e-12, atol=1e-12): # pylint: disable=too-many-statements, too-many-branches
     r"""Decomposition of a unitary into the Clements scheme with sMZIs and phase-shifters.
 
     As given in FIG. 3 and "The Clements Scheme" section of (arXiv:2104.0756)
