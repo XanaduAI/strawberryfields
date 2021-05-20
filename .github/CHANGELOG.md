@@ -4,7 +4,7 @@
 
 * "compact" decompositions as described in <https://arxiv.org/abs/2104.07561>,
  (``rectangle_compact`` and ``triangle_compact``) are now available in
- ``decompositions`` and as options in ``ops.Interferometer``. [#584](https://github.com/XanaduAI/strawberryfields/pull/584)
+ ``decompositions`` and as options in ``ops.Interferometer``. [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
 
 <h3>Improvements</h3>
 
