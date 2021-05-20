@@ -30,7 +30,7 @@ MODES = list(it.combinations(range(4), 2))
 
 
 def get_amplitude(k, r, p):
-    """Get amplitude for two mode squeezing operation
+    """ Get amplitude for two mode squeezing operation
 
     Args:
         k (tuple): fock state numbers for two modes
@@ -53,9 +53,9 @@ class TestTwomodeSqueezing:
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
     def test_two_mode_squeezing(self, setup_backend, r, p, cutoff, pure, tol):
-        r"""Test two-mode squeezing on vacuum-state for both pure states and
+        r""" Test two-mode squeezing on vacuum-state for both pure states and
         mixed states with the amplitude given by
-                :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
+	        :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
         """
 
         backend = setup_backend(2)
@@ -75,13 +75,14 @@ class TestTwomodeSqueezing:
 
                     assert np.allclose(state.data[t], tmsv2, atol=tol, rtol=0)
 
+
     @pytest.mark.parametrize("r", MAG)
     @pytest.mark.parametrize("p", PHASE)
     @pytest.mark.parametrize("modes", MODES)
     def test_squeezing_on_mode_subset(self, setup_backend, r, p, modes, cutoff, pure, tol):
-        r"""Test two-mode squeezing on vacuum-state for both pure states and
+        r""" Test two-mode squeezing on vacuum-state for both pure states and
         mixed states on different mode subsets with the amplitude given by
-                :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
+	        :math:`\delta_{kl} \frac{e^{in\phi} \tanh^n{r}}{\cosh{r}}`
         """
 
         backend = setup_backend(4)

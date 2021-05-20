@@ -25,7 +25,6 @@ try:
 except (ImportError, ModuleNotFoundError):
     tf_available = False
     import mock
-
     tensorflow = mock.Mock(__version__="1.12.2")
 else:
     tf_available = True
@@ -70,7 +69,7 @@ class TestFrontendImport:
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
-                sf.LocalEngine("tf")
+                sf.LocalEngine('tf')
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
     def test_tensorflow_not_installed(self, monkeypatch):
@@ -81,4 +80,4 @@ class TestFrontendImport:
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 reload(sf.backends.tfbackend)
-                sf.LocalEngine("tf")
+                sf.LocalEngine('tf')

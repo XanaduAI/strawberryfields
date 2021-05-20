@@ -41,7 +41,7 @@ class TestSample:
 
     def test_invalid_n_samples(self, adj):
         """Test if function raises a ``ValueError`` when a number of samples less than one is
-        requested"""
+        requested """
         with pytest.raises(ValueError, match="Number of samples must be at least one"):
             sample.sample(A=adj, n_mean=1.0, n_samples=0)
 
@@ -127,7 +127,7 @@ class TestSampleIntegration:
 
     def test_pnr_integration(self, adj, integration_sample_number):
         """Integration test to check if function returns samples of correct form, i.e., correct
-        number of samples, correct number of modes, all non-negative integers"""
+        number of samples, correct number of modes, all non-negative integers """
         samples = np.array(
             sample.sample(A=adj, n_mean=1.0, n_samples=integration_sample_number, threshold=False)
         )
@@ -141,7 +141,7 @@ class TestSampleIntegration:
 
     def test_threshold_integration(self, adj, integration_sample_number):
         """Integration test to check if function returns samples of correct form, i.e., correct
-        number of samples, correct number of modes, all integers of zeros and ones"""
+        number of samples, correct number of modes, all integers of zeros and ones """
         samples = np.array(
             sample.sample(A=adj, n_mean=1.0, n_samples=integration_sample_number, threshold=True)
         )

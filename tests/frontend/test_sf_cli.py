@@ -33,7 +33,6 @@ import builtins
 
 pytestmark = pytest.mark.frontend
 
-
 class TestCreateParser:
     """Tests for creating a parser object."""
 
@@ -41,13 +40,10 @@ class TestCreateParser:
         """Test the general details of the parser created."""
         parser = cli.create_parser()
         assert parser._optionals.title == "General Options"
-        assert (
-            parser.description
-            == "See below for available options and commands for working with the Xanadu cloud platform."
-        )
+        assert parser.description == "See below for available options and commands for working with the Xanadu cloud platform."
         assert parser.add_help
 
-    @pytest.mark.parametrize("option", ["--ping", "-p"])
+    @pytest.mark.parametrize("option", ['--ping', '-p'])
     def test_ping(self, option):
         """Test that specifying --ping to the CLI sets the correct attribute."""
         parser = cli.create_parser()
@@ -55,43 +51,43 @@ class TestCreateParser:
         args = parser.parse_args([option])
         assert args.ping
 
-    @pytest.mark.parametrize("token_option", ["--token", "-t"])
+    @pytest.mark.parametrize("token_option", ['--token', '-t'])
     def test_configure_token(self, token_option):
         """Test that specifying configure, --token and passing an argument to
         the CLI sets the correct attribute."""
         parser = cli.create_parser()
 
-        args = parser.parse_args(["configure", token_option, "SomeToken"])
+        args = parser.parse_args(['configure', token_option, 'SomeToken'])
         assert args.func is cli.configure
-        assert args.token == "SomeToken"
+        assert args.token == 'SomeToken'
         assert not args.local
 
     def test_configuration_wizard(self):
         """Test that specifying configure, --local to the CLI sets the correct
         attribute."""
         parser = cli.create_parser()
-        args = parser.parse_args(["configure"])
+        args = parser.parse_args(['configure'])
 
         assert args.func is cli.configure
         assert not args.local
 
-    @pytest.mark.parametrize("token_option", ["--token", "-t"])
-    @pytest.mark.parametrize("local_option", ["--local", "-l"])
+    @pytest.mark.parametrize("token_option", ['--token', '-t'])
+    @pytest.mark.parametrize("local_option", ['--local', '-l'])
     def test_configure_token_locally(self, token_option, local_option):
         """Test that specifying configure, --token, --local and passing an argument to
         the CLI sets the correct attribute."""
         parser = cli.create_parser()
 
-        args = parser.parse_args(["configure", token_option, "SomeToken", local_option])
+        args = parser.parse_args(['configure', token_option, 'SomeToken', local_option])
         assert args.func is cli.configure
-        assert args.token == "SomeToken"
+        assert args.token == 'SomeToken'
 
-    @pytest.mark.parametrize("option", ["--local", "-l"])
+    @pytest.mark.parametrize("option", ['--local', '-l'])
     def test_configuration_wizard_locally(self, option):
         """Test that specifying configure, --local to the CLI sets the correct
         attribute."""
         parser = cli.create_parser()
-        args = parser.parse_args(["configure", option])
+        args = parser.parse_args(['configure', option])
 
         assert args.func is cli.configure
         assert args.local
@@ -100,21 +96,20 @@ class TestCreateParser:
         """Test that specifying input and passing an argument to the CLI sets
         the correct attribute."""
         parser = cli.create_parser()
-        args = parser.parse_args(["run", "SomePath"])
+        args = parser.parse_args(['run', 'SomePath'])
 
         assert args.func is cli.run_blackbird_script
-        assert args.input == "SomePath"
+        assert args.input == 'SomePath'
 
     def test_output(self):
         """Test that specifying input, --output and passing the arguments to
         the CLI sets the correct attributes."""
         parser = cli.create_parser()
-        args = parser.parse_args(["run", "SomeInputPath", "--output", "SomeOutputPath"])
+        args = parser.parse_args(['run', 'SomeInputPath', '--output', 'SomeOutputPath'])
 
         assert args.func is cli.run_blackbird_script
-        assert args.input == "SomeInputPath"
-        assert args.output == "SomeOutputPath"
-
+        assert args.input == 'SomeInputPath'
+        assert args.output == 'SomeOutputPath'
 
 class MockArgs:
     """A mock class used for mocking the args that are parsed from the command
@@ -126,7 +121,6 @@ class MockArgs:
         self.input = None
         self.output = None
 
-
 class MockStoreAccount:
     """A mock class used for capturing the arguments with which the store_account
     function is being called."""
@@ -137,14 +131,12 @@ class MockStoreAccount:
     def store_account(self, **kwargs):
         self.kwargs = kwargs
 
-
 EXPECTED_KWARGS = {
     "authentication_token": "",
     "hostname": "platform.strawberryfields.ai",
     "use_ssl": True,
     "port": 443,
 }
-
 
 class TestConfigure:
     """Unit tests for the configure function checking that the lines of
@@ -190,10 +182,7 @@ class TestConfigure:
             args.local = True
 
             cli.configure(args)
-            assert mock_store_account.kwargs == {
-                "authentication_token": "SomeToken",
-                "location": "local",
-            }
+            assert mock_store_account.kwargs == {"authentication_token": "SomeToken", "location": "local"}
 
     def test_configuration_wizard_local(self, monkeypatch):
         """Tests that if no token was given as a command line argument and
@@ -213,20 +202,17 @@ class TestConfigure:
 
             assert mock_store_account.kwargs == EXPECTED_KWARGS
 
-
 class MockSuccessfulConnection:
     """A Connection class mocking a successful establishment of connection."""
 
     def ping(self):
         return True
 
-
 class MockFailedConnection:
     """A Connection class mocking a failed establishment of connection."""
 
     def ping(self):
         return False
-
 
 class TestPing:
     """Tests for the pinging mechanism of the CLI."""
@@ -251,13 +237,12 @@ class TestPing:
         out, _ = capsys.readouterr()
         assert out == "There was a problem when authenticating to the platform!\n"
 
-
 # Keys are adjusted to the prompt message displayed to the user
 MOCK_PROMPTS = {
-    "token": "MyAuth",
-    "hostname": "MyHost",
-    "port": 123,
-    "SSL": "n",
+        "token": "MyAuth",
+        "hostname": "MyHost",
+        "port": 123,
+        "SSL": "n",
 }
 
 EXPECTED_KWARGS_FOR_PROMPTS = {
@@ -267,13 +252,11 @@ EXPECTED_KWARGS_FOR_PROMPTS = {
     "use_ssl": False,
 }
 
-
 def mock_input(arg):
     """A mock function that substitutes the built-in input function."""
     option = {k: v for k, v in MOCK_PROMPTS.items() if k in arg}
     if option and len(option) == 1:
         return list(option.values())[0]
-
 
 class TestConfigureEverything:
     """Unit tests for the configuration_wizard function."""
@@ -297,7 +280,7 @@ class TestConfigureEverything:
             auth_prompt = "Please enter the authentication token"
             default_config = cli.create_config()["api"]
             default_auth = "SomeAuth"
-            default_config["authentication_token"] = default_auth
+            default_config['authentication_token'] = default_auth
 
             m.setattr(builtins, "input", lambda arg: default_auth if (auth_prompt in arg) else "")
             assert cli.configuration_wizard() == default_config
@@ -310,11 +293,10 @@ class TestConfigureEverything:
             auth_prompt = "Please enter the authentication token"
             default_config = cli.create_config()["api"]
             default_auth = "SomeAuth"
-            default_config["authentication_token"] = default_auth
+            default_config['authentication_token'] = default_auth
 
             m.setattr(builtins, "input", mock_input)
             assert cli.configuration_wizard() == EXPECTED_KWARGS_FOR_PROMPTS
-
 
 class MockProgram:
     """A mock class used for capturing the arguments with which the
@@ -324,7 +306,6 @@ class MockProgram:
 
         self.target = "X8_01"
         self.result = None
-
 
 class MockRemoteEngine:
     """A mock class used for capturing the arguments with which the
@@ -338,7 +319,6 @@ class MockRemoteEngine:
         if program:
             return program.result
 
-
 class MockWriteScriptResults:
     """A mock class used for capturing the arguments with which the
     write_script_results function is being called."""
@@ -350,7 +330,6 @@ class MockWriteScriptResults:
     def write_script_results(self, output):
         self.called = True
         self.output = output
-
 
 TEST_SCRIPT = """\
 name template_1x2_X8_01     # Name of the program
@@ -410,9 +389,7 @@ class TestRunBlackbirdScript:
         # Check that the write_script_results function was not called
         assert not mocked_write_script_results.called
 
-
 test_samples = [1, 2, 3, 4]
-
 
 class MockRemoteEngineIntegration:
     """A mock class used for capturing the arguments with which the
@@ -426,7 +403,6 @@ class MockRemoteEngineIntegration:
     def run(self, program):
         if program:
             return Result(test_samples)
-
 
 class TestRunBlackbirdScriptIntegration:
     """Tests for the run_blackbird_script function that integrate multiple
@@ -480,7 +456,6 @@ class TestRunBlackbirdScriptIntegration:
         out, _ = capsys.readouterr()
         assert out == "Executing program on remote hardware...\n"
         assert results_from_file == str(Result(test_samples).samples)
-
 
 class TestWriteScriptResults:
     """Tests for the write_script_results function."""

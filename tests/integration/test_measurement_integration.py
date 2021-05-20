@@ -99,7 +99,7 @@ class TestPostselection:
     def test_measure_fock(self, setup_eng, cutoff, batch_size):
         """Test that Fock post-selection on Fock states
         exiting one arm of a beamsplitter results in conservation
-        of photon number in the other."""
+        of photon number in the other. """
         total_photons = cutoff - 1
         for n in range(cutoff):
             eng, prog = setup_eng(2)
@@ -110,9 +110,7 @@ class TestPostselection:
                 ops.MeasureFock(select=n // 2) | q[0]
                 ops.MeasureFock() | q[1]
 
-            eng.run(
-                prog
-            )  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
+            eng.run(prog)  # FIXME measurements above commute, but they should not since the postselection may fail if the other one is performed first!
             photons_out = sum([i.val for i in q])
 
             if batch_size is not None:
@@ -122,7 +120,7 @@ class TestPostselection:
 
     @pytest.mark.backends("gaussian")
     def test_embed_graph(self, setup_eng, hbar):
-        """Test that an embedded graph has the right total mean photon number."""
+        """Test that an embedded graph has the right total mean photon number. """
 
         eng, prog = setup_eng(2)
         A = np.array([[0.0, 1.0], [1.0, 0.0]])
@@ -135,6 +133,7 @@ class TestPostselection:
         n_mean_tot = np.trace(cov / (hbar / 2) - np.identity(4)) / 4
         expected = 2 * n_mean_per_mode
         assert np.allclose(n_mean_tot, expected)
+
 
     @pytest.mark.backends("gaussian")
     def test_coherent_state_has_photons(self, setup_eng, hbar):
@@ -210,9 +209,9 @@ class TestDarkCounts:
             ops.MeasureFock(dark_counts=dark_counts) | q
 
         with pytest.raises(
-            ValueError,
-            match="The number of dark counts must be equal to the number of measured modes",
-        ):
+                ValueError,
+                match="The number of dark counts must be equal to the number of measured modes",
+            ):
             eng.run(prog)
 
     @pytest.mark.backends("fock")
@@ -226,7 +225,7 @@ class TestDarkCounts:
             ops.Fock(n[0]) | q[0]
             ops.Fock(n[1]) | q[1]
             with pytest.raises(
-                NotImplementedError,
-                match="Post-selection cannot be used together with dark counts",
-            ):
+                    NotImplementedError,
+                    match="Post-selection cannot be used together with dark counts",
+                ):
                 ops.MeasureFock(select=1, dark_counts=2) | q

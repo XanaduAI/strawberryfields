@@ -16,11 +16,9 @@ r""" Tests for the file tfbackend/ops.py"""
 import pytest
 
 import numpy as np
-
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
 from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
-
 
 @pytest.mark.backends("tf")
 class TestTFOps:
@@ -32,9 +30,9 @@ class TestTFOps:
         when prepared with initial fock states"""
 
         zero_photon_state = np.zeros([cutoff])
-        zero_photon_state[0] = 1.0
+        zero_photon_state[0] = 1.
         one_photon_state = np.zeros([cutoff])
-        one_photon_state[1] = 1.0
+        one_photon_state[1] = 1.
 
         # create a single-photon state in the second mode
         state = np.outer(zero_photon_state, one_photon_state)
@@ -54,18 +52,15 @@ class TestTFOps:
 
         assert np.allclose(reduced_dm, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize(
-        "modes,einstr",
-        [
-            ([0], "abccee->ab"),
-            ([1], "aacdee->cd"),
-            ([2], "aaccef->ef"),
-            ([0, 1], "abcdee->abcd"),
-            ([0, 2], "abccef->abef"),
-            ([1, 2], "aacdef->cdef"),
-            ([0, 1, 2], "abcdef->abcdef"),
-        ],
-    )
+    @pytest.mark.parametrize("modes,einstr", [
+        ([0], "abccee->ab"),
+        ([1], "aacdee->cd"),
+        ([2], "aaccef->ef"),
+        ([0, 1], "abcdee->abcd"),
+        ([0, 2], "abccef->abef"),
+        ([1, 2], "aacdef->cdef"),
+        ([0, 1, 2], "abcdef->abcdef")
+    ])
     def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, einstr, tol):
         """Test that reduced_density_matrix returns the correct reduced density matrices."""
         state = np.zeros([cutoff, cutoff, cutoff])

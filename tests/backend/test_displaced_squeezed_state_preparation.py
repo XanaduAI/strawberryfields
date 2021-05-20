@@ -46,7 +46,9 @@ class TestRepresentationIndependent:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_displaced_squeezed_with_no_squeezing(self, setup_backend, mag_alpha, phase_alpha, tol):
+    def test_displaced_squeezed_with_no_squeezing(
+        self, setup_backend, mag_alpha, phase_alpha, tol
+    ):
         """Tests if a squeezed coherent state with no squeezing is equal to a coherent state."""
         r = phi = 0
         alpha = mag_alpha * np.exp(1j * phase_alpha)

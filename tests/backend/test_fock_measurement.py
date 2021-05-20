@@ -31,11 +31,8 @@ class TestGaussianRepresentation:
 
         backend = setup_backend(3)
 
-        with pytest.warns(
-            Warning,
-            match="Cannot simulate non-Gaussian states. Conditional state after "
-            "Fock measurement has not been updated.",
-        ):
+        with pytest.warns(Warning, match="Cannot simulate non-Gaussian states. Conditional state after "
+                                         "Fock measurement has not been updated."):
             backend.measure_fock([0, 1], shots=5)
 
 
@@ -49,18 +46,12 @@ class TestFockRepresentation:
 
         backend = setup_backend(3)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="{} backend currently does not support "
-            "shots != 1 for Fock measurement".format(backend.short_name),
-        ):
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for Fock measurement".format(backend.short_name)):
             backend.measure_fock([0, 1], shots=5)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="{} backend currently does not support "
-            "shots != 1 for Fock measurement".format(backend.short_name),
-        ):
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for Fock measurement".format(backend.short_name)):
             backend.measure_fock([0, 1], shots=-5)
 
     def shots_not_implemented_homodyne(self, setup_backend):
@@ -69,18 +60,12 @@ class TestFockRepresentation:
 
         backend = setup_backend(3)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="{} backend currently does not support "
-            "shots != 1 for homodyne measurement".format(backend.short_name),
-        ):
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for homodyne measurement".format(backend.short_name)):
             backend.measure_homodyne([0, 1], shots=5)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="{} backend currently does not support "
-            "shots != 1 for homodyne measurement".format(backend.short_name),
-        ):
+        with pytest.raises(NotImplementedError, match="{} backend currently does not support "
+                                                      "shots != 1 for homodyne measurement".format(backend.short_name)):
             backend.measure_homodyne([0, 1], shots=-5)
 
     def test_normalized_conditional_states(self, setup_backend, cutoff, pure, tol):
@@ -138,9 +123,7 @@ class TestFockRepresentation:
             ref_result = n[meas_modes]
 
             if batch_size is not None:
-                ref_result = np.array([[i] * batch_size for i in ref_result]).T.reshape(
-                    (batch_size, 1, ref_result.shape[0])
-                )
+                ref_result = np.array([[i] * batch_size for i in ref_result]).T.reshape((batch_size, 1, ref_result.shape[0]))
             assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
 
@@ -158,7 +141,7 @@ class TestRepresentationIndependent:
             # Circuit to prepare two mode squeezed vacuum
             backend.squeeze(-r, 0, 0)
             backend.squeeze(r, 0, 1)
-            backend.beamsplitter(np.pi / 4, np.pi, 0, 1)
+            backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_fock(meas_modes)
             if batch_size is not None:
@@ -175,6 +158,7 @@ class TestRepresentationIndependent:
 
             meas = backend.measure_fock([0, 1, 2])[0]
             assert np.all(np.array(meas) == 0)
+
 
     def test_coherent_state_has_photons(self, setup_backend, pure):
         """Test that a coherent state with a mean photon number of 4 and sampled NUM_REPEATS times will produce photons"""

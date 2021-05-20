@@ -56,7 +56,6 @@ from strawberryfields.logger import logging_handler_defined, default_handler, cr
 
 modules_contain_logging = [job, connection, engine]
 
-
 @pytest.fixture(autouse=True)
 def reset_logging(pytestconfig):
     """Reset the logging specific configurations such as handlers or levels as
@@ -116,7 +115,6 @@ class TestLogger:
         assert logger.level == logging.INFO
         assert logging_handler_defined(logger)
         assert logger.handlers[0] == default_handler
-
 
 class TestLoggerIntegration:
     """Tests that the SF logger integrates well with user defined logging

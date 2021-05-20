@@ -10,7 +10,7 @@ circuit = sf.Program(1)
 tf_alpha = tf.Variable(0.1)
 tf_phi = tf.Variable(0.1)
 
-alpha, phi = circuit.params("alpha", "phi")
+alpha, phi = circuit.params('alpha', 'phi')
 
 with circuit.context as q:
     Dgate(alpha, phi) | q[0]
@@ -26,7 +26,7 @@ for step in range(steps):
 
     with tf.GradientTape() as tape:
         # execute the engine
-        results = eng.run(circuit, args={"alpha": tf_alpha, "phi": tf_phi})
+        results = eng.run(circuit, args={'alpha': tf_alpha, 'phi': tf_phi})
         # get the probability of fock state |1>
         prob = results.state.fock_prob([1])
         # negative sign to maximize prob

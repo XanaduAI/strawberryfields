@@ -91,40 +91,36 @@ class TestProgramGateInteraction:
 
     def test_create_or_exception(self):
         """_New_modes must not be called via its __or__ method"""
-        with pytest.raises(ValueError, match="Wrong number of subsystems"):
+        with pytest.raises(ValueError, match='Wrong number of subsystems'):
             ops._New_modes(1).__or__(0)
 
     def test_create_outside_program_context(self):
         """New() must be only called inside a Program context."""
-        with pytest.raises(RuntimeError, match="can only be called inside a Program context"):
+        with pytest.raises(RuntimeError, match='can only be called inside a Program context'):
             ops.New()
 
     def test_create_non_positive_integer(self, prog):
         """number of new modes must be a positive integer"""
-        with pytest.raises(ValueError, match="is not a positive integer"):
+        with pytest.raises(ValueError, match='is not a positive integer'):
             ops.New(-2)
-        with pytest.raises(ValueError, match="is not a positive integer"):
+        with pytest.raises(ValueError, match='is not a positive integer'):
             ops.New(1.5)
 
     def test_create_locked(self, prog):
         """No new modes can be created in a locked Program."""
         prog.lock()
-        with pytest.raises(
-            CircuitError, match="The Program is locked, no new subsystems can be created"
-        ):
+        with pytest.raises(CircuitError, match='The Program is locked, no new subsystems can be created'):
             ops.New(1)
 
     def test_delete_locked(self, prog):
         """No modes can be deleted in a locked Program."""
         prog.lock()
-        with pytest.raises(
-            CircuitError, match="The Program is locked, no more Commands can be appended to it"
-        ):
+        with pytest.raises(CircuitError, match='The Program is locked, no more Commands can be appended to it'):
             ops.Del | 0
 
     def test_delete_not_existing(self, prog):
         """deleting nonexistent modes not allowed"""
-        with pytest.raises(RegRefError, match="does not exist"):
+        with pytest.raises(RegRefError, match='does not exist'):
             ops.Del.__or__(100)
 
     def test_delete(self, prog):
@@ -140,7 +136,7 @@ class TestProgramGateInteraction:
         """test creating a mode"""
         q = prog.register
         assert prog.num_subsystems == 2
-        (new_q,) = ops.New(1)
+        new_q, = ops.New(1)
         assert new_q.active
         assert prog.num_subsystems == 3
 
@@ -148,7 +144,7 @@ class TestProgramGateInteraction:
         """deleting a mode that was already deleted"""
         q = prog.register
         ops.Del | q[1]
-        with pytest.raises(RegRefError, match="has already been deleted"):
+        with pytest.raises(RegRefError, match='has already been deleted'):
             ops.Del.__or__(1)
 
     def test_create_delete_multiple_modes(self):

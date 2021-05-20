@@ -4,7 +4,7 @@ ipykernel
 sphinx==2.2.2
 m2r
 networkx>=2.0
-numpy>=1.19.2
+numpy>=1.20
 plotly
 quantum-blackbird
 scipy>=1.0.0
@@ -13,5 +13,5 @@ sphinx-autodoc-typehints==1.10.3
 sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2
-tensorflow==2.4.0
+tensorflow==2.2.0
 toml

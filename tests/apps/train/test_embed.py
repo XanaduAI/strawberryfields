@@ -70,7 +70,7 @@ class TestExpFeatures:
 
     @pytest.mark.parametrize("m", range(2, 5))
     def test_exp_features_shape(self, dim, m):
-        """Tests that the weights and jacobian have the correct shape for a range of different
+        """Tests that the weights and jacobian have the correct shape for a range of different 
         sizes for the input features matrix"""
         features = np.ones((m, dim))
         expf = embed.ExpFeatures(features)

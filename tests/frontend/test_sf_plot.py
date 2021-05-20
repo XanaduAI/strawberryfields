@@ -80,8 +80,8 @@ def create_example_fock_chart(state, modes, cutoff):
     xlabels = [fr"$|{i}\rangle$" for i in range(0, cutoff, 1)]
 
     # mean photon as latex
-    mean_photon_text1 = "$\\langle \\hat{n} \\rangle=" + f"{mean[0]}" + "$"
-    mean_photon_text2 = "$\\langle \\hat{n} \\rangle=" + f"{mean[1]}" + "$"
+    mean_photon_text1 = '$\\langle \\hat{n} \\rangle=' + f"{mean[0]}" + '$'
+    mean_photon_text2 = '$\\langle \\hat{n} \\rangle=' + f"{mean[1]}" + '$'
     data = [
         {
             "type": "bar",
@@ -226,7 +226,6 @@ def create_example_quad_chart(state, mode, xvec, pvec):
     quad_chart = {"data": data, "layout": layout, "config": config}
     return quad_chart
 
-
 def get_example_state(num_subsystems, cutoff):
     """Creates an example state used in tests."""
     prog = sf.Program(num_subsystems)
@@ -243,7 +242,6 @@ def get_example_state(num_subsystems, cutoff):
     )
     backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
     return backend.state()
-
 
 class TestFockProbPlotting:
     """Test the Fock state probabilities plotting function."""
@@ -302,7 +300,7 @@ class TestFockProbPlotting:
     def test_expected_args_to_plot_two_modes(self, monkeypatch):
         """Test that given a program the expected values would be plotted for
         two modes."""
-        modes = [0, 1]
+        modes = [0,1]
         num_subsystems = len(modes)
 
         cutoff = 5
@@ -311,7 +309,9 @@ class TestFockProbPlotting:
         mean = [state.mean_photon(mode)[0] for mode in modes]
         all_probs = state.all_fock_probs()
 
-        photon_dists = [np.sum(all_probs, i).tolist() for i in range(num_subsystems - 1, -1, -1)]
+        photon_dists = [
+            np.sum(all_probs, i).tolist() for i in range(num_subsystems - 1, -1, -1)
+        ]
 
         arg_store = []
         with monkeypatch.context() as m:
@@ -326,9 +326,7 @@ class TestFockProbPlotting:
 
             mean_res = [state_res.mean_photon(mode)[0] for mode in modes]
             all_probs_res = state_res.all_fock_probs()
-            photon_dists_res = [
-                np.sum(all_probs_res, mode).tolist() for mode in reversed(modes_res)
-            ]
+            photon_dists_res = [np.sum(all_probs_res, mode).tolist() for mode in reversed(modes_res)]
 
             # Check the results to be plotted
             assert np.allclose(mean_res, mean)
@@ -340,7 +338,7 @@ class TestFockProbPlotting:
         """Test the chart generated for a two-mode system when plotting the
         Fock state probabilities."""
         prog = sf.Program(2)
-        eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
+        eng = sf.Engine('fock', backend_options={"cutoff_dim":5})
 
         with prog.context as q:
             Vac | q[0]

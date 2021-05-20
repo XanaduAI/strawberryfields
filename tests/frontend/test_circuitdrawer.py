@@ -46,15 +46,7 @@ COLUMN_SPACING = "@C={0}"
 ROW_SPACING = "@R={0}"
 QUANTUM_WIRE = r"\qw"
 INIT_DOCUMENT = (
-    DOCUMENT_CLASS
-    + "\n"
-    + EMPTY_PAGESTYLE
-    + "\n"
-    + QCIRCUIT_PACKAGE
-    + "\n"
-    + BEGIN_DOCUMENT
-    + "\n"
-    + CIRCUIT_START
+    DOCUMENT_CLASS + "\n" + EMPTY_PAGESTYLE + "\n" + QCIRCUIT_PACKAGE + "\n" + BEGIN_DOCUMENT + "\n" + CIRCUIT_START
 )
 
 
@@ -263,7 +255,9 @@ class TestEngineIntegration:
 
         assert drawer._circuit_matrix == expected_circuit_matrix
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_fourier(self, tmpdir):
         prog = sf.Program(3)
 
@@ -286,7 +280,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == fourier_output, failure_message(result, fourier_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_x_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -309,7 +305,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_test_0_output, failure_message(result, x_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_x_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -332,7 +330,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_test_1_output, failure_message(result, x_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_xx_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -356,7 +356,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == xx_test_1_output, failure_message(result, xx_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_x_z_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -380,7 +382,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_z_test_0_output, failure_message(result, x_z_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_x_0_z_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -404,7 +408,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == x_0_z_1_test_output, failure_message(result, x_0_z_1_test_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_z_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -427,7 +433,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == z_test_0_output, failure_message(result, z_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_z_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -450,7 +458,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == z_test_1_output, failure_message(result, z_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_zz_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -474,7 +484,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == zz_test_1_output, failure_message(result, zz_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_cx(self, tmpdir):
         prog = sf.Program(3)
 
@@ -497,7 +509,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == cx_test_output, failure_message(result, cx_test_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_cz(self, tmpdir):
         prog = sf.Program(3)
 
@@ -520,7 +534,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == cz_test_output, failure_message(result, cz_test_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_bs(self, tmpdir):
         prog = sf.Program(3)
 
@@ -543,7 +559,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == bs_test_output, failure_message(result, bs_test_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_s2(self, tmpdir):
         prog = sf.Program(3)
 
@@ -566,7 +584,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == s2_test_output, failure_message(result, s2_test_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_ck(self, tmpdir):
         prog = sf.Program(3)
 
@@ -589,7 +609,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == ck_test_output, failure_message(result, ck_test_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_k_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -612,7 +634,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == k_test_0_output, failure_message(result, k_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_k_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -635,7 +659,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == k_test_1_output, failure_message(result, k_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_v_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -658,7 +684,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == v_test_0_output, failure_message(result, v_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_v_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -681,7 +709,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == v_test_1_output, failure_message(result, v_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_p_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -704,7 +734,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == p_test_0_output, failure_message(result, p_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_p_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -727,7 +759,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == p_test_1_output, failure_message(result, p_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_r_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -750,7 +784,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == r_test_0_output, failure_message(result, r_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_r_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -773,7 +809,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == r_test_1_output, failure_message(result, r_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_s_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -796,7 +834,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == s_test_0_output, failure_message(result, s_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_s_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -819,7 +859,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == s_test_1_output, failure_message(result, s_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_d_0(self, tmpdir):
         prog = sf.Program(3)
 
@@ -842,7 +884,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == d_test_0_output, failure_message(result, d_test_0_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_d_1(self, tmpdir):
         prog = sf.Program(3)
 
@@ -865,7 +909,9 @@ class TestEngineIntegration:
         result = prog.draw_circuit(tex_dir=tmpdir)[1]
         assert result == d_test_1_output, failure_message(result, d_test_1_output)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_not_drawable(self, tmpdir):
         prog = sf.Program(3)
 
@@ -875,7 +921,9 @@ class TestEngineIntegration:
         with pytest.raises(NotDrawableException):
             prog.draw_circuit(tex_dir=tmpdir)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_unsupported_gate(self, tmpdir):
         prog = sf.Program(3)
 
@@ -895,7 +943,9 @@ class TestEngineIntegration:
         with pytest.raises(UnsupportedGateException):
             prog.draw_circuit(tex_dir=tmpdir)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_compile(self, tmpdir):
         prog = sf.Program(3)
 
@@ -906,13 +956,17 @@ class TestEngineIntegration:
 
         document = prog.draw_circuit(tex_dir=tmpdir)[0]
 
-        file_name = "output_{0}.tex".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
+        file_name = "output_{0}.tex".format(
+            datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p")
+        )
         assert document.split("/")[-1] == file_name
 
         output_file = tmpdir.join(file_name)
         assert os.path.isfile(output_file)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6")
+    @pytest.mark.skipif(
+        sys.version_info < (3, 6), reason="tmpdir fixture requires Python >=3.6"
+    )
     def test_compile_custom_dir(self, tmpdir):
         prog = sf.Program(3)
 
@@ -924,7 +978,9 @@ class TestEngineIntegration:
         subdir = tmpdir.join("subdir")
         document = prog.draw_circuit(tex_dir=subdir)[0]
 
-        file_name = "output_{0}.tex".format(datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p"))
+        file_name = "output_{0}.tex".format(
+            datetime.datetime.now().strftime("%Y_%B_%d_%I:%M%p")
+        )
         assert document.split("/")[-1] == file_name
 
         output_file = subdir.join(file_name)

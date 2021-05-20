@@ -28,7 +28,8 @@ class TestResult:
     """Tests for the ``Result`` class."""
 
     def test_stateless_result_raises_on_state_access(self):
-        """Tests that `result.state` raises an error for a stateless result."""
+        """Tests that `result.state` raises an error for a stateless result.
+        """
         result = Result(np.array([[1, 2], [3, 4]]), is_stateful=False)
 
         with pytest.raises(
@@ -78,3 +79,4 @@ class TestResult:
         assert "shots" not in out
         assert "timebins" not in out
         assert f"contains state={stateful}" in out
+

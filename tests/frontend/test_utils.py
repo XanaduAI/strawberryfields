@@ -50,6 +50,7 @@ def prog():
     return sf.Program(2)
 
 
+
 # ===================================================================================
 # Initial states tests
 # ===================================================================================
@@ -144,9 +145,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("r_d, phi_d, r_s, phi_s", zip(R_D, PHI_D, R, PHI))
     def test_displaced_squeezed_state_gaussian(self, r_d, phi_d, r_s, phi_s, hbar, tol):
         """test displaced squeezed state returns correct means and covariance"""
-        means, cov = utils.displaced_squeezed_state(
-            r_d, phi_d, r_s, phi_s, basis="gaussian", hbar=hbar
-        )
+        means, cov = utils.displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="gaussian", hbar=hbar)
 
         a = r_d * np.exp(1j * phi_d)
         means_expected = np.array([[a.real, a.imag]]) * np.sqrt(2 * hbar)
@@ -169,9 +168,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("r_d, phi_d, r_s, phi_s", zip(R_D, PHI_D, R, PHI))
     def test_displaced_squeezed_state_fock(self, r_d, phi_d, r_s, phi_s, hbar, cutoff, tol):
         """test displaced squeezed state returns correct Fock basis state vector"""
-        state = utils.displaced_squeezed_state(
-            r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        state = utils.displaced_squeezed_state(r_d, phi_d, r_s, phi_s, basis="fock", fock_dim=cutoff, hbar=hbar)
         a = r_d * np.exp(1j * phi_d)
 
         if r_s == 0:
@@ -193,9 +190,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("r_d, phi_d, phi_s", zip(R_D, PHI_D, PHI))
     def test_displaced_squeezed_fock_no_squeezing(self, r_d, phi_d, phi_s, hbar, cutoff, tol):
         """test displaced squeezed state returns coherent state when there is no squeezing"""
-        state = utils.displaced_squeezed_state(
-            r_d, phi_d, 0, phi_s, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        state = utils.displaced_squeezed_state(r_d, phi_d, 0, phi_s, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         a = r_d * np.exp(1j * phi_d)
         n = np.arange(cutoff)
@@ -206,9 +201,7 @@ class TestInitialStates:
     @pytest.mark.parametrize("r, phi", zip(R, PHI))
     def test_displaced_squeezed_fock_no_displacement(self, r, phi, hbar, cutoff, tol):
         """test displaced squeezed state returns squeezed state when there is no displacement"""
-        state = utils.displaced_squeezed_state(
-            0, 0, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
-        )
+        state = utils.displaced_squeezed_state(0, 0, r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
 
         n = np.arange(cutoff)
         kets = (np.sqrt(fac(2 * (n // 2))) / (2 ** (n // 2) * fac(n // 2))) * (
@@ -573,18 +566,8 @@ class TestEngineUtilityFunctions:
             *[cutoff] * 4
         )  # (2^2)^4 -> 2^8 -> (2^2)^4
 
-        assert np.allclose(
-            dm,
-            utils.program_functions._unvectorize(utils.program_functions._vectorize(dm), 2),
-            atol=tol,
-            rtol=0,
-        )
-        assert np.allclose(
-            dm2,
-            utils.program_functions._vectorize(utils.program_functions._unvectorize(dm2, 2)),
-            atol=tol,
-            rtol=0,
-        )
+        assert np.allclose(dm, utils.program_functions._unvectorize(utils.program_functions._vectorize(dm), 2), atol=tol, rtol=0)
+        assert np.allclose(dm2, utils.program_functions._vectorize(utils.program_functions._unvectorize(dm2, 2)), atol=tol, rtol=0)
 
     def test_interleaved_identities(self, tol):
         """Test interleaved utility function"""

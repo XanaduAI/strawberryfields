@@ -38,10 +38,14 @@ class TestFockBasisMultimode:
         """Test multimode ket preparation when modes are permuted"""
         backend = setup_backend(4)
 
-        random_ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        random_ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket0 = random_ket0 / np.linalg.norm(random_ket0)
 
-        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
 
         random_ket = np.outer(random_ket0, random_ket1)
@@ -59,10 +63,14 @@ class TestFockBasisMultimode:
         """Test single and multimode ket preparation"""
         backend = setup_backend(4)
 
-        random_ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        random_ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket0 = random_ket0 / np.linalg.norm(random_ket0)
 
-        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
+        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
+            -1, 1, cutoff
+        )
         random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
 
         random_ket = np.outer(random_ket0, random_ket1)
@@ -79,7 +87,9 @@ class TestFockBasisMultimode:
         multi_mode_preparation_dm = state.dm()
         multi_mode_preparation_probs = np.array(state.all_fock_probs())
 
-        assert np.allclose(single_mode_preparation_dm, multi_mode_preparation_dm, atol=tol, rtol=0)
+        assert np.allclose(
+            single_mode_preparation_dm, multi_mode_preparation_dm, atol=tol, rtol=0
+        )
         assert np.allclose(
             single_mode_preparation_probs,
             multi_mode_preparation_probs,
@@ -91,7 +101,9 @@ class TestFockBasisMultimode:
             single_mode_preparation_dm = single_mode_preparation_dm[0]
             multi_mode_preparation_dm = multi_mode_preparation_dm[0]
 
-        assert np.all(single_mode_preparation_dm.shape == multi_mode_preparation_dm.shape)
+        assert np.all(
+            single_mode_preparation_dm.shape == multi_mode_preparation_dm.shape
+        )
 
     def test_compare_single_mode_and_multimode_dm_preparation(
         self, setup_backend, batch_size, pure, cutoff, tol
@@ -99,11 +111,15 @@ class TestFockBasisMultimode:
         """Compare the results of a successive single mode preparations
         and a multi mode preparation of a product state."""
         backend = setup_backend(4)
-        random_rho0 = np.random.normal(size=[cutoff] * 2) + 1j * np.random.normal(size=[cutoff] * 2)
+        random_rho0 = np.random.normal(size=[cutoff] * 2) + 1j * np.random.normal(
+            size=[cutoff] * 2
+        )
         random_rho0 = np.dot(random_rho0.conj().T, random_rho0)
         random_rho0 = random_rho0 / random_rho0.trace()
 
-        random_rho1 = np.random.normal(size=[cutoff] * 2) + 1j * np.random.normal(size=[cutoff] * 2)
+        random_rho1 = np.random.normal(size=[cutoff] * 2) + 1j * np.random.normal(
+            size=[cutoff] * 2
+        )
         random_rho1 = np.dot(random_rho1.conj().T, random_rho1)
         random_rho1 = random_rho1 / random_rho1.trace()
         random_dm = np.outer(random_rho0, random_rho1)
@@ -137,13 +153,17 @@ class TestFockBasisMultimode:
         multi_mode_preparation_31_mode_1 = backend.state(modes=1).dm()
         multi_mode_preparation_31_mode_2 = backend.state(modes=2).dm()
         multi_mode_preparation_31_mode_3 = backend.state(modes=3).dm()
-        multi_mode_preparation_31_probs = np.array(backend.state(modes=[3, 1]).all_fock_probs())
+        multi_mode_preparation_31_probs = np.array(
+            backend.state(modes=[3, 1]).all_fock_probs()
+        )
 
         single_mode_vac = np.zeros((cutoff, cutoff), dtype=np.complex128)
         single_mode_vac.itemset(0, 1.0 + 0.0j)
 
         assert np.allclose(random_dm, single_mode_preparation_dm, atol=tol, rtol=0)
-        assert np.allclose(multi_mode_preparation_dm, single_mode_preparation_dm, atol=tol, rtol=0)
+        assert np.allclose(
+            multi_mode_preparation_dm, single_mode_preparation_dm, atol=tol, rtol=0
+        )
         assert np.allclose(
             multi_mode_preparation_from_matrix_dm,
             single_mode_preparation_dm,
@@ -151,10 +171,18 @@ class TestFockBasisMultimode:
             rtol=0,
         )
 
-        assert np.allclose(multi_mode_preparation_31_mode_0, single_mode_vac, atol=tol, rtol=0)
-        assert np.allclose(multi_mode_preparation_31_mode_1, random_rho1, atol=tol, rtol=0)
-        assert np.allclose(multi_mode_preparation_31_mode_2, single_mode_vac, atol=tol, rtol=0)
-        assert np.allclose(multi_mode_preparation_31_mode_3, random_rho0, atol=tol, rtol=0)
+        assert np.allclose(
+            multi_mode_preparation_31_mode_0, single_mode_vac, atol=tol, rtol=0
+        )
+        assert np.allclose(
+            multi_mode_preparation_31_mode_1, random_rho1, atol=tol, rtol=0
+        )
+        assert np.allclose(
+            multi_mode_preparation_31_mode_2, single_mode_vac, atol=tol, rtol=0
+        )
+        assert np.allclose(
+            multi_mode_preparation_31_mode_3, random_rho0, atol=tol, rtol=0
+        )
 
         # also check the fock probabilities to catch errors in both the preparation and state() the would cancel each other out
         assert np.allclose(
@@ -179,7 +207,9 @@ class TestFockBasisMultimode:
         if batch_size is not None:
             single_mode_preparation_dm = single_mode_preparation_dm[0]
             multi_mode_preparation_dm = multi_mode_preparation_dm[0]
-            multi_mode_preparation_from_matrix_dm = multi_mode_preparation_from_matrix_dm[0]
+            multi_mode_preparation_from_matrix_dm = multi_mode_preparation_from_matrix_dm[
+                0
+            ]
 
         assert np.all(random_dm.shape == single_mode_preparation_dm.shape)
         assert np.all(random_dm.shape == multi_mode_preparation_dm.shape)
@@ -197,18 +227,24 @@ class TestFockBasisMultimode:
         )  # two mode random state
         random_rho = np.dot(random_rho.conj().T, random_rho)
         random_rho = random_rho / random_rho.trace()
-        random_rho = random_rho.reshape([cutoff] * 4)  # reshape for easier comparison later
+        random_rho = random_rho.reshape(
+            [cutoff] * 4
+        )  # reshape for easier comparison later
 
         # test the state preparation on the first two modes
         backend.prepare_dm_state(random_rho, [0, 1])
         multi_mode_preparation_with_modes_ordered = backend.state([0, 1]).dm()
-        assert np.allclose(multi_mode_preparation_with_modes_ordered, random_rho, atol=tol, rtol=0)
+        assert np.allclose(
+            multi_mode_preparation_with_modes_ordered, random_rho, atol=tol, rtol=0
+        )
 
         # test the state preparation on two other modes that are not in order
         backend.reset(pure=pure)
         backend.prepare_dm_state(random_rho, [1, 2])
         multi_mode_preparation_with_modes_inverted = backend.state([1, 2]).dm()
-        assert np.allclose(multi_mode_preparation_with_modes_inverted, random_rho, atol=tol, rtol=0)
+        assert np.allclose(
+            multi_mode_preparation_with_modes_inverted, random_rho, atol=tol, rtol=0
+        )
 
         # test various subsets of subsystems in various orders
         for subsystems in list(itertools.permutations(range(N), 2)):
@@ -223,16 +259,22 @@ class TestFockBasisMultimode:
 
             assert np.all(random_rho.shape == dm.shape)
 
-    def test_fast_state_prep_on_all_modes(self, setup_backend, batch_size, pure, cutoff, tol):
+    def test_fast_state_prep_on_all_modes(
+        self, setup_backend, batch_size, pure, cutoff, tol
+    ):
         """Tests if a random multi mode ket state is correctly prepared with
         the shortcut method on all modes."""
         backend = setup_backend(4)
         N = 4
-        random_ket = np.random.normal(size=[cutoff] * N) + 1j * np.random.normal(size=[cutoff] * N)
+        random_ket = np.random.normal(size=[cutoff] * N) + 1j * np.random.normal(
+            size=[cutoff] * N
+        )
         random_ket = random_ket / np.linalg.norm(random_ket)
 
         backend.prepare_dm_state(random_ket, modes=range(N))
-        all_mode_preparation_ket = backend.state().ket()  # Returns None if the state if mixed
+        all_mode_preparation_ket = (
+            backend.state().ket()
+        )  # Returns None if the state if mixed
 
         assert np.allclose(all_mode_preparation_ket, random_ket, atol=tol, rtol=0)
 
@@ -267,13 +309,11 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state([1])
-        assert np.allclose(state.means(), means * np.sqrt(hbar / 2), atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov * hbar / 2, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # test that displaced squeezed states are unchanged
-        ex_means, ex_V = displaced_squeezed_state(
-            np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar
-        )
+        ex_means, ex_V = displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
         for i in [0, 2, 3]:
             state = backend.state([i])
             assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)
@@ -300,13 +340,11 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state([1, 3])
-        assert np.allclose(state.means(), means * np.sqrt(hbar / 2), atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov * hbar / 2, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # test that displaced squeezed states are unchanged
-        ex_means, ex_V = displaced_squeezed_state(
-            np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar
-        )
+        ex_means, ex_V = displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
         for i in [0, 2]:
             state = backend.state([i])
             assert np.allclose(state.means(), ex_means, atol=tol, rtol=0)
@@ -326,10 +364,12 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state()
-        assert np.allclose(state.means(), means * np.sqrt(hbar / 2), atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov * hbar / 2, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
-    def test_multimode_gaussian_random_state(self, setup_backend, batch_size, pure, tol, hbar):
+    def test_multimode_gaussian_random_state(
+        self, setup_backend, batch_size, pure, tol, hbar
+    ):
         """Test multimode Gaussian state preparation on a random state"""
         N = 4
         backend = setup_backend(N)
@@ -344,8 +384,8 @@ class TestGaussianMultimode:
 
         # test Gaussian state is correct
         state = backend.state()
-        assert np.allclose(state.means(), means * np.sqrt(hbar / 2), atol=tol, rtol=0)
-        assert np.allclose(state.cov(), cov * hbar / 2, atol=tol, rtol=0)
+        assert np.allclose(state.means(), means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), cov*hbar/2, atol=tol, rtol=0)
 
         # prepare Gaussian state in mode 2 and 1
         means2 = 2 * np.random.random(size=[4]) - 1
@@ -391,10 +431,9 @@ class TestGaussianMultimode:
 
         ex_cov[rows, cols] = cov2[rows2, cols2]
 
-        assert np.allclose(state.means(), ex_means * np.sqrt(hbar / 2), atol=tol, rtol=0)
-        assert np.allclose(state.cov(), ex_cov * hbar / 2, atol=tol, rtol=0)
-
-
+        assert np.allclose(state.means(), ex_means*np.sqrt(hbar/2), atol=tol, rtol=0)
+        assert np.allclose(state.cov(), ex_cov*hbar/2, atol=tol, rtol=0)
+        
 def from_xp(n):
     """Permutation to mode-like (x_1,p_1...x_n,p_n) ordering.
 
@@ -531,9 +570,7 @@ class TestBosonicMultimode:
             state.covs(), np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2, atol=tol, rtol=0
         )
 
-    def test_multimode_gaussian_random_state_with_replacement(
-        self, setup_backend, batch_size, pure, tol, hbar
-    ):
+    def test_multimode_gaussian_random_state_with_replacement(self, setup_backend, batch_size, pure, tol, hbar):
         """Test multimode Gaussian state preparation on a random state with replacement"""
         N = 4
         backend = setup_backend(N)

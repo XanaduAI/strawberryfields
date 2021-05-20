@@ -23,19 +23,18 @@ import numpy as np
 
 MAG_ALPHAS = np.linspace(0, 0.8, 3)
 
-
 class TestIsVacuum:
     """Common tests for all the backends."""
-
     @pytest.mark.parametrize("r", MAG_ALPHAS)
     def test_coherent_state(self, setup_backend, r, tol):
-        """Tests if a range of displaced states are within the expected tolerance from vacuum."""
+        """Tests if a range of displaced states are within the expected tolerance from vacuum.
+        """
         # fidelity of the displaced state with |0>
-        fid = np.exp(-np.abs(r) ** 2)
+        fid = np.exp(-np.abs(r)**2)
         # expected tolerance limit for the test
-        lim = np.abs(fid - 1)
+        lim = np.abs(fid-1)
 
         backend = setup_backend(1)
         backend.displacement(r, 0, 0)
-        assert not np.any(backend.is_vacuum(lim - tol))
-        assert np.all(backend.is_vacuum(lim + tol))
+        assert not np.any(backend.is_vacuum(lim-tol))
+        assert np.all(backend.is_vacuum(lim+tol))

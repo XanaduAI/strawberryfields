@@ -138,9 +138,7 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "squeeze", lambda r, phi, modes: None)
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
-        m.setattr(
-            dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]])
-        )
+        m.setattr(dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]]))
         m.setattr(dummy_backend, "state", lambda modes, shots: None)
         m.setattr(dummy_backend, "reset", lambda: None)
         dummy_backend.two_mode_squeeze = lambda r, phi, mode1, mode2: None
@@ -159,7 +157,9 @@ def print_fixtures(cutoff, hbar, batch_size):
 
 
 @pytest.fixture(params=backend_params)
-def setup_backend(request, cutoff, pure, batch_size):  # pylint: disable=redefined-outer-name
+def setup_backend(
+    request, cutoff, pure, batch_size
+):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, used to automatically create a backend of certain number of modes.
 
     This fixture should only be used in backend tests, as it bypasses Engine and
@@ -188,7 +188,9 @@ def setup_backend(request, cutoff, pure, batch_size):  # pylint: disable=redefin
 
 
 @pytest.fixture(params=eng_backend_params)
-def setup_backend_pars(request, cutoff, pure, batch_size):  # pylint: disable=redefined-outer-name
+def setup_backend_pars(
+    request, cutoff, pure, batch_size
+):  # pylint: disable=redefined-outer-name
     """Parameterized fixture, a container for the backend parameters.
 
     Every test that uses this fixture, or a fixture that depends on it
@@ -214,7 +216,6 @@ def setup_eng(setup_backend_pars):  # pylint: disable=redefined-outer-name
         return eng, prog
 
     return _setup_eng
-
 
 def pytest_runtest_setup(item):
     """Automatically skip tests if they are marked for only certain backends"""
