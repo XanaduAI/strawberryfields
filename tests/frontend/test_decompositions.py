@@ -380,6 +380,97 @@ class TestTriangularDecomposition:
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
+class TestRectangularCompactDecomposition:
+    """Tests for linear interferometer decomposition into rectangular grid of
+    phase-shifters and pairs of symmetric beamsplitters"""
+
+    def test_unitary_validation(self):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="The input matrix is not unitary"):
+            dec.rectangular_compact(A)
+
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(2), id="identity2"),
+            pytest.param(np.identity(2)[::-1], id="antiidentity2"),
+            pytest.param(haar_measure(2), id="random2"),
+            pytest.param(np.identity(4), id="identity4"),
+            pytest.param(np.identity(4)[::-1], id="antiidentity4"),
+            pytest.param(haar_measure(4), id="random4"),
+            pytest.param(np.identity(8), id="identity8"),
+            pytest.param(np.identity(8)[::-1], id="antiidentity8"),
+            pytest.param(haar_measure(8), id="random8"),
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+            pytest.param(np.identity(7), id="identity7"),
+            pytest.param(np.identity(7)[::-1], id="antiidentity7"),
+            pytest.param(haar_measure(7), id="random7")
+        ],
+    )
+    def test_decomposition(self, U, tol):
+        """This test checks the function :func:`dec.rectangular_symmetric` for
+        various unitary matrices.
+
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular_symmetric`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches the given unitary.
+        """
+        nmax, mmax = U.shape
+        assert nmax == mmax
+        phases = dec.rectangular_compact(U)
+        Uout = dec._rectangular_compact_recompose(phases)
+        assert np.allclose(U, Uout, atol=tol, rtol=0)
+
+class TestTriangularCompactDecomposition:
+    """Tests for linear interferometer decomposition into rectangular grid of
+    phase-shifters and pairs of symmetric beamsplitters"""
+
+    def test_unitary_validation(self):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="The input matrix is not unitary"):
+            dec.triangular_compact(A)
+
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(2), id="identity2"),
+            pytest.param(np.identity(2)[::-1], id="antiidentity2"),
+            pytest.param(haar_measure(2), id="random2"),
+            pytest.param(np.identity(4), id="identity4"),
+            pytest.param(np.identity(4)[::-1], id="antiidentity4"),
+            pytest.param(haar_measure(4), id="random4"),
+            pytest.param(np.identity(8), id="identity8"),
+            pytest.param(np.identity(8)[::-1], id="antiidentity8"),
+            pytest.param(haar_measure(8), id="random8"),
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+            pytest.param(np.identity(7), id="identity7"), 
+            pytest.param(np.identity(7)[::-1], id="antiidentity7"),
+            pytest.param(haar_measure(7), id="random7")
+        ],
+    )
+    def test_decomposition(self, U, tol):
+        """This test checks the function :func:`dec.rectangular_symmetric` for
+        various unitary matrices.
+
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular_symmetric`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches the given unitary.
+        """
+        nmax, mmax = U.shape
+        assert nmax == mmax
+        phases = dec.triangular_compact(U)
+        Uout = dec._triangular_compact_recompose(phases)
+        assert np.allclose(U, Uout, atol=tol, rtol=0)
 
 class TestWilliamsonDecomposition:
     """Tests for the Williamson decomposition"""
