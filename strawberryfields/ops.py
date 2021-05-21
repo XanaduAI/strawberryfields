@@ -2381,7 +2381,7 @@ class Interferometer(Decomposition):
             - ``'triangular'`` - triangular mesh
 
             - ``'triangular_compact'`` - triangular mesh, with two independant phase shifts
-             placed inside each MZI.
+              placed inside each MZI.
 
         drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
             such that they correspond to an identity operation, are removed.
