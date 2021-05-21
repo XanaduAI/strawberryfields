@@ -3,8 +3,43 @@
 <h3>New features since last release</h3>
 
 * "compact" decompositions as described in <https://arxiv.org/abs/2104.07561>,
- (``rectangle_compact`` and ``triangle_compact``) are now available in
- ``decompositions`` and as options in ``ops.Interferometer``. [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
+ (``rectangular_compact`` and ``triangular_compact``) are now available in
+ ``decompositions`` and as options in ``ops.Interferometer``. This decomposition
+ alllows for lower depth photonic circuits in physical devices by applying two 
+ independent phase shifts in parallel inside each Mach-Zehnder interferometer.
+ It reduces the layers of phase shifters from 2N+1 to N+2 for an N mode interferometer
+ when compared to e.g. ``rectangular_MZ``.
+
+ Examples:
+
+ ```python 
+  import numpy as np 
+  import strawberryfields.decompositions as dec 
+  from scipy.stats import unitary_group
+
+  # generate a 10x10 Haar random unitary
+  U = unitary_group.rvs(10)
+
+  # decompose unitary using rectangular_compact
+  phases = dec.rectangular_compact(U)
+
+  # check matrix can be reconstructed
+  Uout = dec._rectangular_compact_recompose(phases)
+  print(np.allclose(U, Uout))
+
+  # apply as an operation
+  from strawberryfields import Program, Engine
+  from strawberryfields.ops import Interferometer
+
+  prog = Program(10)
+  eng = Engine('gaussian')
+
+  with prog.context as q:
+      Interferometer(U, mesh='rectangular_compact') | q
+
+  eng.run(prog)
+ ```
+ [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
 
 <h3>Improvements</h3>
 
