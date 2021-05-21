@@ -384,6 +384,40 @@ class TestTriangularDecomposition:
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
+def _rectangular_compact_recompose(phases):
+    r"""Calculates the unitary of a rectangular compact interferometer,
+    using the phases provided in phases dict.
+
+    Args:
+        phases (dict):
+        where the keywords:
+        
+        * ``m``: the length of the matrix
+        * ``phi_ins``: parameters for the phase-shifters
+        * ``sigmas``: parameters for the sMZI
+        * ``deltas``: parameters for the sMZI
+        * ``phi_edges``: parameters for the edge phase shifters
+        * ``phi_outs``: parameters for the phase-shifters
+
+    Returns:
+        U (array) : unitary matrix of the interferometer
+    """
+    m = phases["m"]
+    U = np.eye(m, dtype=np.complex128)
+    for j in range(0, m - 1, 2):
+        phi = phases["phi_ins"][j]
+        U = dec.P(j, phi, m) @ U
+    for layer in range(m):
+        if (layer + m + 1) % 2 == 0:
+            phi_bottom = phases["phi_edges"][m - 1, layer]
+            U = dec.P(m - 1, phi_bottom, m) @ U
+        for mode in range(layer % 2, m - 1, 2):
+            delta = phases["deltas"][mode, layer]
+            sigma = phases["sigmas"][mode, layer]
+            U = dec.M(mode, sigma, delta, m) @ U
+    for j, phi_j in phases["phi_outs"].items():
+        U = dec.P(j, phi_j, m) @ U
+    return U
 
 class TestRectangularCompactDecomposition:
     """Tests for linear interferometer decomposition into rectangular grid of
@@ -428,8 +462,40 @@ class TestRectangularCompactDecomposition:
         nmax, mmax = U.shape
         assert nmax == mmax
         phases = dec.rectangular_compact(U)
-        Uout = dec._rectangular_compact_recompose(phases)
+        Uout = _rectangular_compact_recompose(phases)
         assert np.allclose(U, Uout, atol=tol, rtol=0)
+
+def _triangular_compact_recompose(phases):
+    r"""Calculates the unitary of a triangular compact interferometer,
+    using the phases provided in phases dict.
+
+    Args:
+        phases (dict):
+        where the keywords:
+        
+        * ``m``: the length of the matrix
+        * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
+        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``zetas``: parameter of the phase-shifter at the end of the mode
+
+    Returns:
+        U (array) : unitary matrix of the interferometer
+    """
+    m = phases["m"]
+    U = np.identity(m, dtype=np.complex128)
+    for j in range(m - 1):
+        phi_j = phases["phi_ins"][j]
+        U = dec.P(j + 1, phi_j, m) @ U
+        for k in range(j + 1):
+            n = j - k
+            delta = phases["deltas"][n, k]
+            sigma = phases["sigmas"][n, k]
+            U = dec.M(n, sigma, delta, m) @ U
+    for j in range(m):
+        zeta = phases["zetas"][j]
+        U = dec.P(j, zeta, m) @ U
+    return U
 
 
 class TestTriangularCompactDecomposition:
@@ -475,7 +541,7 @@ class TestTriangularCompactDecomposition:
         nmax, mmax = U.shape
         assert nmax == mmax
         phases = dec.triangular_compact(U)
-        Uout = dec._triangular_compact_recompose(phases)
+        Uout = _triangular_compact_recompose(phases)
         assert np.allclose(U, Uout, atol=tol, rtol=0)
 
 
