@@ -670,7 +670,7 @@ def P(j, phi, m):
 
 
 def triangular_compact(U, rtol=1e-12, atol=1e-12):
-    r"""Reck decomposition of a unitary matrix with sMZIs and phase-shifters, as given in FIG. 2 and "The Reck Scheme" section of (arXiv:2104.0756).
+    r"""Triangular decomposition of a unitary matrix with sMZIs and phase-shifters, as given in FIG. 2 and "The Reck Scheme" section of (arXiv:2104.0756).
 
     Args:
         U (array): unitary matrix
@@ -739,43 +739,10 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
     return phases
 
 
-def _triangular_compact_recompose(phases):
-    r"""Calculates the unitary of a triangular compact interferometer,
-    using the phases provided in phases dict.
-
-    Args:
-        phases (dict):
-        where the keywords:
-
-        * ``m``: the length of the matrix
-        * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
-        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        * ``zetas``: parameter of the phase-shifter at the end of the mode
-
-    Returns:
-        U (array) : unitary matrix of the interferometer
-    """
-    m = phases["m"]
-    U = np.identity(m, dtype=np.complex128)
-    for j in range(m - 1):
-        phi_j = phases["phi_ins"][j]
-        U = P(j + 1, phi_j, m) @ U
-        for k in range(j + 1):
-            n = j - k
-            delta = phases["deltas"][n, k]
-            sigma = phases["sigmas"][n, k]
-            U = M(n, sigma, delta, m) @ U
-    for j in range(m):
-        zeta = phases["zetas"][j]
-        U = P(j, zeta, m) @ U
-    return U
-
-
 def _rectangular_compact_init(
     U, rtol=1e-12, atol=1e-12
 ):  # pylint: disable=too-many-statements, too-many-branches
-    r"""Clement decomposition of a unitary with sMZIs and phase-shifters, as given in FIG. 3 and "The Clements Scheme" section of (arXiv:2104.0756).
+    r"""Rectangular decomposition of a unitary with sMZIs and phase-shifters, as given in FIG. 3 and "The Clements Scheme" section of (arXiv:2104.0756).
 
     Args:
         U (array): unitary matrix
@@ -863,7 +830,7 @@ def _rectangular_compact_init(
 
 
 def _absorb_zeta(phases):
-    r"""Adjust Clement decomposition to relocate residual phase-shifters of interferometer to edge-shifters, as given in FIG. 4 and "Relocating residual phase-shifts" section of (arXiv:2104.0756).
+    r"""Adjust rectangular decomposition to relocate residual phase-shifters of interferometer to edge-shifters, as given in FIG. 4 and "Relocating residual phase-shifts" section of (arXiv:2104.0756).
 
     Args:
         phases (dict): output of _rectangular_compact_init
@@ -914,8 +881,7 @@ def _absorb_zeta(phases):
 
 
 def rectangular_compact(U, rtol=1e-12, atol=1e-12):
-    r"""Decomposition of a unitary into a compact rectangular interferometer,
-    as described in (arXiv:2104.0756)
+    r"""Rectangular decomposition of a unitary with sMZIs and phase-shifters, as given in FIG. 3+4 and "The Clements Scheme" section of (arXiv:2104.0756).
 
     Args:
         U (array): unitary matrix
