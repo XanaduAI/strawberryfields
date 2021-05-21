@@ -2315,7 +2315,7 @@ class All(MetaOperation):
 # ====================================================================
 
 
-def _rectangular_compact_cmds(phases):
+def _rectangular_compact_cmds(reg, phases):
     cmds = []
     m = phases["m"]
     for j in range(0, m - 1, 2):
@@ -2336,7 +2336,7 @@ def _rectangular_compact_cmds(phases):
     return cmds
 
 
-def _triangular_compact_cmds(phases):
+def _triangular_compact_cmds(reg, phases):
     cmds = []
     m = phases["m"]
     for j in range(m - 1):
@@ -2489,11 +2489,11 @@ class Interferometer(Decomposition):
 
         if mesh == "rectangular_compact":
             phases = dec.rectangular_compact(self.p[0], rtol=tol, atol=tol)
-            cmds = _rectangular_compact_cmds(phases)
+            cmds = _rectangular_compact_cmds(reg, phases)
 
         elif mesh == "triangular_compact":
             phases = dec.triangular_compact(self.p[0], rtol=tol, atol=tol)
-            cmds = _triangular_compact_cmds(phases)
+            cmds = _triangular_compact_cmds(reg, phases)
 
         elif not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
