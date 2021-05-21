@@ -732,7 +732,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         phases["zetas"][j] = zeta
         V = V @ P(j, zeta, m)
 
-    assert np.allclose(V, np.eye(m), rtol=tol, atol=atol), "decomposition failed"
+    assert np.allclose(V, np.eye(m), rtol=rtol, atol=atol), "decomposition failed"
 
     return phases
 
@@ -821,7 +821,7 @@ def _rectangular_compact_init(
         V = V @ P(j, zeta, m)
         phases["zetas"][j] = zeta
 
-    assert np.allclose(V, np.eye(m), rtol=tol, atol=atol), "decomposition failed"
+    assert np.allclose(V, np.eye(m), rtol=rtol, atol=atol), "decomposition failed"
 
     return phases
 
