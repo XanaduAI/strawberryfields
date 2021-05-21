@@ -687,7 +687,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
     """
 
     if not U.shape[0] == U.shape[1]:
-        raise Exception("Matrix is not square")
+        raise ValueError("Matrix is not square")
 
     if not np.allclose(U @ U.conj().T, np.eye(U.shape[0]), rtol=rtol, atol=atol):
         raise ValueError("The input matrix is not unitary")
@@ -792,8 +792,6 @@ def _rectangular_compact_init(
         * ``phi_outs``: parameter of the phase-shifter at the end of the mode
 
     """
-    if not U.shape[0] == U.shape[1]:
-        raise Exception("Matrix is not square")
 
     V = U.conj()
     m = U.shape[0]
@@ -933,6 +931,9 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
                 * ``phi_edges``: parameters of the edge phase shifters
         * ``phi_outs``: parameter of the phase-shifter at the end of the mode
     """
+
+    if not U.shape[0] == U.shape[1]:
+        raise ValueError("Matrix is not square")
 
     if not np.allclose(U @ U.conj().T, np.eye(U.shape[0]), rtol=rtol, atol=atol):
         raise ValueError("The input matrix is not unitary")
