@@ -638,8 +638,8 @@ def M(n, sigma, delta, m):
 
     Args:
         n (int): the starting mode of sMZI
-        sigma (complex): parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        delta (complex): parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        sigma (complex): parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        delta (complex): parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
         m (int): the length of the unitary matrix to be decomposed
 
     Returns:
@@ -680,8 +680,8 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
-        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
         * ``zetas``: parameter of the phase-shifter at the end of the mode
     """
 
@@ -750,8 +750,8 @@ def _rectangular_compact_init(
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
-        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
         * ``zetas``: parameter of the phase-shifter at the middle of the mode
         * ``phi_outs``: parameter of the phase-shifter at the end of the mode
 
@@ -837,8 +837,8 @@ def _absorb_zeta(phases):
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
-        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
                 * ``phi_edges``: parameters of the edge phase shifters
         * ``phi_outs``: parameter of the phase-shifter at the end of the mode
 
@@ -887,8 +887,8 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
-        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
                 * ``phi_edges``: parameters of the edge phase shifters
         * ``phi_outs``: parameter of the phase-shifter at the end of the mode
     """
