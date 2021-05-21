@@ -7,37 +7,34 @@
  ``decompositions`` and as options in ``ops.Interferometer``. This decomposition
  alllows for lower depth photonic circuits in physical devices by applying two 
  independent phase shifts in parallel inside each Mach-Zehnder interferometer.
- It reduces the layers of phase shifters from 2N+1 to N+2 for an N mode interferometer
- when compared to e.g. ``rectangular_MZ``.
+ ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2 
+ for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
 
- Examples:
+ Example:
 
  ```python 
   import numpy as np 
-  import strawberryfields.decompositions as dec 
+  from strawberryfields import Program
+  from strawberryfields.ops import Interferometer
   from scipy.stats import unitary_group
 
+  M = 10
+
   # generate a 10x10 Haar random unitary
-  U = unitary_group.rvs(10)
+  U = unitary_group.rvs(M)
 
-  # decompose unitary using rectangular_compact
-  phases = dec.rectangular_compact(U)
-
-  # check matrix can be reconstructed
-  Uout = dec._rectangular_compact_recompose(phases)
-  print(np.allclose(U, Uout))
-
-  # apply as an operation
-  from strawberryfields import Program, Engine
-  from strawberryfields.ops import Interferometer
-
-  prog = Program(10)
-  eng = Engine('gaussian')
+  prog = Program(M)
 
   with prog.context as q:
       Interferometer(U, mesh='rectangular_compact') | q
 
-  eng.run(prog)
+  # check that applied unitary is correct 
+  compiled_circuit = prog.compile(compiler="gaussian_unitary")
+  commands = compiled_circuit.circuit
+  S = commands[0].op.p[0] # symplectic transformation
+  Uout = S[:M,:M] + 1j * S[M:,:M] # unitary transformation
+
+  print(np.allclose(U, Uout))
  ```
  [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
 
