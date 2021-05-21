@@ -676,8 +676,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         U (array): unitary matrix
 
     Returns:
-        dict[]: returns a dictionary contains all parameters
-        where the keywords:
+        phases (dict): A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
@@ -733,8 +732,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         phases["zetas"][j] = zeta
         V = V @ P(j, zeta, m)
 
-    if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol):
-        raise RuntimeError("decomposition failed")
+    assert np.allclose(V, np.eye(m), rtol=tol, atol=atol), "decomposition failed"
 
     return phases
 
@@ -748,8 +746,7 @@ def _rectangular_compact_init(
         U (array): unitary matrix
 
     Returns:
-        dict[]: returns a dictionary contains all parameters
-        where the keywords:
+        phases (dict): A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
@@ -824,8 +821,8 @@ def _rectangular_compact_init(
         V = V @ P(j, zeta, m)
         phases["zetas"][j] = zeta
 
-    if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol):
-        raise Exception("decomposition failed")
+    assert np.allclose(V, np.eye(m), rtol=tol, atol=atol), "decomposition failed"
+
     return phases
 
 
@@ -836,8 +833,7 @@ def _absorb_zeta(phases):
         phases (dict): output of _rectangular_compact_init
 
     Returns:
-        dict[]: returns a dictionary contains all parameters
-        where the keywords:
+        phases (dict): A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
@@ -887,8 +883,7 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
         U (array): unitary matrix
 
     Returns:
-        dict[]: returns a dictionary contains all parameters
-        where the keywords:
+        phasess (dict): A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
