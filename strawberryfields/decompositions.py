@@ -734,7 +734,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
         V = V @ P(j, zeta, m)
 
     if not np.allclose(V, np.eye(m), rtol=rtol, atol=atol):
-        raise Exception("decomposition failed")
+        raise RuntimeError("decomposition failed")
 
     return phases
 
