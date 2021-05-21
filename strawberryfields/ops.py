@@ -2315,6 +2315,47 @@ class All(MetaOperation):
 # ====================================================================
 
 
+def _rectangular_compact_cmds(phases):
+    cmds = []
+    m = phases["m"]
+    for j in range(0, m - 1, 2):
+        phi = phases["phi_ins"][j]
+        cmds.append(Command(Rgate(phi), reg[j]))
+    for layer in range(m):
+        if (layer + m + 1) % 2 == 0:
+            phi_bottom = phases["phi_edges"][m - 1, layer]
+            cmds.append(Command(Rgate(phi_bottom), reg[m - 1]))
+        for mode in range(layer % 2, m - 1, 2):
+            delta = phases["deltas"][mode, layer]
+            sigma = phases["sigmas"][mode, layer]
+            phi1 = sigma + delta
+            phi2 = sigma - delta
+            cmds.append(Command(sMZgate(phi1, phi2), (reg[mode], reg[mode + 1])))
+    for j, phi_j in phases["phi_outs"].items():
+        cmds.append(Command(Rgate(phi_j), reg[j]))
+    return cmds
+
+
+def _triangular_compact_cmds(phases):
+    cmds = []
+    m = phases["m"]
+    for j in range(m - 1):
+        phi_j = phases["phi_ins"][j]
+        cmds.append(Command(Rgate(phi_j), reg[j + 1]))
+        for k in range(j + 1):
+            n = j - k
+            delta = phases["deltas"][n, k]
+            sigma = phases["sigmas"][n, k]
+            phi1 = sigma + delta
+            phi2 = sigma - delta
+            cmds.append(Command(sMZgate(phi1, phi2), (reg[n], reg[n + 1])))
+
+    for j in range(m):
+        zeta = phases["zetas"][j]
+        cmds.append(Command(Rgate(zeta), reg[j]))
+    return cmds
+
+
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
@@ -2448,40 +2489,11 @@ class Interferometer(Decomposition):
 
         if mesh == "rectangular_compact":
             phases = dec.rectangular_compact(self.p[0], rtol=tol, atol=tol)
-            m = phases["m"]
-            for j in range(0, m - 1, 2):
-                phi = phases["phi_ins"][j]
-                cmds.append(Command(Rgate(phi), reg[j]))
-            for layer in range(m):
-                if (layer + m + 1) % 2 == 0:
-                    phi_bottom = phases["phi_edges"][m - 1, layer]
-                    cmds.append(Command(Rgate(phi_bottom), reg[m - 1]))
-                for mode in range(layer % 2, m - 1, 2):
-                    delta = phases["deltas"][mode, layer]
-                    sigma = phases["sigmas"][mode, layer]
-                    phi1 = sigma + delta
-                    phi2 = sigma - delta
-                    cmds.append(Command(sMZgate(phi1, phi2), (reg[mode], reg[mode + 1])))
-            for j, phi_j in phases["phi_outs"].items():
-                cmds.append(Command(Rgate(phi_j), reg[j]))
+            cmds = _rectangular_compact_cmds(phases)
 
         elif mesh == "triangular_compact":
             phases = dec.triangular_compact(self.p[0], rtol=tol, atol=tol)
-            m = phases["m"]
-            for j in range(m - 1):
-                phi_j = phases["phi_ins"][j]
-                cmds.append(Command(Rgate(phi_j), reg[j + 1]))
-                for k in range(j + 1):
-                    n = j - k
-                    delta = phases["deltas"][n, k]
-                    sigma = phases["sigmas"][n, k]
-                    phi1 = sigma + delta
-                    phi2 = sigma - delta
-                    cmds.append(Command(sMZgate(phi1, phi2), (reg[n], reg[n + 1])))
-
-            for j in range(m):
-                zeta = phases["zetas"][j]
-                cmds.append(Command(Rgate(zeta), reg[j]))
+            cmds = _triangular_compact_cmds(phases)
 
         elif not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)

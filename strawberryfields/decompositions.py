@@ -678,7 +678,7 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
     Returns:
         dict[]: returns a dictionary contains all parameters
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
@@ -746,7 +746,7 @@ def _triangular_compact_recompose(phases):
     Args:
         phases (dict):
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
@@ -783,7 +783,7 @@ def _rectangular_compact_init(
     Returns:
         dict[]: returns a dictionary contains all parameters
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
@@ -873,7 +873,7 @@ def _absorb_zeta(phases):
     Returns:
         dict[]: returns a dictionary contains all parameters
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
@@ -925,7 +925,7 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
     Returns:
         dict[]: returns a dictionary contains all parameters
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
@@ -939,42 +939,6 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
 
     phases_temp = _rectangular_compact_init(U, rtol=rtol, atol=atol)
     return _absorb_zeta(phases_temp)
-
-
-def _rectangular_compact_recompose(phases):
-    r"""Calculates the unitary of a rectangular compact interferometer,
-    using the phases provided in phases dict.
-
-    Args:
-        phases (dict):
-        where the keywords:
-        
-        * ``m``: the length of the matrix
-        * ``phi_ins``: parameters for the phase-shifters
-        * ``sigmas``: parameters for the sMZI
-        * ``deltas``: parameters for the sMZI
-        * ``phi_edges``: parameters for the edge phase shifters
-        * ``phi_outs``: parameters for the phase-shifters
-
-    Returns:
-        U (array) : unitary matrix of the interferometer
-    """
-    m = phases["m"]
-    U = np.eye(m, dtype=np.complex128)
-    for j in range(0, m - 1, 2):
-        phi = phases["phi_ins"][j]
-        U = P(j, phi, m) @ U
-    for layer in range(m):
-        if (layer + m + 1) % 2 == 0:
-            phi_bottom = phases["phi_edges"][m - 1, layer]
-            U = P(m - 1, phi_bottom, m) @ U
-        for mode in range(layer % 2, m - 1, 2):
-            delta = phases["deltas"][mode, layer]
-            sigma = phases["sigmas"][mode, layer]
-            U = M(mode, sigma, delta, m) @ U
-    for j, phi_j in phases["phi_outs"].items():
-        U = P(j, phi_j, m) @ U
-    return U
 
 
 def williamson(V, tol=1e-11):
