@@ -400,7 +400,7 @@ def _rectangular_compact_recompose(phases):
         * ``phi_outs``: parameters for the phase-shifters
 
     Returns:
-        U (array) : unitary matrix of the interferometer
+        array : unitary matrix of the interferometer
     """
     m = phases["m"]
     U = np.eye(m, dtype=np.complex128)
