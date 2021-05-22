@@ -2481,6 +2481,7 @@ class Interferometer(Decomposition):
         self.identity = np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0)
 
     def _decompose(self, reg, **kwargs):
+        # pylint: disable=too-many-branches
         mesh = kwargs.get("mesh", self.mesh)
         tol = kwargs.get("tol", self.tol)
         drop_identity = kwargs.get("drop_identity", self.drop_identity)
