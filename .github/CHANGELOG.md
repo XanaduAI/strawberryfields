@@ -38,7 +38,6 @@
 
   print(np.allclose(U, Uout))
  ```
- [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
 
 <h3>Improvements</h3>
 
