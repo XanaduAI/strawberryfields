@@ -889,7 +889,7 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
         * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where :math:`\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
-                * ``phi_edges``: parameters of the edge phase shifters
+        * ``phi_edges``: parameters of the edge phase shifters
         * ``phi_outs``: parameter of the phase-shifter at the end of the mode
     """
 
