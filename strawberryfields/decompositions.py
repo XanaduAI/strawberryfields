@@ -883,7 +883,7 @@ def rectangular_compact(U, rtol=1e-12, atol=1e-12):
         U (array): unitary matrix
 
     Returns:
-        phasess (dict): A dictionary containing the following items:
+        dict: A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
