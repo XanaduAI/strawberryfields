@@ -746,7 +746,7 @@ def _rectangular_compact_init(
         U (array): unitary matrix
 
     Returns:
-        phases (dict): A dictionary containing the following items:
+        dict: A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
