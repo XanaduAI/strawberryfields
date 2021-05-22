@@ -833,7 +833,7 @@ def _absorb_zeta(phases):
         phases (dict): output of _rectangular_compact_init
 
     Returns:
-        phases (dict): A dictionary containing the following items:
+        dict: A dictionary containing the following items:
 
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
