@@ -2,7 +2,7 @@
 
 <h3>New features since last release</h3>
 
-* "compact" decompositions as described in <https://arxiv.org/abs/2104.07561>,
+* Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
  (``rectangular_compact`` and ``triangular_compact``) are now available in
  ``decompositions`` and as options in ``ops.Interferometer``. This decomposition
  alllows for lower depth photonic circuits in physical devices by applying two 
