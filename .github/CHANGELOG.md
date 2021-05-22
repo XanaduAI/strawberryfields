@@ -4,8 +4,10 @@
 
 * Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
  (``rectangular_compact`` and ``triangular_compact``) are now available in
- ``decompositions`` and as options in ``ops.Interferometer``. This decomposition
- alllows for lower depth photonic circuits in physical devices by applying two 
+ the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
+ [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
+ 
+ This decomposition allows for lower depth photonic circuits in physical devices by applying two 
  independent phase shifts in parallel inside each Mach-Zehnder interferometer.
  ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2 
  for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
