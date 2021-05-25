@@ -2,6 +2,43 @@
 
 <h3>New features since last release</h3>
 
+* Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
+ (``rectangular_compact`` and ``triangular_compact``) are now available in
+ the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
+ [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
+ 
+ This decomposition allows for lower depth photonic circuits in physical devices by applying two 
+ independent phase shifts in parallel inside each Mach-Zehnder interferometer.
+ ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2 
+ for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
+
+ Example:
+
+ ```python 
+  import numpy as np 
+  from strawberryfields import Program
+  from strawberryfields.ops import Interferometer
+  from scipy.stats import unitary_group
+
+  M = 10
+
+  # generate a 10x10 Haar random unitary
+  U = unitary_group.rvs(M)
+
+  prog = Program(M)
+
+  with prog.context as q:
+      Interferometer(U, mesh='rectangular_compact') | q
+
+  # check that applied unitary is correct 
+  compiled_circuit = prog.compile(compiler="gaussian_unitary")
+  commands = compiled_circuit.circuit
+  S = commands[0].op.p[0] # symplectic transformation
+  Uout = S[:M,:M] + 1j * S[M:,:M] # unitary transformation
+
+  print(np.allclose(U, Uout))
+ ```
+
 <h3>Improvements</h3>
 
 * Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
@@ -29,7 +66,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Aaron Robertson, Jeremy Swinarton, Antal Száva.
+Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Yuan Yao.
 
 # Release 0.18.0 (current release)
 

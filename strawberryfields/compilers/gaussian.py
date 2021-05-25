@@ -59,6 +59,7 @@ class Gaussian(Compiler):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
+        "sMZgate": {},
         "Xgate": {},
         "Zgate": {},
         "Fouriergate": {},
