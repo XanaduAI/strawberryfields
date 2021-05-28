@@ -170,11 +170,14 @@ with qnn.context as q:
 
 def safe_abs(x):
     # Helper function to deal with tensor terms near zero
+
+    # Check where we have near zero terms
     EPS = 1e-15
     x = tf.where(tf.abs(x) < EPS, tf.zeros_like(x), x)
     zero = tf.constant(0, dtype=tf.complex64)
     x_ok = tf.not_equal(x, zero)
 
+    # To make sure, swap out the zeros with ones
     safe_x = tf.where(x_ok, x, tf.ones_like(x, dtype=tf.complex64))
     return tf.where(x_ok, tf.abs(safe_x), tf.zeros_like(x, dtype=tf.float32))
 
