@@ -25,9 +25,9 @@ def interferometer(params, q):
             is to be applied to
     """
     N = len(q)
-    theta = params[:N*(N-1)//2]
-    phi = params[N*(N-1)//2:N*(N-1)]
-    rphi = params[-N+1:]
+    theta = params[: N * (N - 1) // 2]
+    phi = params[N * (N - 1) // 2 : N * (N - 1)]
+    rphi = params[-N + 1 :]
 
     if N == 1:
         # the interferometer is a single rotation
@@ -65,11 +65,11 @@ def layer(params, q):
     M = int(N * (N - 1)) + max(1, N - 1)
 
     int1 = params[:M]
-    s = params[M:M+N]
-    int2 = params[M+N:2*M+N]
-    dr = params[2*M+N:2*M+2*N]
-    dp = params[2*M+2*N:2*M+3*N]
-    k = params[2*M+3*N:2*M+4*N]
+    s = params[M : M + N]
+    int2 = params[M + N : 2 * M + N]
+    dr = params[2 * M + N : 2 * M + 2 * N]
+    dp = params[2 * M + 2 * N : 2 * M + 3 * N]
+    k = params[2 * M + 3 * N : 2 * M + 4 * N]
 
     # begin layer
     interferometer(int1, q)
@@ -115,7 +115,9 @@ def init_weights(modes, layers, active_sd=0.0001, passive_sd=0.1):
     dp_weights = tf.random.normal(shape=[layers, modes], stddev=passive_sd)
     k_weights = tf.random.normal(shape=[layers, modes], stddev=active_sd)
 
-    weights = tf.concat([int1_weights, s_weights, int2_weights, dr_weights, dp_weights, k_weights], axis=1)
+    weights = tf.concat(
+        [int1_weights, s_weights, int2_weights, dr_weights, dp_weights, k_weights], axis=1
+    )
     weights = tf.Variable(weights)
 
     return weights
@@ -166,6 +168,17 @@ with qnn.context as q:
         layer(sf_params[k], q)
 
 
+def safe_abs(x):
+    # Helper function to deal with tensor terms near zero
+    EPS = 1e-15
+    x = tf.where(tf.abs(x) < EPS, tf.zeros_like(x), x)
+    zero = tf.constant(0, dtype=tf.complex64)
+    x_ok = tf.not_equal(x, zero)
+
+    safe_x = tf.where(x_ok, x, tf.ones_like(x, dtype=tf.complex64))
+    return tf.where(x_ok, tf.abs(safe_x), tf.zeros_like(x, dtype=tf.float32))
+
+
 def cost(weights):
     # Create a dictionary mapping from the names of the Strawberry Fields
     # symbolic gate parameters to the TensorFlow weight values.
@@ -175,7 +188,7 @@ def cost(weights):
     state = eng.run(qnn, args=mapping).state
     ket = state.ket()
 
-    difference = tf.reduce_sum(tf.abs(ket - target_state))
+    difference = tf.reduce_sum(safe_abs(ket - target_state))
     fidelity = tf.abs(tf.reduce_sum(tf.math.conj(ket) * target_state)) ** 2
     return difference, fidelity, ket, tf.math.real(state.trace())
 
