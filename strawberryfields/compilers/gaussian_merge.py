@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This module contains a compiler that merges Gaussian operations into their symplectic forms,
+in a Gaussian and non-Gaussian circuit."""
+
 import strawberryfields.program_utils as pu
 
 from .fock import Fock
@@ -18,10 +21,16 @@ from .gaussian_unitary import GaussianUnitary
 
 
 def get_qumodes_operated_upon(op):
+    """
+    Helper function that returns list of integers, which are the qumode indexes that are operated by op
+    """
     return [reg.ind for reg in op.reg]
 
 
 def get_op_name(op):
+    """
+    Helper function that obtains the string name of an operation
+    """
     return op.op.__class__.__name__
 
 
@@ -289,7 +298,7 @@ class GaussianMerge(Fock):
         if self.is_redundant_merge(op, merged_gaussian_ops):
             return []
         return merged_gaussian_ops
-    
+
     def is_redundant_merge(self, op, merged_gaussian_ops):
         """
         Help function that determines if merge will do nothing. i.e. just contains Gaussian Transforms and Displacement
