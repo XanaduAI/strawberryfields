@@ -95,7 +95,7 @@ class GaussianMerge(Fock):
         "CKgate",
         "S2gate",
         "Interferometer",
-        "GaussianTransform"
+        "GaussianTransform",
     }
 
     decompositions = {
@@ -355,20 +355,6 @@ class GaussianMerge(Fock):
             if op_in_seq in merged_gaussian_ops:
                 organized_merge_operations.append(op_in_seq)
         return organized_merge_operations
-
-    def remove_far_gaussian_ops(self, op, merged_gaussian_ops):
-        """
-        Removes op from merged_gaussian_ops if it has a predecessor operation that is gaussian but was not added to
-        merged_gaussian_ops list. Ensures we dont bypass gaussian operations.
-        """
-        new_merged_ops = merged_gaussian_ops.copy()
-        for predecessor in self.DAG.predecessors(op):
-            if (
-                get_op_name(predecessor) in self.gaussian_ops
-                and predecessor not in merged_gaussian_ops
-            ):
-                new_merged_ops.remove(op)
-        return merged_gaussian_ops
 
     def is_op_gaussian_or_prep(self, op):
         """
