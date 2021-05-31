@@ -36,7 +36,6 @@ def test_complex():
         ops.Ket(initial_state) | q  # Initial state preparation
         # Gaussian Layer
         ops.S2gate(s_d_params, s_d_params) | (q[0], q[1])
-        ops.Dgate(s_d_params) | q[2]
         ops.BSgate(1.9, 1.7) | (q[1], q[2])
         ops.BSgate(0.9, 0.2) | (q[0], q[1])
         # Non-Gaussian Layer
@@ -45,6 +44,7 @@ def test_complex():
         # Gaussian Layer
         ops.BSgate(1.0, 0.4) | (q[0], q[1])
         ops.BSgate(2.0, 1.5) | (q[1], q[2])
+        ops.Dgate(s_d_params) | q[0]
         ops.Sgate(s_d_params, s_d_params) | q[1]
         # Non-Gaussian Layer
         ops.Kgate(0.3) | q[0]
