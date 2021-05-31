@@ -95,6 +95,7 @@ class GaussianMerge(Fock):
         "CKgate",
         "S2gate",
         "Interferometer",
+        "GaussianTransform"
     }
 
     decompositions = {
