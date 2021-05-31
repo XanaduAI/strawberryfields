@@ -315,19 +315,7 @@ class GaussianMerge(Fock):
                     if self.valid_prepend_op_addition(op, predecessor, merged_gaussian_ops):
                         merged_gaussian_ops.append(predecessor)
 
-        op_qumodes = get_qumodes_operated_upon(op)
-        for gaussian_op in merged_gaussian_ops:
-            if any(
-                qumode in op_qumodes for qumode in self.non_gaussian_qumodes_dependecy(gaussian_op)
-            ):
-                # Cannot merge gaussian ops that are operated upon a non-gaussian gate beforehand
-                # E.x. BS | q[0],q[1] has successors V | q[1] & S2gate q[1], q[2]
-                merged_gaussian_ops.remove(gaussian_op)
-                for successor in self.DAG.successors(gaussian_op):
-                    try:
-                        merged_gaussian_ops.remove(successor)
-                    except:
-                        pass
+        merged_gaussian_ops = self.remove_invalid_operations(op, merged_gaussian_ops)
 
         if self.is_redundant_merge(op, merged_gaussian_ops):
             return []
@@ -398,3 +386,20 @@ class GaussianMerge(Fock):
                 if any(qumode in pre_op_qumode for qumode in get_qumodes_operated_upon(pre)):
                     return False
         return True
+
+    def remove_invalid_operations(self, op, merged_gaussian_ops):
+        """
+        Helper function that removes operations from merged_gaussian_ops if they are invalid merge operations
+        """
+        op_qumodes = get_qumodes_operated_upon(op)
+        for gaussian_op in merged_gaussian_ops:
+            if any(
+                qumode in op_qumodes for qumode in self.non_gaussian_qumodes_dependecy(gaussian_op)
+            ):
+                # Cannot merge gaussian ops that are operated upon a non-gaussian gate beforehand
+                # E.x. BS | q[0],q[1] has successors V | q[1] & S2gate q[1], q[2]
+                merged_gaussian_ops.remove(gaussian_op)
+                for successor in self.DAG.successors(gaussian_op):
+                    if successor in merged_gaussian_ops:
+                        merged_gaussian_ops.remove(successor)
+        return merged_gaussian_ops

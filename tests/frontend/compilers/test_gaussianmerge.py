@@ -22,55 +22,33 @@ import strawberryfields.ops as ops
 pytestmark = pytest.mark.frontend
 
 
-def test_no_displacement():
-    """Tests that the compiler is able to compile a number of non-primitive Gaussian gates"""
-    modes = 2
-    cutoff_dim = 3  # (1+ total number of photons)
+def test_complex():
+    modes = 4
+    cutoff_dim = 6
 
-    initial_state = np.zeros([cutoff_dim] * modes, dtype=np.complex)
+    initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
     # The ket below corresponds to a single horizontal photon in each of the modes
-    initial_state[1, 1] = 1
+    initial_state[1, 1, 1, 1] = 1
 
-    # Here is the main program
-    # We create the input state and then send it through a network of beamsplitters, rotations and Kerr gates
-    # Since all the gates preserve the number of photons we need not to worry about cutoff issues
-    prog = sf.Program(2)
+    prog = sf.Program(modes)
+    s_d_params = 0.01
     with prog.context as q:
         ops.Ket(initial_state) | q  # Initial state preparation
-        # Gaussian layer
-        ops.BSgate(0.5, 0.9) | (q[0], q[1])
-        ops.Rgate(0.6) | q[0]
-        ops.BSgate(1.9, 0.7) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        ops.BSgate(1.5, 2.9) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[0], q[1])
-        ops.BSgate(0.5, 0.9) | (q[0], q[1])
-        ops.Rgate(0.6) | q[1]
-        ops.BSgate(1.9, 0.7) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        ops.BSgate(1.5, 2.9) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        # Non Gaussian layer
-        ops.Kgate(0.5) | q[0]
-        ops.Kgate(0.4) | q[1]
-        # Gaussian layer
-        ops.BSgate(0.5, 0.9) | (q[0], q[1])
-        ops.Rgate(0.6) | q[0]
-        ops.BSgate(1.9, 0.7) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        ops.BSgate(1.5, 2.9) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        ops.BSgate(0.5, 0.9) | (q[0], q[1])
-        ops.Rgate(0.6) | q[1]
-        ops.BSgate(1.9, 0.7) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        ops.BSgate(1.5, 2.9) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[0], q[1])
-        ops.Rgate(0.5) | q[1]
-        # Non Gaussian layer
-        ops.CKgate(0.5) | (q[0], q[1])
+        # Gaussian Layer
+        ops.S2gate(s_d_params, s_d_params) | (q[0], q[1])
+        ops.Dgate(s_d_params) | q[2]
+        ops.BSgate(1.9, 1.7) | (q[1], q[2])
+        ops.BSgate(0.9, 0.2) | (q[0], q[1])
+        # Non-Gaussian Layer
+        ops.Kgate(0.5) | q[3]
+        ops.CKgate(0.7) | (q[2], q[3])
+        # Gaussian Layer
+        ops.BSgate(1.0, 0.4) | (q[0], q[1])
+        ops.BSgate(2.0, 1.5) | (q[1], q[2])
+        ops.Sgate(s_d_params, s_d_params) | q[1]
+        # Non-Gaussian Layer
+        ops.Kgate(0.3) | q[0]
+        ops.Vgate(0.5) | q[2]
 
     # We run the simulation
     eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff_dim})
@@ -81,95 +59,3 @@ def test_no_displacement():
     ket_merged = results_merged.state.ket()
     assert np.allclose(np.abs(np.sum(np.conj(ket) * ket_merged)), 1)
 
-
-def test_complex_displacements():
-    modes = 4
-    cutoff_dim = 6  # (1+ total number of photons)
-
-    initial_state = np.zeros([cutoff_dim] * modes, dtype=np.complex)
-    # The ket below corresponds to a single horizontal photon in each of the modes
-    initial_state[1, 1, 1, 1] = 1
-
-    # Here is the main program
-    # We create the input state and then send it through a network of beamsplitters, rotations and Kerr gates
-    # Since all the gates preserve the number of photons we need not to worry about cutoff issues
-    prog = sf.Program(modes)
-    with prog.context as q:
-        ops.Ket(initial_state) | q  # Initial state preparation
-        # Gaussian layer
-        ops.Dgate(0.01) | q[2]
-        ops.BSgate(0.5, 0.9) | (q[0], q[1])
-        ops.Rgate(0.6) | q[0]
-        ops.Rgate(0.2) | q[2]
-        ops.Rgate(0.1) | q[3]
-        ops.BSgate(0.5, 0.9) | (q[1], q[2])
-        ops.BSgate(1.9, 0.7) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[2], q[3])
-        ops.Rgate(0.5) | q[1]
-        ops.Rgate(0.7) | q[3]
-        ops.BSgate(1.5, 2.9) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[0], q[1])
-        ops.BSgate(1.9, 0.7) | (q[1], q[2])
-        ops.BSgate(0.5, 0.9) | (q[0], q[1])
-        ops.Rgate(0.6) | q[1]
-        ops.Rgate(0.9) | q[2]
-        ops.Rgate(0.1) | q[3]
-        ops.BSgate(1.9, 0.7) | (q[0], q[1])
-        ops.BSgate(1.8, 0.9) | (q[1], q[2])
-        ops.BSgate(0.5, 0.9) | (q[2], q[3])
-        ops.Rgate(0.5) | q[1]
-        ops.Rgate(0.3) | q[2]
-        Rops.gate(0.9) | q[3]
-        BSgate(1.5, 2.9) | (q[0], q[1])
-        BSgate(1.8, 0.9) | (q[0], q[1])
-        BSgate(0.5, 0.9) | (q[1], q[2])
-        Rgate(0.5) | q[1]
-        Rgate(0.3) | q[3]
-        # Non Gaussian layer
-        Kgate(0.5) | q[0]
-        Kgate(0.4) | q[1]
-        Kgate(0.6) | q[2]
-        Kgate(0.2) | q[3]
-        # Gaussian layer
-        Dgate(0.01) | q[2]
-        BSgate(0.5, 0.9) | (q[0], q[1])
-        Rgate(0.6) | q[0]
-        Rgate(0.2) | q[2]
-        Rgate(0.1) | q[3]
-        BSgate(0.5, 0.9) | (q[1], q[2])
-        BSgate(1.9, 0.7) | (q[0], q[1])
-        BSgate(1.8, 0.9) | (q[2], q[3])
-        Rgate(0.5) | q[1]
-        Rgate(0.7) | q[3]
-        BSgate(1.5, 2.9) | (q[0], q[1])
-        BSgate(1.8, 0.9) | (q[0], q[1])
-        BSgate(1.9, 0.7) | (q[1], q[2])
-        BSgate(0.5, 0.9) | (q[0], q[1])
-        Rgate(0.6) | q[1]
-        Rgate(0.9) | q[2]
-        Rgate(0.1) | q[3]
-        BSgate(1.9, 0.7) | (q[0], q[1])
-        BSgate(1.8, 0.9) | (q[1], q[2])
-        BSgate(0.5, 0.9) | (q[2], q[3])
-        Rgate(0.5) | q[1]
-        Rgate(0.3) | q[2]
-        Rgate(0.9) | q[3]
-        BSgate(1.5, 2.9) | (q[0], q[1])
-        BSgate(1.8, 0.9) | (q[0], q[1])
-        BSgate(0.5, 0.9) | (q[1], q[2])
-        Rgate(0.5) | q[1]
-        Rgate(0.3) | q[3]
-        # Non Gaussian layer
-        CKgate(0.5) | (q[0], q[1])
-        CKgate(0.3) | (q[1], q[2])
-        CKgate(0.1) | (q[2], q[3])
-
-    # We run the simulation
-    eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff_dim})
-    results_norm = eng.run(prog)
-    prog_merged = prog.compile(compiler="gaussian_merge")
-    results_merged = eng.run(prog_merged)
-    ket = results_norm.state.ket()
-    ket_merged = results_merged.state.ket()
-    if np.allclose(np.abs(np.sum(np.conj(ket) * ket_merged)), 1):
-        print("Wow its working!!!")

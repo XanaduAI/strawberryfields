@@ -46,7 +46,8 @@ def random_params(size, sq_bound, disp_bound):
 
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
-def test_gaussian_program(depth, width):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_gaussian_program(depth, width, compiler):
     """Tests that a circuit and its compiled version produce the same Gaussian state"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
@@ -60,7 +61,7 @@ def test_gaussian_program(depth, width):
             ops.Interferometer(V) | q
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
