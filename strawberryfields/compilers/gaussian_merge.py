@@ -35,8 +35,8 @@ def get_op_name(op):
 
 
 class GaussianMerge(Fock):
-    """Compiler for that merges Gaussian operations into Gaussian Transforms in a hybrid program
-
+    """Compiler that merges adjacent Gaussian operations into a single symplectic transformation,
+    to reduce the depth of non-Gaussian programs.
 
     As a result, the Gaussian operations that this compiler returns are :class:`~.ops.GaussianTransform`,
     and :class:`~.ops.Displacement`. Meanwhile, non-Gaussian operations remain unchanged.
@@ -61,14 +61,15 @@ class GaussianMerge(Fock):
 
         compiled_circuit = circuit.compile(compiler="gaussian_merge")
 
-    We can now print the compiled circuit, consisting of
-    :class:`~.GaussianTransform`, :class:`~.Dgate` and the Non-Gaussian :
+    We can now print the compiled circuit, which has merged adjacent Gaussian
+    operations into singular :class:`~.GaussianTransform` operations:
+
     >>> compiled_circuit.print()
     GaussianTransform([[ 0.6967 -0.7174]
-                       [0.7174  0.6967]]) | (q[0])
+      [0.7174  0.6967]]) | (q[0])
     Kgate(0.4)|q[0]
     GaussianTransform([[ 0.7648 -0.6442]
-                   [0.6442  0.7648]]) | (q[0])
+      [0.6442  0.7648]]) | (q[0])
     Dgate(0.01, 0) | (q[0])
     """
 
@@ -123,7 +124,7 @@ class GaussianMerge(Fock):
         self.new_DAG = None
 
     def compile(self, seq, registers):
-        """Try to merge Gaussian operations into Gaussian Transforms in a hybrid program
+        """Attempt to merge Gaussian operations into Gaussian Transforms in a hybrid program.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
@@ -138,7 +139,7 @@ class GaussianMerge(Fock):
 
     def merge_a_gaussian_op(self, registers):
         """
-        Main function to merge a gaussian operation with its gaussian neighbors.
+        Main function to merge a gaussian operation with its gaussian neighbours.
         If merge is achieved, the method updates self.curr_seq and returns True
         Else (merge cannot be achieved), the method returns false
         """
