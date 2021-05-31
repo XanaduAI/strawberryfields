@@ -94,18 +94,8 @@ class GaussianMerge(Fock):
         "BSgate",
         "CKgate",
         "S2gate",
-    }
-
-    gaussian_ops = [
-        "Dgate",
-        "BSgate",
-        "S2gate",
-        "Sgate",
-        "GaussianTransform",
-        "Rgate",
         "Interferometer",
-        "MZgate",
-    ]
+    }
 
     decompositions = {
         "GraphEmbed": {},
@@ -117,6 +107,19 @@ class GaussianMerge(Fock):
         "Xgate": {},
         "Zgate": {},
     }
+
+    prep_states = ["Ket"]
+
+    gaussian_ops = [
+        "Dgate",
+        "BSgate",
+        "S2gate",
+        "Sgate",
+        "GaussianTransform",
+        "Rgate",
+        "Interferometer",
+        "MZgate",
+    ]
 
     def __init__(self):
         self.curr_seq = None
@@ -178,6 +181,7 @@ class GaussianMerge(Fock):
                     )
 
                     # Add edges for all successor/predecessor operations of the merged operations
+                    merged_gaussian_ops.remove(op)
                     self.add_gaussian_pre_and_succ_gates(
                         gaussian_transform, merged_gaussian_ops, displacement_mapping
                     )
@@ -298,15 +302,6 @@ class GaussianMerge(Fock):
                 if d_gate_successors:
                     merged_gaussian_ops += d_gate_successors
 
-        op_qumodes = get_qumodes_operated_upon(op)
-        for gaussian_op in merged_gaussian_ops:
-            if any(
-                qumode in op_qumodes for qumode in self.non_gaussian_qumodes_dependecy(gaussian_op)
-            ):
-                # Cannot merge gaussian ops that are operated upon a non-gaussian gate beforehand
-                # E.x. BS | q[0],q[1] has successors V | q[1] & S2gate q[1], q[2]
-                merged_gaussian_ops.remove(gaussian_op)
-
         # Add gaussian operations that should be exectued at the same time as op
         # E.X Rgate|q[0] Rgate|q[1] -> BS|q[0]q[1]. Adds Rgate|q[1] if Rgate|q[0] is the op.
         for gaussian_op in merged_gaussian_ops:
@@ -317,7 +312,22 @@ class GaussianMerge(Fock):
                     predecessor not in merged_gaussian_ops
                     and get_op_name(predecessor) in self.gaussian_ops
                 ):
-                    merged_gaussian_ops.append(predecessor)
+                    if self.valid_prepend_op_addition(op, predecessor, merged_gaussian_ops):
+                        merged_gaussian_ops.append(predecessor)
+
+        op_qumodes = get_qumodes_operated_upon(op)
+        for gaussian_op in merged_gaussian_ops:
+            if any(
+                qumode in op_qumodes for qumode in self.non_gaussian_qumodes_dependecy(gaussian_op)
+            ):
+                # Cannot merge gaussian ops that are operated upon a non-gaussian gate beforehand
+                # E.x. BS | q[0],q[1] has successors V | q[1] & S2gate q[1], q[2]
+                merged_gaussian_ops.remove(gaussian_op)
+                for successor in self.DAG.successors(gaussian_op):
+                    try:
+                        merged_gaussian_ops.remove(successor)
+                    except:
+                        pass
 
         if self.is_redundant_merge(op, merged_gaussian_ops):
             return []
@@ -343,7 +353,7 @@ class GaussianMerge(Fock):
         where the number depicts the qumode index that the non-gaussian operation operates on
         """
         for predecessor in self.DAG.predecessors(op):
-            if get_op_name(predecessor) not in self.gaussian_ops:
+            if not self.is_op_gaussian_or_prep(predecessor):
                 return get_qumodes_operated_upon(predecessor)
         return []
 
@@ -356,3 +366,35 @@ class GaussianMerge(Fock):
             if op_in_seq in merged_gaussian_ops:
                 organized_merge_operations.append(op_in_seq)
         return organized_merge_operations
+
+    def remove_far_gaussian_ops(self, op, merged_gaussian_ops):
+        """
+        Removes op from merged_gaussian_ops if it has a predecessor operation that is gaussian but was not added to
+        merged_gaussian_ops list. Ensures we dont bypass gaussian operations.
+        """
+        new_merged_ops = merged_gaussian_ops.copy()
+        for predecessor in self.DAG.predecessors(op):
+            if (
+                get_op_name(predecessor) in self.gaussian_ops
+                and predecessor not in merged_gaussian_ops
+            ):
+                new_merged_ops.remove(op)
+        return merged_gaussian_ops
+
+    def is_op_gaussian_or_prep(self, op):
+        """
+        Helper function that returns True if op is gaussian or a preparation state else returns False
+        """
+        op_name = get_op_name(op)
+        return op_name in self.gaussian_ops or op_name in self.prep_states
+
+    def valid_prepend_op_addition(self, op, pre, merged_gaussian_ops):
+        """
+        Helper function that ensures predecessor operation being added did not skip any operations between op and pre
+        """
+        for pre_op in self.DAG.predecessors(op):
+            if pre_op not in merged_gaussian_ops:
+                pre_op_qumode = get_qumodes_operated_upon(pre_op)
+                if any(qumode in pre_op_qumode for qumode in get_qumodes_operated_upon(pre)):
+                    return False
+        return True
