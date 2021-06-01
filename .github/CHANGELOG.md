@@ -48,9 +48,7 @@
   and ``Dgate`` operations. It utilizes the existing ``GaussianUnitary`` compiler to
   merge operations and Directed Acyclic Graphs to determine which operations can be merged.
 
-Example:
-
- ```python 
+  ```python 
   modes = 4
   cutoff_dim = 6
   
@@ -78,7 +76,7 @@ Example:
       ops.Vgate(0.5) | q[2]
   
   prog_merged = prog.compile(compiler="gaussian_merge")
- ```
+  ```
 
 
 <h3>Improvements</h3>
