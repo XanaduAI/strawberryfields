@@ -39,8 +39,10 @@
   print(np.allclose(U, Uout))
  ```
 
-* ``Gaussian Merge`` compiler has been added. It is aimed at reducing calculation overhead by minimizing the amount of 
-  Gaussian operations in a circuit, while retaining the same functionality. [(#591)](https://github.com/XanaduAI/strawberryfields/pull/591)
+* A new compiler, ``GaussianMerge``, has been added. It is aimed at reducing calculation
+  overhead for non-Gaussian circuits by minimizing the amount of Gaussian operations
+  in a circuit, while retaining the same functionality.
+  [(#591)](https://github.com/XanaduAI/strawberryfields/pull/591)
    
   ``GaussianMerge`` merges Gaussian operations, where allowed, into ``GaussianTransform``
   and ``Dgate`` operations. It utilizes the existing ``GaussianUnitary`` compiler to
