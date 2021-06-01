@@ -33,7 +33,6 @@ import numpy as np
 import numba
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseGaussianState
-
 from .gaussiancircuit import GaussianModes
 
 
@@ -239,16 +238,63 @@ class GaussianBackend(BaseGaussian):
             samples = hafnian_sample_state(reduced_cov, shots)
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
-
         return samples
 
-    @numba.jit(nopython=True)
-    def numba_ix(arr, rows, cols):
+    def tor(self, A, fsum=False):
+        """Returns the Torontonian of a matrix.
 
-        return arr[rows][:, cols]
+        For more direct control, you may wish to call :func:`tor_real` or
+        :func:`tor_complex` directly.
+
+        The input matrix is cast to quadruple precision
+        internally for a quadruple precision torontonian computation.
+
+        Args:
+            A (array): a np.complex128, square, symmetric array of even dimensions.
+            fsum (bool): if ``True``, the `Shewchuck algorithm <https://github.com/achan001/fsum>`_
+                for more accurate summation is performed. This can significantly increase
+                the `accuracy of the computation <https://link.springer.com/article/10.1007%2FPL00009321>`_,
+                but no casting to quadruple precision takes place, as the Shewchuck algorithm
+                only supports double precision.
+
+        Returns:
+           np.float64 or np.complex128: the torontonian of matrix A.
+        """
+        if not isinstance(A, np.ndarray):
+            raise TypeError("Input matrix must be a NumPy array.")
+
+        matshape = A.shape
+
+        if matshape[0] != matshape[1]:
+            raise ValueError("Input matrix must be square.")
+
+        if A.dtype == np.complex128:
+            if np.any(np.iscomplex(A)):
+                return self.tor_complex(A, fsum=fsum)
+            return self.tor_real(np.float64(A.real), fsum=fsum)
+
+        return self.tor_real(A, fsum=fsum)
 
     @numba.jit(nopython=True)
-    def nb_block(X):  # pragma: no cover
+    def numba_ix(self, arr, rows, cols):
+        # pragma: no cover
+        """Numba implementation of `np.ix_`.
+        Required due to numba lacking support for advanced numpy indexing.
+
+        Args:
+            arr (array) : matrix to take submatrix of
+            rows (array) : rows to be selected in submatrix
+            cols (array) : columns to be selected in submatrix
+
+        Return:
+           array: selected submatrix of arr, of shape `(len(rows), len(cols))`
+
+        """
+
+        return self.arr[rows][:, cols]
+
+    @numba.jit(nopython=True)
+    def nb_block(self, X):  # pragma: no cover
         """Numba implementation of `np.block`.
         Only suitable for 2x2 blocks.
         Taken from: https://stackoverflow.com/a/57562911
@@ -259,10 +305,10 @@ class GaussianBackend(BaseGaussian):
         """
         xtmp1 = np.concatenate(X[0], axis=1)
         xtmp2 = np.concatenate(X[1], axis=1)
-        return np.concatenate((xtmp1, xtmp2), axis=0)
+        return np.concatenate(self, (xtmp1, xtmp2), axis=0)
 
     @numba.jit(nopython=True)
-    def Qmat_numba(cov, hbar=2):  # pragma: no cover
+    def Qmat_numba(self, cov, hbar=2):  # pragma: no cover
         r"""Numba compatible version of `thewalrus.quantum.Qmat`
         Returns the :math:`Q` Husimi matrix of the Gaussian state.
         Args:
@@ -283,11 +329,11 @@ class GaussianBackend(BaseGaussian):
         # the (symmetric) matrix elements <a_i a_j>
         aiaj = (x - p + 1j * (xp + xp.T)) / 4
         # calculate the covariance matrix sigma_Q appearing in the Q function:
-        Q = nb_block(((aidaj, aiaj.conj()), (aiaj, aidaj.conj()))) + np.identity(2 * N)
+        Q = self.nb_block(((aidaj, aiaj.conj()), (aiaj, aidaj.conj()))) + np.identity(2 * N)
         return Q
 
     @numba.jit(nopython=True)
-    def powerset(parent_set):  # pragma: no cover
+    def powerset(self, parent_set):  # pragma: no cover
         """Generates the powerset, the set of all the subsets, of its input. Does not include the empty set.
 
         Args:
@@ -298,13 +344,24 @@ class GaussianBackend(BaseGaussian):
         """
         n = len(parent_set)
         for i in range(n + 1):
-            for subset in combinations(parent_set, i):
+            for subset in self.combinations(self, parent_set, i):
                 yield subset
 
     @numba.jit(nopython=True)
-    def threshold_detection_prob_displacement(mu, cov, det_pattern, hbar=2):
+    def threshold_detection_prob_displacement(self, mu, cov, det_pattern, hbar=2):
+        # pragma: no cover
+        r"""Threshold detection probabilities for Gaussian states with displacement.
+        Formula from Jake Bulmer and Stefano Paesani.
+        Args:
+            mu (1d array) : means of xp Gaussian Wigner function
+            cov (2d array) : : xp Wigner covariance matrix
+            det_pattern (1d numpy array) : array of {0,1} to describe the threshold detection outcome
+            hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
+        Returns:
+           np.float64 : probability of detection pattern
+        """
 
-        det_pattern = np.asarray(det_pattern).astype(np.int8)
+        det_pattern = self.np.asarray(det_pattern).astype(np.int8)
 
         m = len(cov)
         assert cov.shape == (m, m)
@@ -316,7 +373,7 @@ class GaussianBackend(BaseGaussian):
             2 * hbar
         )
 
-        Q = Qmat_numba(cov, hbar=hbar)
+        Q = self.Qmat_numba(cov, hbar=hbar)
 
         if max(det_pattern) > 1:
             raise ValueError(
@@ -329,10 +386,10 @@ class GaussianBackend(BaseGaussian):
         ii1 = np.concatenate((nonzero_idxs, nonzero_idxs + n), axis=0)
         ii0 = np.concatenate((zero_idxs, zero_idxs + n), axis=0)
 
-        Qaa = numba_ix(Q, ii0, ii0)
-        Qab = numba_ix(Q, ii0, ii1)
-        Qba = numba_ix(Q, ii1, ii0)
-        Qbb = numba_ix(Q, ii1, ii1)
+        Qaa = self.numba_ix(Q, ii0, ii0)
+        Qab = self.numba_ix(Q, ii0, ii1)
+        Qba = self.numba_ix(Q, ii1, ii0)
+        Qbb = self.numba_ix(Q, ii1, ii1)
 
         Qaa_inv = np.linalg.inv(Qaa)
         Qcond = Qbb - Qba @ Qaa_inv @ Qab
@@ -347,12 +404,12 @@ class GaussianBackend(BaseGaussian):
 
         n_det = len(nonzero_idxs)
         p_sum = 1.0  # empty set is not included in the powerset function so we start at 1
-        for z in powerset(np.arange(n_det)):
+        for z in self.powerset(np.arange(n_det)):
             Z = np.asarray(z)
             ZZ = np.concatenate((Z, Z + n_det), axis=0)
 
             avec0 = avec_cond[ZZ]
-            Q0 = numba_ix(Qcond, ZZ, ZZ)
+            Q0 = self.numba_ix(Qcond, ZZ, ZZ)
             Q0inv = np.linalg.inv(Q0)
 
             fact_exp = np.exp(avec0 @ Q0inv @ avec0.conj() * (-0.5)).real
@@ -361,7 +418,23 @@ class GaussianBackend(BaseGaussian):
             p_sum += ((-1) ** len(Z)) * fact_exp / fact_det
         return p0a * p_sum
 
-    def threshold_detection_prob(mu, cov, det_pattern, hbar=2, atol=1e-10, rtol=1e-10):
+    def threshold_detection_prob(self, mu, cov, det_pattern, hbar=2, atol=1e-10, rtol=1e-10):
+        # pylint: disable=too-many-arguments
+        r"""Threshold detection probabilities for Gaussian states.
+        Formula from Jake Bulmer and Stefano Paesani.
+        When state is displaced, threshold_detection_prob_displacement is called.
+        Otherwise, tor is called.
+        Args:
+            mu (1d array) : means of xp Gaussian Wigner function
+            cov (2d array) : : xp Wigner covariance matrix
+            det_pattern (1d array) : array of {0,1} to describe the threshold detection outcome
+            hbar (float): the value of :math:`\hbar` in the commutation relation :math:`[\x,\p]=i\hbar`.
+            rtol (float): the relative tolerance parameter used in `np.allclose`
+            atol (float): the absolute tolerance parameter used in `np.allclose
+            `
+            Returns:
+               np.float64 : probability of detection pattern
+        """
 
         if np.allclose(mu, 0, atol=atol, rtol=rtol):
             # no displacement
@@ -369,10 +442,10 @@ class GaussianBackend(BaseGaussian):
             Q = Qmat(cov, hbar)
             O = Xmat(n_modes) @ Amat(cov, hbar=hbar)
             rpt2 = np.concatenate((det_pattern, det_pattern))
-            Os = reduction(O, rpt2)
-            return tor(Os) / np.sqrt(np.linalg.det(Q))
+            Os = self.reduction(O, rpt2)
+            return self.tor(Os) / np.sqrt(np.linalg.det(Q))
         det_pattern = np.asarray(det_pattern).astype(np.int8)
-        return threshold_detection_prob_displacement(mu, cov, det_pattern, hbar)
+        return self.threshold_detection_prob_displacement(mu, cov, det_pattern, hbar)
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         if shots != 1:
@@ -389,7 +462,8 @@ class GaussianBackend(BaseGaussian):
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
         if not allclose(mu, zeros_like(mu)):
-            return threshold_detection_prob_displacement(mu, cov, det_pattern, hbar)
+            """For gaussian state with non-zero mean"""
+            return self.threshold_detection_prob_displacement(mu, cov, self.det_pattern, self.hbar)
 
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
