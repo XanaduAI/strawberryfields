@@ -120,7 +120,7 @@ if np.allclose(np.abs(np.sum(np.conj(ket) * ket_merged)), 1):
 
 This release contains contributions from (in alphabetical order):
 
-Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Yuan Yao, Federico Rueda.
+Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
