@@ -45,9 +45,9 @@ def test_complex():
         ops.BSgate(1.0, 0.4) | (q[0], q[1])
         ops.BSgate(2.0, 1.5) | (q[1], q[2])
         ops.Dgate(s_d_params) | q[0]
+        ops.Dgate(s_d_params) | q[0]
         ops.Sgate(s_d_params, s_d_params) | q[1]
         # Non-Gaussian Layer
-        ops.Kgate(0.3) | q[0]
         ops.Vgate(0.5) | q[2]
 
     # We run the simulation

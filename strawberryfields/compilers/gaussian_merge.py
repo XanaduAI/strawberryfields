@@ -166,9 +166,7 @@ class GaussianMerge(Fock):
 
                     # Logic to add displacement gates. Returns dictionary,
                     # where the value is a displacement gate added and its key is the qumode its operating upon.
-                    displacement_mapping = self.add_displacement_gates(
-                        gaussian_transform, merged_gaussian_ops
-                    )
+                    displacement_mapping = self.add_displacement_gates(gaussian_transform)
 
                     # If there are predecessors: Attach predecessor edges to new gaussian transform
                     if predecessors:
@@ -199,8 +197,6 @@ class GaussianMerge(Fock):
         """
         d_gates = []
         successors = list(self.DAG.successors(gate))
-        if successors is None:
-            return d_gates
         for successor in successors:
             if "Dgate" in get_op_name(successor):
                 d_gates.append(successor)
@@ -218,21 +214,10 @@ class GaussianMerge(Fock):
         """
         for successor_op in successors:
             if get_op_name(successor_op) not in self.gaussian_ops:
-                # If there are displacement gates.
+                # If there are no displacement gates.
                 # Add edges from it to successor gates if they act upon the same qumodes
-                if displacement_mapping:
-                    placed_edge = False
-                    # Get qumodes acted upon by successor gate. And add edges if dependency exists
-                    qumodes_operated_upon = get_qumodes_operated_upon(successor_op)
-                    for qumode in qumodes_operated_upon:
-                        if qumode in displacement_mapping:
-                            self.new_DAG.add_edge(displacement_mapping[qumode], successor_op)
-                            placed_edge = True
-                    # If successor gate does not act on qumodes that the displacement gates act upon:
+                if not displacement_mapping:
                     # Add edge from gaussian transform to successor operation
-                    if not placed_edge:
-                        self.new_DAG.add_edge(gaussian_transform[0], successor_op)
-                else:
                     self.new_DAG.add_edge(gaussian_transform[0], successor_op)
 
     def add_gaussian_pre_and_succ_gates(
@@ -274,7 +259,7 @@ class GaussianMerge(Fock):
                 if predecessor not in successor_operations_added:
                     self.new_DAG.add_edge(predecessor, gaussian_transform[0])
 
-    def add_displacement_gates(self, gaussian_transform, merged_gaussian_ops):
+    def add_displacement_gates(self, gaussian_transform):
         """
         Adds displacement gates to new DAG and returns dict with the following format:
         {1: Dgate|q[1], 2:Dgate|q[2]}
@@ -285,8 +270,6 @@ class GaussianMerge(Fock):
                 self.new_DAG.add_node(displacement_gate)
                 self.new_DAG.add_edge(gaussian_transform[0], displacement_gate)
                 displacement_mapping[displacement_gate.reg[0].ind] = displacement_gate
-                if displacement_gate in merged_gaussian_ops:
-                    merged_gaussian_ops.remove(displacement_gate)
         return displacement_mapping
 
     def get_valid_gaussian_merge_ops(self, op):
@@ -386,7 +369,4 @@ class GaussianMerge(Fock):
                 # Cannot merge gaussian ops that are operated upon a non-gaussian gate beforehand
                 # E.x. BS | q[0],q[1] has successors V | q[1] & S2gate q[1], q[2]
                 merged_gaussian_ops.remove(gaussian_op)
-                for successor in self.DAG.successors(gaussian_op):
-                    if successor in merged_gaussian_ops:
-                        merged_gaussian_ops.remove(successor)
         return merged_gaussian_ops
