@@ -49,47 +49,33 @@
 Example:
 
  ```python 
-import strawberryfields as sf
-import strawberryfields.ops as ops
-import numpy as np
-
-modes = 4
-cutoff_dim = 6
-
-initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
-# The ket below corresponds to a single horizontal photon in each of the modes
-initial_state[1, 1, 1, 1] = 1
-
-prog = sf.Program(modes)
-# If s_d parameter is increased, cutoff_dim has to be increased
-s_d_params = 0.01
-with prog.context as q:
-    ops.Ket(initial_state) | q  # Initial state preparation
-    # Gaussian Layer
-    ops.S2gate(s_d_params, s_d_params) | (q[0], q[1])
-    ops.BSgate(1.9, 1.7) | (q[1], q[2])
-    ops.BSgate(0.9, 0.2) | (q[0], q[1])
-    # Non-Gaussian Layer
-    ops.Kgate(0.5) | q[3]
-    ops.CKgate(0.7) | (q[2], q[3])
-    # Gaussian Layer
-    ops.BSgate(1.0, 0.4) | (q[0], q[1])
-    ops.BSgate(2.0, 1.5) | (q[1], q[2])
-    ops.Dgate(s_d_params) | q[0]
-    ops.Dgate(s_d_params) | q[0]
-    ops.Sgate(s_d_params, s_d_params) | q[1]
-    # Non-Gaussian Layer
-    ops.Vgate(0.5) | q[2]
-
-# We run the simulation
-eng = sf.Engine("fock", backend_options={"cutoff_dim": cutoff_dim})
-results_norm = eng.run(prog)
-prog_merged = prog.compile(compiler="gaussian_merge")
-results_merged = eng.run(prog_merged)
-ket = results_norm.state.ket()
-ket_merged = results_merged.state.ket()
-if np.allclose(np.abs(np.sum(np.conj(ket) * ket_merged)), 1):
-    print("Original Circuit and Merged Circuit are functionally the same")
+  modes = 4
+  cutoff_dim = 6
+  
+  initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
+  initial_state[1, 1, 1, 1] = 1
+  
+  prog = sf.Program(4)
+  
+  with prog.context as q:
+      ops.Ket(initial_state) | q  # Initial state preparation
+      # Gaussian Layer
+      ops.S2gate(0.01, 0.01) | (q[0], q[1])
+      ops.BSgate(1.9, 1.7) | (q[1], q[2])
+      ops.BSgate(0.9, 0.2) | (q[0], q[1])
+      # Non-Gaussian Layer
+      ops.Kgate(0.5) | q[3]
+      ops.CKgate(0.7) | (q[2], q[3])
+      # Gaussian Layer
+      ops.BSgate(1.0, 0.4) | (q[0], q[1])
+      ops.BSgate(2.0, 1.5) | (q[1], q[2])
+      ops.Dgate(0.01) | q[0]
+      ops.Dgate(0.01) | q[0]
+      ops.Sgate(0.01, 0.01) | q[1]
+      # Non-Gaussian Layer
+      ops.Vgate(0.5) | q[2]
+  
+  prog_merged = prog.compile(compiler="gaussian_merge")
  ```
 
 
