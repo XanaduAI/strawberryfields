@@ -22,7 +22,7 @@ import strawberryfields.ops as ops
 pytestmark = pytest.mark.frontend
 
 
-@pytest.mark.parametrize("init", [(1, 1, 1, 1), (0, 2, 1, 0), (0, 1, 1, 1), (0, 1, 0, 3)])
+@pytest.mark.parametrize("init", [(1, 1, 1, 1), (0, 2, 1, 0), (0, 1, 1, 1), (0, 1, 0, 3), (0, 0, 0, 0)])
 def test_complex(init):
     modes = 4
     cutoff_dim = 6
