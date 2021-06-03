@@ -123,7 +123,7 @@ class GaussianMerge(Fock):
         "Rgate",
         "Interferometer",
         "MZgate",
-        "sMZgate"
+        "sMZgate",
     ]
 
     def __init__(self):
