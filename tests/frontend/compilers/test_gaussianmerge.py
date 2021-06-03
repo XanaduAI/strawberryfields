@@ -27,7 +27,7 @@ def test_complex():
     cutoff_dim = 6
 
     initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
-    # The ket below corresponds to a single horizontal photon in each of the modes
+    # The ket below corresponds to a single photon going into each of the modes
     initial_state[1, 1, 1, 1] = 1
 
     prog = sf.Program(modes)
@@ -58,4 +58,3 @@ def test_complex():
     ket = results_norm.state.ket()
     ket_merged = results_merged.state.ket()
     assert np.allclose(np.abs(np.sum(np.conj(ket) * ket_merged)), 1)
-
