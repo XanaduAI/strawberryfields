@@ -91,6 +91,8 @@ class GaussianMerge(Fock):
         "Vgate",
         "Kgate",
         # two mode gates
+        "MZgate",
+        "sMZgate",
         "BSgate",
         "CKgate",
         "S2gate",
@@ -107,6 +109,7 @@ class GaussianMerge(Fock):
         "CZgate": {},
         "Xgate": {},
         "Zgate": {},
+        "Fouriergate": {},
     }
 
     prep_states = ["Ket"]
@@ -120,6 +123,7 @@ class GaussianMerge(Fock):
         "Rgate",
         "Interferometer",
         "MZgate",
+        "sMZgate"
     ]
 
     def __init__(self):
