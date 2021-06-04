@@ -21,14 +21,14 @@ import strawberryfields.ops as ops
 
 pytestmark = pytest.mark.frontend
 
-
-def test_complex():
+@pytest.mark.parametrize("init", [(1, 1, 1, 1), (0, 2, 1, 0)])
+def test_complex(init):
     modes = 4
     cutoff_dim = 6
 
     initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
     # The ket below corresponds to a single horizontal photon in each of the modes
-    initial_state[1, 1, 1, 1] = 1
+    initial_state[init] = 1
 
     prog = sf.Program(modes)
     s_d_params = 0.01
