@@ -22,7 +22,7 @@ from .gaussian_unitary import GaussianUnitary
 
 def get_qumodes_operated_upon(op):
     """
-    Helper function that returns list of integers, which are the qumode indexes that are operated by op
+    Helper function that returns list of integers, which are the qumode indexes that are operated by op.
     """
     return [reg.ind for reg in op.reg]
 
