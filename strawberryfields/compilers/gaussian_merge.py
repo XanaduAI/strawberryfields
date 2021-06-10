@@ -164,6 +164,7 @@ class GaussianMerge(Fock):
             - Attach all non-merged predecessor and successor of the merged operations to the new gaussian
             transform and displacement gates (add_gaussian_pre_and_succ_gates).
             - Remove nodes of operations that were merged in and convert DAG to sequence.
+
         """
         self.DAG = pu.list_to_DAG(self.curr_seq)
 
