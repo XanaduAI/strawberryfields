@@ -335,7 +335,7 @@ class GaussianMerge(Fock):
 
     def organize_merge_ops(self, merged_gaussian_ops):
         """
-        Organize operations to be merged in order by using the order of the current operation sequence
+        Organize operations to be merged in order by using the order of the current operation sequence.
         """
         organized_merge_operations = []
         for op_in_seq in self.curr_seq:
