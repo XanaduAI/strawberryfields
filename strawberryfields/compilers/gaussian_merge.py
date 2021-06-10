@@ -345,7 +345,7 @@ class GaussianMerge(Fock):
 
     def is_op_gaussian_or_prep(self, op):
         """
-        Helper function that returns True if op is gaussian or a preparation state else returns False
+        Helper function that returns True if op is Gaussian or a preparation state else returns False.
         """
         op_name = get_op_name(op)
         return op_name in self.gaussian_ops or op_name in self.prep_states
