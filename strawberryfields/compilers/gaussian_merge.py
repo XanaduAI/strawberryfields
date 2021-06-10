@@ -326,7 +326,7 @@ class GaussianMerge(Fock):
     def non_gaussian_qumodes_dependecy(self, op):
         """
         Get qumodes used in predecessor non-gaussian operations of op. Returns a list of integers,
-        where the number depicts the qumode index that the non-gaussian operation operates on
+        where the number depicts the qumode index that the non-Gaussian operation operates on.
         """
         for predecessor in self.DAG.predecessors(op):
             if not self.is_op_gaussian_or_prep(predecessor):
