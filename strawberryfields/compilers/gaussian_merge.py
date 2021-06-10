@@ -29,7 +29,7 @@ def get_qumodes_operated_upon(op):
 
 def get_op_name(op):
     """
-    Helper function that obtains the string name of an operation
+    Helper function that obtains the string name of an operation.
     """
     return op.op.__class__.__name__
 
