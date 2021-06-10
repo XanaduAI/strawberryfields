@@ -149,7 +149,21 @@ class GaussianMerge(Fock):
         """
         Main function to merge a gaussian operation with its gaussian neighbours.
         If merge is achieved, the method updates self.curr_seq and returns True
-        Else (merge cannot be achieved), the method returns false
+        Else (merge cannot be achieved), the method returns false.
+
+        Program Flow:
+            - For each operation (op) check and obtain Gaussian operations that can be merged
+            (get_valid_gaussian_merge_ops).
+            - If the operation has successor gaussian operations that can be merged,
+            then merge them using gaussian_unitary.py.
+            - Determine displacement gates, from gaussian unitary merge, and map them to the qumodes acted upon
+            (add_displacement_gates).
+            - Attach predecessor operations of the main operation (op) to new Gaussian transform operations.
+            - Attach successor non Gaussian operations of op to a displacement gate, if present,
+            or a gaussian transform operation from the merged operations (add_non_gaussian_successor_gates).
+            - Attach all non-merged predecessor and successor of the merged operations to the new gaussian
+            transform and displacement gates (add_gaussian_pre_and_succ_gates).
+            - Remove nodes of operations that were merged in and convert DAG to sequence.
         """
         self.DAG = pu.list_to_DAG(self.curr_seq)
 
@@ -197,7 +211,7 @@ class GaussianMerge(Fock):
 
     def recursive_d_gate_successors(self, gate):
         """
-        Gets all displacement gates in channel if they follow each other. Returns lists of displacement gates
+        Gets all displacement gates in channel if they follow each other. Returns lists of displacement gates.
         """
         d_gates = []
         successors = list(self.DAG.successors(gate))
@@ -228,7 +242,7 @@ class GaussianMerge(Fock):
         self, gaussian_transform, merged_gaussian_ops, displacement_mapping
     ):
         """
-        Updated DAG by adding edges between gaussian transform/displacement operations to unmerged gaussian operations
+        Updated DAG by adding edges between gaussian transform/displacement operations to unmerged gaussian operations.
         """
         successor_operations_added = []
         for gaussian_op in merged_gaussian_ops:
@@ -311,8 +325,8 @@ class GaussianMerge(Fock):
 
     def is_redundant_merge(self, op, merged_gaussian_ops):
         """
-        Helper function that determines if merge will do nothing. i.e. just contains Gaussian Transforms and Displacement
-        operations.
+        Helper function that determines if merge will do nothing. i.e. just contains Gaussian Transforms and
+        Displacement operations.
         """
         if "GaussianTransform" in get_op_name(op):
             all_displacement_gates = True
@@ -352,7 +366,8 @@ class GaussianMerge(Fock):
 
     def valid_prepend_op_addition(self, op, pre, merged_gaussian_ops):
         """
-        Helper function that ensures predecessor operation being added did not skip any operations between op and pre
+        Helper function that ensures predecessor operation being added to merger list, did not skip any operations
+        between op (operation being merged) and pre (predecessor operation of op attempted to be merged).
         """
         for pre_op in self.DAG.predecessors(op):
             if pre_op not in merged_gaussian_ops:
@@ -363,7 +378,9 @@ class GaussianMerge(Fock):
 
     def remove_invalid_operations(self, op, merged_gaussian_ops):
         """
-        Helper function that removes operations from merged_gaussian_ops if they are invalid merge operations
+        Helper function that removes operations from merged_gaussian_ops if they are being operated upon a
+        non-gaussian beforehand.
+        E.X  BS | q[0],q[1] has successors Vgate | q[1] & S2gate q[0],q[1] in this case the S2gate is removed.
         """
         op_qumodes = get_qumodes_operated_upon(op)
         for gaussian_op in merged_gaussian_ops:
