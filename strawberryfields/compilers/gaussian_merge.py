@@ -153,7 +153,7 @@ class GaussianMerge(Fock):
 
         Program Flow:
             - For each operation (op) check and obtain Gaussian operations that can be merged
-            (get_valid_gaussian_merge_ops).
+              (get_valid_gaussian_merge_ops).
             - If the operation has successor gaussian operations that can be merged,
             then merge them using gaussian_unitary.py.
             - Determine displacement gates, from gaussian unitary merge, and map them to the qumodes acted upon
