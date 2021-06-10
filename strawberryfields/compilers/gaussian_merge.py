@@ -311,7 +311,7 @@ class GaussianMerge(Fock):
 
     def is_redundant_merge(self, op, merged_gaussian_ops):
         """
-        Help function that determines if merge will do nothing. i.e. just contains Gaussian Transforms and Displacement
+        Helper function that determines if merge will do nothing. i.e. just contains Gaussian Transforms and Displacement
         operations.
         """
         if "GaussianTransform" in get_op_name(op):
