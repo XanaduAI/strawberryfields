@@ -16,7 +16,7 @@ in a Gaussian and non-Gaussian circuit."""
 
 import strawberryfields.program_utils as pu
 
-from .fock import Fock
+from .compiler import Compiler
 from .gaussian_unitary import GaussianUnitary
 
 
@@ -34,7 +34,7 @@ def get_op_name(op):
     return op.op.__class__.__name__
 
 
-class GaussianMerge(Fock):
+class GaussianMerge(Compiler):
     """Compiler that merges adjacent Gaussian operations into a single symplectic transformation,
     to reduce the depth of non-Gaussian programs.
 
