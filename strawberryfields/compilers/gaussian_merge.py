@@ -155,14 +155,14 @@ class GaussianMerge(Fock):
             - For each operation (op) check and obtain Gaussian operations that can be merged
               (get_valid_gaussian_merge_ops).
             - If the operation has successor gaussian operations that can be merged,
-            then merge them using gaussian_unitary.py.
+              then merge them using gaussian_unitary.py.
             - Determine displacement gates, from gaussian unitary merge, and map them to the qumodes acted upon
-            (add_displacement_gates).
+              (add_displacement_gates).
             - Attach predecessor operations of the main operation (op) to new Gaussian transform operations.
             - Attach successor non Gaussian operations of op to a displacement gate, if present,
-            or a gaussian transform operation from the merged operations (add_non_gaussian_successor_gates).
+              or a gaussian transform operation from the merged operations (add_non_gaussian_successor_gates).
             - Attach all non-merged predecessor and successor of the merged operations to the new gaussian
-            transform and displacement gates (add_gaussian_pre_and_succ_gates).
+              transform and displacement gates (add_gaussian_pre_and_succ_gates).
             - Remove nodes of operations that were merged in and convert DAG to sequence.
 
         """
