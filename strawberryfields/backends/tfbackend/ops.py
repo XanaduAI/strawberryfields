@@ -403,7 +403,7 @@ def single_n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, dtype=tf.compl
     gate = np.transpose(gate, [0, 2, 1, 3])
 
     def grad(dy):
-    ##TODO: !!!
+    ##TODO: !!!test
 #        Dr, Dphi = grad_n_mode_gaussian_gate_tw(np.transpose(gate, [0, 2, 1, 3]), theta, phi)
 #        Dr = np.transpose(Dr, [0, 2, 1, 3])
 #        Dphi = np.transpose(Dphi, [0, 2, 1, 3])
