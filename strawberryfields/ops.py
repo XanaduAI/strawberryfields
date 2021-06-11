@@ -2193,6 +2193,44 @@ class Fouriergate(Gate):
         if self.dagger:
             temp += ".H"
         return temp
+        
+class Ggate(Gate):
+    r"""General N-mode Gaussian gate.
+    
+    The general N-mode Gaussian gate which is decomposed into the N single-mode displacements, N-mode passive transformation parametrized by a unitary matrix V, N single-mode squeezers and another N-mode passive transformation parametrized by a unitary matrix W.
+
+    .. math::
+        G = D(\gamma)U(W)S(\zeta)U(V)
+        
+    Args:
+        gamma (complex vector length N): parameter for single-mode displacement
+        W/V (unitary matrix (N,N)): parameter for the passive transformation
+        
+        
+        gamma (array): vector of displcement parameters
+        W (array): unitary matrix
+        zeta (array):  vector of squeezing parameters
+        V (array): unitary matrix
+        
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+           
+    """
+    ns = 2 # Number of dimension?
+
+    def __init__(self, gamma, W, zeta, V):
+        super().__init__([gamma, W, zeta, V])
+
+    def _apply(self, reg, backend, **kwargs):
+        gamma, W, zeta, V = par_evaluate(self.p)
+        backend.n_mode_gaussian_gate(gamma, W, zeta, V, *reg)
+
+    def _decompose(self, reg, **kwargs):
+        # TODO: decompose?
+
 
 
 # ====================================================================

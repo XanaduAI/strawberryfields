@@ -553,6 +553,28 @@ class Circuit:
             dtype=self._dtype,
         )
         self._update_state(new_state)
+        
+    def n_mode_gaussian_gate(gamma, W, zeta, V, *modes):
+        """
+        Apply the N-mode gaussian gates to the specified mode.
+        """
+        ##TODO: if tf.cast is necesssary?
+#        g = tf.cast(gamma, self._dtype)
+        gamma = self._maybe_batch(gamma)
+        W = self._maybe_batch(W)
+        zeta = self._maybe_batch(zeta)
+        V = self._maybe_batch(V)
+        new_state = ops.n_mode_gaussian_gate(
+            gamma, W, zeta, V,
+            *modes,
+            self._state,
+            self._cutoff_dim,
+            self._hbar,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
+        )
+        self._update_state(new_state)
 
     def loss(self, T, mode):
         """

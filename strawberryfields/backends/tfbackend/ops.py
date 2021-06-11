@@ -43,6 +43,8 @@ from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
+from thewalrus.fock_gradients import n_mode_gaussian_gate as n_mode_gaussian_gate_tw
+from thewalrus.fock_gradients import grad_n_mode_gaussian_gate as grad_n_mode_gaussian_gate_tw
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -388,6 +390,46 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
         single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
+@tf.custom_gradient
+def single_n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, dtype=tf.complex64.as_numpy_dtype):
+    """creates a N-mode gaussian gate matrix"""
+    gamma = gamma.numpy()
+    W = W.numpy()
+    zeta = zeta.numpy()
+    V = V.numpy()
+
+    gate = n_mode_gaussian_gate_tw(gamma, W, zeta, V, cutoff, dtype)
+    ##TODO: transpose order?
+    gate = np.transpose(gate, [0, 2, 1, 3])
+
+    def grad(dy):
+    ##TODO: !!!
+#        Dr, Dphi = grad_n_mode_gaussian_gate_tw(np.transpose(gate, [0, 2, 1, 3]), theta, phi)
+#        Dr = np.transpose(Dr, [0, 2, 1, 3])
+#        Dphi = np.transpose(Dphi, [0, 2, 1, 3])
+#        grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
+#        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        return grad_gamma, grad_S, grad_d, None
+
+    return gate, grad
+
+
+def n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, batched=False, dtype=tf.complex64):
+    """creates a N-mode gaussian gate matrix accounting for batching"""
+    gamma = tf.cast(gamma, dtype)
+    W = tf.cast(W, dtype)
+    zeta = tf.cast(zeta, dtype)
+    V = tf.cast(V, dtype)
+    if batched:
+        return tf.stack(
+            [
+                single_n_mode_gaussian_gate_matrix(gamma_, W_, zeta_, V_, cutoff, dtype=dtype.as_numpy_dtype)
+                for gamma_, W_, zeta_, V_ in tf.transpose([gamma, W, zeta, V])
+            ]
+        )
+    return tf.convert_to_tensor(
+        single_n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, dtype=dtype.as_numpy_dtype)
+    )
 
 ###################################################################
 
