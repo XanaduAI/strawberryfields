@@ -150,7 +150,7 @@ class GaussianMerge(Compiler):
     def merge_a_gaussian_op(self, registers):
         """
         Main function to merge a gaussian operation with its gaussian neighbours.
-        If merge is achieved, the method updates self.curr_seq and returns True
+        If merge is achieved, the method updates self.curr_seq and returns ``True``
         Else (merge cannot be achieved), the method returns false.
 
         Program Flow:
