@@ -223,11 +223,11 @@ class TFBackend(BaseFock):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
             
-    def n_mode_gaussian_gate(self, gamma, W, zeta, V, **modes):
+    def n_mode_gaussian_gate(self, S, d, *modes):
         # TODO: non-fix longer modes to be remapped and applied
         with tf.name_scope("N_mode_gaussian_gate"):
             remapped_modes = self._remap_modes([modes])
-            self.circuit.n_mode_gaussian_gate(gamma, W, zeta, V, **remapped_modes)
+            self.circuit.n_mode_gaussian_gate(S, d, *remapped_modes)
 
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.

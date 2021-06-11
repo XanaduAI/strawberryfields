@@ -391,14 +391,12 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 @tf.custom_gradient
-def single_n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, dtype=tf.complex64.as_numpy_dtype):
+def single_n_mode_gaussian_gate_matrix(S, d, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
-    gamma = gamma.numpy()
-    W = W.numpy()
-    zeta = zeta.numpy()
-    V = V.numpy()
+    S = S.numpy()
+    d = d.numpy()
 
-    gate = n_mode_gaussian_gate_tw(gamma, W, zeta, V, cutoff, dtype)
+    gate = n_mode_gaussian_gate_tw(S, d, cutoff, dtype)
     ##TODO: transpose order?
     gate = np.transpose(gate, [0, 2, 1, 3])
 

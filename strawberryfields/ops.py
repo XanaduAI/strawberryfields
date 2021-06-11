@@ -2197,26 +2197,24 @@ class Fouriergate(Gate):
 class Ggate(Gate):
     r"""General N-mode Gaussian gate.
     
-    The general N-mode Gaussian gate which is decomposed into the N single-mode displacements, N-mode passive transformation parametrized by a unitary matrix V, N single-mode squeezers and another N-mode passive transformation parametrized by a unitary matrix W.
+    The general N-mode Gaussian gate which is decomposed into the N single-mode displacements, N-mode passive transformation parametrized by a unitary matrix V, N single-mode squeezers and another N-mode passive transformation parametrized by a unitary matrix W. And here we represent it as the symplectic matrix S and the displacement parameter d.
 
     .. math::
         G = D(\gamma)U(W)S(\zeta)U(V)
         
     Args:
-        gamma (complex vector length N): parameter for single-mode displacement
-        W/V (unitary matrix (N,N)): parameter for the passive transformation
-        
-        
-        gamma (array): vector of displcement parameters
-        W (array): unitary matrix
-        zeta (array):  vector of squeezing parameters
-        V (array): unitary matrix
+
+        S (array): symplectic matrix
+        d (array): vector of displacement parameters
         
     .. details::
 
         .. admonition:: Definition
             :class: defn
-
+            
+        .. math::
+            & cov = S*cov*S^T,\\
+            & mean = mean + d.
            
     """
     ns = 2 # Number of dimension?
@@ -2225,8 +2223,8 @@ class Ggate(Gate):
         super().__init__([gamma, W, zeta, V])
 
     def _apply(self, reg, backend, **kwargs):
-        gamma, W, zeta, V = par_evaluate(self.p)
-        backend.n_mode_gaussian_gate(gamma, W, zeta, V, *reg)
+        S, d = par_evaluate(self.p)
+        backend.n_mode_gaussian_gate(S, d, *reg)
 
     def _decompose(self, reg, **kwargs):
         # TODO: decompose?
