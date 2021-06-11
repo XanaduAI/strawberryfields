@@ -181,8 +181,8 @@ class GaussianMerge(Compiler):
                 if merged_gaussian_ops:
                     self.new_DAG = self.DAG.copy()
                     # Fix order of operations
-                    merged_gaussian_ops = self.organize_merge_ops([op] + merged_gaussian_ops)
-                    gaussian_transform = GaussianUnitary().compile(merged_gaussian_ops, registers)
+                    unified_operations = self.organize_merge_ops([op] + merged_gaussian_ops)
+                    gaussian_transform = GaussianUnitary().compile(unified_operations, registers)
                     self.new_DAG.add_node(gaussian_transform[0])
 
                     # Logic to add displacement gates. Returns a dictionary,
@@ -201,7 +201,6 @@ class GaussianMerge(Compiler):
                     )
 
                     # Add edges for all successor/predecessor operations of the merged operations
-                    merged_gaussian_ops.remove(op)
                     self.add_gaussian_pre_and_succ_gates(
                         gaussian_transform, merged_gaussian_ops, displacement_mapping
                     )
@@ -286,7 +285,9 @@ class GaussianMerge(Compiler):
         {1: Dgate|q[1], 2:Dgate|q[2]}
         """
         displacement_mapping = {}
-        if len(gaussian_transform) > 1:
+        #  The Gaussian Unitary compiler can return Dgate in two ways. Either there is a Gaussian Transform plus Dgates
+        #  or the only thing returned is a Dgate.
+        if len(gaussian_transform) > 1 or "Dgate" in get_op_name(gaussian_transform[0]):
             for displacement_gate in gaussian_transform[1:]:
                 self.new_DAG.add_node(displacement_gate)
                 self.new_DAG.add_edge(gaussian_transform[0], displacement_gate)
