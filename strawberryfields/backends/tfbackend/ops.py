@@ -70,9 +70,8 @@ def _numer_safe_power(base, exponent, dtype=tf.complex64):
     return base ** exponent
 
 
-def mixed(pure_state, batched=False):
+def mix(pure_state, batched=False):
     """Converts the state from pure to mixed"""
-    # todo: In the fock backend mixing is done by ops.mix(), maybe the functions should be named identically?
     if not batched:
         pure_state = tf.expand_dims(pure_state, 0)  # add in fake batch dimension
 
@@ -412,7 +411,7 @@ def fock_state(n, cutoff, pure=True, batched=False, dtype=tf.complex64):
     fock_sparse = tf.scatter_nd(idxs, values, shape)
     fock = tf.cast(fock_sparse, dtype)
     if not pure:
-        fock = mixed(fock, batched)
+        fock = mix(fock, batched)
     return fock
 
 
@@ -429,7 +428,7 @@ def coherent_state(r, phi, cutoff, pure=True, batched=False, dtype=tf.complex64)
         axis=-1,
     )
     if not pure:
-        coh = mixed(coh, batched)
+        coh = mix(coh, batched)
     return coh
 
 
@@ -437,7 +436,7 @@ def squeezed_vacuum(r, theta, cutoff, pure=True, batched=False, dtype=tf.complex
     """creates a single mode input squeezed vacuum state"""
     squeezed = squeezed_vacuum_vector(r, theta, cutoff, batched=batched, dtype=dtype)
     if not pure:
-        squeezed = mixed(squeezed, batched)
+        squeezed = mix(squeezed, batched)
     return squeezed
 
 
@@ -477,7 +476,7 @@ def displaced_squeezed(
     squeezed_coh = prefactor * coeff * hermite_terms
 
     if not pure:
-        squeezed_coh = mixed(squeezed_coh, batched)
+        squeezed_coh = mix(squeezed_coh, batched)
     return squeezed_coh
 
 
@@ -695,7 +694,7 @@ def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
         )
 
     if pure:
-        in_modes = mixed(in_modes, batched)
+        in_modes = mix(in_modes, batched)
 
     # create equation
     batch_index = indices[:batch_offset]
@@ -917,11 +916,11 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
         # make both system and replacement mixed
         # todo: For performance the partial trace could be done directly from the pure state. This would of course require a better partial trace function...
         if system_is_pure:
-            system = mixed(system, batched)
+            system = mix(system, batched)
 
         # mix the replacement if it is pure
         if replacement_is_pure:
-            replacement = mixed(replacement, batched)
+            replacement = mix(replacement, batched)
 
         # partial trace out modes
         # todo: We are tracing out the modes one by one in descending order (to not screw up things). This is quite inefficient.
@@ -930,26 +929,11 @@ def replace_modes(replacement, modes, system, system_is_pure, batched=False):
             reduced_state = partial_trace(reduced_state, mode, False, batched)
         # append mode and insert state (There is also insert_state(), but it seemed unnecessarily complicated to try to generalize this function, which does a lot of manual list comprehension, to the multi mode case than to write the two liner below)
         # todo: insert_state() could be rewritten to take full advantage of the high level functions of tf. Before doing that different implementatinos should be benchmarked to compare speed and memory requirements, as in practice these methods will be perfomance critical.
-        if not batched:
-            # todo: remove the hack in the line below and enable the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
-            # revised_modes = tf.tensordot(reduced_state, replacement, axes=0)
-            revised_modes = tf.tensordot(
-                tf.expand_dims(reduced_state, 0), tf.expand_dims(replacement, 0), axes=[[0], [0]]
-            )
-        else:
-            batch_size = reduced_state.shape[0]
-            # todo: remove the hack in the line below and enabled the line with axes=0 instead, if ever we change the dependency of SF to tensorflow>=1.6
-            # revised_modes = tf.stack([tf.tensordot(reduced_state[b], replacement[b], axes=0) for b in range(batch_size)])
-            revised_modes = tf.stack(
-                [
-                    tf.tensordot(
-                        tf.expand_dims(reduced_state[b], 0),
-                        tf.expand_dims(replacement[b], 0),
-                        axes=[[0], [0]],
-                    )
-                    for b in range(batch_size)
-                ]
-            )
+        idx1 = (slice(None, None),) * batched + (Ellipsis,) + (None,) * (replacement.ndim - batched)
+        idx2 = (
+            (slice(None, None),) * batched + (None,) * (reduced_state.ndim - batched) + (Ellipsis,)
+        )
+        revised_modes = reduced_state[idx1] * replacement[idx2]
         revised_modes_pure = False
 
     # unless the preparation was meant to go into the last modes in the standard order, we need to swap indices around
@@ -1009,7 +993,7 @@ def insert_state(state, system, state_is_pure, mode=None, batched=False):
             if state_is_pure:
                 return state
             else:
-                return mixed(state)
+                return mix(state)
         elif len(state.shape) - batch_offset == 2:
             return state
         else:
@@ -1061,7 +1045,7 @@ def partial_trace(system, mode, state_is_pure, batched=False):
         num_modes = (num_indices - batch_offset) // 2
 
     if state_is_pure:
-        system = mixed(system, batched)
+        system = mix(system, batched)
 
     # tensorflow trace implementation
     # requires subsystem to be traced out to be at end
@@ -1086,7 +1070,7 @@ def reduced_density_matrix(system, modes, state_is_pure, batched=False):
         modes = [modes]
 
     if state_is_pure:
-        reduced_state = mixed(system, batched)
+        reduced_state = mix(system, batched)
     else:
         reduced_state = system
     num_indices = len(reduced_state.shape)

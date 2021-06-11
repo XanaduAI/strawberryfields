@@ -2,15 +2,112 @@
 
 <h3>New features since last release</h3>
 
+* Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
+ (``rectangular_compact`` and ``triangular_compact``) are now available in
+ the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
+ [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
+ 
+ This decomposition allows for lower depth photonic circuits in physical devices by applying two 
+ independent phase shifts in parallel inside each Mach-Zehnder interferometer.
+ ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2 
+ for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
+
+ Example:
+
+ ```python 
+  import numpy as np 
+  from strawberryfields import Program
+  from strawberryfields.ops import Interferometer
+  from scipy.stats import unitary_group
+
+  M = 10
+
+  # generate a 10x10 Haar random unitary
+  U = unitary_group.rvs(M)
+
+  prog = Program(M)
+
+  with prog.context as q:
+      Interferometer(U, mesh='rectangular_compact') | q
+
+  # check that applied unitary is correct 
+  compiled_circuit = prog.compile(compiler="gaussian_unitary")
+  commands = compiled_circuit.circuit
+  S = commands[0].op.p[0] # symplectic transformation
+  Uout = S[:M,:M] + 1j * S[M:,:M] # unitary transformation
+
+  print(np.allclose(U, Uout))
+ ```
+
+* A new compiler, ``GaussianMerge``, has been added. It is aimed at reducing calculation
+  overhead for non-Gaussian circuits by minimizing the amount of Gaussian operations
+  in a circuit, while retaining the same functionality.
+  [(#591)](https://github.com/XanaduAI/strawberryfields/pull/591)
+   
+  ``GaussianMerge`` merges Gaussian operations, where allowed, into ``GaussianTransform``
+  and ``Dgate`` operations. It utilizes the existing ``GaussianUnitary`` compiler to
+  merge operations and Directed Acyclic Graphs to determine which operations can be merged.
+
+  ```python 
+  modes = 4
+  cutoff_dim = 6
+  
+  # prepare an intial state with 4 photons in as many modes
+  initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
+  initial_state[1, 1, 1, 1] = 1
+  
+  prog = sf.Program(4)
+  
+  with prog.context as q:
+      ops.Ket(initial_state) | q  # Initial state preparation
+      # Gaussian Layer
+      ops.S2gate(0.01, 0.01) | (q[0], q[1])
+      ops.BSgate(1.9, 1.7) | (q[1], q[2])
+      ops.BSgate(0.9, 0.2) | (q[0], q[1])
+      # Non-Gaussian Layer
+      ops.Kgate(0.5) | q[3]
+      ops.CKgate(0.7) | (q[2], q[3])
+      # Gaussian Layer
+      ops.BSgate(1.0, 0.4) | (q[0], q[1])
+      ops.BSgate(2.0, 1.5) | (q[1], q[2])
+      ops.Dgate(0.01) | q[0]
+      ops.Dgate(0.01) | q[0]
+      ops.Sgate(0.01, 0.01) | q[1]
+      # Non-Gaussian Layer
+      ops.Vgate(0.5) | q[2]
+  
+  prog_merged = prog.compile(compiler="gaussian_merge")
+  ```
+
+
+<h3>Improvements</h3>
+
+* Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
+  similarity across backend ops, and replace `tensorflow.tensordot` with
+  broadcasting.
+  [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
 
+* Fixed an unexpected behaviour that can result in increasing memory usage due
+  to ``sympy.lambdify`` caching too much data using ``linecache``.
+  [(#579)](https://github.com/XanaduAI/strawberryfields/pull/579)
+
 <h3>Documentation</h3>
+
+* References to the ``simulon`` simulator target have been rewritten to
+  ``simulon_gaussian`` to reflect changes made on the Xanadu Quantum Cloud. The
+  language has been modified to imply that multiple simulators could be
+  available on XQC.
+  [(#576)](https://github.com/XanaduAI/strawberryfields/pull/576)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
@@ -113,7 +210,7 @@ This release contains contributions from (in alphabetical order):
   N1, N1var = state.mean_photon(1)
   print(N0)
   print(N1)
-  print("analytical:" ,np.sinh(0.8)**2)
+  print("analytical:", np.sinh(0.8)**2)
   ```
 
 <h3>Improvements</h3>

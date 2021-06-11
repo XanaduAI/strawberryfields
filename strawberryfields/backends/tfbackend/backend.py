@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
-from .ops import mixed, partial_trace, reorder_modes
+from .ops import mix, partial_trace, reorder_modes
 from .states import FockStateTF
 
 
@@ -255,7 +255,7 @@ class TFBackend(BaseFock):
 
                 if pure:
                     # convert to mixed state representation
-                    reduced_state = mixed(s, batched)
+                    reduced_state = mix(s, batched)
                     pure = False
                 else:
                     reduced_state = s
