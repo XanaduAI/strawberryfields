@@ -33,11 +33,6 @@ class Gaussian(Compiler):
         "DisplacedSqueezed",
         "Thermal",
         "Gaussian",
-        # measurements
-        "MeasureHomodyne",
-        "MeasureHeterodyne",
-        "MeasureFock",
-        "MeasureThreshold",
         # channels
         "LossChannel",
         "ThermalLossChannel",
@@ -53,7 +48,6 @@ class Gaussian(Compiler):
         "GraphEmbed": {},
         "BipartiteGraphEmbed": {},
         "GaussianTransform": {},
-        "Gaussian": {},
         "Pgate": {},
         "S2gate": {},
         "CXgate": {},

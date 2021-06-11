@@ -83,9 +83,6 @@ class GaussianMerge(Compiler):
         "_Delete",
         # state preparations
         "Ket",
-        # measurements
-        "MeasureFock",
-        "MeasureHomodyne",
         # single mode gates
         "Dgate",
         "Sgate",
@@ -105,7 +102,6 @@ class GaussianMerge(Compiler):
     decompositions = {
         "GraphEmbed": {},
         "BipartiteGraphEmbed": {},
-        "Gaussian": {},
         "Pgate": {},
         "CXgate": {},
         "CZgate": {},
