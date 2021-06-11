@@ -151,7 +151,7 @@ class GaussianMerge(Compiler):
         """
         Main function to merge a gaussian operation with its gaussian neighbours.
         If merge is achieved, the method updates self.curr_seq and returns ``True``
-        Else (merge cannot be achieved), the method returns false.
+        else (merge cannot be achieved), the method returns ``False``.
 
         Program Flow:
             - For each operation (op) check and obtain Gaussian operations that can be merged
