@@ -52,6 +52,7 @@
   modes = 4
   cutoff_dim = 6
   
+  # prepare an intial state with 4 photons in as many modes
   initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
   initial_state[1, 1, 1, 1] = 1
   
