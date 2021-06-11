@@ -39,6 +39,47 @@
   print(np.allclose(U, Uout))
  ```
 
+* A new compiler, ``GaussianMerge``, has been added. It is aimed at reducing calculation
+  overhead for non-Gaussian circuits by minimizing the amount of Gaussian operations
+  in a circuit, while retaining the same functionality.
+  [(#591)](https://github.com/XanaduAI/strawberryfields/pull/591)
+   
+  ``GaussianMerge`` merges Gaussian operations, where allowed, into ``GaussianTransform``
+  and ``Dgate`` operations. It utilizes the existing ``GaussianUnitary`` compiler to
+  merge operations and Directed Acyclic Graphs to determine which operations can be merged.
+
+  ```python 
+  modes = 4
+  cutoff_dim = 6
+  
+  # prepare an intial state with 4 photons in as many modes
+  initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
+  initial_state[1, 1, 1, 1] = 1
+  
+  prog = sf.Program(4)
+  
+  with prog.context as q:
+      ops.Ket(initial_state) | q  # Initial state preparation
+      # Gaussian Layer
+      ops.S2gate(0.01, 0.01) | (q[0], q[1])
+      ops.BSgate(1.9, 1.7) | (q[1], q[2])
+      ops.BSgate(0.9, 0.2) | (q[0], q[1])
+      # Non-Gaussian Layer
+      ops.Kgate(0.5) | q[3]
+      ops.CKgate(0.7) | (q[2], q[3])
+      # Gaussian Layer
+      ops.BSgate(1.0, 0.4) | (q[0], q[1])
+      ops.BSgate(2.0, 1.5) | (q[1], q[2])
+      ops.Dgate(0.01) | q[0]
+      ops.Dgate(0.01) | q[0]
+      ops.Sgate(0.01, 0.01) | q[1]
+      # Non-Gaussian Layer
+      ops.Vgate(0.5) | q[2]
+  
+  prog_merged = prog.compile(compiler="gaussian_merge")
+  ```
+
+
 <h3>Improvements</h3>
 
 * Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
@@ -66,7 +107,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Yuan Yao.
+Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
