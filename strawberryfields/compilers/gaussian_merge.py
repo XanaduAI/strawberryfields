@@ -74,6 +74,8 @@ class GaussianMerge(Compiler):
     """
 
     short_name = "gaussian_merge"
+    interactive = True
+
     primitives = {
         # meta operations
         "All",
