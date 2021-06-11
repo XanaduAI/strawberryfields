@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2021 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -185,7 +185,7 @@ class GaussianMerge(Compiler):
                     gaussian_transform = GaussianUnitary().compile(merged_gaussian_ops, registers)
                     self.new_DAG.add_node(gaussian_transform[0])
 
-                    # Logic to add displacement gates. Returns dictionary,
+                    # Logic to add displacement gates. Returns a dictionary,
                     # where the value is a displacement gate added and its key is the qumode its operating upon.
                     displacement_mapping = self.add_displacement_gates(gaussian_transform)
 
@@ -256,7 +256,7 @@ class GaussianMerge(Compiler):
                     successor_op_qumodes = get_qumodes_operated_upon(successor_op)
                     for qumode in successor_op_qumodes:
                         # If displacement gate operates on the same qumodes as the non-gaussian operation then don't
-                        # add edge. If register operated upon by successor operation has a displacement gate. Add edge.
+                        # add an edge. If register operated upon by successor operation has a displacement gate, add edge.
                         if (
                             qumode in displacement_mapping
                             and qumode not in self.non_gaussian_qumodes_dependecy(successor_op)
