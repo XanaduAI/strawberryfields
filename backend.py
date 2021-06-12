@@ -39,6 +39,7 @@ from thewalrus._torontonian import (
     powerset,
 )
 import numpy as np
+import strawberryfields as sf
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseGaussianState
 from .gaussiancircuit import GaussianModes
@@ -263,7 +264,10 @@ class GaussianBackend(BaseGaussian):
         cov = self.circuit.scovmatxp()
         # check we are sampling from a gaussian state with zero mean
         if not allclose(mu, zeros_like(mu)):
-            """For gaussian state with non-zero mean"""
+            mu = self.circuit.mean
+            cov = self.circuit.scovmatxp()
+            det_pattern = np.asarray(det_pattern).astype(np.int8)
+            hbar = sf.hbar
             return threshold_detection_prob_displacement(mu, cov, det_pattern, hbar)
 
         x_idxs = array(modes)
