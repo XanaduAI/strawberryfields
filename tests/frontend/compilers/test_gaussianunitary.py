@@ -46,7 +46,8 @@ def random_params(size, sq_bound, disp_bound):
 
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
-def test_gaussian_program(depth, width):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_gaussian_program(depth, width, compiler):
     """Tests that a circuit and its compiled version produce the same Gaussian state"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
@@ -60,7 +61,7 @@ def test_gaussian_program(depth, width):
             ops.Interferometer(V) | q
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -72,7 +73,8 @@ def test_gaussian_program(depth, width):
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
 @pytest.mark.parametrize("width", [5, 10])
-def test_symplectic_composition(depth, width):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_symplectic_composition(depth, width, compiler):
     """Tests that symplectic operations are composed correctly"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
@@ -83,12 +85,13 @@ def test_symplectic_composition(depth, width):
             S = random_symplectic(width, scale = 0.2)
             Snet = S @ Snet
             ops.GaussianTransform(S) | q
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     assert np.allclose(compiled_circuit.circuit[0].op.p[0], Snet)
 
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
-def test_modes_subset(depth):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_modes_subset(depth, compiler):
     """Tests that the compiler recognizes which modes are not being modified and acts accordingly"""
 
     width = 10
@@ -104,7 +107,7 @@ def test_modes_subset(depth):
             for i, index in enumerate(indices):
                 ops.Sgate(s[i]) | q[index]
             ops.Interferometer(V) | tuple(q[i] for i in indices)
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -117,7 +120,8 @@ def test_modes_subset(depth):
     assert indices == sorted(list(indices))
 
 
-def test_non_primitive_gates():
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_non_primitive_gates(compiler):
     """Tests that the compiler is able to compile a number of non-primitive Gaussian gates"""
 
     width = 6
@@ -142,7 +146,7 @@ def test_non_primitive_gates():
         ops.Xgate(0.4) | q[1]
         ops.Zgate(0.5) | q[3]
         ops.sMZgate(0.5,0.2) | (q[1], q[2])
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -152,10 +156,10 @@ def test_non_primitive_gates():
     assert np.allclose(mean, mean1)
 
 
-
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
-def test_displacements_only(depth, width):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_displacements_only(depth, width, compiler):
     """Tests that a circuit and its compiled version produce
     the same Gaussian state when there are only displacements"""
     eng = sf.LocalEngine(backend="gaussian")
@@ -166,7 +170,7 @@ def test_displacements_only(depth, width):
             alphas = np.random.rand(width)+1j*np.random.rand(width)
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
