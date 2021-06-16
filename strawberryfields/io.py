@@ -18,9 +18,9 @@ code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
-import regex as re
 from numbers import Number
 
+import re
 import numpy as np
 
 import blackbird
