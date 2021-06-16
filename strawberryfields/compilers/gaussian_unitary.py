@@ -83,6 +83,7 @@ class GaussianUnitary(Compiler):
         "Rgate",
         # multi mode gates
         "MZgate",
+        "sMZgate",
         "BSgate",
         "S2gate",
         "Interferometer",  # Note that interferometer is accepted as a primitive
@@ -170,6 +171,17 @@ class GaussianUnitary(Compiler):
                     v = np.exp(1j * params[0])
                     u = np.exp(1j * params[1])
                     U = 0.5 * np.array([[u * (v - 1), 1j * (1 + v)], [1j * u * (1 + v), 1 - v]])
+                    S = expand(
+                        interferometer(U),
+                        [dict_indices[modes[0]], dict_indices[modes[1]]],
+                        nmodes,
+                    )
+                elif name == "sMZgate":
+                    exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
+                    delta = (params[0] - params[1]) / 2
+                    U = exp_sigma * np.array(
+                        [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
+                    )
                     S = expand(
                         interferometer(U),
                         [dict_indices[modes[0]], dict_indices[modes[1]]],

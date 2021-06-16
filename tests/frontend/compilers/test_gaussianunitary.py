@@ -141,6 +141,7 @@ def test_non_primitive_gates():
         ops.Fourier | q[0]
         ops.Xgate(0.4) | q[1]
         ops.Zgate(0.5) | q[3]
+        ops.sMZgate(0.5,0.2) | (q[1], q[2])
     compiled_circuit = circuit.compile(compiler="gaussian_unitary")
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()

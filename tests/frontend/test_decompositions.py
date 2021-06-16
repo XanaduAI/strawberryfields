@@ -35,7 +35,11 @@ def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)
     O = np.concatenate(
-        (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1),), axis=0,
+        (
+            np.concatenate((0 * idm, idm), axis=1),
+            np.concatenate((-idm, 0 * idm), axis=1),
+        ),
+        axis=0,
     )
     return O
 
@@ -379,6 +383,166 @@ class TestTriangularDecomposition:
             qrec = dec.Ti(*i) @ qrec
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
+
+def _rectangular_compact_recompose(phases):
+    r"""Calculates the unitary of a rectangular compact interferometer,
+    using the phases provided in phases dict.
+
+    Args:
+        phases (dict):
+        where the keywords:
+        
+        * ``m``: the length of the matrix
+        * ``phi_ins``: parameters for the phase-shifters
+        * ``sigmas``: parameters for the sMZI
+        * ``deltas``: parameters for the sMZI
+        * ``phi_edges``: parameters for the edge phase shifters
+        * ``phi_outs``: parameters for the phase-shifters
+
+    Returns:
+        array : unitary matrix of the interferometer
+    """
+    m = phases["m"]
+    U = np.eye(m, dtype=np.complex128)
+    for j in range(0, m - 1, 2):
+        phi = phases["phi_ins"][j]
+        U = dec.P(j, phi, m) @ U
+    for layer in range(m):
+        if (layer + m + 1) % 2 == 0:
+            phi_bottom = phases["phi_edges"][m - 1, layer]
+            U = dec.P(m - 1, phi_bottom, m) @ U
+        for mode in range(layer % 2, m - 1, 2):
+            delta = phases["deltas"][mode, layer]
+            sigma = phases["sigmas"][mode, layer]
+            U = dec.M(mode, sigma, delta, m) @ U
+    for j, phi_j in phases["phi_outs"].items():
+        U = dec.P(j, phi_j, m) @ U
+    return U
+
+class TestRectangularCompactDecomposition:
+    """Tests for linear interferometer decomposition into rectangular grid of
+    phase-shifters and pairs of symmetric beamsplitters"""
+
+    def test_unitary_validation(self):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="The input matrix is not unitary"):
+            dec.rectangular_compact(A)
+
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(2), id="identity2"),
+            pytest.param(np.identity(2)[::-1], id="antiidentity2"),
+            pytest.param(haar_measure(2), id="random2"),
+            pytest.param(np.identity(4), id="identity4"),
+            pytest.param(np.identity(4)[::-1], id="antiidentity4"),
+            pytest.param(haar_measure(4), id="random4"),
+            pytest.param(np.identity(8), id="identity8"),
+            pytest.param(np.identity(8)[::-1], id="antiidentity8"),
+            pytest.param(haar_measure(8), id="random8"),
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+            pytest.param(np.identity(7), id="identity7"),
+            pytest.param(np.identity(7)[::-1], id="antiidentity7"),
+            pytest.param(haar_measure(7), id="random7"),
+        ],
+    )
+    def test_decomposition(self, U, tol):
+        """This test checks the function :func:`dec.rectangular_symmetric` for
+        various unitary matrices.
+
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular_symmetric`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches the given unitary.
+        """
+        nmax, mmax = U.shape
+        assert nmax == mmax
+        phases = dec.rectangular_compact(U)
+        Uout = _rectangular_compact_recompose(phases)
+        assert np.allclose(U, Uout, atol=tol, rtol=0)
+
+def _triangular_compact_recompose(phases):
+    r"""Calculates the unitary of a triangular compact interferometer,
+    using the phases provided in phases dict.
+
+    Args:
+        phases (dict):
+        where the keywords:
+        
+        * ``m``: the length of the matrix
+        * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
+        * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``deltas``: parameter of the sMZI :math:`\frac{(\theta_1-\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI
+        * ``zetas``: parameter of the phase-shifter at the end of the mode
+
+    Returns:
+        U (array) : unitary matrix of the interferometer
+    """
+    m = phases["m"]
+    U = np.identity(m, dtype=np.complex128)
+    for j in range(m - 1):
+        phi_j = phases["phi_ins"][j]
+        U = dec.P(j + 1, phi_j, m) @ U
+        for k in range(j + 1):
+            n = j - k
+            delta = phases["deltas"][n, k]
+            sigma = phases["sigmas"][n, k]
+            U = dec.M(n, sigma, delta, m) @ U
+    for j in range(m):
+        zeta = phases["zetas"][j]
+        U = dec.P(j, zeta, m) @ U
+    return U
+
+
+class TestTriangularCompactDecomposition:
+    """Tests for linear interferometer decomposition into rectangular grid of
+    phase-shifters and pairs of symmetric beamsplitters"""
+
+    def test_unitary_validation(self):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="The input matrix is not unitary"):
+            dec.triangular_compact(A)
+
+    @pytest.mark.parametrize(
+        "U",
+        [
+            pytest.param(np.identity(2), id="identity2"),
+            pytest.param(np.identity(2)[::-1], id="antiidentity2"),
+            pytest.param(haar_measure(2), id="random2"),
+            pytest.param(np.identity(4), id="identity4"),
+            pytest.param(np.identity(4)[::-1], id="antiidentity4"),
+            pytest.param(haar_measure(4), id="random4"),
+            pytest.param(np.identity(8), id="identity8"),
+            pytest.param(np.identity(8)[::-1], id="antiidentity8"),
+            pytest.param(haar_measure(8), id="random8"),
+            pytest.param(np.identity(20), id="identity20"),
+            pytest.param(np.identity(20)[::-1], id="antiidentity20"),
+            pytest.param(haar_measure(20), id="random20"),
+            pytest.param(np.identity(7), id="identity7"),
+            pytest.param(np.identity(7)[::-1], id="antiidentity7"),
+            pytest.param(haar_measure(7), id="random7"),
+        ],
+    )
+    def test_decomposition(self, U, tol):
+        """This test checks the function :func:`dec.rectangular_symmetric` for
+        various unitary matrices.
+
+        A given unitary (identity or random draw from Haar measure) is
+        decomposed using the function :func:`dec.rectangular_symmetric`
+        and the resulting beamsplitters are multiplied together.
+
+        Test passes if the product matches the given unitary.
+        """
+        nmax, mmax = U.shape
+        assert nmax == mmax
+        phases = dec.triangular_compact(U)
+        Uout = _triangular_compact_recompose(phases)
+        assert np.allclose(U, Uout, atol=tol, rtol=0)
 
 
 class TestWilliamsonDecomposition:
