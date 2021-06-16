@@ -45,6 +45,7 @@ from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 from thewalrus.fock_gradients import n_mode_gaussian_gate as n_mode_gaussian_gate_tw
 from thewalrus.fock_gradients import grad_n_mode_gaussian_gate as grad_n_mode_gaussian_gate_tw
+from thewalrus.fock_gradients import choi_trick as choi_trick_tw
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -390,43 +391,52 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
         single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
+def n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype = np.complex128):
+    gate = n_mode_gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
+    def grad(dy):
+        dG_dC, dG_dmu, dG_dSigma = grad_n_mode_gaussian_gate_tw(gate, C, mu, Sigma, cutoff, num_modes)
+        ##TODO: transpose?
+        return dG_dC, dG_dmu, dG_dSigma
+    return gate, grad
+
 @tf.custom_gradient
 def single_n_mode_gaussian_gate_matrix(S, d, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
     S = S.numpy()
     d = d.numpy()
+    num_modes = S.shape[0]//2
 
-    gate = n_mode_gaussian_gate_tw(S, d, cutoff, dtype)
-    ##TODO: transpose order?
-    gate = np.transpose(gate, [0, 2, 1, 3])
+    with tf.GradientTape as tape:
+        C, mu, Sigma = choi_trick_tw(S, d, num_modes)
+        gate = n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype)
+    ##TODO: transpose order? -> num of mode?
+#    gate = np.transpose(gate, [0, 2, 1, 3])
 
+    @tf.function
     def grad(dy):
-    ##TODO: !!!test
-#        Dr, Dphi = grad_n_mode_gaussian_gate_tw(np.transpose(gate, [0, 2, 1, 3]), theta, phi)
+    ##TODO: without gradient function?
+        DS, Dd = tape.gradient(gate,[S, d])
 #        Dr = np.transpose(Dr, [0, 2, 1, 3])
 #        Dphi = np.transpose(Dphi, [0, 2, 1, 3])
-#        grad_r = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dr)))
-#        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
-        return grad_gamma, grad_S, grad_d, None
-
+        grad_S = tf.math.real(tf.reduce_sum(dy * tf.math.conj(DS)))
+        grad_d = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dd)))
+        return grad_S, grad_d, None
     return gate, grad
 
 
 def n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, batched=False, dtype=tf.complex64):
     """creates a N-mode gaussian gate matrix accounting for batching"""
-    gamma = tf.cast(gamma, dtype)
-    W = tf.cast(W, dtype)
-    zeta = tf.cast(zeta, dtype)
-    V = tf.cast(V, dtype)
+    S = tf.cast(S, dtype)
+    d = tf.cast(d, dtype)
     if batched:
         return tf.stack(
             [
-                single_n_mode_gaussian_gate_matrix(gamma_, W_, zeta_, V_, cutoff, dtype=dtype.as_numpy_dtype)
-                for gamma_, W_, zeta_, V_ in tf.transpose([gamma, W, zeta, V])
+                single_n_mode_gaussian_gate_matrix(S_, d_, cutoff, dtype=dtype.as_numpy_dtype)
+                for S_, d_ in tf.transpose([S, d])
             ]
         )
     return tf.convert_to_tensor(
-        single_n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, dtype=dtype.as_numpy_dtype)
+        single_n_mode_gaussian_gate_matrix(S, d, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
 ###################################################################
