@@ -39,7 +39,6 @@ from thewalrus._torontonian import (
     powerset,
 )
 import numpy as np
-import strawberryfields as sf
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseGaussianState
 from .gaussiancircuit import GaussianModes
@@ -267,9 +266,8 @@ class GaussianBackend(BaseGaussian):
             mu = self.circuit.mean
             cov = self.circuit.scovmatxp()
             det_pattern = np.asarray(det_pattern).astype(np.int8)
-            hbar = sf.hbar
-            return threshold_detection_prob_displacement(mu, cov, det_pattern, hbar)
-
+            return threshold_detection_prob_displacement(mu, cov, det_pattern, self.hbar)
+        
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
