@@ -18,6 +18,7 @@ code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
+import regex as re
 from numbers import Number
 
 import numpy as np
@@ -26,7 +27,6 @@ import blackbird
 import strawberryfields.program as sfp
 import strawberryfields.parameters as sfpar
 from . import ops
-import regex as re
 
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
