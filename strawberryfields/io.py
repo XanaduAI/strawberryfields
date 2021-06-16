@@ -26,6 +26,7 @@ import blackbird
 import strawberryfields.program as sfp
 import strawberryfields.parameters as sfpar
 from . import ops
+import regex as re
 
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
@@ -83,7 +84,11 @@ def to_blackbird(prog, version="1.0"):
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
-                    a = str(a)
+                    if re.search(r"(?<!\w)q\d*(?!\w)", str(a)):
+                        # check if there are any regref statements (e.g. q0, q1)
+                        a = blackbird.RegRefTransform(a)
+                    else:
+                        a = str(a)
                 op["args"].append(a)
 
         # If program type is "tdm" then add the looped-over arrays to the

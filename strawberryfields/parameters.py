@@ -97,6 +97,7 @@ import collections.abc
 import functools
 import types
 import linecache
+import blackbird
 
 import numpy as np
 import sympy
@@ -257,6 +258,8 @@ def par_convert(args, prog):
     """
 
     def do_convert(a):
+        if isinstance(a, blackbird.RegRefTransform):
+            a = a.expr
         if isinstance(a, sympy.Basic):
             # substitute SF symbolic parameter objects for Blackbird ones
             s = {}
