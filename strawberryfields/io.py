@@ -20,7 +20,6 @@ code.
 import os
 from numbers import Number
 
-import re
 import numpy as np
 
 import blackbird
@@ -84,8 +83,9 @@ def to_blackbird(prog, version="1.0"):
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
-                    if re.search(r"(?<!\w)q\d*(?!\w)", str(a)):
-                        # check if there are any regref statements (e.g. q0, q1)
+                    isMeasuredParameter = lambda x : isinstance(x, sfpar.MeasuredParameter)
+                    if any(map(isMeasuredParameter, a.free_symbols)):
+                        # check if there are any measured parameters in `a`
                         a = blackbird.RegRefTransform(a)
                     else:
                         a = str(a)
