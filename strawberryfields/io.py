@@ -80,7 +80,7 @@ def to_blackbird(prog, version="1.0"):
                     op["kwargs"]["dark_counts"] = cmd.op.dark_counts
 
         else:
-            isMeasuredParameter = lambda x : isinstance(x, sfpar.MeasuredParameter)
+            isMeasuredParameter = lambda x: isinstance(x, sfpar.MeasuredParameter)
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
