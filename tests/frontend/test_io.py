@@ -467,7 +467,6 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
 
-    @pytest.mark.skip("FIXME enable when blackbird.program.RegRefTransform is replaced with sympy.Symbol.")
     def test_gate_measured_par(self):
         """Test a gate with a MeasuredParameter argument."""
 
