@@ -80,10 +80,10 @@ def to_blackbird(prog, version="1.0"):
                     op["kwargs"]["dark_counts"] = cmd.op.dark_counts
 
         else:
+            isMeasuredParameter = lambda x : isinstance(x, sfpar.MeasuredParameter)
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
-                    isMeasuredParameter = lambda x : isinstance(x, sfpar.MeasuredParameter)
                     if any(map(isMeasuredParameter, a.free_symbols)):
                         # check if there are any measured parameters in `a`
                         a = blackbird.RegRefTransform(a)
