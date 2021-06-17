@@ -46,6 +46,8 @@ def to_blackbird(prog, version="1.0"):
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
     bb._modes = list(prog.reg_refs.keys())
 
+    isMeasuredParameter = lambda x: isinstance(x, sfpar.MeasuredParameter)
+
     # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
         # set the target
@@ -80,7 +82,6 @@ def to_blackbird(prog, version="1.0"):
                     op["kwargs"]["dark_counts"] = cmd.op.dark_counts
 
         else:
-            isMeasuredParameter = lambda x: isinstance(x, sfpar.MeasuredParameter)
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
