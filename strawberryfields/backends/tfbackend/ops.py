@@ -45,7 +45,6 @@ from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 from thewalrus.fock_gradients import n_mode_gaussian_gate as n_mode_gaussian_gate_tw
 from thewalrus.fock_gradients import grad_n_mode_gaussian_gate as grad_n_mode_gaussian_gate_tw
-from thewalrus.fock_gradients import choi_trick as choi_trick_tw
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -391,6 +390,37 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
         single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
+def choi_trick(S, d, m, dtype=tf.complex64):
+    S = tf.cast(S, dtype = dtype)
+    d = tf.cast(d, dtype  = dtype)
+    m = num_mode
+    # m: num of modes
+    choi_r = tf.cast(tf.math.asinh(1.0), dtype  = dtype)
+    ch = tf.math.cosh(choi_r) * tf.eye(m, dtype  = dtype)
+    sh = tf.math.sinh(choi_r) * tf.eye(m, dtype  = dtype)
+    zh = tf.zeros([m, m], dtype  = dtype)
+    Schoi = tf.concat([tf.concat([ch, sh, zh, zh],0), tf.concat([sh, ch, zh, zh],0), tf.concat([zh, zh, ch, -sh],0), tf.concat([zh, zh, -sh, ch],0)],1)
+    Sxx = S[:m, :m]
+    Sxp = S[:m, m:]
+    Spx = S[m:, :m]
+    Spp = S[m:, m:]
+    idl = tf.eye(m, dtype  = dtype)
+    S_exp = tf.concat([tf.concat([Sxx, zh, Sxp, zh],1), tf.concat([zh, idl, zh, zh],1), tf.concat([Spx, zh, Spp, zh],1), tf.concat([zh, zh, zh, idl],1)],0)@ Schoi
+    choi_cov = 0.5 * S_exp @ tf.transpose(S_exp)
+    idl = tf.eye(2 * m, dtype= dtype)
+    R = tf.cast(tf.math.sqrt(0.5),dtype=dtype) * tf.concat([tf.concat([idl, 1j * idl],1), tf.concat([idl, -1j * idl],1)],0)
+    sigma = R @ choi_cov @ tf.transpose(tf.math.conj(R))
+    zh = tf.zeros([2 * m, 2 * m], dtype= dtype)
+    X = tf.concat([tf.concat([zh, idl],1), tf.concat([idl, zh],1)],0)
+    sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype= dtype)
+    A_mat = X @ (tf.eye(4 * m, dtype= dtype) - tf.linalg.inv(sigma_Q))
+    #    #TODO: get C from T maybe?
+    E = tf.linalg.diag(tf.concat([tf.ones([m], dtype= dtype), tf.ones([m], dtype= dtype) / tf.math.tanh(choi_r)],0))
+    Sigma = -tf.math.conj(E @ A_mat[:2*m, :2*m] @ E)
+    mu = tf.concat([tf.linalg.matvec(Sigma[:m,:m],tf.math.conj(d))+tf.transpose(d), tf.linalg.matvec(Sigma[m:,:m],tf.math.conj(d))],0)
+    C = 1
+    return C, mu, Sigma
+    
 def n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype = np.complex128):
     gate = n_mode_gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
     def grad(dy):
@@ -407,7 +437,7 @@ def single_n_mode_gaussian_gate_matrix(S, d, cutoff, dtype=tf.complex64.as_numpy
     num_modes = S.shape[0]//2
 
     with tf.GradientTape as tape:
-        C, mu, Sigma = choi_trick_tw(S, d, num_modes)
+        C, mu, Sigma = choi_trick(S, d, num_modes)
         gate = n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype)
     ##TODO: transpose order? -> num of mode?
 #    gate = np.transpose(gate, [0, 2, 1, 3])
