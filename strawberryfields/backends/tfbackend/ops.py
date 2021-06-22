@@ -418,7 +418,9 @@ def choi_trick(S, d, m, dtype=tf.complex64):
     E = tf.linalg.diag(tf.concat([tf.ones([m], dtype= dtype), tf.ones([m], dtype= dtype) / tf.math.tanh(choi_r)],0))
     Sigma = -tf.math.conj(E @ A_mat[:2*m, :2*m] @ E)
     mu = tf.concat([tf.linalg.matvec(Sigma[:m,:m],tf.math.conj(d))+tf.transpose(d), tf.linalg.matvec(Sigma[m:,:m],tf.math.conj(d))],0)
-    C = 1
+    alpha = tf.concat([tf.cast(d,dtype = dtype),tf.zeros(num_mode,dtype = dtype)],0)
+    zeta = alpha + tf.linalg.matvec(tf.cast(Sigma,dtype = dtype),tf.math.conj(alpha))
+    C = tf.math.sqrt(tf.math.sqrt(tf.linalg.det(tf.eye(num_mode,dtype=dtype)-Sigma[:num_mode,:num_mode]@tf.math.conj(Sigma[:num_mode,:num_mode])))) * tf.exp(-0.5*tf.reduce_sum(tf.math.conj(alpha)*zeta))
     return C, mu, Sigma
     
 def n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype = np.complex128):
