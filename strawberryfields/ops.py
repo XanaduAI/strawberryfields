@@ -1411,6 +1411,28 @@ class MSgate(Channel):
         return ancilla_val / s
 
 
+class PassiveChannel(Channel):
+    r"""Perform an arbitrary multimode passive operation
+
+    Args:
+        T (array): an NxN matrix acting on a N mode state
+
+    .. details::
+
+        Acts the following transformation on the state:
+
+        .. math::
+            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}j
+    """
+
+    def __init__(self, T):
+        super().__init__([T])
+        self.ns = T.shape[0]
+
+    def _apply(self, reg, backend, **kwargs):
+        p = par_evaluate(self.p)
+        backend.passive(p[0], *reg)
+
 # ====================================================================
 # Unitary gates
 # ====================================================================
