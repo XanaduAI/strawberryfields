@@ -152,7 +152,7 @@ class GaussianUnitary(Compiler):
         nmodes = len(used_modes)
 
         # This is the identity transformation in phase-space, multiply by the identity and add zero
-        Snet = np.identity(2 * nmodes)
+        Snet = identity(2 * nmodes)
         rnet = np.zeros(2 * nmodes)
 
         # Now we will go through each operation in the sequence `seq` and apply it in quadrature space
