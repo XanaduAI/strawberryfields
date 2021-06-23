@@ -29,6 +29,29 @@ from thewalrus.symplectic import (
 
 from .compiler import Compiler
 
+from scipy.sparse import identity, csr_matrix
+
+def sparse_expand(S, modes, N):
+    r"""Expands a Symplectic matrix S into a CSR spare matrix to act on the entire subsystem.
+
+    Args:
+        S (array): a :math:`2M\times 2M` Symplectic matrix
+        modes (Sequence[int]): the list of modes S acts on
+        N (int): full size of the subsystem
+
+    Returns:
+        csr_matrix: the resulting sparse :math:`2N\times 2N` Symplectic matrix
+    """
+    M = len(S) // 2
+    S2 = identity(2 * N, dtype=S.dtype, format='lil')
+    w = np.asarray(modes)
+
+    S2[w.reshape(-1, 1), w.reshape(1, -1)] = S[:M, :M]  # X
+    S2[(w + N).reshape(-1, 1), (w + N).reshape(1, -1)] = S[M:, M:]  # P
+    S2[w.reshape(-1, 1), (w + N).reshape(1, -1)] = S[:M, M:]  # XP
+    S2[(w + N).reshape(-1, 1), w.reshape(1, -1)] = S[M:, :M]  # PX
+
+    return S2.tocsr()
 
 class GaussianUnitary(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
@@ -141,54 +164,49 @@ class GaussianUnitary(Compiler):
             params = par_evaluate(operations.op.p)
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Dgate":
-                rnet = rnet + expand_vector(
-                    params[0] * (np.exp(1j * params[1])), dict_indices[modes[0]], nmodes
-                )
+                rnet[dict_indices[modes[0]]] += 2 * (params[0] * (np.exp(1j * params[1]))).real
+                rnet[dict_indices[modes[0]]+nmodes] += 2 * (params[0] * (np.exp(1j * params[1]))).imag
             else:
                 if name == "Rgate":
-                    S = expand(rotation(params[0]), dict_indices[modes[0]], nmodes)
+                    modes = [dict_indices[modes[0]]]
+                    S = rotation(params[0])
                 elif name == "Sgate":
-                    S = expand(squeezing(params[0], params[1]), dict_indices[modes[0]], nmodes)
+                    modes = [dict_indices[modes[0]]]
+                    S = squeezing(params[0], params[1])
                 elif name == "S2gate":
-                    S = expand(
-                        two_mode_squeezing(params[0], params[1]),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
-                    )
+                    modes = [dict_indices[modes[0]], dict_indices[modes[1]]]
+                    S = two_mode_squeezing(params[0], params[1])
                 elif name == "Interferometer":
-                    S = expand(
-                        interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes
-                    )
+                    modes = [dict_indices[mode] for mode in modes]
+                    S = interferometer(params[0])
                 elif name == "GaussianTransform":
-                    S = expand(params[0], [dict_indices[mode] for mode in modes], nmodes)
+                    modes = [dict_indices[mode] for mode in modes]
+                    S = params[0]
                 elif name == "BSgate":
-                    S = expand(
-                        beam_splitter(params[0], params[1]),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
-                    )
+                    modes = [dict_indices[modes[0]], dict_indices[modes[1]]]
+                    S = beam_splitter(params[0], params[1])
                 elif name == "MZgate":
                     v = np.exp(1j * params[0])
                     u = np.exp(1j * params[1])
                     U = 0.5 * np.array([[u * (v - 1), 1j * (1 + v)], [1j * u * (1 + v), 1 - v]])
-                    S = expand(
-                        interferometer(U),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
-                    )
+                    modes = [dict_indices[modes[0]], dict_indices[modes[1]]]
+                    S = interferometer(U)
                 elif name == "sMZgate":
                     exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
                     delta = (params[0] - params[1]) / 2
                     U = exp_sigma * np.array(
                         [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
                     )
-                    S = expand(
-                        interferometer(U),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
-                    )
-                Snet = S @ Snet
-                rnet = S @ rnet
+                    modes = [dict_indices[modes[0]], dict_indices[modes[1]]]
+                    S = interferometer(U)
+
+                S = sparse_expand(S, modes, nmodes)
+                Snet = csr_matrix(S.dot(Snet))
+                rnet = S.dot(rnet)
+
+        # Snet = Snet.toarray()
+        if not isinstance(Snet, np.ndarray):
+            Snet = Snet.toarray()
 
         # Having obtained the net displacement we simply convert it into complex notation
         alphas = 0.5 * (rnet[0:nmodes] + 1j * rnet[nmodes : 2 * nmodes])
