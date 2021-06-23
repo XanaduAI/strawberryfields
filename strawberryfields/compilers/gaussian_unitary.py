@@ -31,6 +31,7 @@ from .compiler import Compiler
 
 from scipy.sparse import identity, csr_matrix
 
+
 def sparse_expand(S, modes, N):
     r"""Expands a Symplectic matrix S into a CSR spare matrix to act on the entire subsystem.
 
@@ -43,7 +44,7 @@ def sparse_expand(S, modes, N):
         csr_matrix: the resulting sparse :math:`2N\times 2N` Symplectic matrix
     """
     M = len(S) // 2
-    S2 = identity(2 * N, dtype=S.dtype, format='lil')
+    S2 = identity(2 * N, dtype=S.dtype, format="lil")
     w = np.asarray(modes)
 
     S2[w.reshape(-1, 1), w.reshape(1, -1)] = S[:M, :M]  # X
@@ -52,6 +53,7 @@ def sparse_expand(S, modes, N):
     S2[(w + N).reshape(-1, 1), w.reshape(1, -1)] = S[M:, :M]  # PX
 
     return S2.tocsr()
+
 
 class GaussianUnitary(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
@@ -165,7 +167,9 @@ class GaussianUnitary(Compiler):
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Dgate":
                 rnet[dict_indices[modes[0]]] += 2 * (params[0] * (np.exp(1j * params[1]))).real
-                rnet[dict_indices[modes[0]]+nmodes] += 2 * (params[0] * (np.exp(1j * params[1]))).imag
+                rnet[dict_indices[modes[0]] + nmodes] += (
+                    2 * (params[0] * (np.exp(1j * params[1]))).imag
+                )
             else:
                 if name == "Rgate":
                     modes = [dict_indices[modes[0]]]
