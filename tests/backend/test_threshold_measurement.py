@@ -15,6 +15,7 @@
 r"""Unit tests for measurements in the Fock basis"""
 import pytest
 import numpy as np
+from thewalrus.random import random_covariance
 from thewalrus._torontonian import (
     tor,
     threshold_detection_prob_displacement,
@@ -35,6 +36,12 @@ class TestGaussianRepresentation:
         """Tests that threshold_detection backend is implemented"""
         backend = setup_backend(3)
         backend.measure_threshold([0, 1], shots=5)
+        
+        n_modes = 5
+        mu = np.zeros([2 * n_modes])
+        cov = random_covariance(n_modes)
+        prob = threshold_detection_prob_displacement(mu, cov, np.array([1] * n_modes))
+        assert np.all(prob)
 
 @pytest.mark.backends("gaussian")
 class TestRepresentationIndependent:
