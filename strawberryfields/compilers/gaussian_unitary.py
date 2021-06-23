@@ -14,12 +14,11 @@
 """This module contains a compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form."""
 
 import numpy as np
+from scipy.sparse import identity, csr_matrix
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import (
-    expand_vector,
-    expand,
     rotation,
     squeezing,
     two_mode_squeezing,
@@ -28,8 +27,6 @@ from thewalrus.symplectic import (
 )
 
 from .compiler import Compiler
-
-from scipy.sparse import identity, csr_matrix
 
 
 def sparse_expand(S, modes, N):
@@ -126,7 +123,7 @@ class GaussianUnitary(Compiler):
         "Zgate": {},
         "Fouriergate": {},
     }
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
 
@@ -208,7 +205,6 @@ class GaussianUnitary(Compiler):
                 Snet = csr_matrix(S.dot(Snet))
                 rnet = S.dot(rnet)
 
-        # Snet = Snet.toarray()
         if not isinstance(Snet, np.ndarray):
             Snet = Snet.toarray()
 
