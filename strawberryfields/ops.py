@@ -391,9 +391,11 @@ class Channel(Transformation):
         # channels can be merged if they are the same class and share all the other parameters
         if self.p[1:] == other.p[1:]:
             # determine the combined first parameter
-            T = self.p[0] * other.p[0]
+            
+            T = np.dot(other.p[0], self.p[0])
             # if one, replace with the identity
-            if T == 1:
+            T_arr = np.atleast_2d(T)
+            if np.allclose(T_arr, np.eye(T_arr.shape[0])):
                 return None
 
             # return a copy
