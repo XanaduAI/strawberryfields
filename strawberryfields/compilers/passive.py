@@ -129,7 +129,7 @@ class Passive(Compiler):
         "MZgate",
         "sMZgate",
         "BSgate",
-        "Interferometer" # Note that interferometer is accepted as a primitive
+        "Interferometer", # Note that interferometer is accepted as a primitive
         "PassiveChannel",  
     }
 
