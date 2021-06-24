@@ -19,10 +19,17 @@ import numpy as np
 import strawberryfields as sf
 import strawberryfields.ops as ops
 from strawberryfields.utils import random_symplectic
+from strawberryfields.compilers.passive import (
+    _apply_one_mode_gate, 
+    _apply_two_mode_gate, 
+    _beam_splitter_passive)
 
 from scipy.stats import unitary_group
 
-from thewalrus.symplectic import squeezing, passive_transformation
+from thewalrus.symplectic import (
+    squeezing,
+    passive_transformation,
+    expand_passive)
 
 pytestmark = pytest.mark.frontend
 
@@ -108,3 +115,44 @@ def test_modes_subset(depth):
     indices = [compiled_circuit.circuit[0].reg[i].ind for i in range(5)]
     assert indices == sorted(list(indices))
 
+@pytest.mark.parametrize("M", range(4,8))
+def test_one_mode_gate(M, tol):
+    """test _apply_one_mode_gate applies correctly"""
+    T = np.ones((M,M))
+    a = np.random.random()
+
+    _apply_one_mode_gate(a, T, M-2)
+    assert np.allclose(T[M-2], a, atol=tol, rtol=0)
+
+
+
+@pytest.mark.parametrize("M", range(4,8))
+def test_two_mode_gate(M, tol):
+    """test _apply_two_mode_gate transforms operations correctly"""
+    T = np.arange(M**2, dtype=np.complex128).reshape((M,M))
+    G = np.random.random((2,2)) + 1j * np.random.random((2,2))
+
+    _apply_two_mode_gate(G, T, M-4, M-2)
+
+    T1 = expand_passive(G, [M-4, M-2], M) @ np.arange(M**2).reshape((M,M))
+
+    assert np.allclose(T, T1, atol=tol, rtol=0)
+    
+@pytest.mark.parametrize("theta", [0, 0.4, np.pi])
+@pytest.mark.parametrize("phi", [0, 0.1, np.pi])
+def test_beam_splitter_passive(tol, theta, phi):
+    """test _beam_splitter_passive"""
+
+    ct = np.cos(theta)
+    st = np.sin(theta)
+    eip = np.exp(1j * phi)
+    U = np.array(
+        [
+            [ct, -eip.conj() * st],
+            [eip * st, ct],
+        ]
+    )
+    
+    U2 = _beam_splitter_passive(theta, phi)
+
+    assert np.allclose(U, U2, atol=tol, rtol=tol)
