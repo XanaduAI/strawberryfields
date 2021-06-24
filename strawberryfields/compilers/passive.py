@@ -21,8 +21,6 @@ from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import (
     expand_passive,
     rotation,
-    squeezing,
-    two_mode_squeezing,
     interferometer,
     beam_splitter,
 )
@@ -31,7 +29,7 @@ from .compiler import Compiler
 
 
 @jit(nopython=True)
-def apply_one_mode_gate(G, T, i):
+def _apply_one_mode_gate(G, T, i):
     """In-place applies a one mode gate G into the process matrix T in mode i
 
     Args:
@@ -43,7 +41,7 @@ def apply_one_mode_gate(G, T, i):
     T[i] *= G
 
 @jit(nopython=True)
-def apply_two_mode_gate(G, T, i, j):
+def _apply_two_mode_gate(G, T, i, j):
     """In-place applies a two mode gate G into the process matrix T in modes i and j
 
     Args:
@@ -55,7 +53,7 @@ def apply_two_mode_gate(G, T, i, j):
     (T[i], T[j]) = (G[0, 0] * T[i] + G[0, 1] * T[j], G[1, 0] * T[i] + G[1, 1] * T[j])
 
 @jit(nopython=True)
-def beam_splitter_passive(theta, phi):
+def _beam_splitter_passive(theta, phi):
     """Beam-splitter.
 
     Args:
@@ -131,7 +129,8 @@ class Passive(Compiler):
         "MZgate",
         "sMZgate",
         "BSgate",
-        "Interferometer",  # Note that interferometer is accepted as a primitive
+        "Interferometer" # Note that interferometer is accepted as a primitive
+        "PassiveChannel",  
     }
 
     decompositions = {}
@@ -175,33 +174,41 @@ class Passive(Compiler):
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Rgate":
                 G = np.exp(1j * params[0])
-                apply_one_mode_gate(G, T, dict_indices[modes[0]])
+                _apply_one_mode_gate(G, T, dict_indices[modes[0]])
             elif name == "LossChannel":
                 G = np.sqrt(params[0])
-                apply_one_mode_gate(G, T, dict_indices[modes[0]])
+                _apply_one_mode_gate(G, T, dict_indices[modes[0]])
             elif name == "Interferometer":
                 U = params[0]
                 if U.shape == (1,1):
-                    apply_one_mode_gate(U, T, dict_indices[modes[0]])
+                    _apply_one_mode_gate(U, T, dict_indices[modes[0]])
                 elif U.shape == (2,2):
-                    apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
+                    _apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
                     T = expand_passive(U, [dict_indices[mode] for mode in modes], nmodes) @ T
+            elif name == "PassiveChannel":
+                T0 = params[0]
+                if T0.shape == (1,1):
+                    _apply_one_mode_gate(T0, T, dict_indices[modes[0]])
+                elif T0.shape == (2,2):
+                    _apply_two_mode_gate(T0, T, dict_indices[modes[0]], dict_indices[modes[1]])
+                else:
+                    T = expand_passive(T0, [dict_indices[mode] for mode in modes], nmodes) @ T
             elif name == "BSgate":
-                G = beam_splitter_passive(params[0], params[1])
-                apply_two_mode_gate(G, T, dict_indices[modes[0]], dict_indices[modes[1]])
+                G = _beam_splitter_passive(params[0], params[1])
+                _apply_two_mode_gate(G, T, dict_indices[modes[0]], dict_indices[modes[1]])
             elif name == "MZgate":
                 v = np.exp(1j * params[0])
                 u = np.exp(1j * params[1])
                 U = 0.5 * np.array([[u * (v - 1), 1j * (1 + v)], [1j * u * (1 + v), 1 - v]])
-                apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
+                _apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
             elif name == "sMZgate":
                 exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
                 delta = (params[0] - params[1]) / 2
                 U = exp_sigma * np.array(
                     [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
                 )
-                apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
+                _apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
 
         ord_reg = [r for r in list(registers) if r.ind in used_modes]
         ord_reg = sorted(list(ord_reg), key=lambda x: x.ind)
