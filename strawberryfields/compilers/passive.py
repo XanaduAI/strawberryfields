@@ -60,10 +60,9 @@ def _beam_splitter_passive(theta, phi):
     Args:
         theta (float): transmissivity parameter
         phi (float): phase parameter
-        dtype (numpy.dtype): datatype to represent the Symplectic matrix
 
     Returns:
-        array: symplectic-orthogonal transformation matrix of an interferometer with angles theta and phi
+        array: unitary 2x2 transformation matrix of an interferometer with angles theta and phi
     """
     ct = np.cos(theta)
     st = np.sin(theta)
@@ -78,42 +77,37 @@ def _beam_splitter_passive(theta, phi):
 
 
 class Passive(Compiler):
-    """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
+    """Compiler to write a sequence of passive operations as a single passive operation
 
     This compiler checks whether the circuit can be implemented as a sequence of
-    Gaussian operations. If so, it arranges them in the canonical order with displacement at the end.
-    After compilation, the circuit will consist of at most two operations, a :class:`~.GaussianTransform`
-    and a :class:`~.Dgate`.
+    passive operations. If so, it arranges them in a single matrix, T. It then returns an PassiveChannel
+    operation which can act this transformation.
 
-    This compiler can be accessed by calling :meth:`.Program.compile` with `'gaussian_unitary'` specified.
+    This compiler can be accessed by calling :meth:`.Program.compile` with `'passive'` specified.
 
     **Example:**
 
-    Consider the following Strawberry Fields program, compiled using the `'gaussian_unitary'` compiler:
+    Consider the following Strawberry Fields program, compiled using the `'passive'` compiler:
 
     .. code-block:: python3
 
-        from strawberryfields.ops import Xgate, Zgate, Sgate, Dgate, Rgate
+        from strawberryfields.ops import BSgate, LossChannel, Rgate
         import strawberryfields as sf
 
-        circuit = sf.Program(1)
+        circuit = sf.Program(2)
         with circuit.context as q:
-            Xgate(0.4) | q[0]
-            Zgate(0.5) | q[0]
-            Sgate(0.6) | q[0]
-            Dgate(1.0+2.0j) | q[0]
-            Rgate(0.3) | q[0]
-            Sgate(0.6, 1.0) | q[0]
+            Rgate(np.pi) | q[0]
+            BSgate(0.25 * np.pi, 0) | (q[0], q[1])
+            LossChannel(0.9) | q[1]
 
-        compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+        compiled_circuit = circuit.compile(compiler="passive")
 
     We can now print the compiled circuit, consisting of one
     :class:`~.GaussianTransform` and one :class:`~.Dgate`:
 
     >>> compiled_circuit.print()
-    GaussianTransform([[ 0.3543 -1.3857]
-                       [-0.0328  2.9508]]) | (q[0])
-    Dgate(-1.151+3.91j, 0) | (q[0])
+    PassiveChannel([[-0.7071+8.6596e-17j -0.7071+0.0000e+00j]
+     [-0.6708+8.2152e-17j  0.6708+0.0000e+00j]]) | (q[0], q[1])
     """
 
     short_name = "passive"
@@ -132,7 +126,7 @@ class Passive(Compiler):
         "sMZgate",
         "BSgate",
         "Interferometer",  # Note that interferometer is accepted as a primitive
-        "PassiveChannel",
+        "PassiveChannel",  # and PassiveChannels!
     }
 
     decompositions = {}
@@ -144,12 +138,12 @@ class Passive(Compiler):
         If the answer is yes it arranges them into a single operation.
 
         Args:
-            seq (Sequence[Command]): quantum circuit to modify
+            seq (Sequence[Command]): passive quantum circuit to modify
             registers (Sequence[RegRefs]): quantum registers
         Returns:
-            List[Command]: modified circuit
+            List[Command]: compiled circuit
         Raises:
-            CircuitError: the circuit does not correspond to a Gaussian unitary
+            CircuitError: the circuit does not correspond to a passive unitary
         """
 
         # Check which modes are actually being used
@@ -157,19 +151,17 @@ class Passive(Compiler):
         for operations in seq:
             modes = [modes_label.ind for modes_label in operations.reg]
             used_modes.append(modes)
-        # pylint: disable=consider-using-set-comprehension
-        used_modes = list(set([item for sublist in used_modes for item in sublist]))
+
+        used_modes = list(set(item for sublist in used_modes for item in sublist))
 
         # dictionary mapping the used modes to consecutive non-negative integers
         dict_indices = {used_modes[i]: i for i in range(len(used_modes))}
         nmodes = len(used_modes)
 
-        # This is the identity transformation in phase-space, multiply by the identity and add zero
+        # We start with an identity then sequentially update with the gate transformations
         T = np.identity(nmodes, dtype=np.complex128)
 
-        # Now we will go through each operation in the sequence `seq` and apply it in quadrature space
-        # We will keep track of the net transforation in the Symplectic matrix `Snet` and the quadrature
-        # vector `rnet`.
+        # Now we will go through each operation in the sequence `seq` and apply it to T
         for operations in seq:
             name = operations.op.__class__.__name__
             params = par_evaluate(operations.op.p)
