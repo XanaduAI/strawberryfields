@@ -20,7 +20,6 @@ from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import (
     expand_passive,
-    rotation,
     interferometer,
     beam_splitter,
 )
@@ -40,6 +39,7 @@ def _apply_one_mode_gate(G, T, i):
 
     T[i] *= G
 
+
 @jit(nopython=True)
 def _apply_two_mode_gate(G, T, i, j):
     """In-place applies a two mode gate G into the process matrix T in modes i and j
@@ -51,6 +51,7 @@ def _apply_two_mode_gate(G, T, i, j):
         j (int): index of second mode of gate
     """
     (T[i], T[j]) = (G[0, 0] * T[i] + G[0, 1] * T[j], G[1, 0] * T[i] + G[1, 1] * T[j])
+
 
 @jit(nopython=True)
 def _beam_splitter_passive(theta, phi):
@@ -74,6 +75,7 @@ def _beam_splitter_passive(theta, phi):
         ]
     )
     return U
+
 
 class Passive(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
@@ -129,8 +131,8 @@ class Passive(Compiler):
         "MZgate",
         "sMZgate",
         "BSgate",
-        "Interferometer", # Note that interferometer is accepted as a primitive
-        "PassiveChannel",  
+        "Interferometer",  # Note that interferometer is accepted as a primitive
+        "PassiveChannel",
     }
 
     decompositions = {}
@@ -180,17 +182,17 @@ class Passive(Compiler):
                 _apply_one_mode_gate(G, T, dict_indices[modes[0]])
             elif name == "Interferometer":
                 U = params[0]
-                if U.shape == (1,1):
+                if U.shape == (1, 1):
                     _apply_one_mode_gate(U, T, dict_indices[modes[0]])
-                elif U.shape == (2,2):
+                elif U.shape == (2, 2):
                     _apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
                     T = expand_passive(U, [dict_indices[mode] for mode in modes], nmodes) @ T
             elif name == "PassiveChannel":
                 T0 = params[0]
-                if T0.shape == (1,1):
+                if T0.shape == (1, 1):
                     _apply_one_mode_gate(T0, T, dict_indices[modes[0]])
-                elif T0.shape == (2,2):
+                elif T0.shape == (2, 2):
                     _apply_two_mode_gate(T0, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
                     T = expand_passive(T0, [dict_indices[mode] for mode in modes], nmodes) @ T

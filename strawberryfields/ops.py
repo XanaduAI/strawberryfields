@@ -391,7 +391,7 @@ class Channel(Transformation):
         # channels can be merged if they are the same class and share all the other parameters
         if self.p[1:] == other.p[1:]:
             # determine the combined first parameter
-            
+
             T = np.dot(other.p[0], self.p[0])
             # if one, replace with the identity
             T_arr = np.atleast_2d(T)
@@ -1434,6 +1434,7 @@ class PassiveChannel(Channel):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         backend.passive(p[0], *reg)
+
 
 # ====================================================================
 # Unitary gates

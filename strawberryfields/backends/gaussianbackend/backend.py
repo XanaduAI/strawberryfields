@@ -209,6 +209,9 @@ class GaussianBackend(BaseGaussian):
         self.circuit.loss(T, mode)
 
     def passive(self, T, *modes):
+        """
+        linear optical passive transformations
+        """
         T = expand_passive(T, modes, len(self.circuit.get_modes()))
         self.circuit.passive(T)
 

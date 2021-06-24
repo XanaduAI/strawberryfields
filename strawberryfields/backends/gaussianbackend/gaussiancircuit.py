@@ -547,4 +547,3 @@ class GaussianModes:
     def passive(self, T):
         """Transforms the state according to the arbitrary linear transformation that maps a[i] \to T[i, j]^*a[j]"""
         self.apply_u(T.conj())
-
