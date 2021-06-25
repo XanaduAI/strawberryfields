@@ -24,10 +24,10 @@ from numpy import (
     vstack,
     zeros_like,
     allclose,
-    ix_,
+    ix_
 )
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
-from thewalrus.symplectic import xxpp_to_xpxp, expand_passive
+from thewalrus.symplectic import xxpp_to_xpxp
 
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseGaussianState
@@ -212,8 +212,9 @@ class GaussianBackend(BaseGaussian):
         """
         linear optical passive transformations
         """
-        T = expand_passive(T, modes, len(self.circuit.get_modes()))
-        self.circuit.passive(T)
+        T_expand = identity(self.circuit.nlen, dtype=T.dtype)
+        T_expand[ix_(modes, modes)] = T 
+        self.circuit.passive(T_expand)
 
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
