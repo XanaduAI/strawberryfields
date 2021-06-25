@@ -253,6 +253,21 @@ def move_vac_modes(samples, N, crop=False):
     return samples
 
 
+def get_mode_indices(delays):
+    """Calculates the mode indices for use in a ``TDMProgram``
+
+    Args:
+        delays (list[int]): List of loop delays. E.g. ``delays = [1, 6, 36]`` for TD3.
+
+    Returns:
+        tuple(list[int], int): the mode indices and number of concurrent (or 'alive')
+        modes for the program
+    """
+    cum_sums = np.cumsum([1] + delays)
+    N = sum(delays) + 1
+    return N - cum_sums, N
+
+
 class TDMProgram(sf.Program):
     r"""Represents a photonic quantum circuit in the time domain encoding.
 
@@ -270,6 +285,8 @@ class TDMProgram(sf.Program):
             modes in each time bin. Alternatively, a sequence of integers
             may be provided, corresponding to the number of concurrent modes in
             the possibly multiple bands in the circuit.
+        delays (list[int]): List of loop delays (e.g. ``delays = [1, 6, 36]`` for TD3).
+            Assumes a TD3-style program containing only fock measurements if input.
         name (str): the program name (optional)
 
     **Example**
@@ -381,7 +398,7 @@ class TDMProgram(sf.Program):
         </div>
     """
 
-    def __init__(self, N, name=None):
+    def __init__(self, N, delays=None, name=None):
         # N is a list with the number of qumodes for each spatial mode
         if isinstance(N, int):
             self.N = [N]
@@ -389,9 +406,21 @@ class TDMProgram(sf.Program):
             self.N = N
         self.concurr_modes = sum(self.N)
 
-        super().__init__(num_subsystems=self.concurr_modes, name=name)
+        # if delays are input, td3 is assumed
+        if delays is not None:
+            self._is_td3 = True
+            _, N_true = get_mode_indices(delays)
+            if N != N_true:
+                raise ValueError(
+                    "Delays are incompatible with number of concurrent modes. "
+                    "N should be equal to {N_true}.")
+            super().__init__(num_subsystems=np.prod(delays), name=name)
+        else:
+            self._is_td3 = False
+            super().__init__(num_subsystems=self.concurr_modes, name=name)
 
         self.type = "tdm"
+
         self.timebins = 0
         self.spatial_modes = 0
         self.measured_modes = []
@@ -429,6 +458,7 @@ class TDMProgram(sf.Program):
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
                 the hardware :class:`~.DeviceSpec`. If no compiler is passed, the default "TD2"
+                compiler is used unless the program is a TD3 program, in which case the "passive"
                 compiler is used. Currently, the only other allowed compiler is "gaussian".
 
         Returns:
@@ -436,6 +466,8 @@ class TDMProgram(sf.Program):
         """
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
+        if self._is_td3 or compiler == "passive":
+            return super().compile(device=device, compiler="passive")
 
         if device is not None:
             device_layout = bb.loads(device.layout)
@@ -544,9 +576,16 @@ class TDMProgram(sf.Program):
         super().__exit__(ex_type, ex_value, ex_tb)
 
         if ex_type is None:
-            self.spatial_modes = validate_measurements(self.circuit, self.N)
             self.timebins = len(self.tdm_params[0])
             self.rolled_circuit = self.circuit.copy()
+
+            # check if any fock measurements are part of the circuit
+            if self._is_td3:
+                self.spatial_modes = self.timebins
+            else:
+                self.spatial_modes = validate_measurements(self.circuit, self.N)
+
+
 
     @property
     def parameters(self):
@@ -571,6 +610,9 @@ class TDMProgram(sf.Program):
         Returns:
             Program: unrolled program (including shots)
         """
+        if self._is_td3:
+            return self.space_unroll(shots)
+
         if self.unrolled_circuit is not None:
             self.circuit = self.unrolled_circuit * shots
             return self
@@ -630,6 +672,52 @@ class TDMProgram(sf.Program):
         self.circuit = self.unrolled_circuit * shots
 
         return self
+
+    def space_unroll(self, shots):
+        """Construct the space-unrolled program for TD3
+
+        Constructs the unrolled single-shot program, storing it in `self.unrolled_circuit`
+        when run for the first time, and returns the unrolled program including shots.
+        Only supported for TD3.
+
+        Args:
+            shots (int): the number of times the circuit should be repeated
+
+        Returns:
+            Program: unrolled program (including shots)
+        """
+        if self.unrolled_circuit is not None:
+            self.circuit = self.unrolled_circuit * shots
+            return self
+
+        self.circuit = []
+
+        num_vacuum_modes = 43
+        q = shift_by(self.register, -num_vacuum_modes)
+
+        measurements = []
+        for i in range(self.timebins - num_vacuum_modes):
+            for cmd in self.rolled_circuit:
+                if isinstance(cmd.op, ops.Measurement):
+                    if i == 0:
+                        self.measured_modes.append(cmd.reg[0].ind)
+                    if not isinstance(cmd.op, ops.MeasureFock):
+                        raise TypeError("Only fock measurements allowed when using space unroll.")
+                    measurements.append(cmd)
+                else:
+                    self.apply_op(cmd, q, i)
+
+            q = shift_by(q, 1)
+
+        if len(measurements) == self.timebins - num_vacuum_modes:
+            self.append(measurements[0].op, self.reg_refs.keys())
+
+        # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
+        self.unrolled_circuit = self.circuit.copy()
+        self.circuit = self.unrolled_circuit * shots
+
+        return self
+
 
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
