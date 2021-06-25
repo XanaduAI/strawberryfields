@@ -15,17 +15,7 @@
 """Gaussian backend"""
 import warnings
 
-from numpy import (
-    empty,
-    concatenate,
-    array,
-    identity,
-    sqrt,
-    vstack,
-    zeros_like,
-    allclose,
-    ix_
-)
+from numpy import empty, concatenate, array, identity, sqrt, vstack, zeros_like, allclose, ix_
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 from thewalrus.symplectic import xxpp_to_xpxp
 
@@ -213,7 +203,7 @@ class GaussianBackend(BaseGaussian):
         linear optical passive transformations
         """
         T_expand = identity(self.circuit.nlen, dtype=T.dtype)
-        T_expand[ix_(modes, modes)] = T 
+        T_expand[ix_(modes, modes)] = T
         self.circuit.passive(T_expand)
 
     def thermal_loss(self, T, nbar, mode):
