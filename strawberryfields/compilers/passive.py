@@ -19,7 +19,6 @@ from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import (
-    expand_passive,
     interferometer,
     beam_splitter,
 )
@@ -179,7 +178,10 @@ class Passive(Compiler):
                 elif U.shape == (2, 2):
                     _apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
-                    T = expand_passive(U, [dict_indices[mode] for mode in modes], nmodes) @ T
+                    modes = [dict_indices[mode] for mode in modes]
+                    U_expand = np.eye(nmodes, dtype=np.complex128)
+                    U_expand[np.ix_(modes, modes)] = U
+                    T = U_expand @ T
             elif name == "PassiveChannel":
                 T0 = params[0]
                 if T0.shape == (1, 1):
@@ -187,7 +189,10 @@ class Passive(Compiler):
                 elif T0.shape == (2, 2):
                     _apply_two_mode_gate(T0, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
-                    T = expand_passive(T0, [dict_indices[mode] for mode in modes], nmodes) @ T
+                    modes = [dict_indices[mode] for mode in modes]
+                    T0_expand = np.eye(nmodes, dtype=np.complex128)
+                    T0_expand[np.ix_(modes, modes)] = T0
+                    T = T0_expand @ T
             elif name == "BSgate":
                 G = _beam_splitter_passive(params[0], params[1])
                 _apply_two_mode_gate(G, T, dict_indices[modes[0]], dict_indices[modes[1]])

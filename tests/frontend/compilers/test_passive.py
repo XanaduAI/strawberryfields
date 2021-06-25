@@ -26,10 +26,7 @@ from strawberryfields.compilers.passive import (
 
 from scipy.stats import unitary_group
 
-from thewalrus.symplectic import (
-    squeezing,
-    passive_transformation,
-    expand_passive)
+from thewalrus.symplectic import interferometer
 
 pytestmark = pytest.mark.frontend
 
@@ -86,11 +83,21 @@ def test_all_passive_gates(tol):
     compiled_circuit = circuit.compile(compiler='passive')
     T = compiled_circuit.circuit[0].op.p[0]
     
-    S_sq = squeezing([1] * 4, [0.3] * 4)
+    S_sq = np.eye(8, dtype=np.complex128)
+    r = 1 
+    phi = 0.3 
+    for i in range(4):
+        S_sq[i,i] = np.cosh(r) - np.sinh(r) * np.cos(phi)
+        S_sq[i, i+4] = -np.sinh(r) * np.sin(phi)
+        S_sq[i+4, i] = -np.sinh(r) * np.sin(phi)
+        S_sq[i+4, i+4] = np.cosh(r) + np.sinh(r) * np.cos(phi)
+
     cov_sq = S_sq @ S_sq.T 
     mu = np.zeros(8)
 
-    _, cov2 = passive_transformation(mu, cov_sq, T)
+    P = interferometer(T)
+    L = np.eye(P.shape[0]) - P @ P.T 
+    cov2 = P @ cov_sq @ P.T + L
 
     assert np.allclose(cov, cov2, atol=tol, rtol=0)
 
@@ -134,7 +141,10 @@ def test_two_mode_gate(M, tol):
 
     _apply_two_mode_gate(G, T, M-4, M-2)
 
-    T1 = expand_passive(G, [M-4, M-2], M) @ np.arange(M**2).reshape((M,M))
+    G_expand = np.eye(M, dtype=np.complex128)
+    modes = [M-4, M-2]
+    G_expand[np.ix_(modes, modes)] = G
+    T1 = G_expand @ np.arange(M**2).reshape((M,M))
 
     assert np.allclose(T, T1, atol=tol, rtol=0)
     
