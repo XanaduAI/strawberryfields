@@ -101,8 +101,8 @@ class Passive(Compiler):
 
         compiled_circuit = circuit.compile(compiler="passive")
 
-    We can now print the compiled circuit, consisting of one
-    :class:`~.GaussianTransform` and one :class:`~.Dgate`:
+    We can now print the compiled circuit, consisting a single
+    :class:`~.PassiveChannel`:
 
     >>> compiled_circuit.print()
     PassiveChannel([[-0.7071+8.6596e-17j -0.7071+0.0000e+00j]
