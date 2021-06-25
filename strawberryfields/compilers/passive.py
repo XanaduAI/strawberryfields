@@ -26,7 +26,7 @@ from thewalrus.symplectic import (
 from .compiler import Compiler
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def _apply_one_mode_gate(G, T, i):
     """In-place applies a one mode gate G into the process matrix T in mode i
 
@@ -39,7 +39,7 @@ def _apply_one_mode_gate(G, T, i):
     T[i] *= G
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def _apply_two_mode_gate(G, T, i, j):
     """In-place applies a two mode gate G into the process matrix T in modes i and j
 
@@ -52,7 +52,7 @@ def _apply_two_mode_gate(G, T, i, j):
     (T[i], T[j]) = (G[0, 0] * T[i] + G[0, 1] * T[j], G[1, 0] * T[i] + G[1, 1] * T[j])
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def _beam_splitter_passive(theta, phi):
     """Beam-splitter.
 
