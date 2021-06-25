@@ -65,7 +65,12 @@ def _beam_splitter_passive(theta, phi):
     ct = np.cos(theta)
     st = np.sin(theta)
     eip = np.cos(phi) + 1j * np.sin(phi)
-    U = np.array([[ct, -np.conj(eip) * st], [eip * st, ct],])
+    U = np.array(
+        [
+            [ct, -np.conj(eip) * st],
+            [eip * st, ct],
+        ]
+    )
     return U
 
 
