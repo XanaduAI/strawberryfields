@@ -14,7 +14,7 @@
 """This module contains a compiler to reduce a sequence of passive gates into a single multimode linear passive operation"""
 
 import numpy as np
-from numba import jit
+#from numba import jit
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
@@ -129,7 +129,7 @@ class Passive(Compiler):
     }
 
     decompositions = {}
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a passive circuit into a single multimode passive operation
 
