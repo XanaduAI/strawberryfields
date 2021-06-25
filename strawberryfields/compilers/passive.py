@@ -14,11 +14,13 @@
 """This module contains a compiler to reduce a sequence of passive gates into a single multimode linear passive operation"""
 
 import numpy as np
-#from numba import jit
+
+# from numba import jit
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
-#from thewalrus.symplectic import interferometer, beam_splitter
+
+# from thewalrus.symplectic import interferometer, beam_splitter
 
 from .compiler import Compiler
 
@@ -63,12 +65,7 @@ def _beam_splitter_passive(theta, phi):
     ct = np.cos(theta)
     st = np.sin(theta)
     eip = np.cos(phi) + 1j * np.sin(phi)
-    U = np.array(
-        [
-            [ct, -np.conj(eip) * st],
-            [eip * st, ct],
-        ]
-    )
+    U = np.array([[ct, -np.conj(eip) * st], [eip * st, ct],])
     return U
 
 
