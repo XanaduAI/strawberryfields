@@ -18,7 +18,7 @@ import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
-from thewalrus.symplectic import interferometer, beam_splitter
+#from thewalrus.symplectic import interferometer, beam_splitter
 
 from .compiler import Compiler
 
