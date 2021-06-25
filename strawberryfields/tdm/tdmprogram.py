@@ -413,7 +413,8 @@ class TDMProgram(sf.Program):
             if N != N_true:
                 raise ValueError(
                     "Delays are incompatible with number of concurrent modes. "
-                    "N should be equal to {N_true}.")
+                    "N should be equal to {N_true}."
+                )
             super().__init__(num_subsystems=np.prod(delays), name=name)
         else:
             self._is_td3 = False
@@ -585,8 +586,6 @@ class TDMProgram(sf.Program):
             else:
                 self.spatial_modes = validate_measurements(self.circuit, self.N)
 
-
-
     @property
     def parameters(self):
         """Return the parameters of the ``TDMProgram`` as a dictionary with the parameter
@@ -717,7 +716,6 @@ class TDMProgram(sf.Program):
         self.circuit = self.unrolled_circuit * shots
 
         return self
-
 
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
