@@ -20,9 +20,10 @@ import strawberryfields as sf
 import strawberryfields.ops as ops
 from strawberryfields.utils import random_symplectic
 from strawberryfields.compilers.passive import (
-    _apply_one_mode_gate, 
-    _apply_two_mode_gate, 
-    _beam_splitter_passive)
+    _apply_one_mode_gate,
+    _apply_two_mode_gate,
+    _beam_splitter_passive,
+)
 
 from scipy.stats import unitary_group
 
@@ -49,9 +50,10 @@ def test_passive_program(tol, depth, width):
                 ops.LossChannel(0.5) | q[i]
             T_circuit *= np.sqrt(0.5)
 
-    compiled_circuit = circuit.compile(compiler='passive')
+    compiled_circuit = circuit.compile(compiler="passive")
     T = compiled_circuit.circuit[0].op.p[0]
     assert np.allclose(T, T_circuit, atol=tol, rtol=0)
+
 
 def test_all_passive_gates(hbar, tol):
     """test that all gates run and do not cause anything to crash"""
@@ -67,7 +69,7 @@ def test_all_passive_gates(hbar, tol):
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
         ops.BSgate(0.8, 0.4) | (q[1], q[3])
         ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
-        ops.PassiveChannel(0.1 * np.ones((3,3))) | (q[3], q[1], q[0])
+        ops.PassiveChannel(0.1 * np.ones((3, 3))) | (q[3], q[1], q[0])
 
     cov = eng.run(circuit).state.cov()
 
@@ -78,21 +80,21 @@ def test_all_passive_gates(hbar, tol):
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
         ops.BSgate(0.8, 0.4) | (q[1], q[3])
         ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
-        ops.PassiveChannel(0.1 * np.ones((3,3))) | (q[3], q[1], q[0])
-   
-    compiled_circuit = circuit.compile(compiler='passive')
-    T = compiled_circuit.circuit[0].op.p[0]
-    
-    S_sq = np.eye(8, dtype=np.complex128)
-    r = 1 
-    phi = 0.3 
-    for i in range(4):
-        S_sq[i,i] = np.cosh(r) - np.sinh(r) * np.cos(phi)
-        S_sq[i, i+4] = -np.sinh(r) * np.sin(phi)
-        S_sq[i+4, i] = -np.sinh(r) * np.sin(phi)
-        S_sq[i+4, i+4] = np.cosh(r) + np.sinh(r) * np.cos(phi)
+        ops.PassiveChannel(0.1 * np.ones((3, 3))) | (q[3], q[1], q[0])
 
-    cov_sq = (hbar / 2) * S_sq @ S_sq.T 
+    compiled_circuit = circuit.compile(compiler="passive")
+    T = compiled_circuit.circuit[0].op.p[0]
+
+    S_sq = np.eye(8, dtype=np.complex128)
+    r = 1
+    phi = 0.3
+    for i in range(4):
+        S_sq[i, i] = np.cosh(r) - np.sinh(r) * np.cos(phi)
+        S_sq[i, i + 4] = -np.sinh(r) * np.sin(phi)
+        S_sq[i + 4, i] = -np.sinh(r) * np.sin(phi)
+        S_sq[i + 4, i + 4] = np.cosh(r) + np.sinh(r) * np.cos(phi)
+
+    cov_sq = (hbar / 2) * S_sq @ S_sq.T
     mu = np.zeros(8)
 
     P = interferometer(T)
@@ -100,6 +102,7 @@ def test_all_passive_gates(hbar, tol):
     cov2 = P @ cov_sq @ P.T + L
 
     assert np.allclose(cov, cov2, atol=tol, rtol=0)
+
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
 def test_modes_subset(depth):
@@ -122,32 +125,33 @@ def test_modes_subset(depth):
     indices = [compiled_circuit.circuit[0].reg[i].ind for i in range(5)]
     assert indices == sorted(list(indices))
 
-@pytest.mark.parametrize("M", range(4,8))
+
+@pytest.mark.parametrize("M", range(4, 8))
 def test_one_mode_gate(M, tol):
     """test _apply_one_mode_gate applies correctly"""
-    T = np.ones((M,M))
+    T = np.ones((M, M))
     a = np.random.random()
 
-    _apply_one_mode_gate(a, T, M-2)
-    assert np.allclose(T[M-2], a, atol=tol, rtol=0)
+    _apply_one_mode_gate(a, T, M - 2)
+    assert np.allclose(T[M - 2], a, atol=tol, rtol=0)
 
 
-
-@pytest.mark.parametrize("M", range(4,8))
+@pytest.mark.parametrize("M", range(4, 8))
 def test_two_mode_gate(M, tol):
     """test _apply_two_mode_gate transforms operations correctly"""
-    T = np.arange(M**2, dtype=np.complex128).reshape((M,M))
-    G = np.random.random((2,2)) + 1j * np.random.random((2,2))
+    T = np.arange(M ** 2, dtype=np.complex128).reshape((M, M))
+    G = np.random.random((2, 2)) + 1j * np.random.random((2, 2))
 
-    _apply_two_mode_gate(G, T, M-4, M-2)
+    _apply_two_mode_gate(G, T, M - 4, M - 2)
 
     G_expand = np.eye(M, dtype=np.complex128)
-    modes = [M-4, M-2]
+    modes = [M - 4, M - 2]
     G_expand[np.ix_(modes, modes)] = G
-    T1 = G_expand @ np.arange(M**2).reshape((M,M))
+    T1 = G_expand @ np.arange(M ** 2).reshape((M, M))
 
     assert np.allclose(T, T1, atol=tol, rtol=0)
-    
+
+
 @pytest.mark.parametrize("theta", [0, 0.4, np.pi])
 @pytest.mark.parametrize("phi", [0, 0.1, np.pi])
 def test_beam_splitter_passive(tol, theta, phi):
@@ -162,7 +166,7 @@ def test_beam_splitter_passive(tol, theta, phi):
             [eip * st, ct],
         ]
     )
-    
+
     U2 = _beam_splitter_passive(theta, phi)
 
     assert np.allclose(U, U2, atol=tol, rtol=tol)

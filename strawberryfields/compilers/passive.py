@@ -44,7 +44,7 @@ def _apply_two_mode_gate(G, T, i, j):
         j (int): index of second mode of gate
     """
     (T[i], T[j]) = (G[0, 0] * T[i] + G[0, 1] * T[j], G[1, 0] * T[i] + G[1, 1] * T[j])
-    return T 
+    return T
 
 
 def _beam_splitter_passive(theta, phi):
