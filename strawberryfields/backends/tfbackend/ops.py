@@ -43,8 +43,8 @@ from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
-from thewalrus.fock_gradients import n_mode_gaussian_gate as n_mode_gaussian_gate_tw
-from thewalrus.fock_gradients import grad_n_mode_gaussian_gate as grad_n_mode_gaussian_gate_tw
+from thewalrus.fock_gradients import gaussian_gate as gaussian_gate_tw
+from thewalrus.fock_gradients import grad_gaussian_gate as grad_gaussian_gate_tw
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -391,6 +391,7 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 def choi_trick(S, d, m, dtype=tf.complex64):
+    """Transforms the parameter from S,d to C,mu,Sigma (works for gaussian_gate)"""
     S = tf.cast(S, dtype = dtype)
     d = tf.cast(d, dtype  = dtype)
     m = num_mode
@@ -422,53 +423,43 @@ def choi_trick(S, d, m, dtype=tf.complex64):
     zeta = alpha + tf.linalg.matvec(tf.cast(Sigma,dtype = dtype),tf.math.conj(alpha))
     C = tf.math.sqrt(tf.math.sqrt(tf.linalg.det(tf.eye(num_mode,dtype=dtype)-Sigma[:num_mode,:num_mode]@tf.math.conj(Sigma[:num_mode,:num_mode])))) * tf.exp(-0.5*tf.reduce_sum(tf.math.conj(alpha)*zeta))
     return C, mu, Sigma
-    
-def n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype = np.complex128):
-    gate = n_mode_gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
-    def grad(dy):
-        dG_dC, dG_dmu, dG_dSigma = grad_n_mode_gaussian_gate_tw(gate, C, mu, Sigma, cutoff, num_modes)
-        ##TODO: transpose?
-        return dG_dC, dG_dmu, dG_dSigma
-    return gate, grad
 
 @tf.custom_gradient
-def single_n_mode_gaussian_gate_matrix(S, d, cutoff, dtype=tf.complex64.as_numpy_dtype):
+def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
-    S = S.numpy()
-    d = d.numpy()
+    C = C.numpy()
+    mu = mu.numpy()
+    Sigma = Sigma.numpy()
     num_modes = S.shape[0]//2
 
-    with tf.GradientTape as tape:
-        C, mu, Sigma = choi_trick(S, d, num_modes)
-        gate = n_mode_gaussian_gate_with_grad(C, mu, Sigma, cutoff, num_modes, dtype)
-    ##TODO: transpose order? -> num of mode?
-#    gate = np.transpose(gate, [0, 2, 1, 3])
+    gate = gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
+    transpose_list = np.concatenate([np.arange(0,num_modes,2) , np.arange(1,num_modes,2)])
+    gate = tf.transpose(gate,transpose_list)
 
     @tf.function
     def grad(dy):
-    ##TODO: without gradient function?
-        DS, Dd = tape.gradient(gate,[S, d])
-#        Dr = np.transpose(Dr, [0, 2, 1, 3])
-#        Dphi = np.transpose(Dphi, [0, 2, 1, 3])
-        grad_S = tf.math.real(tf.reduce_sum(dy * tf.math.conj(DS)))
-        grad_d = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dd)))
-        return grad_S, grad_d, None
+        dG_dC, dG_dmu, dG_dSigma = grad_gaussian_gate_tw(gate, C, mu, Sigma, cutoff, num_modes, dtype)
+        #TODO: transpose?
+        grad_C = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dC)))
+        grad_mu = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dmu)))
+        grad_Sigma = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dSigma)))
+        return grad_C, grad_mu, grad_Sigma, None
     return gate, grad
 
-
-def n_mode_gaussian_gate_matrix(gamma, W, zeta, V, cutoff, batched=False, dtype=tf.complex64):
+def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     """creates a N-mode gaussian gate matrix accounting for batching"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
+    C, mu, Sigma = choi_trick(S, d, num_modes)
     if batched:
         return tf.stack(
             [
-                single_n_mode_gaussian_gate_matrix(S_, d_, cutoff, dtype=dtype.as_numpy_dtype)
-                for S_, d_ in tf.transpose([S, d])
+                single_gaussian_gate_matrix(C_, mu_, Sigma_, cutoff, dtype=dtype.as_numpy_dtype)
+                for C_, mu_, Sigma_ in tf.transpose([C, mu, Sigma])
             ]
         )
     return tf.convert_to_tensor(
-        single_n_mode_gaussian_gate_matrix(S, d, cutoff, dtype=dtype.as_numpy_dtype)
+        single_gaussian_gate_matrix(C, mu, Sigma, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
 ###################################################################
@@ -883,6 +874,16 @@ def two_mode_squeeze(
     """returns beamsplitter unitary matrix on specified input modes"""
     matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
+    return output
+    
+
+def gaussian_gate(
+    S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+):
+    """returns gaussian gate unitary matrix on specified input modes"""
+    matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
+    #TODO: add n_mode_gate code like two_mode at 653/ fast algorithm???
+    output = n_mode_gate(matrix, *modes, in_modes, pure, batched)
     return output
 
 
