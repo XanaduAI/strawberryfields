@@ -56,6 +56,8 @@ def test_passive_program(tol, depth, width):
 def test_all_passive_gates(tol):
     """test that all gates run and do not cause anything to crash"""
 
+    hbar = sf.hbar
+
     eng = sf.LocalEngine(backend="gaussian")
     circuit = sf.Program(4)
 
@@ -96,7 +98,7 @@ def test_all_passive_gates(tol):
     mu = np.zeros(8)
 
     P = interferometer(T)
-    L = np.eye(P.shape[0]) - P @ P.T 
+    L = (hbar / 2) * (np.eye(P.shape[0]) - P @ P.T)
     cov2 = P @ cov_sq @ P.T + L
 
     assert np.allclose(cov, cov2, atol=tol, rtol=0)
