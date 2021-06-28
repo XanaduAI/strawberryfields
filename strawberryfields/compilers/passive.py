@@ -17,10 +17,6 @@ import numpy as np
 from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
-from thewalrus.symplectic import (
-    interferometer,
-    beam_splitter,
-)
 
 from .compiler import Compiler
 
@@ -125,7 +121,7 @@ class Passive(Compiler):
     }
 
     decompositions = {}
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a passive circuit into a single multimode passive operation
 
