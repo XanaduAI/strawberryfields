@@ -540,10 +540,6 @@ class GaussianModes:
 
     def apply_u(self, U):
         """Transforms the state according to the linear optical unitary that maps a[i] \to U[i, j]^*a[j]"""
-        self.mean = U @ self.mean
-        self.nmat = U.conj() @ self.nmat @ U.T
-        self.mmat = U @ self.mmat @ U.T
-
-    def passive(self, T):
-        """Transforms the state according to the arbitrary linear transformation that maps a[i] \to T[i, j]^*a[j]"""
-        self.apply_u(T)
+        self.mean = np.dot(np.conj(U), self.mean)
+        self.nmat = np.dot(np.dot(U, self.nmat), np.conj(np.transpose(U)))
+        self.mmat = np.dot(np.dot(np.conj(U), self.mmat), np.conj(np.transpose(U)))

@@ -22,9 +22,6 @@ from strawberryfields import ops
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
-from thewalrus.quantum import is_valid_cov
-
-from scipy.stats import unitary_group 
 
 # make test deterministic
 np.random.seed(42)
@@ -98,93 +95,6 @@ class TestChannelApplication:
         assert np.allclose(mean_photon, nbar, atol=tol, rtol=0)
         assert np.allclose(var, nbar ** 2 + nbar, atol=tol, rtol=0)
 
-    @pytest.mark.backends("gaussian")
-    @pytest.mark.parametrize("M", range(1,5))
-    def test_passive_channel_vacuum(self, M, setup_eng, tol):
-        """test that you get vacuum on all modes if you apply a channel with all zero"""
-        eng, prog = setup_eng(M)
-
-        with prog.context as q:
-            for i in range(M):
-                ops.Dgate(abs(A), np.angle(A)) | q[i]
-            ops.PassiveChannel(np.zeros((M,M))) | q
-
-        eng.run(prog)
-        assert np.all(eng.backend.is_vacuum(tol))
-
-    @pytest.mark.backends("gaussian")
-    @pytest.mark.parametrize("M", range(2,7))
-    def test_passive_channel(self, M, setup_eng, tol):
-        """check that passive channel is consistent with unitary methods"""
-        U = unitary_group.rvs(M)
-
-        loss_in = np.random.random(M)
-        loss_out = np.random.random(M)
-
-        T = (np.sqrt(loss_in) * U) * np.sqrt(loss_out[np.newaxis].T)
-
-        eng, prog = setup_eng(M)
-        with prog.context as q:
-            for i in range(M):
-                ops.Sgate(1) | q[i]
-                ops.Dgate(A) | q[i]
-            ops.PassiveChannel(T) | q
-
-        state = eng.run(prog).state
-        cov1 = state.cov()
-        mu1 = state.means()
-
-        eng, prog = setup_eng(M)
-        with prog.context as q:
-            for i in range(M):
-                ops.Sgate(1) | q[i]
-                ops.Dgate(A) | q[i]
-                ops.LossChannel(loss_in[i]) | q[i]
-            ops.Interferometer(U) | q 
-            for i in range(M):
-                ops.LossChannel(loss_out[i]) | q[i]
-
-        state = eng.run(prog).state
-        cov2 = state.cov()
-        mu2 = state.means()
-
-        assert np.allclose(cov1, cov2, atol=tol, rtol=0)
-        assert np.allclose(mu1, mu2, atol=tol, rtol=0)
-        
-        u, s, v = np.linalg.svd(T)
-
-        eng, prog = setup_eng(M)
-        with prog.context as q:
-            for i in range(M):
-                ops.Sgate(1) | q[i]
-                ops.Dgate(A) | q[i]
-            ops.Interferometer(v) | q 
-            for i in range(M):
-                ops.LossChannel(s[i]**2) | q[i]
-            ops.Interferometer(u) | q 
-
-        state = eng.run(prog).state
-        cov3 = state.cov()
-        mu3 = state.means()
-
-        assert np.allclose(cov1, cov3, atol=tol, rtol=0)
-        assert np.allclose(mu1, mu3, atol=tol, rtol=0)
-
-        T1 = u * s 
-        eng, prog = setup_eng(M)
-        with prog.context as q:
-            for i in range(M):
-                ops.Sgate(1) | q[i]
-                ops.Dgate(A) | q[i]
-            ops.PassiveChannel(v) | q 
-            ops.PassiveChannel(T1) | q
-
-        state = eng.run(prog).state
-        cov4 = state.cov()
-        mu4 = state.means()
-
-        assert np.allclose(cov1, cov4, atol=tol, rtol=0)
-        assert np.allclose(mu1, mu4, atol=tol, rtol=0)
 
 class TestPreparationApplication:
     """Tests that involve state preparation application"""
