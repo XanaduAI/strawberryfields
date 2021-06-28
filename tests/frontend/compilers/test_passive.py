@@ -65,8 +65,12 @@ def test_all_passive_gates(hbar, tol):
         for i in range(4):
             ops.Sgate(1, 0.3) | q[i]
         ops.Rgate(np.pi) | q[0]
+        ops.PassiveChannel(np.ones((2,2))) | (q[1], q[2])
         ops.LossChannel(0.9) | q[1]
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
+        ops.PassiveChannel(np.array([[0.83]])) | q[0]
+        ops.sMZgate(0.11, -2.1) | (q[0], q[3])
+        ops.Interferometer(np.array([[np.exp(1j * 2)]])) | q[1]
         ops.BSgate(0.8, 0.4) | (q[1], q[3])
         ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
         ops.PassiveChannel(0.1 * np.ones((3, 3))) | (q[3], q[1], q[0])
@@ -76,8 +80,12 @@ def test_all_passive_gates(hbar, tol):
     circuit = sf.Program(4)
     with circuit.context as q:
         ops.Rgate(np.pi) | q[0]
+        ops.PassiveChannel(np.ones((2,2))) | (q[1], q[2])
         ops.LossChannel(0.9) | q[1]
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
+        ops.PassiveChannel(np.array([[0.83]])) | q[0]
+        ops.sMZgate(0.11, -2.1) | (q[0], q[3])
+        ops.Interferometer(np.array([[np.exp(1j * 2)]])) | q[1]
         ops.BSgate(0.8, 0.4) | (q[1], q[3])
         ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
         ops.PassiveChannel(0.1 * np.ones((3, 3))) | (q[3], q[1], q[0])
