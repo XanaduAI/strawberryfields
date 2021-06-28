@@ -73,8 +73,8 @@ def test_all_passive_gates(tol):
 
     cov = eng.run(circuit).state.cov()
 
-    circuit = sf.Program(4)
-    with circuit.context as q:
+    circuit2 = sf.Program(4)
+    with circuit2.context as q:
         ops.Rgate(np.pi) | q[0]
         ops.LossChannel(0.9) | q[1]
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
@@ -82,7 +82,7 @@ def test_all_passive_gates(tol):
         ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
         ops.PassiveChannel(0.1 * np.ones((3,3))) | (q[3], q[1], q[0])
    
-    compiled_circuit = circuit.compile(compiler='passive')
+    compiled_circuit = circuit2.compile(compiler='passive')
     T = compiled_circuit.circuit[0].op.p[0]
     
     S_sq = np.eye(8, dtype=np.complex128)
