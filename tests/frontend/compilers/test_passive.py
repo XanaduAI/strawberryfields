@@ -92,7 +92,7 @@ def test_all_passive_gates(hbar, tol):
         S_sq[i+4, i] = -np.sinh(r) * np.sin(phi)
         S_sq[i+4, i+4] = np.cosh(r) + np.sinh(r) * np.cos(phi)
 
-    cov_sq = S_sq @ S_sq.T 
+    cov_sq = (hbar / 2) * S_sq @ S_sq.T 
     mu = np.zeros(8)
 
     P = interferometer(T)
