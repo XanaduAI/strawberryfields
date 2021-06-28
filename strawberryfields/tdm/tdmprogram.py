@@ -20,6 +20,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 from operator import itemgetter
 from math import ceil
 from collections.abc import Iterable
+from itertools import accumulate
 
 import numpy as np
 import blackbird as bb
@@ -398,7 +399,7 @@ class TDMProgram(sf.Program):
         </div>
     """
 
-    def __init__(self, N, delays=None, name=None):
+    def __init__(self, N, delays=[], name=None):
         # N is a list with the number of qumodes for each spatial mode
         if isinstance(N, int):
             self.N = [N]
@@ -407,15 +408,17 @@ class TDMProgram(sf.Program):
         self.concurr_modes = sum(self.N)
 
         # if delays are input, td3 is assumed
-        if delays is not None:
+        self._delays = delays
+        if len(self._delays) != 0:
             self._is_td3 = True
-            _, N_true = get_mode_indices(delays)
+            _, N_true = get_mode_indices(self._delays)
             if N != N_true:
                 raise ValueError(
                     "Delays are incompatible with number of concurrent modes. "
                     "N should be equal to {N_true}."
                 )
-            super().__init__(num_subsystems=np.prod(delays), name=name)
+            modes_tot = np.prod(self._delays) + sum(self._delays)
+            super().__init__(num_subsystems=modes_tot, name=name)
         else:
             self._is_td3 = False
             super().__init__(num_subsystems=self.concurr_modes, name=name)
@@ -691,11 +694,13 @@ class TDMProgram(sf.Program):
 
         self.circuit = []
 
-        num_vacuum_modes = 43
-        q = shift_by(self.register, -num_vacuum_modes)
+        start_mode = sum(self._delays)
+        q = shift_by(self.register, -start_mode)
 
         measurements = []
-        for i in range(self.timebins - num_vacuum_modes):
+        sgates = []
+        otter_ops = []
+        for i in range(self.timebins - start_mode):
             for cmd in self.rolled_circuit:
                 if isinstance(cmd.op, ops.Measurement):
                     if i == 0:
@@ -703,13 +708,18 @@ class TDMProgram(sf.Program):
                     if not isinstance(cmd.op, ops.MeasureFock):
                         raise TypeError("Only fock measurements allowed when using space unroll.")
                     measurements.append(cmd)
+                elif isinstance(cmd.op, ops.Sgate):
+                    sgates.append((cmd, q, i))
                 else:
-                    self.apply_op(cmd, q, i)
+                    otter_ops.append((cmd, q, i))
 
             q = shift_by(q, 1)
 
-        if len(measurements) == self.timebins - num_vacuum_modes:
-            self.append(measurements[0].op, self.reg_refs.keys())
+        for op in sgates + otter_ops:
+            self.apply_op(*op)
+
+        if len(measurements) == self.timebins - start_mode:
+            self.append(measurements[0].op, list(self.reg_refs.keys())[start_mode:])
 
         # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
         self.unrolled_circuit = self.circuit.copy()
@@ -720,11 +730,16 @@ class TDMProgram(sf.Program):
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
         params = cmd.op.p.copy()
+        if self._is_td3:
+            # get number of initial vacuum modes in each parameter list
+            shift = [0] + list(accumulate(self._delays))[:-1]
+        else:
+            shift = [0] * 3
 
         for i in range(len(params)):
             if par_is_symbolic(params[i]):
                 arg_index = int(params[i].name[1:])
-                params[i] = self.tdm_params[arg_index][t % self.timebins]
+                params[i] = self.tdm_params[arg_index][(t + shift[arg_index % 3]) % self.timebins]
 
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
 
