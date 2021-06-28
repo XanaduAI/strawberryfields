@@ -46,8 +46,20 @@ from .bosonic import Bosonic
 from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
 from .gaussian_merge import GaussianMerge
+from .passive import Passive
 
-compilers = (Fock, Gaussian, Bosonic, GBS, GaussianUnitary, Xcov, Xstrict, Xunitary, GaussianMerge)
+compilers = (
+    Fock,
+    Gaussian,
+    Bosonic,
+    GBS,
+    GaussianUnitary,
+    Xcov,
+    Xstrict,
+    Xunitary,
+    GaussianMerge,
+    Passive,
+)
 
 compiler_db = {c.short_name: c for c in compilers}
 """dict[str, ~strawberryfields.compilers.Compiler]: Map from compiler name to the corresponding
