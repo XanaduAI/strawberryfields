@@ -168,7 +168,7 @@ class Passive(Compiler):
             elif name == "Interferometer":
                 U = params[0]
                 if U.shape == (1, 1):
-                    T = _apply_one_mode_gate(U[0,0], T, dict_indices[modes[0]])
+                    T = _apply_one_mode_gate(U[0, 0], T, dict_indices[modes[0]])
                 elif U.shape == (2, 2):
                     T = _apply_two_mode_gate(U, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
@@ -179,7 +179,7 @@ class Passive(Compiler):
             elif name == "PassiveChannel":
                 T0 = params[0]
                 if T0.shape == (1, 1):
-                    T = _apply_one_mode_gate(T0[0,0], T, dict_indices[modes[0]])
+                    T = _apply_one_mode_gate(T0[0, 0], T, dict_indices[modes[0]])
                 elif T0.shape == (2, 2):
                     T = _apply_two_mode_gate(T0, T, dict_indices[modes[0]], dict_indices[modes[1]])
                 else:
