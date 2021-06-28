@@ -53,10 +53,8 @@ def test_passive_program(tol, depth, width):
     T = compiled_circuit.circuit[0].op.p[0]
     assert np.allclose(T, T_circuit, atol=tol, rtol=0)
 
-def test_all_passive_gates(tol):
+def test_all_passive_gates(hbar, tol):
     """test that all gates run and do not cause anything to crash"""
-
-    hbar = sf.hbar
 
     eng = sf.LocalEngine(backend="gaussian")
     circuit = sf.Program(4)
