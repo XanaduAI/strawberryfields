@@ -204,7 +204,7 @@ class GaussianBackend(BaseGaussian):
         """
         T_expand = identity(self.circuit.nlen, dtype=T.dtype)
         T_expand[ix_(modes, modes)] = T
-        self.circuit.passive(T_expand)
+        self.circuit.apply_u(T_expand)
 
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)

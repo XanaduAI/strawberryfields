@@ -1424,7 +1424,7 @@ class PassiveChannel(Channel):
         Acts the following transformation on the state:
 
         .. math::
-            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}j
+            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
     """
 
     def __init__(self, T):
@@ -1433,6 +1433,9 @@ class PassiveChannel(Channel):
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
+
+        if not isinstance(backend, BaseGaussianState):
+
         backend.passive(p[0], *reg)
 
 

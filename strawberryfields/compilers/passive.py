@@ -25,9 +25,12 @@ def _apply_one_mode_gate(G, T, i):
     """In-place applies a one mode gate G into the process matrix T in mode i
 
     Args:
-        G (complex/float): one mode gate
+        G (complex or float): one mode gate
         T (array): passive transformation
         i (int): index of one mode gate
+
+    Returns:
+        T (array): updated passive transformation
     """
 
     T[i] *= G
@@ -42,6 +45,9 @@ def _apply_two_mode_gate(G, T, i, j):
         T (array): passive transformation
         i (int): index of first mode of gate
         j (int): index of second mode of gate
+
+    Returns:
+        T (array): updated passive transformation
     """
     (T[i], T[j]) = (G[0, 0] * T[i] + G[0, 1] * T[j], G[1, 0] * T[i] + G[1, 1] * T[j])
     return T
