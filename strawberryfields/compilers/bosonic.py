@@ -65,4 +65,5 @@ class Bosonic(Compiler):
         "Xgate": {},
         "Zgate": {},
         "Fouriergate": {},
+        "PassiveChannel": {}
     }

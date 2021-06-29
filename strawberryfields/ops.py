@@ -1437,6 +1437,15 @@ class PassiveChannel(Channel):
         p = par_evaluate(self.p)
         backend.passive(p[0], reg)
 
+    def _decompose(self, reg, **kwargs):
+        U, S, V = np.linalg.svd(T)
+        cmds = [Command(Interferometer(V), reg)]
+        for mode, s in zip(reg, S):
+            cmds.append(Command(LossChannel(s**2), mode))
+        cmds.append(Command(Interferometer(U), reg))
+
+        return cmds
+
 
 # ====================================================================
 # Unitary gates
