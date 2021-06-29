@@ -1433,10 +1433,7 @@ class PassiveChannel(Channel):
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
-
-        if not isinstance(backend, BaseGaussianState):
-
-        backend.passive(p[0], *reg)
+        backend.passive(p[0], reg)
 
 
 # ====================================================================
