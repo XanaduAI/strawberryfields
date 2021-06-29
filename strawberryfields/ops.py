@@ -1424,16 +1424,18 @@ class PassiveChannel(Channel):
         Acts the following transformation on the state:
 
         .. math::
-            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}j
+            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
+
     """
 
     def __init__(self, T):
+        T = np.atleast_2d(T)
         super().__init__([T])
         self.ns = T.shape[0]
 
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
-        backend.passive(p[0], *reg)
+        backend.passive(p[0], reg)
 
 
 # ====================================================================
@@ -3032,7 +3034,7 @@ one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKga
 two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
-channels = (LossChannel, ThermalLossChannel, MSgate)
+channels = (LossChannel, ThermalLossChannel, MSgate, PassiveChannel)
 
 simple_state_preparations = (
     Vacuum,
