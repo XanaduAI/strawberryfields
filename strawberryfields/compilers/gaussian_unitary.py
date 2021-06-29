@@ -26,10 +26,12 @@ from thewalrus.symplectic import (
     interferometer,
     beam_splitter,
 )
-
+from numba import jit
 from .compiler import Compiler
 
-def _apply_symp_one_mode_gate(S_G, S, i):
+
+@jit(nopython=True)
+def _apply_symp_one_mode_gate(S_G, S, r, i):
     """In-place applies a one mode gate G to the symplectic operation, S, in mode i
     Args:
         S_G (array): 2x2 matrix for one mode symplectic operation
@@ -37,10 +39,19 @@ def _apply_symp_one_mode_gate(S_G, S, i):
         i (int): index of one mode gate
     """
     M = S.shape[0] // 2
-    (S[i], S[i+M]) = (S_G[0,0] * S[i] + S_G[0,1] * S[i+M], S_G[1,0] * S[i] + S_G[1,1] * S[i+M])
-    return S
+    (S[i], S[i + M]) = (
+        S_G[0, 0] * S[i] + S_G[0, 1] * S[i + M],
+        S_G[1, 0] * S[i] + S_G[1, 1] * S[i + M],
+    )
+    (r[i], r[i + M]) = (
+        S_G[0, 0] * r[i] + S_G[0, 1] * r[i + M],
+        S_G[1, 0] * r[i] + S_G[1, 1] * r[i + M],
+    )
+    return S, r
 
-def _apply_symp_two_mode_gate(S_G, S, i, j):
+
+@jit(nopython=True)
+def _apply_symp_two_mode_gate(S_G, S, r, i, j):
     """In-place applies a two mode gate G to the symplectic operation, S, in modes i and j
     Args:
         G (array): 2x2 matrix for two mode gate
@@ -49,11 +60,20 @@ def _apply_symp_two_mode_gate(S_G, S, i, j):
         j (int): index of second mode of gate
     """
     M = S.shape[0] // 2
-    (S[i], S[j], S[i+M], S[j+M]) = (S_G[0,0] * S[i] + S_G[0,1] * S[j] + S_G[0,2] * S[i+M] + S_G[0,3] * S[j+M],
-                                    S_G[1,0] * S[i] + S_G[1,1] * S[j] + S_G[1,2] * S[i+M] + S_G[1,3] * S[j+M],
-                                    S_G[2,0] * S[i] + S_G[2,1] * S[j] + S_G[2,2] * S[i+M] + S_G[2,3] * S[j+M],
-                                    S_G[3,0] * S[i] + S_G[3,1] * S[j] + S_G[3,2] * S[i+M] + S_G[3,3] * S[j+M])
-    return S
+    (S[i], S[j], S[i + M], S[j + M]) = (
+        S_G[0, 0] * S[i] + S_G[0, 1] * S[j] + S_G[0, 2] * S[i + M] + S_G[0, 3] * S[j + M],
+        S_G[1, 0] * S[i] + S_G[1, 1] * S[j] + S_G[1, 2] * S[i + M] + S_G[1, 3] * S[j + M],
+        S_G[2, 0] * S[i] + S_G[2, 1] * S[j] + S_G[2, 2] * S[i + M] + S_G[2, 3] * S[j + M],
+        S_G[3, 0] * S[i] + S_G[3, 1] * S[j] + S_G[3, 2] * S[i + M] + S_G[3, 3] * S[j + M],
+    )
+    (r[i], r[j], r[i + M], r[j + M]) = (
+        S_G[0, 0] * r[i] + S_G[0, 1] * r[j] + S_G[0, 2] * r[i + M] + S_G[0, 3] * r[j + M],
+        S_G[1, 0] * r[i] + S_G[1, 1] * r[j] + S_G[1, 2] * r[i + M] + S_G[1, 3] * r[j + M],
+        S_G[2, 0] * r[i] + S_G[2, 1] * r[j] + S_G[2, 2] * r[i + M] + S_G[2, 3] * r[j + M],
+        S_G[3, 0] * r[i] + S_G[3, 1] * r[j] + S_G[3, 2] * r[i + M] + S_G[3, 3] * r[j + M],
+    )
+    return S, r
+
 
 class GaussianUnitary(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
@@ -167,39 +187,80 @@ class GaussianUnitary(Compiler):
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Dgate":
                 alpha = params[0] * (np.exp(1j * params[1]))
-                rnet[dict_indices[modes[0]]] += alpha.real 
-                rnet[dict_indices[modes[0]] + nmodes] += alpha.imag
+                rnet[dict_indices[modes[0]]] += 2 * alpha.real
+                rnet[dict_indices[modes[0]] + nmodes] += 2 * alpha.imag
             else:
                 if name == "Rgate":
-                    S = expand(rotation(params[0]), dict_indices[modes[0]], nmodes)
+                    Snet, rnet = _apply_symp_one_mode_gate(
+                        rotation(params[0]), Snet, rnet, dict_indices[modes[0]]
+                    )
                 elif name == "Sgate":
-                    S = expand(squeezing(params[0], params[1]), dict_indices[modes[0]], nmodes)
+                    Snet, rnet = _apply_symp_one_mode_gate(
+                        squeezing(params[0], params[1]), Snet, rnet, dict_indices[modes[0]]
+                    )
                 elif name == "S2gate":
-                    S = expand(
+                    Snet, rnet = _apply_symp_two_mode_gate(
                         two_mode_squeezing(params[0], params[1]),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
+                        Snet,
+                        rnet,
+                        dict_indices[modes[0]],
+                        dict_indices[modes[1]],
                     )
                 elif name == "Interferometer":
-                    S = expand(
-                        interferometer(params[0]), [dict_indices[mode] for mode in modes], nmodes
-                    )
+                    U = params[0]
+                    if U.shape == (1, 1):
+                        Snet, rnet = _apply_symp_one_mode_gate(
+                            interferometer(U), Snet, rnet, dict_indices[modes[0]]
+                        )
+                    elif U.shape == (2, 2):
+                        Snet, rnet = _apply_symp_two_mode_gate(
+                            interferometer(U),
+                            Snet,
+                            rnet,
+                            dict_indices[modes[0]],
+                            dict_indices[modes[1]],
+                        )
+                    else:
+                        S = expand(
+                            interferometer(U), [dict_indices[mode] for mode in modes], nmodes
+                        )
+                        Snet = S @ Snet
+                        rnet = S @ rnet
+
                 elif name == "GaussianTransform":
-                    S = expand(params[0], [dict_indices[mode] for mode in modes], nmodes)
+                    S_G = params[0]
+                    if S_G.shape == (2, 2):
+                        Snet, rnet = _apply_symp_one_mode_gate(
+                            S_G, Snet, rnet, dict_indices[modes[0]]
+                        )
+                    elif S_G.shape == (4, 4):
+                        Snet, rnet = _apply_symp_two_mode_gate(
+                            S_G, Snet, rnet, dict_indices[modes[0]], dict_indices[modes[1]]
+                        )
+                    else:
+                        S = expand(S_G, [dict_indices[mode] for mode in modes], nmodes)
+                        Snet = S @ Snet
+                        rnet = S @ rnet
+
                 elif name == "BSgate":
-                    S = expand(
+                    Snet, rnet = _apply_symp_two_mode_gate(
                         beam_splitter(params[0], params[1]),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
+                        Snet,
+                        rnet,
+                        dict_indices[modes[0]],
+                        dict_indices[modes[1]],
                     )
+
                 elif name == "MZgate":
                     v = np.exp(1j * params[0])
                     u = np.exp(1j * params[1])
                     U = 0.5 * np.array([[u * (v - 1), 1j * (1 + v)], [1j * u * (1 + v), 1 - v]])
-                    S = expand(
+                    Snet, rnet = _apply_symp_two_mode_gate(
                         interferometer(U),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
+                        Snet,
+                        rnet,
+                        dict_indices[modes[0]],
+                        dict_indices[modes[1]],
                     )
                 elif name == "sMZgate":
                     exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
@@ -207,13 +268,13 @@ class GaussianUnitary(Compiler):
                     U = exp_sigma * np.array(
                         [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
                     )
-                    S = expand(
+                    Snet, rnet = _apply_symp_two_mode_gate(
                         interferometer(U),
-                        [dict_indices[modes[0]], dict_indices[modes[1]]],
-                        nmodes,
+                        Snet,
+                        rnet,
+                        dict_indices[modes[0]],
+                        dict_indices[modes[1]],
                     )
-                Snet = S @ Snet
-                rnet = S @ rnet
 
         # Having obtained the net displacement we simply convert it into complex notation
         alphas = 0.5 * (rnet[0:nmodes] + 1j * rnet[nmodes : 2 * nmodes])
