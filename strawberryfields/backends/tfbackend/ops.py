@@ -29,7 +29,7 @@ Contents
 # pylint: disable=too-many-arguments
 
 from string import ascii_lowercase as indices
-from string import ascii_letters as ind
+from string import ascii_letters as indices_full
 
 import tensorflow as tf
 import numpy as np
@@ -395,7 +395,6 @@ def choi_trick(S, d, m, dtype=tf.complex64):
     """Transforms the parameter from S,d to C,mu,Sigma (works for gaussian_gate)"""
     S = tf.cast(S, dtype = dtype)
     d = tf.cast(d, dtype  = dtype)
-    m = num_mode
     # m: num of modes
     choi_r = tf.cast(tf.math.asinh(1.0), dtype  = dtype)
     ch = tf.math.cosh(choi_r) * tf.eye(m, dtype  = dtype)
@@ -420,19 +419,17 @@ def choi_trick(S, d, m, dtype=tf.complex64):
     E = tf.linalg.diag(tf.concat([tf.ones([m], dtype= dtype), tf.ones([m], dtype= dtype) / tf.math.tanh(choi_r)],0))
     Sigma = -tf.math.conj(E @ A_mat[:2*m, :2*m] @ E)
     mu = tf.concat([tf.linalg.matvec(Sigma[:m,:m],tf.math.conj(d))+tf.transpose(d), tf.linalg.matvec(Sigma[m:,:m],tf.math.conj(d))],0)
-    alpha = tf.concat([tf.cast(d,dtype = dtype),tf.zeros(num_mode,dtype = dtype)],0)
+    alpha = tf.concat([tf.cast(d,dtype = dtype),tf.zeros(m,dtype = dtype)],0)
     zeta = alpha + tf.linalg.matvec(tf.cast(Sigma,dtype = dtype),tf.math.conj(alpha))
-    C = tf.math.sqrt(tf.math.sqrt(tf.linalg.det(tf.eye(num_mode,dtype=dtype)-Sigma[:num_mode,:num_mode]@tf.math.conj(Sigma[:num_mode,:num_mode])))) * tf.exp(-0.5*tf.reduce_sum(tf.math.conj(alpha)*zeta))
+    C = tf.math.sqrt(tf.math.sqrt(tf.linalg.det(tf.eye(m,dtype=dtype)-Sigma[:m,:m]@tf.math.conj(Sigma[:m,:m])))) * tf.exp(-0.5*tf.reduce_sum(tf.math.conj(alpha)*zeta))
     return C, mu, Sigma
 
 @tf.custom_gradient
-def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, dtype=tf.complex64.as_numpy_dtype):
+def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=tf.complex64.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
     C = C.numpy()
     mu = mu.numpy()
     Sigma = Sigma.numpy()
-    num_modes = S.shape[0]//2
-
     gate = gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
     transpose_list = np.concatenate([np.arange(0,num_modes,2) , np.arange(1,num_modes,2)])
     gate = tf.transpose(gate,transpose_list)
@@ -451,16 +448,17 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     """creates a N-mode gaussian gate matrix accounting for batching"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
+    num_modes = S.shape[0] // 2
     C, mu, Sigma = choi_trick(S, d, num_modes)
     if batched:
         return tf.stack(
             [
-                single_gaussian_gate_matrix(C_, mu_, Sigma_, cutoff, dtype=dtype.as_numpy_dtype)
+                single_gaussian_gate_matrix(C_, mu_, Sigma_, cutoff, num_modes, dtype=dtype.as_numpy_dtype)
                 for C_, mu_, Sigma_ in tf.transpose([C, mu, Sigma])
             ]
         )
     return tf.convert_to_tensor(
-        single_gaussian_gate_matrix(C, mu, Sigma, cutoff, dtype=dtype.as_numpy_dtype)
+        single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=dtype.as_numpy_dtype)
     )
 
 ###################################################################
@@ -746,6 +744,10 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
 
 
 def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
+    """basic form:
+    'abcd,efg...b...d...xyz->efg...a...c...xyz' (pure state)
+    'abcd,ij...be...dg...xyz,efgh->ij...af...ch...xyz' (mixed state)
+    """
     # "a": reserved for batching
     # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
     # matrix : out_1 out_2 ... in_1 in_2 ...
@@ -754,13 +756,13 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
     # in_modes : input state
     if pure:
         num_modes = len(in_modes.shape)
-        index_in_modes = ind[1:1+num_modes]
+        index_in_modes = indices_full[1:1+num_modes]
         index_in_state = ""
         #*modes starts from 1 in this case.
         for x in modes:
-            index_in_state += ind[x]
+            index_in_state += indices_full[x]
         num_mode_op = len(modes)
-        index_output_op = ind[1+num_modes:1+num_modes+num_mode_op]
+        index_output_op = indices_full[1+num_modes:1+num_modes+num_mode_op]
         index_op = index_output_op + index_in_state
         if batched:
             eqn = "a" + index_op + "," + "a" + index_in_state + "->" + "a" + index_output_op
@@ -768,17 +770,17 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
             eqn = index_op + "," + index_in_state + "->" + index_output_op
     else:
         num_modes = 2
-        index_in_modes = ind[1:1+2*num_modes]
+        index_in_modes = indices_full[1:1+2*num_modes]
         index_in_state = ""
         modes = (1,2)
         #*modes starts from 1 in this case.
         for x in modes:
-            index_in_state += ind[x]
+            index_in_state += indices_full[x]
         for x in modes:
-            index_in_state += ind[x+num_modes]
+            index_in_state += indices_full[x+num_modes]
         num_mode_op = len(modes)
-        index_output_op = ind[1+2*num_modes:1+2*num_modes+num_mode_op]
-        index_output_op_conj = ind[1+2*num_modes+num_mode_op:1+2*num_modes+2*num_mode_op]
+        index_output_op = indices_full[1+2*num_modes:1+2*num_modes+num_mode_op]
+        index_output_op_conj = indices_full[1+2*num_modes+num_mode_op:1+2*num_modes+2*num_mode_op]
         index_op = index_output_op + index_in_state[:num_mode_op]
         index_op_conj = index_in_state[num_mode_op:] + index_output_op_conj
         if batched:

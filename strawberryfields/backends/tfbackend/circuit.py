@@ -554,7 +554,7 @@ class Circuit:
         )
         self._update_state(new_state)
         
-    def gaussian_gate(S, d, modes):
+    def gaussian_gate(self, S, d, modes):
         """
         Apply the N-mode gaussian gates to the specified mode.
         """
@@ -565,12 +565,11 @@ class Circuit:
         new_state = ops.gaussian_gate(
             S, d,
             modes,
-            self._state,
-            self._cutoff_dim,
-            self._hbar,
-            self._state_is_pure,
-            self._batched,
-            dtype=self._dtype,
+            in_modes = self._state,
+            cutoff = self._cutoff_dim,
+            pure = self._state_is_pure,
+            batched = self._batched,
+            dtype = self._dtype,
         )
         self._update_state(new_state)
 
