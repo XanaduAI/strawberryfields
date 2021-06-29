@@ -1436,7 +1436,7 @@ class PassiveChannel(Channel):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         backend.passive(p[0], reg)
-        
+
 
 # ====================================================================
 # Unitary gates
