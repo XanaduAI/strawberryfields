@@ -29,6 +29,7 @@ Contents
 # pylint: disable=too-many-arguments
 
 from string import ascii_lowercase as indices
+from string import ascii_letters as ind
 
 import tensorflow as tf
 import numpy as np
@@ -744,6 +745,53 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     return output
 
 
+def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
+    # "a": reserved for batching
+    # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
+    # matrix : out_1 out_2 ... in_1 in_2 ...
+    # *mode : Tuple(1,2,3,...)
+    #TODO: figure out *mode starts from 0 or 1.
+    # in_modes : input state
+    if pure:
+        num_modes = len(in_modes.shape)
+        index_in_modes = ind[1:1+num_modes]
+        index_in_state = ""
+        #*modes starts from 1 in this case.
+        for x in modes:
+            index_in_state += ind[x]
+        num_mode_op = len(modes)
+        index_output_op = ind[1+num_modes:1+num_modes+num_mode_op]
+        index_op = index_output_op + index_in_state
+        if batched:
+            eqn = "a" + index_op + "," + "a" + index_in_state + "->" + "a" + index_output_op
+        else:
+            eqn = index_op + "," + index_in_state + "->" + index_output_op
+    else:
+        num_modes = 2
+        index_in_modes = ind[1:1+2*num_modes]
+        index_in_state = ""
+        modes = (1,2)
+        #*modes starts from 1 in this case.
+        for x in modes:
+            index_in_state += ind[x]
+        for x in modes:
+            index_in_state += ind[x+num_modes]
+        num_mode_op = len(modes)
+        index_output_op = ind[1+2*num_modes:1+2*num_modes+num_mode_op]
+        index_output_op_conj = ind[1+2*num_modes+num_mode_op:1+2*num_modes+2*num_mode_op]
+        index_op = index_output_op + index_in_state[:num_mode_op]
+        index_op_conj = index_in_state[num_mode_op:] + index_output_op_conj
+        if batched:
+            eqn = "a" + index_op + "," + "a" + index_in_state + "," + "a" + index_op_conj +"->" + "a" + index_output_op + index_output_op_conj
+        else:
+            eqn = index_op + "," + index_in_state + "," + index_op_conj +"->" + index_output_op + index_output_op_conj
+    einsum_inputs = [matrix, in_modes]
+    if not pure:
+        einsum_inputs.append(tf.math.conj(tf.transpose(matrix)))
+    output = tf.einsum(eqn, *einsum_inputs)
+    return output
+
+
 def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
     """rho_out = S[rho_in]
     (state is always converted to mixed to apply superop)
@@ -882,8 +930,7 @@ def gaussian_gate(
 ):
     """returns gaussian gate unitary matrix on specified input modes"""
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
-    #TODO: add n_mode_gate code like two_mode at 653/ fast algorithm???
-    output = n_mode_gate(matrix, *modes, in_modes, pure, batched)
+    output = n_mode_gate(matrix, *modes, in_modes = in_modes, pure = pure, batched = batched)
     return output
 
 
