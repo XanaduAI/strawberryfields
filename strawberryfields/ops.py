@@ -1425,6 +1425,7 @@ class PassiveChannel(Channel):
 
         .. math::
             a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
+
     """
 
     def __init__(self, T):
