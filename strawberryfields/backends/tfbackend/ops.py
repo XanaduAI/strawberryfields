@@ -765,9 +765,9 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
         index_output_op = indices_full[1+num_modes:1+num_modes+num_mode_op]
         index_op = index_output_op + index_in_state
         if batched:
-            eqn = "a" + index_op + "," + "a" + index_in_state + "->" + "a" + index_output_op
+            eqn = "a" + index_op + "," + "a" + index_in_modes + "->" + "a" + index_output_op
         else:
-            eqn = index_op + "," + index_in_state + "->" + index_output_op
+            eqn = index_op + "," + index_in_modes + "->" + index_output_op
     else:
         num_modes = 2
         index_in_modes = indices_full[1:1+2*num_modes]
@@ -784,9 +784,9 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
         index_op = index_output_op + index_in_state[:num_mode_op]
         index_op_conj = index_in_state[num_mode_op:] + index_output_op_conj
         if batched:
-            eqn = "a" + index_op + "," + "a" + index_in_state + "," + "a" + index_op_conj +"->" + "a" + index_output_op + index_output_op_conj
+            eqn = "a" + index_op + "," + "a" + index_in_modes + "," + "a" + index_op_conj +"->" + "a" + index_output_op + index_output_op_conj
         else:
-            eqn = index_op + "," + index_in_state + "," + index_op_conj +"->" + index_output_op + index_output_op_conj
+            eqn = index_op + "," + index_in_modes + "," + index_op_conj +"->" + index_output_op + index_output_op_conj
     einsum_inputs = [matrix, in_modes]
     if not pure:
         einsum_inputs.append(tf.math.conj(tf.transpose(matrix)))

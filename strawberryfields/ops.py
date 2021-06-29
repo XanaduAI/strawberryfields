@@ -2256,7 +2256,7 @@ class Ggate(Gate):
     def _decompose(self, reg, **kwargs):
         # TODO: decompose?
         pass
-        
+
 
 
 
