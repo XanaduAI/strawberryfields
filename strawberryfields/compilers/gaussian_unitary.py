@@ -25,11 +25,8 @@ from thewalrus.symplectic import (
     interferometer,
     beam_splitter,
 )
-from numba import jit
 from .compiler import Compiler
 
-
-@jit(nopython=True)
 def _apply_symp_one_mode_gate(S_G, S, r, i):
     """In-place applies a one mode gate G to the symplectic operation, S, in mode i
     Args:
@@ -53,8 +50,6 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
     )
     return S, r
 
-
-@jit(nopython=True)
 def _apply_symp_two_mode_gate(S_G, S, r, i, j):
     """In-place applies a two mode gate G to the symplectic operation, S, in modes i and j
 
