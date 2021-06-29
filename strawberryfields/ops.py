@@ -3032,7 +3032,7 @@ one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKga
 two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
-channels = (LossChannel, ThermalLossChannel, MSgate)
+channels = (LossChannel, ThermalLossChannel, MSgate, PassiveChannel)
 
 simple_state_preparations = (
     Vacuum,
