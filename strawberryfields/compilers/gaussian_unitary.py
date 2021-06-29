@@ -18,7 +18,6 @@ from strawberryfields.program_utils import Command
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import (
-    expand_vector,
     expand,
     rotation,
     squeezing,
@@ -146,7 +145,7 @@ class GaussianUnitary(Compiler):
         "Zgate": {},
         "Fouriergate": {},
     }
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
 
