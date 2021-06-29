@@ -112,7 +112,6 @@ class GaussianMerge(Compiler):
         "Xgate": {},
         "Zgate": {},
         "Fouriergate": {},
-        "PassiveChannel": {}
     }
 
     prep_states = ["Ket"]

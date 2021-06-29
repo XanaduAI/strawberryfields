@@ -68,5 +68,4 @@ class Fock(Compiler):
         "Xgate": {},
         "Zgate": {},
         "Fouriergate": {},
-        "PassiveChannel": {}
     }
