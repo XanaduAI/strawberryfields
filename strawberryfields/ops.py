@@ -1428,6 +1428,7 @@ class PassiveChannel(Channel):
     """
 
     def __init__(self, T):
+        T = np.atleast_2d(T)
         super().__init__([T])
         self.ns = T.shape[0]
 
