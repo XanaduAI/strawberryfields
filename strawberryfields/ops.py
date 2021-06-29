@@ -1438,7 +1438,8 @@ class PassiveChannel(Channel):
         backend.passive(p[0], reg)
 
     def _decompose(self, reg, **kwargs):
-        U, S, V = np.linalg.svd(T)
+        p = par_evaluate(self.p)
+        U, S, V = np.linalg.svd(p[0])
         cmds = [Command(Interferometer(V), reg)]
         for mode, s in zip(reg, S):
             cmds.append(Command(LossChannel(s**2), mode))
