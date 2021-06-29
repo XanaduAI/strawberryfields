@@ -79,6 +79,57 @@
   prog_merged = prog.compile(compiler="gaussian_merge")
   ```
 
+* A new operation, ``PassiveChannel`` has been added. It allows for arbitrary linear/passive transformations
+  (i.e., any operation which is linear in creation operators). Currently only supported by the ``gaussian``
+  backend. [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
+  ```python
+  from strawberryfields.ops import PassiveChannel, Sgate
+  import strawberryfields as sf
+  from scipy.stats import unitary_group
+  import numpy as np
+
+  M = 4
+
+  circuit = sf.Program(M)
+  U1 = unitary_group.rvs(M)
+  U2 = unitary_group.rvs(M)
+  losses = np.random.random(M)
+
+  T = U2 @ np.diag(losses) @ U1
+
+  eng = sf.Engine(backend='gaussian')
+  circuit = sf.Program(M)
+  with circuit.context as q:
+      for i in range(M):
+          ops.Sgate(1) | q[i]
+      ops.PassiveChannel(T) | q
+
+  cov = eng.run(circuit).state.cov()
+  ```
+ 
+* A new compiler, ``passive``, allows for a circuit which only consists of passive
+  elements to be compiled into a single ``PassiveChannel``.
+  [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
+  ```python 
+  from strawberryfields.ops import BSgate, LossChannel, Rgate
+  import strawberryfields as sf
+
+  circuit = sf.Program(2)
+  with circuit.context as q:
+      Rgate(np.pi) | q[0]
+      BSgate(0.25 * np.pi, 0) | (q[0], q[1])
+      LossChannel(0.9) | q[1]
+
+  compiled_circuit = circuit.compile(compiler="passive")
+  ```
+  ```pycon
+  >>> print(compiled_circuit)
+     PassiveChannel([[-0.7071+8.6596e-17j -0.7071+0.0000e+00j]
+     [-0.6708+8.2152e-17j  0.6708+0.0000e+00j]]) | (q[0], q[1])
+  ```
+
 
 <h3>Improvements</h3>
 

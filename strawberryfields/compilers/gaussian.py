@@ -41,6 +41,7 @@ class Gaussian(Compiler):
         # channels
         "LossChannel",
         "ThermalLossChannel",
+        "PassiveChannel",
         # single mode gates
         "Dgate",
         "Sgate",
