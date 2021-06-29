@@ -108,7 +108,10 @@
   cov = eng.run(circuit).state.cov()
   ```
  
-* A new compiler, ``passive``, allows for a circuit which only consists of passive elements to be compiled into a single ``PassiveChannel``. [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+* A new compiler, ``passive``, allows for a circuit which only consists of passive
+  elements to be compiled into a single ``PassiveChannel``.
+  [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
   ```python 
   from strawberryfields.ops import BSgate, LossChannel, Rgate
   import strawberryfields as sf
