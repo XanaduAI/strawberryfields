@@ -34,8 +34,13 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
     """In-place applies a one mode gate G to the symplectic operation, S, in mode i
     Args:
         S_G (array): 2x2 matrix for one mode symplectic operation
-        S (array): Symplectic operation
+        S (array): 2Mx2M Symplectic operation
+        r (array): M length means vector
         i (int): index of one mode gate
+
+    Returns:
+        S (array): updated symplectic operation
+        r (array): updated means vector
     """
     M = S.shape[0] // 2
     (S[i], S[i + M]) = (
@@ -52,11 +57,17 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
 @jit(nopython=True)
 def _apply_symp_two_mode_gate(S_G, S, r, i, j):
     """In-place applies a two mode gate G to the symplectic operation, S, in modes i and j
+
     Args:
-        G (array): 2x2 matrix for two mode gate
-        S (array): Symplectic operation
-        i (int): index of first mode of gate
+        S_G (array): 2x2 matrix for one mode symplectic operation
+        S (array): 2Mx2M Symplectic operation
+        r (array): M length means vector
+        i (int): index of one mode gate
         j (int): index of second mode of gate
+
+    Returns:
+        S (array): updated symplectic operation
+        r (array): updated means vector
     """
     M = S.shape[0] // 2
     (S[i], S[j], S[i + M], S[j + M]) = (
