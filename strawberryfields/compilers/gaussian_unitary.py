@@ -29,6 +29,31 @@ from thewalrus.symplectic import (
 
 from .compiler import Compiler
 
+def _apply_symp_one_mode_gate(S_G, S, i):
+    """In-place applies a one mode gate G to the symplectic operation, S, in mode i
+    Args:
+        S_G (array): 2x2 matrix for one mode symplectic operation
+        S (array): Symplectic operation
+        i (int): index of one mode gate
+    """
+    M = S.shape[0] // 2
+    (S[i], S[i+M]) = (S_G[0,0] * S[i] + S_G[0,1] * S[i+M], S_G[1,0] * S[i] + S_G[1,1] * S[i+M])
+    return S
+
+def _apply_symp_two_mode_gate(S_G, S, i, j):
+    """In-place applies a two mode gate G to the symplectic operation, S, in modes i and j
+    Args:
+        G (array): 2x2 matrix for two mode gate
+        S (array): Symplectic operation
+        i (int): index of first mode of gate
+        j (int): index of second mode of gate
+    """
+    M = S.shape[0] // 2
+    (S[i], S[j], S[i+M], S[j+M]) = (S_G[0,0] * S[i] + S_G[0,1] * S[j] + S_G[0,2] * S[i+M] + S_G[0,3] * S[j+M],
+                                    S_G[1,0] * S[i] + S_G[1,1] * S[j] + S_G[1,2] * S[i+M] + S_G[1,3] * S[j+M],
+                                    S_G[2,0] * S[i] + S_G[2,1] * S[j] + S_G[2,2] * S[i+M] + S_G[2,3] * S[j+M],
+                                    S_G[3,0] * S[i] + S_G[3,1] * S[j] + S_G[3,2] * S[i+M] + S_G[3,3] * S[j+M])
+    return S
 
 class GaussianUnitary(Compiler):
     """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
@@ -141,9 +166,9 @@ class GaussianUnitary(Compiler):
             params = par_evaluate(operations.op.p)
             modes = [modes_label.ind for modes_label in operations.reg]
             if name == "Dgate":
-                rnet = rnet + expand_vector(
-                    params[0] * (np.exp(1j * params[1])), dict_indices[modes[0]], nmodes
-                )
+                alpha = params[0] * (np.exp(1j * params[1]))
+                rnet[dict_indices[modes[0]]] += alpha.real 
+                rnet[dict_indices[modes[0]] + nmodes] += alpha.imag
             else:
                 if name == "Rgate":
                     S = expand(rotation(params[0]), dict_indices[modes[0]], nmodes)
