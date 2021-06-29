@@ -543,7 +543,3 @@ class GaussianModes:
         self.mean = U @ self.mean
         self.nmat = U.conj() @ self.nmat @ U.T
         self.mmat = U @ self.mmat @ U.T
-
-    def passive(self, T):
-        """Transforms the state according to the arbitrary linear transformation that maps a[i] \to T[i, j]^*a[j]"""
-        self.apply_u(T)
