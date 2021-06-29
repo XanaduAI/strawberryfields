@@ -79,7 +79,9 @@
   prog_merged = prog.compile(compiler="gaussian_merge")
   ```
 
-* A new operation, ``PassiveChannel`` has been added. It allows for arbitrary linear/passive transformations (i.e. any operation which is linear in creation operators). Currently only supported by the ``gaussian`` backend. [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+* A new operation, ``PassiveChannel`` has been added. It allows for arbitrary linear/passive transformations
+  (i.e., any operation which is linear in creation operators). Currently only supported by the ``gaussian``
+  backend. [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
 
   ```python
   from strawberryfields.ops import PassiveChannel, Sgate
