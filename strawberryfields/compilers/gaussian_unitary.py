@@ -27,6 +27,7 @@ from thewalrus.symplectic import (
 )
 from .compiler import Compiler
 
+
 def _apply_symp_one_mode_gate(S_G, S, r, i):
     """In-place applies a one mode gate G to the symplectic operation, S, in mode i
     Args:
@@ -49,6 +50,7 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
         S_G[1, 0] * r[i] + S_G[1, 1] * r[i + M],
     )
     return S, r
+
 
 def _apply_symp_two_mode_gate(S_G, S, r, i, j):
     """In-place applies a two mode gate G to the symplectic operation, S, in modes i and j
