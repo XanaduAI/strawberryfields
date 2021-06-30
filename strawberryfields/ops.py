@@ -2220,7 +2220,8 @@ class Fouriergate(Gate):
         if self.dagger:
             temp += ".H"
         return temp
-        
+
+
 class Ggate(Gate):
     r"""General N-mode Gaussian gate.
     
@@ -2244,10 +2245,10 @@ class Ggate(Gate):
             & mean = mean + d.
            
     """
-    ns = 2 # Number of dimension?
+    ns = 2  # Number of dimension?
 
     def __init__(self, S, d):
-        super().__init__([S,d])
+        super().__init__([S, d])
 
     def _apply(self, reg, backend, **kwargs):
         S, d = par_evaluate(self.p)
@@ -2256,8 +2257,6 @@ class Ggate(Gate):
     def _decompose(self, reg, **kwargs):
         # TODO: decompose?
         pass
-
-
 
 
 # ====================================================================

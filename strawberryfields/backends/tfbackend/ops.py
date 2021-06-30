@@ -391,38 +391,73 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
         single_two_mode_squeezing_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
+
 def choi_trick(S, d, m, dtype=tf.complex64):
     """Transforms the parameter from S,d to C,mu,Sigma (works for gaussian_gate)"""
-    S = tf.cast(S, dtype = dtype)
-    d = tf.cast(d, dtype  = dtype)
+    S = tf.cast(S, dtype=dtype)
+    d = tf.cast(d, dtype=dtype)
     # m: num of modes
-    choi_r = tf.cast(tf.math.asinh(1.0), dtype  = dtype)
-    ch = tf.math.cosh(choi_r) * tf.eye(m, dtype  = dtype)
-    sh = tf.math.sinh(choi_r) * tf.eye(m, dtype  = dtype)
-    zh = tf.zeros([m, m], dtype  = dtype)
-    Schoi = tf.concat([tf.concat([ch, sh, zh, zh],0), tf.concat([sh, ch, zh, zh],0), tf.concat([zh, zh, ch, -sh],0), tf.concat([zh, zh, -sh, ch],0)],1)
+    choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
+    ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
+    sh = tf.math.sinh(choi_r) * tf.eye(m, dtype=dtype)
+    zh = tf.zeros([m, m], dtype=dtype)
+    Schoi = tf.concat(
+        [
+            tf.concat([ch, sh, zh, zh], 0),
+            tf.concat([sh, ch, zh, zh], 0),
+            tf.concat([zh, zh, ch, -sh], 0),
+            tf.concat([zh, zh, -sh, ch], 0),
+        ],
+        1,
+    )
     Sxx = S[:m, :m]
     Sxp = S[:m, m:]
     Spx = S[m:, :m]
     Spp = S[m:, m:]
-    idl = tf.eye(m, dtype  = dtype)
-    S_exp = tf.concat([tf.concat([Sxx, zh, Sxp, zh],1), tf.concat([zh, idl, zh, zh],1), tf.concat([Spx, zh, Spp, zh],1), tf.concat([zh, zh, zh, idl],1)],0)@ Schoi
+    idl = tf.eye(m, dtype=dtype)
+    S_exp = (
+        tf.concat(
+            [
+                tf.concat([Sxx, zh, Sxp, zh], 1),
+                tf.concat([zh, idl, zh, zh], 1),
+                tf.concat([Spx, zh, Spp, zh], 1),
+                tf.concat([zh, zh, zh, idl], 1),
+            ],
+            0,
+        )
+        @ Schoi
+    )
     choi_cov = 0.5 * S_exp @ tf.transpose(S_exp)
-    idl = tf.eye(2 * m, dtype= dtype)
-    R = tf.cast(tf.math.sqrt(0.5),dtype=dtype) * tf.concat([tf.concat([idl, 1j * idl],1), tf.concat([idl, -1j * idl],1)],0)
+    idl = tf.eye(2 * m, dtype=dtype)
+    R = tf.cast(tf.math.sqrt(0.5), dtype=dtype) * tf.concat(
+        [tf.concat([idl, 1j * idl], 1), tf.concat([idl, -1j * idl], 1)], 0
+    )
     sigma = R @ choi_cov @ tf.transpose(tf.math.conj(R))
-    zh = tf.zeros([2 * m, 2 * m], dtype= dtype)
-    X = tf.concat([tf.concat([zh, idl],1), tf.concat([idl, zh],1)],0)
-    sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype= dtype)
-    A_mat = X @ (tf.eye(4 * m, dtype= dtype) - tf.linalg.inv(sigma_Q))
+    zh = tf.zeros([2 * m, 2 * m], dtype=dtype)
+    X = tf.concat([tf.concat([zh, idl], 1), tf.concat([idl, zh], 1)], 0)
+    sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype=dtype)
+    A_mat = X @ (tf.eye(4 * m, dtype=dtype) - tf.linalg.inv(sigma_Q))
     #    #TODO: get C from T maybe?
-    E = tf.linalg.diag(tf.concat([tf.ones([m], dtype= dtype), tf.ones([m], dtype= dtype) / tf.math.tanh(choi_r)],0))
-    Sigma = -tf.math.conj(E @ A_mat[:2*m, :2*m] @ E)
-    mu = tf.concat([tf.linalg.matvec(Sigma[:m,:m],tf.math.conj(d))+tf.transpose(d), tf.linalg.matvec(Sigma[m:,:m],tf.math.conj(d))],0)
-    alpha = tf.concat([tf.cast(d,dtype = dtype),tf.zeros(m,dtype = dtype)],0)
-    zeta = alpha + tf.linalg.matvec(tf.cast(Sigma,dtype = dtype),tf.math.conj(alpha))
-    C = tf.math.sqrt(tf.math.sqrt(tf.linalg.det(tf.eye(m,dtype=dtype)-Sigma[:m,:m]@tf.math.conj(Sigma[:m,:m])))) * tf.exp(-0.5*tf.reduce_sum(tf.math.conj(alpha)*zeta))
+    E = tf.linalg.diag(
+        tf.concat([tf.ones([m], dtype=dtype), tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r)], 0)
+    )
+    Sigma = -tf.math.conj(E @ A_mat[: 2 * m, : 2 * m] @ E)
+    mu = tf.concat(
+        [
+            tf.linalg.matvec(Sigma[:m, :m], tf.math.conj(d)) + tf.transpose(d),
+            tf.linalg.matvec(Sigma[m:, :m], tf.math.conj(d)),
+        ],
+        0,
+    )
+    alpha = tf.concat([tf.cast(d, dtype=dtype), tf.zeros(m, dtype=dtype)], 0)
+    zeta = alpha + tf.linalg.matvec(tf.cast(Sigma, dtype=dtype), tf.math.conj(alpha))
+    C = tf.math.sqrt(
+        tf.math.sqrt(
+            tf.linalg.det(tf.eye(m, dtype=dtype) - Sigma[:m, :m] @ tf.math.conj(Sigma[:m, :m]))
+        )
+    ) * tf.exp(-0.5 * tf.reduce_sum(tf.math.conj(alpha) * zeta))
     return C, mu, Sigma
+
 
 @tf.custom_gradient
 def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=tf.complex64.as_numpy_dtype):
@@ -431,18 +466,22 @@ def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=tf.comple
     mu = mu.numpy()
     Sigma = Sigma.numpy()
     gate = gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
-    transpose_list = np.concatenate([np.arange(0,num_modes,2) , np.arange(1,num_modes,2)])
-    gate = tf.transpose(gate,transpose_list)
+    transpose_list = np.concatenate([np.arange(0, num_modes, 2), np.arange(1, num_modes, 2)])
+    gate = tf.transpose(gate, transpose_list)
 
     @tf.function
     def grad(dy):
-        dG_dC, dG_dmu, dG_dSigma = grad_gaussian_gate_tw(gate, C, mu, Sigma, cutoff, num_modes, dtype)
-        #TODO: transpose?
+        dG_dC, dG_dmu, dG_dSigma = grad_gaussian_gate_tw(
+            gate, C, mu, Sigma, cutoff, num_modes, dtype
+        )
+        # TODO: transpose?
         grad_C = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dC)))
         grad_mu = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dmu)))
         grad_Sigma = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dSigma)))
         return grad_C, grad_mu, grad_Sigma, None
+
     return gate, grad
+
 
 def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     """creates a N-mode gaussian gate matrix accounting for batching"""
@@ -453,13 +492,16 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     if batched:
         return tf.stack(
             [
-                single_gaussian_gate_matrix(C_, mu_, Sigma_, cutoff, num_modes, dtype=dtype.as_numpy_dtype)
+                single_gaussian_gate_matrix(
+                    C_, mu_, Sigma_, cutoff, num_modes, dtype=dtype.as_numpy_dtype
+                )
                 for C_, mu_, Sigma_ in tf.transpose([C, mu, Sigma])
             ]
         )
     return tf.convert_to_tensor(
         single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=dtype.as_numpy_dtype)
     )
+
 
 ###################################################################
 
@@ -752,7 +794,7 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
     # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
     # matrix : out_1 out_2 ... in_1 in_2 ...
     # *mode : Tuple(1,2,3,...)
-    #TODO: figure out *mode starts from 0 or 1.
+    # TODO: figure out *mode starts from 0 or 1.
     # in_modes : input state
     if batched:
         offset = 1
@@ -760,28 +802,28 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
         offset = 0
     if pure:
         num_modes = len(in_modes.shape) - offset
-        index_in_modes = indices_full[1:1+num_modes]
+        index_in_modes = indices_full[1 : 1 + num_modes]
         index_in_state = ""
-#         #*modes starts from 1 in this case.
-#         for x in modes:
-#             index_in_state += indices_full[x]
-            
+        #         #*modes starts from 1 in this case.
+        #         for x in modes:
+        #             index_in_state += indices_full[x]
+
         index_in_state_rest = ""
-        #*modes starts from 1 in this case.
-        for i in range(1,1+num_modes):
+        # *modes starts from 1 in this case.
+        for i in range(1, 1 + num_modes):
             if i in modes:
                 index_in_state += indices_full[i]
             else:
                 index_in_state_rest += indices_full[i]
         num_mode_op = len(modes)
-        index_output_op = indices_full[1+num_modes:1+num_modes+num_mode_op]
+        index_output_op = indices_full[1 + num_modes : 1 + num_modes + num_mode_op]
         index_op = index_output_op + index_in_state
         index_op_new = ""
         for i in range(num_mode_op):
-            index_op_new += index_op[i] + index_op[i+num_mode_op]
+            index_op_new += index_op[i] + index_op[i + num_mode_op]
         index_output = ""
         j = 0
-        for i in range(1,1+num_modes):
+        for i in range(1, 1 + num_modes):
             if i in modes:
                 index_output += index_output_op[j]
                 j += 1
@@ -792,52 +834,68 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
         else:
             eqn = index_op_new + "," + index_in_modes + "->" + index_output
     else:
-        num_modes = (len(in_modes.shape) - offset)// 2
-        index_in_modes = indices_full[1:1+2*num_modes]
+        num_modes = (len(in_modes.shape) - offset) // 2
+        index_in_modes = indices_full[1 : 1 + 2 * num_modes]
         index_in_state = ""
         index_in_state_rest = ""
-        #*modes starts from 1 in this case.
-        for i in range(1,1+num_modes):
+        # *modes starts from 1 in this case.
+        for i in range(1, 1 + num_modes):
             if i in modes:
-                index_in_state += indices_full[2*i-1] + indices_full[2*i]
+                index_in_state += indices_full[2 * i - 1] + indices_full[2 * i]
             else:
-                index_in_state_rest += indices_full[2*i-1] + indices_full[2*i]
+                index_in_state_rest += indices_full[2 * i - 1] + indices_full[2 * i]
         index_in_state = index_in_state[::2] + index_in_state[1::2]
         num_mode_op = len(modes)
-        index_output_op = indices_full[1+2*num_modes:1+2*num_modes+num_mode_op]
-        index_output_op_conj = indices_full[1+2*num_modes+num_mode_op:1+2*num_modes+2*num_mode_op]
+        index_output_op = indices_full[1 + 2 * num_modes : 1 + 2 * num_modes + num_mode_op]
+        index_output_op_conj = indices_full[
+            1 + 2 * num_modes + num_mode_op : 1 + 2 * num_modes + 2 * num_mode_op
+        ]
         index_op = index_output_op + index_in_state[:num_mode_op]
         index_op_conj = index_in_state[num_mode_op:] + index_output_op_conj
         index_op_new = ""
         index_op_conj_new = ""
         for i in range(num_mode_op):
-            index_op_new += index_op[i] + index_op[i+num_mode_op]
-            index_op_conj_new += index_op_conj[i] + index_op_conj[i+num_mode_op]
+            index_op_new += index_op[i] + index_op[i + num_mode_op]
+            index_op_conj_new += index_op_conj[i] + index_op_conj[i + num_mode_op]
         index_output = ""
         j = 0
-        for i in range(1,1+num_modes):
+        for i in range(1, 1 + num_modes):
             if i in modes:
                 index_output += index_output_op[j] + index_output_op_conj[j]
                 j += 1
             else:
-                index_output += indices_full[2*i-1] + indices_full[2*i]
+                index_output += indices_full[2 * i - 1] + indices_full[2 * i]
         if batched:
-            eqn = "a" + index_op_new + "," + "a" + index_in_modes + "," + "a" + index_op_conj_new +"->" + "a" + index_output
+            eqn = (
+                "a"
+                + index_op_new
+                + ","
+                + "a"
+                + index_in_modes
+                + ","
+                + "a"
+                + index_op_conj_new
+                + "->"
+                + "a"
+                + index_output
+            )
         else:
-            eqn = index_op_new + "," + index_in_modes + "," + index_op_conj_new +"->" + index_output
-            
+            eqn = (
+                index_op_new + "," + index_in_modes + "," + index_op_conj_new + "->" + index_output
+            )
+
     if batched:
         transpose_list = [0]
-        N = np.arange(1,len(matrix.shape))
+        N = np.arange(1, len(matrix.shape))
     else:
         transpose_list = []
         N = np.arange(len(matrix.shape))
-    for x,y in zip(N[1::2],N[::2]):
+    for x, y in zip(N[1::2], N[::2]):
         transpose_list.append(x)
         transpose_list.append(y)
     einsum_inputs = [matrix, in_modes]
     if not pure:
-        einsum_inputs.append(tf.math.conj(tf.transpose(matrix,transpose_list)))
+        einsum_inputs.append(tf.math.conj(tf.transpose(matrix, transpose_list)))
     output = tf.einsum(eqn, *einsum_inputs)
     return output
 
@@ -973,14 +1031,12 @@ def two_mode_squeeze(
     matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
-    
 
-def gaussian_gate(
-    S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
-):
+
+def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
-    output = n_mode_gate(matrix, *modes, in_modes = in_modes, pure = pure, batched = batched)
+    output = n_mode_gate(matrix, *modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
 
 
