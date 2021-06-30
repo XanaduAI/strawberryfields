@@ -223,7 +223,7 @@ class TFBackend(BaseFock):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
 
-    def gaussian_gate(self, S, d, modes):
+    def gaussian_gate(self, S, d, *modes):
         with tf.name_scope("Gaussian_gate"):
             remapped_modes = self._remap_modes(modes)
             self.circuit.gaussian_gate(S, d, remapped_modes)
