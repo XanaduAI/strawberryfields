@@ -29,7 +29,8 @@ from .compiler import Compiler
 
 
 def _apply_symp_one_mode_gate(S_G, S, r, i):
-    """In-place applies a one mode gate G to the symplectic operation, S, in mode i
+    """In-place applies a one mode gate to a symplectic operation.
+
     Args:
         S_G (array): 2x2 matrix for one mode symplectic operation
         S (array): 2Mx2M Symplectic operation
