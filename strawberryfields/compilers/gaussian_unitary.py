@@ -32,10 +32,10 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
     """In-place applies a one mode gate to a symplectic operation.
 
     Args:
-        S_G (array): 2x2 matrix for one mode symplectic operation
-        S (array): 2Mx2M Symplectic operation
-        r (array): M length means vector
-        i (int): index of one mode gate
+        S_G (array): a :math:`2\times 2` matrix representing a one mode symplectic operation
+        S (array): a :math:`2M\times 2M` symplectic operation
+        r (array): means vector of length :math:`M`
+        i (int): the mode the symplectic operation ``S_G`` is applied to
 
     Returns:
         S (array): updated symplectic operation
