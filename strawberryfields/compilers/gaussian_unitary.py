@@ -38,8 +38,8 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
         i (int): the mode the symplectic operation ``S_G`` is applied to
 
     Returns:
-        S (array): updated symplectic operation
-        r (array): updated means vector
+        tuple[array, array]: returns a tuple containing the updated symplectic operation
+        and the updated means vector
     """
     M = S.shape[0] // 2
     (S[i], S[i + M]) = (
