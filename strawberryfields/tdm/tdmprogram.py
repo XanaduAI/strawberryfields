@@ -436,6 +436,7 @@ class TDMProgram(sf.Program):
         """
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
+
         if device is not None:
             device_layout = bb.loads(device.layout)
 
@@ -471,7 +472,7 @@ class TDMProgram(sf.Program):
             # We will loop over the different operations in the device specification
 
             num_symbolic_param = 0  # counts the number of symbolic variables, which are labelled consecutively by the context method
-            
+
             for i, operation in enumerate(device_layout.operations):
                 # We obtain the name of the parameter(s)
                 param_names = operation["args"]
