@@ -436,7 +436,6 @@ class TDMProgram(sf.Program):
         """
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
-
         if device is not None:
             device_layout = bb.loads(device.layout)
 
@@ -471,6 +470,7 @@ class TDMProgram(sf.Program):
             # Third check: the parameters of the gates are valid
             # We will loop over the different operations in the device specification
 
+            num_symbolic_param = 0  # counts the number of symbolic variables, which are labelled consecutively by the context method
             for i, operation in enumerate(device_layout.operations):
                 # We obtain the name of the parameter(s)
                 param_names = operation["args"]
@@ -487,8 +487,6 @@ class TDMProgram(sf.Program):
                                 "due to incompatible parameter.".format(device.target)
                             )
                 # Now we will check explicitly if the parameters in the program match
-                num_symbolic_param = 0  # counts the number of symbolic variables, which are labelled consecutively by the context method
-
                 for k, param_name in enumerate(param_names):
                     # Obtain the value of the corresponding parameter in the program
                     program_param = self.rolled_circuit[i].op.p[k]
@@ -532,6 +530,7 @@ class TDMProgram(sf.Program):
                                     device.target, program_param, param_range
                                 )
                             )
+
             return self
 
         raise CircuitError("TDM programs cannot be compiled without a valid device specification.")
