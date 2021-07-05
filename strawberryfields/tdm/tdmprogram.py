@@ -580,7 +580,7 @@ class TDMProgram(sf.Program):
         q = self.register
 
         sm = []
-        for i, item in enumerate(self.N):
+        for i, _ in enumerate(self.N):
             start = sum(self.N[:i])
             stop = sum(self.N[:i]) + self.N[i]
             sm.append(slice(start, stop))
