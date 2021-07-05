@@ -29,7 +29,7 @@ from .compiler import Compiler
 
 
 def _apply_symp_one_mode_gate(S_G, S, r, i):
-    """In-place applies a one mode gate to a symplectic operation.
+    r"""In-place applies a one mode gate to a symplectic operation.
 
     Args:
         S_G (array): a :math:`2\times 2` matrix representing a one mode symplectic operation
@@ -54,14 +54,14 @@ def _apply_symp_one_mode_gate(S_G, S, r, i):
 
 
 def _apply_symp_two_mode_gate(S_G, S, r, i, j):
-    """In-place applies a two mode gate G to the symplectic operation, S, in modes i and j
+    r"""In-place applies a two mode gate to a symplectic operation.
 
     Args:
-        S_G (array): 2x2 matrix for one mode symplectic operation
-        S (array): 2Mx2M Symplectic operation
-        r (array): M length means vector
-        i (int): index of one mode gate
-        j (int): index of second mode of gate
+        S_G (array): a :math:`4\times 4` for a two mode symplectic operation
+        S (array):  a :math:`2M\times 2M` Symplectic operation
+        r (array): means vector of length :math:`M`
+        i (int): index of first mode the symplectic operation ``S_G`` is applied to
+        j (int): index of second mode the symplectic operation ``S_G`` is applied to
 
     Returns:
         S (array): updated symplectic operation
