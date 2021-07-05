@@ -471,6 +471,7 @@ class TDMProgram(sf.Program):
             # We will loop over the different operations in the device specification
 
             num_symbolic_param = 0  # counts the number of symbolic variables, which are labelled consecutively by the context method
+            
             for i, operation in enumerate(device_layout.operations):
                 # We obtain the name of the parameter(s)
                 param_names = operation["args"]
@@ -530,7 +531,6 @@ class TDMProgram(sf.Program):
                                     device.target, program_param, param_range
                                 )
                             )
-
             return self
 
         raise CircuitError("TDM programs cannot be compiled without a valid device specification.")
