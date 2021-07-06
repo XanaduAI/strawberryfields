@@ -700,7 +700,7 @@ class TDMProgram(sf.Program):
         measurements = []
         sgates = []
         otter_ops = []
-        for i in range(self.timebins - start_mode):
+        for i in range(self.timebins):
             for cmd in self.rolled_circuit:
                 if isinstance(cmd.op, ops.Measurement):
                     if i == 0:
