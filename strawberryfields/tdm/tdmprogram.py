@@ -410,7 +410,7 @@ class TDMProgram(sf.Program):
         # if delays are input, td3 is assumed
         self._delays = delays
         if len(self._delays) != 0:
-            self._is_td3 = True
+            self._has_fock = True
             _, N_true = get_mode_indices(self._delays)
             if N != N_true:
                 raise ValueError(
@@ -420,7 +420,7 @@ class TDMProgram(sf.Program):
             modes_tot = np.prod(self._delays) + sum(self._delays)
             super().__init__(num_subsystems=modes_tot, name=name)
         else:
-            self._is_td3 = False
+            self._has_fock = False
             super().__init__(num_subsystems=self.concurr_modes, name=name)
 
         self.type = "tdm"
@@ -470,7 +470,7 @@ class TDMProgram(sf.Program):
         """
         if compiler == "gaussian":
             return super().compile(device=device, compiler=compiler)
-        if self._is_td3 or compiler == "passive":
+        if self._has_fock or compiler == "passive":
             return super().compile(device=device, compiler="passive")
 
         if device is not None:
@@ -584,7 +584,7 @@ class TDMProgram(sf.Program):
             self.rolled_circuit = self.circuit.copy()
 
             # check if any fock measurements are part of the circuit
-            if self._is_td3:
+            if self._has_fock:
                 self.spatial_modes = self.timebins
             else:
                 self.spatial_modes = validate_measurements(self.circuit, self.N)
@@ -612,7 +612,7 @@ class TDMProgram(sf.Program):
         Returns:
             Program: unrolled program (including shots)
         """
-        if self._is_td3:
+        if self._has_fock:
             return self.space_unroll(shots)
 
         if self.unrolled_circuit is not None:
@@ -730,16 +730,10 @@ class TDMProgram(sf.Program):
     def apply_op(self, cmd, q, t):
         """Apply a particular operation on register q at timestep t"""
         params = cmd.op.p.copy()
-        if self._is_td3:
-            # get number of initial vacuum modes in each parameter list
-            shift = [0] + list(accumulate(self._delays))[:-1]
-        else:
-            shift = [0] * 3
 
         for i in range(len(params)):
             if par_is_symbolic(params[i]):
-                arg_index = int(params[i].name[1:])
-                params[i] = self.tdm_params[arg_index][(t + shift[arg_index % 3]) % self.timebins]
+                params[i] = self.parameters[params[i].name][t % self.timebins]
 
         self.append(cmd.op.__class__(*params), get_modes(cmd, q))
 
