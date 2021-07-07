@@ -88,7 +88,6 @@ def test_lossless_no_mixing_no_rotation_U(delays, modes):
     angles = np.zeros([2 * len(delays), modes + sum(delays)])
     d = len(delays)
     n, N = get_mode_indices(delays)
-    print(n, N, delays)
     prog = sf.TDMProgram([N], delays=delays)
     vac_modes = sum(delays)
     with prog.context(*angles) as (p, q):
@@ -101,3 +100,37 @@ def test_lossless_no_mixing_no_rotation_U(delays, modes):
     U = passive_elem.op.p[0]
     # Check that it is indeed the identity
     assert np.allclose(U, np.identity(len(U)))
+
+
+@pytest.mark.parametrize("delays", [np.array([1,10])])#[np.random.randint(low=1, high=10, size=i) for i in range(2, 6)])
+@pytest.mark.parametrize("modes", [100])#[70, 80, 100])
+def test_no_entanglement_between_padding_and_computational_modes(delays, modes):
+    """Test that the U matrix is the identity if there is no beamsplitter mixing and no rotations"""
+    delays = list(delays)
+    angles = np.concatenate([generate_valid_bs_sequence(delays,modes), generate_valid_r_sequence(delays,modes)])
+    print(angles.shape)
+    d = len(delays)
+    n, N = get_mode_indices(delays)
+    prog = sf.TDMProgram([N], delays=delays)
+    vac_modes = sum(delays)
+    print("N=",N)
+    with prog.context(*angles) as (p, q):
+        for i in range(d):
+            print(i, i+d, n[i], vac_modes)
+            Rgate(p[i + d]) | q[n[i] + vac_modes]
+            BSgate(p[i], np.pi / 2) | (q[n[i + 1] + vac_modes], q[n[i] + vac_modes])
+    prog.space_unroll(1)  # Not sure what is this
+    compiled = prog.compile(compiler="passive")
+    passive_elem = compiled.circuit[0]
+    U = passive_elem.op.p[0]
+    print(U.shape, vac_modes + modes)
+    # Check that it is indeed the identity
+    U_AA = U[:vac_modes,:vac_modes]
+    U_AB = U[vac_modes:,:vac_modes]
+    U_BA = U[:vac_modes,vac_modes:]
+    U_BB = U[vac_modes:,vac_modes:]
+    #assert np.allclose(U @ U.T.conj(), np.identity(len(U)))
+    assert np.allclose(U_AA, np.identity(vac_modes))
+    assert np.allclose(U_AB, 0)
+    assert np.allclose(U_BA, 0)
+    assert np.allclose(U_BB @ U_BB.T.conj(), np.identity(len(U_BB)))
