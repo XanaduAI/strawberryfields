@@ -437,7 +437,6 @@ def choi_trick(S, d, m, dtype=tf.complex64):
     X = tf.concat([tf.concat([zh, idl], 1), tf.concat([idl, zh], 1)], 0)
     sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype=dtype)
     A_mat = X @ (tf.eye(4 * m, dtype=dtype) - tf.linalg.inv(sigma_Q))
-    #    #TODO: get C from T maybe?
     E = tf.linalg.diag(
         tf.concat([tf.ones([m], dtype=dtype), tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r)], 0)
     )
@@ -466,19 +465,16 @@ def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=tf.comple
     mu = mu.numpy()
     Sigma = Sigma.numpy()
     gate = gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
-    transpose_list = np.concatenate([np.arange(0, num_modes, 2), np.arange(1, num_modes, 2)])
-    gate = tf.transpose(gate, transpose_list)
 
     @tf.function
     def grad(dy):
         dG_dC, dG_dmu, dG_dSigma = grad_gaussian_gate_tw(
             gate, C, mu, Sigma, cutoff, num_modes, dtype
         )
-        # TODO: transpose?
         grad_C = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dC)))
         grad_mu = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dmu)))
         grad_Sigma = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dSigma)))
-        return grad_C, grad_mu, grad_Sigma, None
+        return grad_C, grad_mu, grad_Sigma, None, None
 
     return gate, grad
 
@@ -488,14 +484,13 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
     num_modes = S.shape[0] // 2
-    C, mu, Sigma = choi_trick(S, d, num_modes)
     if batched:
         return tf.stack(
             [
                 single_gaussian_gate_matrix(
-                    C_, mu_, Sigma_, cutoff, num_modes, dtype=dtype.as_numpy_dtype
+                        *choi_trick(S_, d_, num_modes), cutoff, num_modes, dtype=dtype.as_numpy_dtype
                 )
-                for C_, mu_, Sigma_ in tf.transpose([C, mu, Sigma])
+                for S_, d_ in tf.transpose([S, d])
             ]
         )
     return tf.convert_to_tensor(
@@ -790,11 +785,11 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
     'abcd,efg...b...d...xyz->efg...a...c...xyz' (pure state)
     'abcd,ij...be...dg...xyz,efgh->ij...af...ch...xyz' (mixed state)
     """
+    # pylint: disable=too-many-branches,too-many-statements
     # "a": reserved for batching
     # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
     # matrix : out_1 out_2 ... in_1 in_2 ...
-    # *mode : Tuple(1,2,3,...)
-    # TODO: figure out *mode starts from 0 or 1.
+    # *mode : Tuple(0,1,2,3,...)
     # in_modes : input state
     if batched:
         offset = 1
@@ -802,19 +797,25 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
         offset = 0
     if pure:
         num_modes = len(in_modes.shape) - offset
+    else:
+        num_modes = (len(in_modes.shape) - offset) // 2
+    if num_modes == 0:
+        raise ValueError("'in_modes' must have at least one mode")
+    if len(indices_full) - 2 * num_modes - offset < 0:
+        raise NotImplementedError(
+            "Exceed the max number of supported modes for this operation"
+        )
+    if min(modes) < 0 or max(mode) >= num_modes:
+        raise ValueError("'mode' argument is not compatible with number of in_modes")
+    if pure:
         index_in_modes = indices_full[1 : 1 + num_modes]
         index_in_state = ""
-        #         #*modes starts from 1 in this case.
-        #         for x in modes:
-        #             index_in_state += indices_full[x]
-
         index_in_state_rest = ""
-        # *modes starts from 1 in this case.
-        for i in range(1, 1 + num_modes):
+        for i in range(num_modes):
             if i in modes:
-                index_in_state += indices_full[i]
+                index_in_state += indices_full[i + 1]
             else:
-                index_in_state_rest += indices_full[i]
+                index_in_state_rest += indices_full[i + 1]
         num_mode_op = len(modes)
         index_output_op = indices_full[1 + num_modes : 1 + num_modes + num_mode_op]
         index_op = index_output_op + index_in_state
@@ -823,27 +824,26 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
             index_op_new += index_op[i] + index_op[i + num_mode_op]
         index_output = ""
         j = 0
-        for i in range(1, 1 + num_modes):
+        for i in range(num_modes):
             if i in modes:
                 index_output += index_output_op[j]
                 j += 1
             else:
-                index_output += indices_full[i]
+                index_output += indices_full[i + 1]
         if batched:
             eqn = "a" + index_op_new + "," + "a" + index_in_modes + "->" + "a" + index_output
         else:
             eqn = index_op_new + "," + index_in_modes + "->" + index_output
     else:
-        num_modes = (len(in_modes.shape) - offset) // 2
         index_in_modes = indices_full[1 : 1 + 2 * num_modes]
         index_in_state = ""
         index_in_state_rest = ""
         # *modes starts from 1 in this case.
-        for i in range(1, 1 + num_modes):
+        for i in range(num_modes):
             if i in modes:
-                index_in_state += indices_full[2 * i - 1] + indices_full[2 * i]
+                index_in_state += indices_full[2 * i + 1] + indices_full[2 * i + 2]
             else:
-                index_in_state_rest += indices_full[2 * i - 1] + indices_full[2 * i]
+                index_in_state_rest += indices_full[2 * i + 1] + indices_full[2 * i + 2]
         index_in_state = index_in_state[::2] + index_in_state[1::2]
         num_mode_op = len(modes)
         index_output_op = indices_full[1 + 2 * num_modes : 1 + 2 * num_modes + num_mode_op]
@@ -859,12 +859,12 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
             index_op_conj_new += index_op_conj[i] + index_op_conj[i + num_mode_op]
         index_output = ""
         j = 0
-        for i in range(1, 1 + num_modes):
+        for i in range(num_modes):
             if i in modes:
                 index_output += index_output_op[j] + index_output_op_conj[j]
                 j += 1
             else:
-                index_output += indices_full[2 * i - 1] + indices_full[2 * i]
+                index_output += indices_full[2 * i + 1] + indices_full[2 * i + 2]
         if batched:
             eqn = (
                 "a"
@@ -1035,6 +1035,8 @@ def two_mode_squeeze(
 
 def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
+    S = tf.cast(S, dtype)
+    d = tf.cast(d, dtype)
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
     output = n_mode_gate(matrix, *modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
