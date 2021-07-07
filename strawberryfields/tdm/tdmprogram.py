@@ -471,8 +471,6 @@ class TDMProgram(sf.Program):
             # Third check: the parameters of the gates are valid
             # We will loop over the different operations in the device specification
 
-            num_symbolic_param = 0  # counts the number of symbolic variables, which are labelled consecutively by the context method
-
             for i, operation in enumerate(device_layout.operations):
                 # We obtain the name of the parameter(s)
                 param_names = operation["args"]
@@ -509,7 +507,7 @@ class TDMProgram(sf.Program):
                     param_range = device.gate_parameters[param_name]
                     if sf.parameters.par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
-                        local_p_vals = self.tdm_params[num_symbolic_param]
+                        local_p_vals = self.parameters.get(program_param.name, [])
 
                         for x in local_p_vals:
                             if not x in param_range:
@@ -520,7 +518,6 @@ class TDMProgram(sf.Program):
                                         device.target, x, param_range
                                     )
                                 )
-                        num_symbolic_param += 1
 
                     else:
                         # If it is a numerical value check directly
