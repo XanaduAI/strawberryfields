@@ -434,9 +434,12 @@ class LocalEngine(BaseEngine):
         if valid_tdm_program:
             # priority order for the shots value should be kwargs > run_options > 1
             shots = kwargs.get("shots", program.run_options.get("shots", 1))
-
+            # if a tdm program is input in a rolled state, then unroll it
             if program.unrolled_circuit is None and program.space_unrolled_circuit is None:
+                rolled_input = True
                 program.unroll(shots=shots)
+            else:
+                rolled_input = False
             # Shots >1 for a TDM program simply corresponds to creating
             # multiple copies of the program, and appending them to run sequentially.
             # As a result, we set the backend shots to 1 for the Gaussian backend.
@@ -497,12 +500,15 @@ class LocalEngine(BaseEngine):
         )
 
         if valid_tdm_program:
-            result._all_samples = reshape_samples(
-                result.all_samples, program.measured_modes, program.N, program.timebins
-            )
-            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
-            result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
-            program.roll()
+            if isinstance(result.all_samples, dict) and len(result.all_samples) > 0:
+                result._all_samples = reshape_samples(
+                    result.all_samples, program.measured_modes, program.N, program.timebins
+                )
+                # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+                result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
+            if rolled_input:
+                # if tdm program is input in a rolled state, roll it back again
+                program.roll()
         modes = temp_run_options["modes"]
 
         if modes is None or modes:

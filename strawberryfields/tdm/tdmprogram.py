@@ -17,7 +17,6 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
-import copy
 from operator import itemgetter
 from math import ceil
 from collections.abc import Iterable
@@ -393,6 +392,8 @@ class TDMProgram(sf.Program):
         self.unrolled_circuit = None
         # `space_unrolled_circuit` only contains the space-unrolled single-shot circuit
         self.space_unrolled_circuit = None
+        # `added_subsystems` corresponds to the number of subsystems added when space-unrolling
+        self.added_subsystems = 0
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
         execution of the program. Note that if the ``run_options`` dictionary is passed
@@ -558,10 +559,7 @@ class TDMProgram(sf.Program):
             if self.added_subsystems > 0:
                 self._delete_subsystems(self.register[-self.added_subsystems:])
                 self.init_num_subsystems -= self.added_subsystems
-                self.init_reg_refs = copy.deepcopy(self.reg_refs)
-                self.unused_indices = copy.deepcopy(self.unused_indices)
-
-                added_subsystems = 0
+                self.added_subsystems = 0
 
             self._is_space_unrolled = False
         return self
@@ -608,8 +606,6 @@ class TDMProgram(sf.Program):
             self._add_subsystems(self.added_subsystems)
 
             self.init_num_subsystems += self.added_subsystems
-            self.init_reg_refs = copy.deepcopy(self.reg_refs)
-            self.unused_indices = copy.deepcopy(self.unused_indices)
         self._is_space_unrolled = True
 
         return self._unroll_program(shots)
