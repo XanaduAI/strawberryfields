@@ -60,32 +60,6 @@ def get_modes(cmd, q):
     return modes
 
 
-def validate_measurements(circuit, N):
-    """Validate the TDM program measurements are correct.
-
-    Args:
-        circuit (list): a list containing commands or measurements specifying a circuit
-        N (list): list giving the number of concurrent modes per band
-
-    Return:
-        spatial_modes (int): number of spatial modes
-    """
-    spatial_modes = 0
-
-    for cmd in circuit:
-        if isinstance(cmd.op, ops.Measurement):
-            modes = [r.ind for r in cmd.reg]
-            spatial_modes += len(modes)
-
-    if not spatial_modes:
-        raise ValueError("Must be at least one measurement.")
-
-    if spatial_modes is not len(N):
-        raise ValueError("Number of measurement operators must match number of spatial modes.")
-
-    return spatial_modes
-
-
 def input_check(args):
     """Checks the input arguments have consistent dimensions.
 
@@ -567,7 +541,7 @@ class TDMProgram(sf.Program):
             self.timebins = len(self.tdm_params[0])
             self.rolled_circuit = self.circuit.copy()
 
-            self.spatial_modes = validate_measurements(self.circuit, self.N)
+            self.spatial_modes = len(self.N)
 
     @property
     def parameters(self):
