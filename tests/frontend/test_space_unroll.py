@@ -19,6 +19,8 @@ import strawberryfields as sf
 from strawberryfields.tdm.tdmprogram import get_mode_indices
 from strawberryfields.ops import Sgate, Rgate, BSgate, LossChannel, MeasureFock
 
+pytestmark = pytest.mark.frontend
+
 
 def generate_valid_bs_sequence(delays, modes, random_func=np.random.rand):
     """

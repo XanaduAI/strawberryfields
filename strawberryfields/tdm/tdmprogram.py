@@ -23,12 +23,10 @@ from collections.abc import Iterable
 
 import numpy as np
 import blackbird as bb
-import strawberryfields as sf
 from strawberryfields import ops
+from strawberryfields.program import Program
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
-
-
 
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
@@ -243,7 +241,7 @@ def get_mode_indices(delays):
     return N - cum_sums, N
 
 
-class TDMProgram(sf.Program):
+class TDMProgram(Program):
     r"""Represents a photonic quantum circuit in the time domain encoding.
 
     The ``TDMProgram`` class provides a context manager for easily defining
@@ -504,7 +502,7 @@ class TDMProgram(sf.Program):
 
                     # Obtain the relevant parameter range from the device
                     param_range = device.gate_parameters[param_name]
-                    if sf.parameters.par_is_symbolic(program_param):
+                    if par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                         local_p_vals = self.tdm_params[num_symbolic_param]
 
