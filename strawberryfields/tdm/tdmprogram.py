@@ -20,7 +20,6 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 from operator import itemgetter
 from math import ceil
 from collections.abc import Iterable
-from itertools import accumulate
 
 import numpy as np
 import blackbird as bb
@@ -286,8 +285,6 @@ class TDMProgram(sf.Program):
             modes in each time bin. Alternatively, a sequence of integers
             may be provided, corresponding to the number of concurrent modes in
             the possibly multiple bands in the circuit.
-        delays (list[int]): List of loop delays (e.g. ``delays = [1, 6, 36]`` for TD3).
-            Assumes a TD3-style program containing only fock measurements if input.
         name (str): the program name (optional)
 
     **Example**
@@ -399,7 +396,7 @@ class TDMProgram(sf.Program):
         </div>
     """
 
-    def __init__(self, N, delays=[], name=None):
+    def __init__(self, N, name=None):
         # N is a list with the number of qumodes for each spatial mode
         if isinstance(N, int):
             self.N = [N]
@@ -407,23 +404,10 @@ class TDMProgram(sf.Program):
             self.N = N
         self.concurr_modes = sum(self.N)
 
-        # if delays are input, td3 is assumed
-        self._delays = delays
-        if len(self._delays) != 0:
-            self._has_fock = True
-            _, N_true = get_mode_indices(self._delays)
-            if N != N_true:
-                raise ValueError(
-                    "Delays are incompatible with number of concurrent modes. "
-                    "N should be equal to {N_true}."
-                )
-            modes_tot = np.prod(self._delays) + sum(self._delays)
-            super().__init__(num_subsystems=modes_tot, name=name)
-        else:
-            self._has_fock = False
-            super().__init__(num_subsystems=self.concurr_modes, name=name)
+        super().__init__(num_subsystems=self.concurr_modes, name=name)
 
         self.type = "tdm"
+        self._is_space_unrolled = False
 
         self.timebins = 0
         self.spatial_modes = 0
@@ -431,6 +415,8 @@ class TDMProgram(sf.Program):
         self.rolled_circuit = None
         # `unrolled_circuit` only contains the unrolled single-shot circuit
         self.unrolled_circuit = None
+        # `space_unrolled_circuit` only contains the space-unrolled single-shot circuit
+        self.space_unrolled_circuit = None
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
         execution of the program. Note that if the ``run_options`` dictionary is passed
@@ -468,10 +454,8 @@ class TDMProgram(sf.Program):
         Returns:
             Program: compiled program
         """
-        if compiler == "gaussian":
+        if compiler in ("gaussian", "passive"):
             return super().compile(device=device, compiler=compiler)
-        if self._has_fock or compiler == "passive":
-            return super().compile(device=device, compiler="passive")
 
         if device is not None:
             device_layout = bb.loads(device.layout)
@@ -583,11 +567,7 @@ class TDMProgram(sf.Program):
             self.timebins = len(self.tdm_params[0])
             self.rolled_circuit = self.circuit.copy()
 
-            # check if any fock measurements are part of the circuit
-            if self._has_fock:
-                self.spatial_modes = self.timebins
-            else:
-                self.spatial_modes = validate_measurements(self.circuit, self.N)
+            self.spatial_modes = validate_measurements(self.circuit, self.N)
 
     @property
     def parameters(self):
@@ -598,6 +578,12 @@ class TDMProgram(sf.Program):
     def roll(self):
         """Represent the program in a compressed way without rolling the for loops"""
         self.circuit = self.rolled_circuit
+        if self._is_space_unrolled:
+            added_subsystems = self.timebins - self.init_num_subsystems
+            if added_subsystems > 0:
+                self._delete_subsystems(self.register[-added_subsystems:])
+
+            self._is_space_unrolled = False
         return self
 
     def unroll(self, shots):
@@ -612,13 +598,39 @@ class TDMProgram(sf.Program):
         Returns:
             Program: unrolled program (including shots)
         """
-        if self._has_fock:
-            return self.space_unroll(shots)
-
         if self.unrolled_circuit is not None:
             self.circuit = self.unrolled_circuit * shots
             return self
 
+        if self._is_space_unrolled:
+            raise ValueError("Program is space-unrolled and must be rolled before unrolling")
+
+        return self._unroll_program(shots)
+
+    def space_unroll(self, shots):
+        """Construct the space-unrolled program
+
+        Constructs the space-unrolled single-shot program, storing it in `self.space_unrolled_circuit`
+        when run for the first time, and returns the space-unrolled program including shots.
+
+        Args:
+            shots (int): the number of times the circuit should be repeated
+
+        Returns:
+            Program: unrolled program (including shots)
+        """
+        if self.space_unrolled_circuit is not None:
+            self.circuit = self.space_unrolled_circuit * shots
+            return self
+
+        if self.timebins - self.init_num_subsystems > 0:
+            self._add_subsystems(self.timebins - self.init_num_subsystems)
+        self._is_space_unrolled = True
+
+        return self._unroll_program(shots)
+
+    def _unroll_program(self, shots):
+        """Construct the unrolled program either using space-unrolling or with register shift"""
         self.circuit = []
 
         q = self.register
@@ -659,7 +671,9 @@ class TDMProgram(sf.Program):
             for cmd in self.rolled_circuit:
                 self.apply_op(cmd, q, i)
 
-            if self.shift == "default":
+            if self._is_space_unrolled:
+                q = shift_by(q, 1)
+            elif self.shift == "default":
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
                 for j in range(len(self.N)):
@@ -670,60 +684,11 @@ class TDMProgram(sf.Program):
                 q = shift_by(q, self.shift)  # shift at end of each time bin
 
         # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
-        self.unrolled_circuit = self.circuit.copy()
-        self.circuit = self.unrolled_circuit * shots
-
-        return self
-
-    def space_unroll(self, shots):
-        """Construct the space-unrolled program for TD3
-
-        Constructs the unrolled single-shot program, storing it in `self.unrolled_circuit`
-        when run for the first time, and returns the unrolled program including shots.
-        Only supported for TD3.
-
-        Args:
-            shots (int): the number of times the circuit should be repeated
-
-        Returns:
-            Program: unrolled program (including shots)
-        """
-        if self.unrolled_circuit is not None:
-            self.circuit = self.unrolled_circuit * shots
-            return self
-
-        self.circuit = []
-
-        start_mode = sum(self._delays)
-        q = shift_by(self.register, -start_mode)
-
-        measurements = []
-        sgates = []
-        otter_ops = []
-        for i in range(self.timebins):
-            for cmd in self.rolled_circuit:
-                if isinstance(cmd.op, ops.Measurement):
-                    if i == 0:
-                        self.measured_modes.append(cmd.reg[0].ind)
-                    if not isinstance(cmd.op, ops.MeasureFock):
-                        raise TypeError("Only fock measurements allowed when using space unroll.")
-                    measurements.append(cmd)
-                elif isinstance(cmd.op, ops.Sgate):
-                    sgates.append((cmd, q, i))
-                else:
-                    otter_ops.append((cmd, q, i))
-
-            q = shift_by(q, 1)
-
-        for op in sgates + otter_ops:
-            self.apply_op(*op)
-
-        if len(measurements) == self.timebins - start_mode:
-            self.append(measurements[0].op, list(self.reg_refs.keys())[start_mode:])
-
-        # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
-        self.unrolled_circuit = self.circuit.copy()
-        self.circuit = self.unrolled_circuit * shots
+        if self._is_space_unrolled:
+            self.space_unrolled_circuit = self.circuit.copy()
+        else:
+            self.unrolled_circuit = self.circuit.copy()
+        self.circuit = self.circuit * shots
 
         return self
 
