@@ -435,7 +435,8 @@ class LocalEngine(BaseEngine):
             # priority order for the shots value should be kwargs > run_options > 1
             shots = kwargs.get("shots", program.run_options.get("shots", 1))
 
-            program.unroll(shots=shots)
+            if program.unrolled_circuit is None and program.space_unrolled_circuit is None:
+                program.unroll(shots=shots)
             # Shots >1 for a TDM program simply corresponds to creating
             # multiple copies of the program, and appending them to run sequentially.
             # As a result, we set the backend shots to 1 for the Gaussian backend.
