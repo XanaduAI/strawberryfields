@@ -86,7 +86,7 @@ def _get_mode_order(num_of_values, modes, N, timebins):
 
     """
     all_modes = []
-    for i in range(len(N)):
+    for i, _ in enumerate(N):
         timebin_modes = list(range(sum(N[:i]), sum(N[: i + 1])))
         # shift the timebin_modes if the measured mode isn't the first in the
         # band, so that the measurements start at the correct mode
@@ -404,7 +404,7 @@ class TDMProgram(Program):
         input_check(args)
         self.tdm_params = args
         self.shift = shift
-        self.loop_vars = self.params(*[f"p{i}" for i in range(len(args))])
+        self.loop_vars = self.params(*[f"p{i}" for i, _ in enumerate(args)])
         # if a single parameter list is supplied, only a single free
         # parameter will be created; turn it into a list
         if not isinstance(self.loop_vars, Iterable):
@@ -615,7 +615,7 @@ class TDMProgram(Program):
         q = self.register
 
         sm = []
-        for i in range(len(self.N)):
+        for i, _ in enumerate(self.N):
             start = sum(self.N[:i])
             stop = sum(self.N[:i]) + self.N[i]
             sm.append(slice(start, stop))
@@ -655,7 +655,7 @@ class TDMProgram(Program):
             elif self.shift == "default":
                 # shift each spatial mode SEPARATELY by one step
                 q_aux = list(q)
-                for j in range(len(self.N)):
+                for j, _ in enumerate(self.N):
                     q_aux[sm[j]] = shift_by(q_aux[sm[j]], 1)
                 q = tuple(q_aux)
 
@@ -675,7 +675,7 @@ class TDMProgram(Program):
         """Apply a particular operation on register q at timestep t"""
         params = cmd.op.p.copy()
 
-        for i in range(len(params)):
+        for i, _ in enumerate(params):
             if par_is_symbolic(params[i]):
                 params[i] = self.parameters[params[i].name][t % self.timebins]
 
