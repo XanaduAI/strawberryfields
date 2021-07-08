@@ -17,6 +17,7 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 """
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
+import copy
 from operator import itemgetter
 from math import ceil
 from collections.abc import Iterable
@@ -27,6 +28,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
+
 
 
 def shift_by(l, n):
@@ -553,9 +555,13 @@ class TDMProgram(sf.Program):
         """Represent the program in a compressed way without rolling the for loops"""
         self.circuit = self.rolled_circuit
         if self._is_space_unrolled:
-            added_subsystems = self.timebins - self.init_num_subsystems
-            if added_subsystems > 0:
-                self._delete_subsystems(self.register[-added_subsystems:])
+            if self.added_subsystems > 0:
+                self._delete_subsystems(self.register[-self.added_subsystems:])
+                self.init_num_subsystems -= self.added_subsystems
+                self.init_reg_refs = copy.deepcopy(self.reg_refs)
+                self.unused_indices = copy.deepcopy(self.unused_indices)
+
+                added_subsystems = 0
 
             self._is_space_unrolled = False
         return self
@@ -597,8 +603,13 @@ class TDMProgram(sf.Program):
             self.circuit = self.space_unrolled_circuit * shots
             return self
 
-        if self.timebins - self.init_num_subsystems > 0:
-            self._add_subsystems(self.timebins - self.init_num_subsystems)
+        self.added_subsystems = self.timebins - self.init_num_subsystems
+        if self.added_subsystems > 0:
+            self._add_subsystems(self.added_subsystems)
+
+            self.init_num_subsystems += self.added_subsystems
+            self.init_reg_refs = copy.deepcopy(self.reg_refs)
+            self.unused_indices = copy.deepcopy(self.unused_indices)
         self._is_space_unrolled = True
 
         return self._unroll_program(shots)
