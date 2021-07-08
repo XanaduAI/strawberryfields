@@ -28,6 +28,7 @@ from strawberryfields.program import Program
 from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
 
+
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 
@@ -555,7 +556,7 @@ class TDMProgram(Program):
         self.circuit = self.rolled_circuit
         if self._is_space_unrolled:
             if self.added_subsystems > 0:
-                self._delete_subsystems(self.register[-self.added_subsystems:])
+                self._delete_subsystems(self.register[-self.added_subsystems :])
                 self.init_num_subsystems -= self.added_subsystems
                 self.added_subsystems = 0
 
