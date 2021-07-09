@@ -138,6 +138,9 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
+* Speed improvements to ``gaussian_unitary`` compiler
+  [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
