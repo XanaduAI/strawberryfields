@@ -392,8 +392,9 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
-def choi_trick(S, d, m, dtype=tf.complex64):
+def choi_trick(S, d, dtype=tf.complex64):
     """Transforms the parameter from S,d to C,mu,Sigma (works for gaussian_gate)"""
+    m = S.shape[0] // 2
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
     # m: num of modes
@@ -488,13 +489,13 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
         return tf.stack(
             [
                 single_gaussian_gate_matrix(
-                        *choi_trick(S_, d_, num_modes), cutoff, num_modes, dtype=dtype.as_numpy_dtype
+                        *choi_trick(S_, d_), cutoff, num_modes, dtype=dtype.as_numpy_dtype
                 )
                 for S_, d_ in tf.transpose([S, d])
             ]
         )
     return tf.convert_to_tensor(
-        single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=dtype.as_numpy_dtype)
+        single_gaussian_gate_matrix(*choi_trick(S, d), cutoff, num_modes, dtype=dtype.as_numpy_dtype)
     )
 
 
@@ -805,7 +806,7 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
         raise NotImplementedError(
             "Exceed the max number of supported modes for this operation"
         )
-    if min(modes) < 0 or max(mode) >= num_modes:
+    if min(modes) < 0 or max(modes) >= num_modes:
         raise ValueError("'mode' argument is not compatible with number of in_modes")
     if pure:
         index_in_modes = indices_full[1 : 1 + num_modes]
