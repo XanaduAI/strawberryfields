@@ -644,12 +644,21 @@ class TDMProgram(Program):
         # q[sm[2]] as concurrent modes of spatial mode C
         # q[sm[3]] as concurrent modes of spatial mode D.
 
+        # save previous mode index of a command to be able to check when modes
+        # are looped back to the start (not allowed when space-unrolling)
+        last_idx = dict()
+
         for cmd in self.rolled_circuit:
+            last_idx[cmd] = 0
             if isinstance(cmd.op, ops.Measurement):
                 self.measured_modes.append(cmd.reg[0].ind)
+
         for i in range(self.timebins):
             for cmd in self.rolled_circuit:
-                self.apply_op(cmd, q, i)
+                modes = get_modes(cmd, q)
+                if not (self._is_space_unrolled and any(m.ind < last_idx[cmd] for m in modes)):
+                    self.apply_op(cmd, modes, i)
+                    last_idx[cmd] = min(m.ind for m in modes)
 
             if self._is_space_unrolled:
                 q = shift_by(q, 1)
@@ -672,7 +681,7 @@ class TDMProgram(Program):
 
         return self
 
-    def apply_op(self, cmd, q, t):
+    def apply_op(self, cmd, modes, t):
         """Apply a particular operation on register q at timestep t"""
         params = cmd.op.p.copy()
 
@@ -680,7 +689,7 @@ class TDMProgram(Program):
             if par_is_symbolic(params[i]):
                 params[i] = self.parameters[params[i].name][t % self.timebins]
 
-        self.append(cmd.op.__class__(*params), get_modes(cmd, q))
+        self.append(cmd.op.__class__(*params), modes)
 
     def assert_number_of_modes(self, device):
         if self.timebins > device.modes["temporal_max"]:
