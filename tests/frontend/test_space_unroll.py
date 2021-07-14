@@ -18,6 +18,8 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.tdm.tdmprogram import get_mode_indices
 from strawberryfields.ops import Sgate, Rgate, BSgate, LossChannel, MeasureFock
+from thewalrus.symplectic import reduced_state
+from thewalrus.quantum import is_pure_cov
 
 pytestmark = pytest.mark.frontend
 
@@ -96,7 +98,7 @@ def test_lossless_no_mixing_no_rotation_U(delays, modes):
 def test_no_entanglement_between_padding_and_computational_modes(delays, modes):
     """Test that the U matrix is the identity if there is no beamsplitter mixing and no rotations"""
     delays = list(delays)
-    angles = np.concatenate([generate_valid_bs_sequence(delays,modes), generate_valid_r_sequence(delays,modes)])
+    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
     d = len(delays)
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
@@ -110,23 +112,24 @@ def test_no_entanglement_between_padding_and_computational_modes(delays, modes):
     passive_elem = compiled.circuit[0]
     U = passive_elem.op.p[0]
     # Check that it is indeed the identity
-    U_AA = U[:vac_modes,:vac_modes]
-    U_AB = U[vac_modes:,:vac_modes]
-    U_BA = U[:vac_modes,vac_modes:]
-    U_BB = U[vac_modes:,vac_modes:]
+    U_AA = U[:vac_modes, :vac_modes]
+    U_AB = U[vac_modes:, :vac_modes]
+    U_BA = U[:vac_modes, vac_modes:]
+    U_BB = U[vac_modes:, vac_modes:]
 
     assert np.allclose(U_AA, np.identity(vac_modes))
     assert np.allclose(U_AB, 0)
     assert np.allclose(U_BA, 0)
     assert np.allclose(U_BB @ U_BB.T.conj(), np.identity(len(U_BB)))
 
-@pytest.mark.parametrize("delays", [np.random.randint(low=1, high=10, size=i) for i in range(2,3)])
+
+@pytest.mark.parametrize("delays", [np.random.randint(low=1, high=10, size=i) for i in range(2, 3)])
 @pytest.mark.parametrize("modes", [20])
 def test_is_permutation_when_angle_pi_on_two(delays, modes):
     """Checks that if all the beamsplitters are cross then the absolute value output matrix is a permutation matrix"""
     delays = list(delays)
     net = modes + sum(delays)
-    angles = np.concatenate([generate_valid_bs_sequence(delays,modes), generate_valid_r_sequence(delays,modes)])
+    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
     angles[0] = np.pi / 2 * np.random.randint(2, size=net)
     angles[1] = np.pi / 2 * np.random.randint(2, size=net)
     angles[2] = np.pi / 2 * np.random.randint(2, size=net)
@@ -142,26 +145,31 @@ def test_is_permutation_when_angle_pi_on_two(delays, modes):
     compiled = prog.compile(compiler="passive")
     passive_elem = compiled.circuit[0]
     U = passive_elem.op.p[0]
-    assert np.allclose(U@U.T.conj(), np.identity(len(U)))
-    assert np.allclose(list(map(max,np.abs(U))), 1.0)
+    assert np.allclose(U @ U.T.conj(), np.identity(len(U)))
+    assert np.allclose(list(map(max, np.abs(U))), 1.0)
 
 
-
-def test_cov():
+def test_cov_is_pure():
     """Tests space unrolling when going into the Gaussian backend"""
-    delays = [1,6,36]
+    delays = [1, 6, 36]
     modes = 216
+    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
     net = modes + sum(delays)
     d = len(delays)
-    angles = np.concatenate([generate_valid_bs_sequence(delays,modes), generate_valid_r_sequence(delays,modes)])
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
     vac_modes = sum(delays)
     with prog.context(*angles) as (p, q):
-        Sgate(0.8)|q[n[0]]
+        Sgate(0.8) | q[n[0]]
         for i in range(d):
             Rgate(p[i + d]) | q[n[i]]
             BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
-    prog.space_unroll(1)  # Not sure what is
+    prog.space_unroll(1)  # Not sure what is this
     eng = sf.Engine(backend="gaussian")
     results = eng.run(prog)
+    cov = results.state.cov()
+    mu = np.zeros(len(cov))
+    mu_vac, cov_vac = reduced_state(mu, cov, list(range(vac_modes)))
+    mu_comp, cov_comp = reduced_state(mu, cov, list(range(vac_modes, net)))
+    assert np.allclose(cov_vac, np.identity(2 * vac_modes))
+    assert is_pure_cov(cov_comp)
