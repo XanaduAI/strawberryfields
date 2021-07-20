@@ -187,6 +187,31 @@ def test_cov_is_pure():
     assert is_pure_cov(cov_comp, hbar=sf.hbar)
 
 
+def test_space_unrolling_twice():
+    """Tests that space-unrolling works and that it can be done twice"""
+    delays = [1, 6, 36]
+    modes = 216
+    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+
+    d = len(delays)
+    n, N = get_mode_indices(delays)
+    prog = sf.TDMProgram([N])
+
+    with prog.context(*angles) as (p, q):
+        Sgate(0.8) | q[n[0]]
+        for i in range(d):
+            Rgate(p[i + d]) | q[n[i]]
+            BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+
+    assert prog._is_space_unrolled == False
+
+    # space-unroll the program twice
+    prog.space_unroll()
+    prog.space_unroll()
+
+    assert prog._is_space_unrolled == True
+
+
 def test_rolling_space_unrolled():
     """Tests that rolling a space-unrolled circuit works"""
     delays = [1, 6, 36]
