@@ -822,4 +822,3 @@ class TestTDMValidation:
         args[incorrect_index] = -999
         with pytest.raises(CircuitError, match="Parameter has value '-999' while its valid range is "):
             self.compile_test_program(device, args=args)
-    
