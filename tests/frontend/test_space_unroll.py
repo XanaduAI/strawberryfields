@@ -81,11 +81,14 @@ def test_lossless_no_mixing_no_rotation_U(delays, modes):
     d = len(delays)
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
+
     with prog.context(*angles) as (p, q):
         for i in range(d):
             Rgate(p[i + d]) | q[n[i]]
             BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
-    prog.space_unroll(1)  # Not sure what is this
+
+    prog.space_unroll()
+
     compiled = prog.compile(compiler="passive")
     passive_elem = compiled.circuit[0]
     U = passive_elem.op.p[0]
@@ -103,11 +106,14 @@ def test_no_entanglement_between_padding_and_computational_modes(delays, modes):
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
     vac_modes = sum(delays)
+
     with prog.context(*angles) as (p, q):
         for i in range(d):
             Rgate(p[i + d]) | q[n[i]]
             BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
-    prog.space_unroll(1)  # Not sure what is this
+
+    prog.space_unroll()
+
     compiled = prog.compile(compiler="passive")
     passive_elem = compiled.circuit[0]
     U = passive_elem.op.p[0]
@@ -137,11 +143,14 @@ def test_is_permutation_when_angle_pi_on_two(delays, modes):
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
     vac_modes = sum(delays)
+
     with prog.context(*angles) as (p, q):
         for i in range(d):
             Rgate(p[i + d]) | q[n[i]]
             BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
-    prog.space_unroll(1)  # Not sure what is this
+
+    prog.space_unroll()
+
     compiled = prog.compile(compiler="passive")
     passive_elem = compiled.circuit[0]
     U = passive_elem.op.p[0]
@@ -159,12 +168,15 @@ def test_cov_is_pure():
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
     vac_modes = sum(delays)
+
     with prog.context(*angles) as (p, q):
         Sgate(0.8) | q[n[0]]
         for i in range(d):
             Rgate(p[i + d]) | q[n[i]]
             BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
-    prog.space_unroll(1)  # Not sure what is this
+
+    prog.space_unroll()
+
     eng = sf.Engine(backend="gaussian")
     results = eng.run(prog)
     cov = results.state.cov()
@@ -173,3 +185,41 @@ def test_cov_is_pure():
     mu_comp, cov_comp = reduced_state(mu, cov, list(range(vac_modes, net)))
     assert np.allclose(cov_vac, 0.5 * (sf.hbar) * np.identity(2 * vac_modes))
     assert is_pure_cov(cov_comp, hbar=sf.hbar)
+
+
+def test_rolling_space_unrolled():
+    """Tests that rolling a space-unrolled circuit works"""
+    delays = [1, 6, 36]
+    modes = 216
+    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+
+    d = len(delays)
+    n, N = get_mode_indices(delays)
+    prog = sf.TDMProgram([N])
+
+    with prog.context(*angles) as (p, q):
+        Sgate(0.8) | q[n[0]]
+        for i in range(d):
+            Rgate(p[i + d]) | q[n[i]]
+            BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+
+    rolled_circuit = prog.circuit.copy()
+    num_subsystems_pre_roll = prog.num_subsystems
+    init_num_subsystems_pre_roll = prog.init_num_subsystems
+
+    assert prog._is_space_unrolled == False
+
+    # space-unroll the program
+    prog.space_unroll()
+
+    assert prog._is_space_unrolled == True
+
+    # roll the program back up
+    prog.roll()
+
+    assert prog._is_space_unrolled == False
+    assert prog.num_subsystems == num_subsystems_pre_roll
+    assert prog.init_num_subsystems == init_num_subsystems_pre_roll
+
+    assert len(prog.circuit) == len(rolled_circuit)
+    assert prog.circuit == rolled_circuit
