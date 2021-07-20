@@ -391,9 +391,11 @@ class Channel(Transformation):
         # channels can be merged if they are the same class and share all the other parameters
         if self.p[1:] == other.p[1:]:
             # determine the combined first parameter
-            T = self.p[0] * other.p[0]
+
+            T = np.dot(other.p[0], self.p[0])
             # if one, replace with the identity
-            if T == 1:
+            T_arr = np.atleast_2d(T)
+            if np.allclose(T_arr, np.eye(T_arr.shape[0])):
                 return None
 
             # return a copy
@@ -1409,6 +1411,31 @@ class MSgate(Channel):
         s = np.sqrt(sf.hbar / 2)
         ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
         return ancilla_val / s
+
+
+class PassiveChannel(Channel):
+    r"""Perform an arbitrary multimode passive operation
+
+    Args:
+        T (array): an NxN matrix acting on a N mode state
+
+    .. details::
+
+        Acts the following transformation on the state:
+
+        .. math::
+            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
+
+    """
+
+    def __init__(self, T):
+        T = np.atleast_2d(T)
+        super().__init__([T])
+        self.ns = T.shape[0]
+
+    def _apply(self, reg, backend, **kwargs):
+        p = par_evaluate(self.p)
+        backend.passive(p[0], reg)
 
 
 # ====================================================================
@@ -3007,7 +3034,7 @@ one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKga
 two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
-channels = (LossChannel, ThermalLossChannel, MSgate)
+channels = (LossChannel, ThermalLossChannel, MSgate, PassiveChannel)
 
 simple_state_preparations = (
     Vacuum,

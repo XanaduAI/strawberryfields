@@ -6,16 +6,16 @@
  (``rectangular_compact`` and ``triangular_compact``) are now available in
  the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
  [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
- 
- This decomposition allows for lower depth photonic circuits in physical devices by applying two 
+
+ This decomposition allows for lower depth photonic circuits in physical devices by applying two
  independent phase shifts in parallel inside each Mach-Zehnder interferometer.
- ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2 
+ ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2
  for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
 
  Example:
 
- ```python 
-  import numpy as np 
+ ```python
+  import numpy as np
   from strawberryfields import Program
   from strawberryfields.ops import Interferometer
   from scipy.stats import unitary_group
@@ -30,7 +30,7 @@
   with prog.context as q:
       Interferometer(U, mesh='rectangular_compact') | q
 
-  # check that applied unitary is correct 
+  # check that applied unitary is correct
   compiled_circuit = prog.compile(compiler="gaussian_unitary")
   commands = compiled_circuit.circuit
   S = commands[0].op.p[0] # symplectic transformation
@@ -43,21 +43,21 @@
   overhead for non-Gaussian circuits by minimizing the amount of Gaussian operations
   in a circuit, while retaining the same functionality.
   [(#591)](https://github.com/XanaduAI/strawberryfields/pull/591)
-   
+
   ``GaussianMerge`` merges Gaussian operations, where allowed, into ``GaussianTransform``
   and ``Dgate`` operations. It utilizes the existing ``GaussianUnitary`` compiler to
   merge operations and Directed Acyclic Graphs to determine which operations can be merged.
 
-  ```python 
+  ```python
   modes = 4
   cutoff_dim = 6
-  
+
   # prepare an intial state with 4 photons in as many modes
   initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
   initial_state[1, 1, 1, 1] = 1
-  
+
   prog = sf.Program(4)
-  
+
   with prog.context as q:
       ops.Ket(initial_state) | q  # Initial state preparation
       # Gaussian Layer
@@ -75,8 +75,59 @@
       ops.Sgate(0.01, 0.01) | q[1]
       # Non-Gaussian Layer
       ops.Vgate(0.5) | q[2]
-  
+
   prog_merged = prog.compile(compiler="gaussian_merge")
+  ```
+
+* A new operation, ``PassiveChannel`` has been added. It allows for arbitrary linear/passive transformations
+  (i.e., any operation which is linear in creation operators). Currently only supported by the ``gaussian``
+  backend. [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
+  ```python
+  from strawberryfields.ops import PassiveChannel, Sgate
+  import strawberryfields as sf
+  from scipy.stats import unitary_group
+  import numpy as np
+
+  M = 4
+
+  circuit = sf.Program(M)
+  U1 = unitary_group.rvs(M)
+  U2 = unitary_group.rvs(M)
+  losses = np.random.random(M)
+
+  T = U2 @ np.diag(losses) @ U1
+
+  eng = sf.Engine(backend='gaussian')
+  circuit = sf.Program(M)
+  with circuit.context as q:
+      for i in range(M):
+          ops.Sgate(1) | q[i]
+      ops.PassiveChannel(T) | q
+
+  cov = eng.run(circuit).state.cov()
+  ```
+ 
+* A new compiler, ``passive``, allows for a circuit which only consists of passive
+  elements to be compiled into a single ``PassiveChannel``.
+  [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
+  ```python 
+  from strawberryfields.ops import BSgate, LossChannel, Rgate
+  import strawberryfields as sf
+
+  circuit = sf.Program(2)
+  with circuit.context as q:
+      Rgate(np.pi) | q[0]
+      BSgate(0.25 * np.pi, 0) | (q[0], q[1])
+      LossChannel(0.9) | q[1]
+
+  compiled_circuit = circuit.compile(compiler="passive")
+  ```
+  ```pycon
+  >>> print(compiled_circuit)
+     PassiveChannel([[-0.7071+8.6596e-17j -0.7071+0.0000e+00j]
+     [-0.6708+8.2152e-17j  0.6708+0.0000e+00j]]) | (q[0], q[1])
   ```
 
 
@@ -87,6 +138,9 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
+* Speed improvements to ``gaussian_unitary`` compiler
+  [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -94,6 +148,14 @@
 * Fixed an unexpected behaviour that can result in increasing memory usage due
   to ``sympy.lambdify`` caching too much data using ``linecache``.
   [(#579)](https://github.com/XanaduAI/strawberryfields/pull/579)
+
+* Keep symbolic expressions when converting a Strawberry Fields circuit to a Blackbird program
+  by storing them as `blackbird.RegRefTransforms` in the resulting Blackbird program.
+  [(#596)](https://github.com/XanaduAI/strawberryfields/pull/596)
+
+* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always 
+  used the wrong set of allowed gate parameter ranges to validate the parameters in a program. 
+  [(#605)](https://github.com/XanaduAI/strawberryfields/pull/605)
 
 <h3>Documentation</h3>
 
@@ -107,7 +169,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Bulmer, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
+Jake Bulmer, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 

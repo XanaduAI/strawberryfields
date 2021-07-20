@@ -24,7 +24,6 @@ from strawberryfields import ops
 from strawberryfields.program_utils import MergeFailure
 from strawberryfields import utils
 
-
 # make test deterministic
 np.random.seed(42)
 a = np.random.random()
@@ -66,3 +65,30 @@ class TestChannelBasics:
         G = ops.ThermalLossChannel(a, 2 * c)
         with pytest.raises(MergeFailure):
             merged = G.merge(ops.LossChannel(b))
+    
+    @pytest.mark.parametrize("M", range(1,5))
+    def test_passive_merging(self, M, tol):
+        """test merging of two passive channels"""
+        T1 = np.random.randn(M,M) + 1j * np.random.randn(M,M)
+        T2 = np.random.randn(M,M) + 1j * np.random.randn(M,M)
+        G = ops.PassiveChannel(T1)
+        merged = G.merge(ops.PassiveChannel(T2))
+        assert np.allclose(merged.p[0], T2 @ T1, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("M", range(1,5))
+    def test_passive_merging(self, M, tol):
+        """test merging of two passive channels"""
+        T1 = np.random.randn(M,M) + 1j * np.random.randn(M,M)
+        T2 = np.random.randn(M,M) + 1j * np.random.randn(M,M)
+        G = ops.PassiveChannel(T1)
+        merged = G.merge(ops.PassiveChannel(T2))
+        assert np.allclose(merged.p[0], T2 @ T1, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("M", range(1,5))
+    def test_passive_merging_inverse(self, M, tol):
+        """test merging of two passive channels which should return identity"""
+        T1 = np.random.randn(M,M) + 1j * np.random.randn(M,M)
+        T2 = np.linalg.inv(T1)
+        G = ops.PassiveChannel(T1)
+        merged = G.merge(ops.PassiveChannel(T2))
+        assert merged is None

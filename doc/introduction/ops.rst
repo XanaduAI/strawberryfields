@@ -113,6 +113,7 @@ Channels
     LossChannel
     ThermalLossChannel
     MSgate
+    PassiveChannel
 
 :html:`</div>`
 
