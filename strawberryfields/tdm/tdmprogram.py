@@ -563,7 +563,7 @@ class TDMProgram(Program):
             self._is_space_unrolled = False
         return self
 
-    def unroll(self, shots):
+    def unroll(self, shots=1):
         """Construct program with the register shift
 
         Constructs the unrolled single-shot program, storing it in `self.unrolled_circuit` when run
@@ -584,7 +584,7 @@ class TDMProgram(Program):
 
         return self._unroll_program(shots)
 
-    def space_unroll(self, shots):
+    def space_unroll(self, shots=1):
         """Construct the space-unrolled program
 
         Constructs the space-unrolled single-shot program, storing it in `self.space_unrolled_circuit`
