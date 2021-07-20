@@ -151,6 +151,7 @@ def test_is_permutation_when_angle_pi_on_two(delays, modes):
 
 def test_cov_is_pure():
     """Tests space unrolling when going into the Gaussian backend"""
+    np.random.seed(137)
     delays = [1, 6, 36]
     modes = 216
     angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
