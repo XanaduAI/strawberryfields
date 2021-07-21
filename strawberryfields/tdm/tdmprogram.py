@@ -86,7 +86,10 @@ def _get_mode_order(num_of_values, modes, N, timebins):
     ...     MeasureHomodyne(p[1]) | q[2]
 
     """
+
     all_modes = []
+    mode_order = []
+
     for i, _ in enumerate(N):
         timebin_modes = list(range(sum(N[:i]), sum(N[: i + 1])))
         # shift the timebin_modes if the measured mode isn't the first in the
@@ -96,14 +99,12 @@ def _get_mode_order(num_of_values, modes, N, timebins):
 
         # extend the modes by duplicating the list so that the measured mode
         # orders in all bands have the same length
-        extended_modes = timebin_modes * ceil(1 + timebins // len(timebin_modes))
-        all_modes.append(extended_modes[:timebins])
+        extended_modes = timebin_modes * (1 + num_of_values // len(timebin_modes))
+        all_modes.append(extended_modes[:num_of_values])
 
-    # alternate measurements in the bands and extend/duplicate the resulting
-    # list so that it is at least as long as `num_of_values`
-    mode_order = [i for j in zip(*all_modes) for i in j]
-    mode_order *= ceil(1 + num_of_values / len(mode_order))
-
+        # alternate measurements in the bands and extend/duplicate the resulting
+        # list so that it is at least as long as `num_of_values`
+        mode_order = [i for j in zip(*all_modes) for i in j]
     return mode_order[:num_of_values]
 
 
@@ -376,29 +377,51 @@ class TDMProgram(Program):
             self.N = [N]
         else:
             self.N = N
-        self.concurr_modes = sum(self.N)
+        self._concurr_modes = sum(self.N)
 
-        super().__init__(num_subsystems=self.concurr_modes, name=name)
+        super().__init__(num_subsystems=self._concurr_modes, name=name)
 
-        self.type = "tdm"
+        self._type = "tdm"
         self._is_space_unrolled = False
 
-        self.timebins = 0
-        self.spatial_modes = 0
-        self.measured_modes = []
+        self._timebins = 0
+        self._spatial_modes = 0
+        self._measured_modes = set()
+
         self.rolled_circuit = None
         # `unrolled_circuit` only contains the unrolled single-shot circuit
         self.unrolled_circuit = None
         # `space_unrolled_circuit` only contains the space-unrolled single-shot circuit
         self.space_unrolled_circuit = None
         # `added_subsystems` corresponds to the number of subsystems added when space-unrolling
-        self.added_subsystems = 0
+
+        self._added_subsystems = 0
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
         execution of the program. Note that if the ``run_options`` dictionary is passed
         directly to :meth:`~.Engine.run`, it takes precedence over the run options specified
         here.
         """
+
+    @property
+    def measured_modes(self):
+        """The number of measured modes in the program returned as a list."""
+        return list(self._measured_modes)
+
+    @property
+    def timebins(self):
+        """The number of timebins in the program."""
+        return self._timebins
+
+    @property
+    def spatial_modes(self):
+        """The number of spatial modes in the program."""
+        return self._spatial_modes
+
+    @property
+    def concurr_modes(self):
+        """The number of concurrent modes in the program."""
+        return self._concurr_modes
 
     # pylint: disable=arguments-differ, invalid-overridden-method
     def context(self, *args, shift="default"):
@@ -537,10 +560,10 @@ class TDMProgram(Program):
         super().__exit__(ex_type, ex_value, ex_tb)
 
         if ex_type is None:
-            self.timebins = len(self.tdm_params[0])
+            self._timebins = len(self.tdm_params[0])
             self.rolled_circuit = self.circuit.copy()
 
-            self.spatial_modes = len(self.N)
+            self._spatial_modes = len(self.N)
 
     @property
     def parameters(self):
@@ -552,10 +575,10 @@ class TDMProgram(Program):
         """Represent the program in a compressed way without rolling the for loops"""
         self.circuit = self.rolled_circuit
         if self._is_space_unrolled:
-            if self.added_subsystems > 0:
-                self._delete_subsystems(self.register[-self.added_subsystems :])
-                self.init_num_subsystems -= self.added_subsystems
-                self.added_subsystems = 0
+            if self._added_subsystems > 0:
+                self._delete_subsystems(self.register[-self._added_subsystems :])
+                self.init_num_subsystems -= self._added_subsystems
+                self._added_subsystems = 0
 
             self._is_space_unrolled = False
         return self
@@ -573,7 +596,7 @@ class TDMProgram(Program):
             Program: unrolled program (including shots)
         """
         if self.unrolled_circuit is not None:
-            self.circuit = self.unrolled_circuit * shots
+            self.circuit = self.unrolled_circuit
             return self
 
         if self._is_space_unrolled:
@@ -594,14 +617,14 @@ class TDMProgram(Program):
             Program: unrolled program (including shots)
         """
         if self.space_unrolled_circuit is not None:
-            self.circuit = self.space_unrolled_circuit * shots
+            self.circuit = self.space_unrolled_circuit
             return self
 
-        self.added_subsystems = self.timebins - self.init_num_subsystems
-        if self.added_subsystems > 0:
-            self._add_subsystems(self.added_subsystems)
+        self._added_subsystems = self._timebins - self.init_num_subsystems
+        if self._added_subsystems > 0:
+            self._add_subsystems(self._added_subsystems)
 
-            self.init_num_subsystems += self.added_subsystems
+            self.init_num_subsystems += self._added_subsystems
         self._is_space_unrolled = True
 
         return self._unroll_program(shots)
@@ -641,40 +664,40 @@ class TDMProgram(Program):
         # q[sm[2]] as concurrent modes of spatial mode C
         # q[sm[3]] as concurrent modes of spatial mode D.
 
-        # save previous mode index of a command to be able to check when modes
-        # are looped back to the start (not allowed when space-unrolling)
-        last_idx = dict()
+        for _ in range(shots):
+            # save previous mode index of a command to be able to check when modes
+            # are looped back to the start (not allowed when space-unrolling)
+            last_idx = dict()
 
-        for cmd in self.rolled_circuit:
-            last_idx[cmd] = 0
-            if isinstance(cmd.op, ops.Measurement):
-                self.measured_modes.append(cmd.reg[0].ind)
-
-        for i in range(self.timebins):
             for cmd in self.rolled_circuit:
-                modes = get_modes(cmd, q)
-                if not (self._is_space_unrolled and any(m.ind < last_idx[cmd] for m in modes)):
-                    self.apply_op(cmd, modes, i)
-                    last_idx[cmd] = min(m.ind for m in modes)
+                last_idx[cmd] = 0
+                if isinstance(cmd.op, ops.Measurement):
+                    self._measured_modes.add(cmd.reg[0].ind)
 
-            if self._is_space_unrolled:
-                q = shift_by(q, 1)
-            elif self.shift == "default":
-                # shift each spatial mode SEPARATELY by one step
-                q_aux = list(q)
-                for j, _ in enumerate(self.N):
-                    q_aux[sm[j]] = shift_by(q_aux[sm[j]], 1)
-                q = tuple(q_aux)
+            for i in range(self._timebins):
+                for cmd in self.rolled_circuit:
+                    modes = get_modes(cmd, q)
+                    if not (self._is_space_unrolled and any(m.ind < last_idx[cmd] for m in modes)):
+                        self.apply_op(cmd, modes, i)
+                        last_idx[cmd] = min(m.ind for m in modes)
 
-            elif isinstance(self.shift, int):
-                q = shift_by(q, self.shift)  # shift at end of each time bin
+                if self._is_space_unrolled:
+                    q = shift_by(q, 1)
+                elif self.shift == "default":
+                    # shift each spatial mode SEPARATELY by one step
+                    q_aux = list(q)
+                    for j, _ in enumerate(self.N):
+                        q_aux[sm[j]] = shift_by(q_aux[sm[j]], 1)
+                    q = tuple(q_aux)
+
+                elif isinstance(self.shift, int):
+                    q = shift_by(q, self.shift)  # shift at end of each time bin
 
         # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
         if self._is_space_unrolled:
             self.space_unrolled_circuit = self.circuit.copy()
         else:
             self.unrolled_circuit = self.circuit.copy()
-        self.circuit = self.circuit * shots
 
         return self
 
