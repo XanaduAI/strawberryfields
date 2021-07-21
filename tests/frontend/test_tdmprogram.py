@@ -726,9 +726,10 @@ class TestEngineTDMProgramInteraction:
         assert results.samples.shape[0] == 2
         assert prog.run_options["shots"] == 5
 
-    def test_shots_as_non_multiple_of_concurrent_modes(self):
+    def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
+        """Test that multiple shots work when having the number of timebins be
+        a non-multiple of the number of concurrent modes"""
         theta = [0] * 3
-        r = 3
         shots = 2
 
         prog = sf.TDMProgram(N=2)
