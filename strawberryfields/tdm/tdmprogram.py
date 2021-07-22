@@ -381,7 +381,6 @@ class TDMProgram(Program):
 
         super().__init__(num_subsystems=self._concurr_modes, name=name)
 
-        self._type = "tdm"
         self._is_space_unrolled = False
 
         self._timebins = 0
