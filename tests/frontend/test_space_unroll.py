@@ -26,7 +26,7 @@ pytestmark = pytest.mark.frontend
 
 def generate_valid_bs_sequence(delays, modes, random_func=np.random.rand):
     """
-    Generate sequences of valied beamsplitter angles for a time-domain program where
+    Generate sequences of valid beamsplitter angles for a time-domain program where
     the modes inside the delays loops are in vacuum.
 
     Args:
