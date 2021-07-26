@@ -433,7 +433,7 @@ class LocalEngine(BaseEngine):
             # priority order for the shots value should be kwargs > run_options > 1
             shots = kwargs.get("shots", program.run_options.get("shots", 1))
             # if a tdm program is input in a rolled state, then unroll it
-            if program.unrolled_circuit is None and program.space_unrolled_circuit is None:
+            if not program.is_unrolled:
                 rolled_input = True
                 program.unroll(shots=shots)
 

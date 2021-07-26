@@ -381,6 +381,7 @@ class TDMProgram(Program):
         super().__init__(num_subsystems=self.concurr_modes, name=name)
 
         self.type = "tdm"
+        self.is_unrolled = False
         self._is_space_unrolled = False
 
         self.timebins = 0
@@ -391,8 +392,8 @@ class TDMProgram(Program):
         self.unrolled_circuit = None
         # `space_unrolled_circuit` only contains the space-unrolled single-shot circuit
         self.space_unrolled_circuit = None
-        # `added_subsystems` corresponds to the number of subsystems added when space-unrolling
-        self.added_subsystems = 0
+        # `num_added_subsystems` corresponds to the number of subsystems added when space-unrolling
+        self.num_added_subsystems = 0
         self.run_options = {}
         """dict[str, Any]: dictionary of default run options, to be passed to the engine upon
         execution of the program. Note that if the ``run_options`` dictionary is passed
@@ -423,14 +424,15 @@ class TDMProgram(Program):
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DeviceSpec`. If no compiler is passed, the default "TD2"
-                compiler is used unless the program is a TD3 program, in which case the "passive"
-                compiler is used. Currently, the only other allowed compiler is "gaussian".
+                the hardware :class:`~.DeviceSpec`. If no compiler is passed, the default TDM
+                compiler is used. Currently, the only other allowed compilers are "gaussian" and
+                "passive".
 
         Returns:
             Program: compiled program
         """
-        if compiler in ("gaussian", "passive"):
+        alt_compilers = ("gaussian", "passive")
+        if compiler in alt_compilers or getattr(device, "default_compiler") in alt_compilers:
             return super().compile(device=device, compiler=compiler)
 
         if device is not None:
@@ -550,12 +552,13 @@ class TDMProgram(Program):
 
     def roll(self):
         """Represent the program in a compressed way without rolling the for loops"""
+        self.is_unrolled = False
         self.circuit = self.rolled_circuit
         if self._is_space_unrolled:
-            if self.added_subsystems > 0:
-                self._delete_subsystems(self.register[-self.added_subsystems :])
-                self.init_num_subsystems -= self.added_subsystems
-                self.added_subsystems = 0
+            if self.num_added_subsystems > 0:
+                self._delete_subsystems(self.register[-self.num_added_subsystems :])
+                self.init_num_subsystems -= self.num_added_subsystems
+                self.num_added_subsystems = 0
 
             self._is_space_unrolled = False
         return self
@@ -572,12 +575,16 @@ class TDMProgram(Program):
         Returns:
             Program: unrolled program (including shots)
         """
+        self.is_unrolled = True
         if self.unrolled_circuit is not None:
             self.circuit = self.unrolled_circuit * shots
             return self
 
         if self._is_space_unrolled:
-            raise ValueError("Program is space-unrolled and must be rolled before unrolling")
+            raise ValueError(
+                "Program is space-unrolled and cannot be unrolled. Must be rolled (by calling the"
+                "`roll()` method) before unrolling."
+            )
 
         return self._unroll_program(shots)
 
@@ -593,15 +600,16 @@ class TDMProgram(Program):
         Returns:
             Program: unrolled program (including shots)
         """
+        self.is_unrolled = True
         if self.space_unrolled_circuit is not None:
             self.circuit = self.space_unrolled_circuit * shots
             return self
 
-        self.added_subsystems = self.timebins - self.init_num_subsystems
-        if self.added_subsystems > 0:
-            self._add_subsystems(self.added_subsystems)
+        self.num_added_subsystems = self.timebins - self.init_num_subsystems
+        if self.num_added_subsystems > 0:
+            self._add_subsystems(self.num_added_subsystems)
 
-            self.init_num_subsystems += self.added_subsystems
+            self.init_num_subsystems += self.num_added_subsystems
         self._is_space_unrolled = True
 
         return self._unroll_program(shots)
@@ -643,19 +651,21 @@ class TDMProgram(Program):
 
         # save previous mode index of a command to be able to check when modes
         # are looped back to the start (not allowed when space-unrolling)
-        last_idx = dict()
+        previous_mode_index = dict()
 
         for cmd in self.rolled_circuit:
-            last_idx[cmd] = 0
+            previous_mode_index[cmd] = 0
             if isinstance(cmd.op, ops.Measurement):
                 self.measured_modes.append(cmd.reg[0].ind)
 
         for i in range(self.timebins):
             for cmd in self.rolled_circuit:
                 modes = get_modes(cmd, q)
-                if not (self._is_space_unrolled and any(m.ind < last_idx[cmd] for m in modes)):
+                has_looped_back = any(m.ind < previous_mode_index[cmd] for m in modes)
+                valid_application = not self._is_space_unrolled or not has_looped_back
+                if valid_application:
                     self.apply_op(cmd, modes, i)
-                    last_idx[cmd] = min(m.ind for m in modes)
+                    previous_mode_index[cmd] = min(m.ind for m in modes)
 
             if self._is_space_unrolled:
                 q = shift_by(q, 1)
