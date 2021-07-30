@@ -388,9 +388,11 @@ class TDMProgram(Program):
         self.spatial_modes = 0
         self.measured_modes = []
         self.rolled_circuit = None
-        # `unrolled_circuit` only contains the unrolled single-shot circuit
+        # `unrolled_circuit` contains the unrolled single-shot circuit, reusing previously measured
+        # modes (doesn't work with Fock measurements)
         self.unrolled_circuit = None
-        # `space_unrolled_circuit` only contains the space-unrolled single-shot circuit
+        # `space_unrolled_circuit` contains the space-unrolled single-shot circuit, instead adding
+        # new modes for each new measurement (works with Fock measurements)
         self.space_unrolled_circuit = None
         # `num_added_subsystems` corresponds to the number of subsystems added when space-unrolling
         self.num_added_subsystems = 0
@@ -566,14 +568,15 @@ class TDMProgram(Program):
     def unroll(self, shots=1):
         """Construct program with the register shift
 
-        Constructs the unrolled single-shot program, storing it in `self.unrolled_circuit` when run
-        for the first time, and returns the unrolled program including shots.
+        Calls the `_unroll_program` method which constructs the unrolled single-shot program,
+        storing it in `self.unrolled_circuit` when run for the first time, and returns the unrolled
+        program.
 
         Args:
             shots (int): the number of times the circuit should be repeated
 
         Returns:
-            Program: unrolled program (including shots)
+            Program: unrolled program
         """
         self.is_unrolled = True
         if self.unrolled_circuit is not None:
@@ -591,14 +594,15 @@ class TDMProgram(Program):
     def space_unroll(self, shots=1):
         """Construct the space-unrolled program
 
-        Constructs the space-unrolled single-shot program, storing it in `self.space_unrolled_circuit`
-        when run for the first time, and returns the space-unrolled program including shots.
+        Calls the `_unroll_program` method which constructs the space-unrolled single-shot program,
+        storing it in `self.space_unrolled_circuit` when run for the first time, and returns the
+        space-unrolled program.
 
         Args:
             shots (int): the number of times the circuit should be repeated
 
         Returns:
-            Program: unrolled program (including shots)
+            Program: unrolled program
         """
         self.is_unrolled = True
         if self.space_unrolled_circuit is not None:
