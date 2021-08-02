@@ -45,7 +45,9 @@ from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 from thewalrus._hermite_multidimensional import hermite_multidimensional_numba as gaussian_gate_tw
-from thewalrus._hermite_multidimensional import grad_hermite_multidimensional_numba as grad_gaussian_gate_tw
+from thewalrus._hermite_multidimensional import (
+    grad_hermite_multidimensional_numba as grad_gaussian_gate_tw,
+)
 from thewalrus.symplectic import is_symplectic
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
@@ -453,9 +455,7 @@ def choi_trick(S, d, dtype=tf.complex64):
     alpha = tf.concat([tf.cast(d, dtype=dtype), tf.zeros(m, dtype=dtype)], 0)
     zeta = alpha + tf.linalg.matvec(tf.cast(R, dtype=dtype), tf.math.conj(alpha))
     C = tf.math.sqrt(
-        tf.math.sqrt(
-            tf.linalg.det(tf.eye(m, dtype=dtype) - R[:m, :m] @ tf.math.conj(R[:m, :m]))
-        )
+        tf.math.sqrt(tf.linalg.det(tf.eye(m, dtype=dtype) - R[:m, :m] @ tf.math.conj(R[:m, :m])))
     ) * tf.exp(-0.5 * tf.reduce_sum(tf.math.conj(alpha) * zeta))
     return R, y, C
 
@@ -466,13 +466,11 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
     C = C.numpy()
     y = y.numpy()
     R = R.numpy()
-    gate = gaussian_gate_tw(R, cutoff, y, C = C, dtype = dtype)
+    gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
 
     @tf.function
     def grad(dy):
-        dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(
-            gate, R, cutoff, y, C = C, dtype = dtype
-        )
+        dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
         grad_C = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dC)))
         grad_y = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dy)))
         grad_R = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dR)))
@@ -488,9 +486,7 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     if batched:
         return tf.stack(
             [
-                single_gaussian_gate_matrix(
-                        *choi_trick(S_, d_), cutoff, dtype=dtype.as_numpy_dtype
-                )
+                single_gaussian_gate_matrix(*choi_trick(S_, d_), cutoff, dtype=dtype.as_numpy_dtype)
                 for S_, d_ in tf.transpose([S, d])
             ]
         )
@@ -803,9 +799,7 @@ def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
     if num_modes == 0:
         raise ValueError("'in_modes' must have at least one mode")
     if len(indices_full) - 2 * num_modes - offset < 0:
-        raise NotImplementedError(
-            "Exceed the max number of supported modes for this operation"
-        )
+        raise NotImplementedError("Exceed the max number of supported modes for this operation")
     if min(modes) < 0 or max(modes) >= num_modes:
         raise ValueError("'mode' argument is not compatible with number of in_modes")
     if pure:
@@ -1039,9 +1033,7 @@ def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtyp
     if not is_symplectic(S, rtol=0.00001, atol=0):
         raise ValueError("The matrix S is not symplectic")
     if (S.shape[0] // 2) != len(d):
-        raise ValueError(
-            "The matrix S and the vector d do not have compatible dimensions"
-        )
+        raise ValueError("The matrix S and the vector d do not have compatible dimensions")
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
