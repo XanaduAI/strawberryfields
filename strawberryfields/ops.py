@@ -1250,7 +1250,7 @@ class MeasureHeterodyne(Measurement):
     \frac{1}{\pi}\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
     The measured mode is reset to the vacuum state.
 
-    .. warning:: The heterodyne measurement can only be performed in the Gaussian backend.
+    .. warning:: The heterodyne measurement can only be performed in the Gaussian or Bosonic backends.
 
     Args:
         select (None, complex): (Optional) desired values of measurement result.
