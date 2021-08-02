@@ -2225,10 +2225,10 @@ class Fouriergate(Gate):
 class Ggate(Gate):
     r"""General N-mode Gaussian gate.
     
-    The general N-mode Gaussian gate which is decomposed into the N single-mode displacements, N-mode passive transformation parametrized by a unitary matrix V, N single-mode squeezers and another N-mode passive transformation parametrized by a unitary matrix W. And here we represent it as the symplectic matrix S and the displacement parameter d.
+    The general N-mode Gaussian gate can be parametrized by a symplectic matrix S and a displacement parameter d.
 
     .. math::
-        G = D(\gamma)U(W)S(\zeta)U(V)
+        G(S,d)
         
     Args:
 

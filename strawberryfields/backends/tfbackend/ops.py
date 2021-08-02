@@ -44,8 +44,9 @@ from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
-from thewalrus.fock_gradients import gaussian_gate as gaussian_gate_tw
-from thewalrus.fock_gradients import grad_gaussian_gate as grad_gaussian_gate_tw
+from thewalrus._hermite_multidimensional import hermite_multidimensional_numba as gaussian_gate_tw
+from thewalrus._hermite_multidimensional import grad_hermite_multidimensional_numba as grad_gaussian_gate_tw
+from thewalrus.symplectic import is_symplectic
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -393,7 +394,7 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
 
 
 def choi_trick(S, d, dtype=tf.complex64):
-    """Transforms the parameter from S,d to C,mu,Sigma (works for gaussian_gate)"""
+    """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
     m = S.shape[0] // 2
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
@@ -430,10 +431,10 @@ def choi_trick(S, d, dtype=tf.complex64):
     )
     choi_cov = 0.5 * S_exp @ tf.transpose(S_exp)
     idl = tf.eye(2 * m, dtype=dtype)
-    R = tf.cast(tf.math.sqrt(0.5), dtype=dtype) * tf.concat(
+    Rot = tf.cast(tf.math.sqrt(0.5), dtype=dtype) * tf.concat(
         [tf.concat([idl, 1j * idl], 1), tf.concat([idl, -1j * idl], 1)], 0
     )
-    sigma = R @ choi_cov @ tf.transpose(tf.math.conj(R))
+    sigma = Rot @ choi_cov @ tf.transpose(tf.math.conj(Rot))
     zh = tf.zeros([2 * m, 2 * m], dtype=dtype)
     X = tf.concat([tf.concat([zh, idl], 1), tf.concat([idl, zh], 1)], 0)
     sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype=dtype)
@@ -441,41 +442,41 @@ def choi_trick(S, d, dtype=tf.complex64):
     E = tf.linalg.diag(
         tf.concat([tf.ones([m], dtype=dtype), tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r)], 0)
     )
-    Sigma = -tf.math.conj(E @ A_mat[: 2 * m, : 2 * m] @ E)
-    mu = tf.concat(
+    R = -tf.math.conj(E @ A_mat[: 2 * m, : 2 * m] @ E)
+    y = tf.concat(
         [
-            tf.linalg.matvec(Sigma[:m, :m], tf.math.conj(d)) + tf.transpose(d),
-            tf.linalg.matvec(Sigma[m:, :m], tf.math.conj(d)),
+            tf.linalg.matvec(R[:m, :m], tf.math.conj(d)) + tf.transpose(d),
+            tf.linalg.matvec(R[m:, :m], tf.math.conj(d)),
         ],
         0,
     )
     alpha = tf.concat([tf.cast(d, dtype=dtype), tf.zeros(m, dtype=dtype)], 0)
-    zeta = alpha + tf.linalg.matvec(tf.cast(Sigma, dtype=dtype), tf.math.conj(alpha))
+    zeta = alpha + tf.linalg.matvec(tf.cast(R, dtype=dtype), tf.math.conj(alpha))
     C = tf.math.sqrt(
         tf.math.sqrt(
-            tf.linalg.det(tf.eye(m, dtype=dtype) - Sigma[:m, :m] @ tf.math.conj(Sigma[:m, :m]))
+            tf.linalg.det(tf.eye(m, dtype=dtype) - R[:m, :m] @ tf.math.conj(R[:m, :m]))
         )
     ) * tf.exp(-0.5 * tf.reduce_sum(tf.math.conj(alpha) * zeta))
-    return C, mu, Sigma
+    return R, y, C
 
 
 @tf.custom_gradient
-def single_gaussian_gate_matrix(C, mu, Sigma, cutoff, num_modes, dtype=tf.complex64.as_numpy_dtype):
+def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
     C = C.numpy()
-    mu = mu.numpy()
-    Sigma = Sigma.numpy()
-    gate = gaussian_gate_tw(C, mu, Sigma, cutoff, num_modes, dtype)
+    y = y.numpy()
+    R = R.numpy()
+    gate = gaussian_gate_tw(R, cutoff, y, C = C, dtype)
 
     @tf.function
     def grad(dy):
-        dG_dC, dG_dmu, dG_dSigma = grad_gaussian_gate_tw(
-            gate, C, mu, Sigma, cutoff, num_modes, dtype
+        dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(
+            gate, R, cutoff, y, C = C, dtype
         )
         grad_C = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dC)))
-        grad_mu = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dmu)))
-        grad_Sigma = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dSigma)))
-        return grad_C, grad_mu, grad_Sigma, None, None
+        grad_y = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dy)))
+        grad_R = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dR)))
+        return grad_C, grad_y, grad_R, None, None
 
     return gate, grad
 
@@ -484,18 +485,17 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
     """creates a N-mode gaussian gate matrix accounting for batching"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
-    num_modes = S.shape[0] // 2
     if batched:
         return tf.stack(
             [
                 single_gaussian_gate_matrix(
-                        *choi_trick(S_, d_), cutoff, num_modes, dtype=dtype.as_numpy_dtype
+                        *choi_trick(S_, d_), cutoff, dtype=dtype.as_numpy_dtype
                 )
                 for S_, d_ in tf.transpose([S, d])
             ]
         )
     return tf.convert_to_tensor(
-        single_gaussian_gate_matrix(*choi_trick(S, d), cutoff, num_modes, dtype=dtype.as_numpy_dtype)
+        single_gaussian_gate_matrix(*choi_trick(S, d), cutoff, dtype=dtype.as_numpy_dtype)
     )
 
 
@@ -1036,6 +1036,12 @@ def two_mode_squeeze(
 
 def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
+    if not is_symplectic(S, rtol=0.00001, atol=0):
+        raise ValueError("The matrix S is not symplectic")
+    if (S.shape[0] // 2) != len(d):
+        raise ValueError(
+            "The matrix S and the vector d do not have compatible dimensions"
+        )
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)

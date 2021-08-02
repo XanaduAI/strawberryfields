@@ -558,8 +558,8 @@ class Circuit:
         """
         Apply the N-mode gaussian gates to the specified mode.
         """
-        ##TODO: if tf.cast is necesssary?
-        #        g = tf.cast(gamma, self._dtype)
+        S = tf.cast(S, self._dtype)
+        d = tf.cast(d, self._dtype)
         S = self._maybe_batch(S)
         d = self._maybe_batch(d)
         new_state = ops.gaussian_gate(
