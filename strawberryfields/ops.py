@@ -2245,10 +2245,10 @@ class Ggate(Gate):
             & mean = mean + d.
            
     """
-    ns = 2  # Number of dimension?
 
     def __init__(self, S, d):
         super().__init__([S, d])
+        ns = len(d)
 
     def _apply(self, reg, backend, **kwargs):
         S, d = par_evaluate(self.p)
