@@ -20,10 +20,11 @@ mag_alphas = np.linspace(0, 0.8, 4)
 phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 squeeze_val = np.arcsinh(1.0)
 
-n_meas = 300
+n_meas = 500
 disp_val = 1.0 + 1j * 1.0
 num_stds = 10.0
 std_10 = num_stds / np.sqrt(n_meas)
+R_VALS = [-1.2,0,1,1.4]
 
 
 @pytest.mark.backends("gaussian","bosonic")
@@ -65,18 +66,21 @@ class TestHeterodyne:
 
         assert np.allclose(x.mean(), disp_val, atol=std_10 + tol, rtol=0)
 
-    def test_std_vacuum(self, setup_backend, pure, tol):
-        """Test heterodyne provides the correct standard deviation of the vacuum"""
+    @pytest.mark.parametrize("r", R_VALS)
+    def test_std(self, r, setup_backend, pure, tol):
+        """Test heterodyne provides the correct standard deviation for heterodyne outcomes on 
+        squeezed states"""
         backend = setup_backend(1)
         x = np.empty(0)
 
         for i in range(n_meas):
             backend.reset(pure=pure)
+            backend.prepare_squeezed_state(r, 0, 0)
             meas_result = backend.measure_heterodyne(0)
             x = np.append(x, meas_result)
 
         xr = x.real
         xi = x.imag
-        xvar = xi.std() ** 2 + xr.std() ** 2
 
-        assert np.allclose(np.sqrt(xvar), np.sqrt(0.5), atol=std_10 + tol, rtol=0)
+        assert np.allclose(xr.std(), np.sqrt(1 + np.exp(-2 * r)) / 2, atol=std_10 + tol, rtol=0)
+        assert np.allclose(xi.std(), np.sqrt(1 + np.exp(2 * r)) / 2, atol=std_10 + tol, rtol=0)

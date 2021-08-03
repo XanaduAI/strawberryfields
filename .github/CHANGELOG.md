@@ -140,6 +140,10 @@
 
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
+  
+* Speed improvements to ``gaussian_unitary`` compiler
+  [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
+
 
 <h3>Breaking Changes</h3>
 
@@ -153,6 +157,9 @@
   by storing them as `blackbird.RegRefTransforms` in the resulting Blackbird program.
   [(#596)](https://github.com/XanaduAI/strawberryfields/pull/596)
 
+* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always 
+  used the wrong set of allowed gate parameter ranges to validate the parameters in a program. 
+  [(#605)](https://github.com/XanaduAI/strawberryfields/pull/605)
 
 <h3>Documentation</h3>
 
