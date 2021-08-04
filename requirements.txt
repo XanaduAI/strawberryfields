@@ -6,7 +6,7 @@ tensorboard>=2.0
 networkx>=2.0
 git+https://github.com/XanaduAI/blackbird@master#egg=quantum-blackbird
 python-dateutil==2.8.0
-https://xanadu-wheels.s3-website-us-east-1.amazonaws.com/thewalrus-0.16.0.dev0+20210730000214-cp38-cp38-manylinux2010_x86_64.whl
+http://xanadu-wheels.s3-website-us-east-1.amazonaws.com/thewalrus-0.16.0.dev0+20210730000214-cp38-cp38-manylinux2010_x86_64.whl
 toml
 appdirs
 numba>=0.48.0
