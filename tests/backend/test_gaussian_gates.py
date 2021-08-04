@@ -19,16 +19,11 @@ import numpy as np
 from scipy.linalg import expm
 from scipy.stats import unitary_group
 from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate
-#from thewalrus.symplectic import sypmat
 
-NUMBER_MODES = np.arange(3,6)
-CUTOFF_LIST = np.arange(4,6)
-#SYMPLECTIC_MATRIX = sympmat(2)
-#DISPLACEMENT_VECTOR = np.random.random(2)
 
 class TestUnitaryFunctionRelated:
     """Basic tests over new functions related to gaussian gates"""
-    @pytest.mark.parametrize("num_mode", NUMBER_MODES)
+    @pytest.mark.parametrize("num_mode", [4,5])
     def test_choi_trick(self, tol):
         """Test if we can get correct C, mu, Sigma from S, d"""
         W = unitary_group.rvs(num_mode)
@@ -49,7 +44,7 @@ class TestUnitaryFunctionRelated:
         assert np.allclose(_mu, expected_mu, atol=tol, rtol=0)
         assert np.allclose(_Sigma, expected_Sigma, atol=tol, rtol=0)
     
-    @pytest.mark.parametrize("cutoff", CUTOFF_LIST)
+    @pytest.mark.parametrize("cutoff", [5,7])
     def test_n_mode_gate(tol):
         """Test if n_mode_gate is compatable with single and two-mode gate in tfbackend"""
         #single mode gate
