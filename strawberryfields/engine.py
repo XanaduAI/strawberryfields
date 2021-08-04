@@ -428,13 +428,13 @@ class LocalEngine(BaseEngine):
         # pylint: disable=import-outside-toplevel
         from strawberryfields.tdm.tdmprogram import reshape_samples
 
-        recieved_rolled_circuit = False
+        received_rolled_circuit = False
         if isinstance(program, TDMProgram):
             # priority order for the shots value should be kwargs > run_options > 1
             shots = kwargs.get("shots", program.run_options.get("shots", 1))
             # if a tdm program is input in a rolled state, then unroll it
             if not program.is_unrolled:
-                recieved_rolled_circuit = True
+                received_rolled_circuit = True
                 program.unroll(shots=shots)
 
             # Shots >1 for a TDM program simply corresponds to creating
@@ -503,8 +503,8 @@ class LocalEngine(BaseEngine):
                 )
                 # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
                 result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
-            if recieved_rolled_circuit:
-                # if the tdm circuit is recieved in a rolled state, and unrolled
+            if received_rolled_circuit:
+                # if the tdm circuit is received in a rolled state, and unrolled
                 # for execution, roll it back again
                 program.roll()
         modes = temp_run_options["modes"]
