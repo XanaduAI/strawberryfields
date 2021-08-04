@@ -777,7 +777,7 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     return output
 
 
-def n_mode_gate(matrix, *modes, in_modes, pure=True, batched=False):
+def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     """basic form:
     'abcd,efg...b...d...xyz->efg...a...c...xyz' (pure state)
     'abcd,ij...be...dg...xyz,efgh->ij...af...ch...xyz' (mixed state)
@@ -1030,7 +1030,7 @@ def two_mode_squeeze(
 
 def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
-    if not is_symplectic(S, rtol=0.00001, atol=0):
+    if not is_symplectic(S.numpy(), rtol=0.00001, atol=0):
         raise ValueError("The matrix S is not symplectic")
     if (S.shape[0] // 2) != len(d):
         raise ValueError("The matrix S and the vector d do not have compatible dimensions")
