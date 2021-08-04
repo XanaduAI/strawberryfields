@@ -151,7 +151,7 @@ class TestDeviceSpec:
 
         new_spec_dict = device_dict.copy()
         new_spec_dict["modes"] = 42
-        monkeypatch.setattr(connection, "_get_device_dict", lambda target: new_spec_dict)
+        monkeypatch.setattr(connection, "_get_device_spec_dict", lambda target: new_spec_dict)
 
         spec.refresh()
         assert spec.modes != device_dict["modes"]

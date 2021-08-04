@@ -78,7 +78,7 @@ def job_to_complete(connection, monkeypatch):
 
     monkeypatch.setattr(
         Connection,
-        "_get_device_dict",
+        "_get_device_spec_dict",
         mock_return(mock_device_dict),
     )
 
@@ -129,7 +129,7 @@ class TestRemoteEngine:
         passes all keyword argument backend and runtime options to the create_job
         method."""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
         _, _, _, run_options = engine.run_async(prog, shots=1234)
         assert run_options == {"shots": 1234, "cutoff_dim": 12}
@@ -144,7 +144,7 @@ class TestRemoteEngine:
         """Test that the remote engine run_async method correctly
         parses runtime options compiled into the program"""
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8")
 
         prog = prog.compile(device=engine.device_spec, shots=15)
@@ -156,7 +156,7 @@ class TestRemoteEngine:
     def test_no_shots(self, prog, connection, monkeypatch):
         """Test that if the number of shots is not provided, an
         exception is raised"""
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: mock_device_dict)
         engine = RemoteEngine("X8", connection=connection)
 
         with pytest.raises(ValueError, match="Number of shots must be specified"):
@@ -171,7 +171,7 @@ class TestRemoteEngineIntegration:
         for the intended backend"""
         caplog.set_level(logging.INFO)
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: mock_device_dict)
 
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
@@ -201,7 +201,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = []
 
         monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
 
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
@@ -222,7 +222,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = []
 
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
         # Setting compile_info with a dummy devicespec and compiler name
@@ -243,7 +243,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = []
 
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
         # Leaving compile_info as None
@@ -265,7 +265,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = compiler
 
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
 
         compile_options = {"compiler": compiler}
 
@@ -296,7 +296,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = []
 
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
         # Setting compile_info
@@ -325,7 +325,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = compiler
 
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: MockJob(program))
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
 
         class MockJob:
             """Mock job that acts like a job, but also stores a program."""
@@ -367,7 +367,7 @@ class TestRemoteEngineIntegration:
         test_device_dict["compiler"] = compiler
 
         monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        monkeypatch.setattr(Connection, "_get_device_spec_dict", lambda *args: test_device_dict)
 
         engine = sf.RemoteEngine("X8_01")
 

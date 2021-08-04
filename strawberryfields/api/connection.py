@@ -160,19 +160,52 @@ class Connection:
         Returns:
             strawberryfields.api.DeviceSpec: the created device specification
         """
-        device_dict = self._get_device_dict(target)
+        device_dict = self._get_device_spec_dict(target)
         return DeviceSpec(target=target, spec=device_dict, connection=self)
 
-    def _get_device_dict(self, target: str) -> dict:
-        """Returns the device specifications as a dictionary"""
-        path = f"/devices/{target}/specifications"
-        response = self._request("GET", self._url(path), headers=self._headers)
+    def _get_device_dict(self, target: str, api_version: str = "0.3.0") -> dict:
+        """Returns general device information as a dictionary"""
+        path = f"/devices/{target}"
+        if api_version is None: 
+            api_version = self.api_version
+        headers = {**self._headers, "Accept-Version": api_version}
+        response = self._request("GET", self._url(path), headers=headers)
 
         if response.status_code == 200:
-            self.log.info("The device spec %s has been successfully retrieved.", target)
+            self.log.info("The device information for %s has been successfully retrieved.", target)
+            return response.json()
+        raise RequestFailedError(
+            "Failed to get device information: {}".format(self._format_error_message(response))
+        )
+
+    def _get_device_spec_dict(self, target: str, api_version: str = None) -> dict:
+        """Returns the device specifications as a dictionary"""
+        path = f"/devices/{target}/specifications"
+        if api_version is None: 
+            api_version = self.api_version
+        headers = {**self._headers, "Accept-Version": api_version}
+        response = self._request("GET", self._url(path), headers=headers)
+
+        if response.status_code == 200:
+            self.log.info("The device spec for %s has been successfully retrieved.", target)
             return response.json()
         raise RequestFailedError(
             "Failed to get device specifications: {}".format(self._format_error_message(response))
+        )
+
+    def _get_device_certificate_dict(self, target: str, api_version: str = "0.3.0") -> dict:
+        """Returns the latest device certificate as a dictionary"""
+        path = f"/devices/{target}/certificate"
+        if api_version is None: 
+            api_version = self.api_version
+        headers = {**self._headers, "Accept-Version": api_version}
+        response = self._request("GET", self._url(path), headers=headers)
+
+        if response.status_code == 200:
+            self.log.info("The latest device certificate for %s has been successfully retrieved.", target)
+            return response.json()
+        raise RequestFailedError(
+            "Failed to get device information: {}".format(self._format_error_message(response))
         )
 
     def create_job(self, target: str, program: Program, run_options: dict = None) -> Job:
@@ -357,12 +390,12 @@ class Connection:
             requests.Response: the response received for the sent request
         """
         headers = headers or {}
-        request_headers = {**headers, **self._headers}
+        request_headers = {**self._headers, **headers}
         response = requests.request(method, path, headers=request_headers, **kwargs)
         if response.status_code == 401:
             # Refresh the access_token and retry the request
             self._refresh_access_token()
-            request_headers = {**headers, **self._headers}
+            request_headers = {**self._headers, **headers}
             response = requests.request(method, path, headers=request_headers, **kwargs)
         return response
 
