@@ -19,11 +19,12 @@ import numpy as np
 from scipy.linalg import expm
 from scipy.stats import unitary_group
 from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate
+from thewalrus.symplectic import sypmat
 
 NUMBER_MODES = np.arange(3,6)
 CUTOFF_LIST = np.arange(4,6)
-SYMPLECTIC_MATRIX
-DISPLACEMENT_VECTOR
+SYMPLECTIC_MATRIX = sympmat(2)
+DISPLACEMENT_VECTOR = np.random.random(2)
 
 class TestUnitaryFunctionRelated:
     """Basic tests over new functions related to gaussian gates"""
@@ -104,25 +105,25 @@ class TestUnitaryFunctionRelated:
         _batched = True
         assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2,in_modes = in_modes, pure=_pure, batched=_batched))
     
-from thewalrus.quantum.fock_tensors import fock_tensor
-@pytest.mark.backends("tf")
-class TestFockRepresentation:
-    @pytest.mark.parametrize("S", SYMPLECTIC_MATRIX)
-    @pytest.mark.parametrize("d", DISPLACEMENT_VECTOR)
-    @pytest.mark.parametrize("cutoff", CUTOFF_LIST)
-    def test_gaussian_gate(self, setup_backend, S, d, cutoff, tol):
-        """Test if the gaussian gate has the right effect on states in the Fock basis"""
-        backend = setup_backend(1)
-        
-        backend.prepare_ket_state(np.ones([cutoff]) / np.sqrt(cutoff), 0)
-        backend.gaussian_gate(S, d, 0)
-        s = backend.state()
-        if s.is_pure:
-            numer_state = s.ket()
-        else:
-            numer_state = s.dm()
-
-        #S,d -> gaussian state
-        ref_state = fock_tensor(S, d, cutoff)
-        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
+#from thewalrus.quantum.fock_tensors import fock_tensor
+#@pytest.mark.backends("tf")
+#class TestFockRepresentation:
+#    @pytest.mark.parametrize("S", SYMPLECTIC_MATRIX)
+#    @pytest.mark.parametrize("d", DISPLACEMENT_VECTOR)
+#    @pytest.mark.parametrize("cutoff", CUTOFF_LIST)
+#    def test_gaussian_gate(self, setup_backend, S, d, cutoff, tol):
+#        """Test if the gaussian gate has the right effect on states in the Fock basis"""
+#        backend = setup_backend(1)
+#
+#        backend.prepare_ket_state(np.ones([cutoff]) / np.sqrt(cutoff), 0)
+#        backend.gaussian_gate(S, d, 0, 1)
+#        s = backend.state()
+#        if s.is_pure:
+#            numer_state = s.ket()
+#        else:
+#            numer_state = s.dm()
+#
+#        #S,d -> gaussian state
+#        ref_state = fock_tensor(S, d, cutoff)
+#        assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
 
