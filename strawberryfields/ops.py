@@ -2224,26 +2224,26 @@ class Fouriergate(Gate):
 
 class Ggate(Gate):
     r"""General N-mode Gaussian gate.
-    
+
     The general N-mode Gaussian gate can be parametrized by a symplectic matrix S and a displacement parameter d.
 
     .. math::
         G(S,d)
-        
+
     Args:
 
         S (array): symplectic matrix
         d (array): vector of displacement parameters
-        
+
     .. details::
 
         .. admonition:: Definition
             :class: defn
-            
+
         .. math::
             & cov = S*cov*S^T,\\
             & mean = mean + d.
-           
+
     """
     ns = None
 
