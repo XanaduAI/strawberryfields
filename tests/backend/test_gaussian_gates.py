@@ -19,12 +19,12 @@ import numpy as np
 from scipy.linalg import expm
 from scipy.stats import unitary_group
 from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate
-from thewalrus.symplectic import sypmat
+#from thewalrus.symplectic import sypmat
 
 NUMBER_MODES = np.arange(3,6)
 CUTOFF_LIST = np.arange(4,6)
-SYMPLECTIC_MATRIX = sympmat(2)
-DISPLACEMENT_VECTOR = np.random.random(2)
+#SYMPLECTIC_MATRIX = sympmat(2)
+#DISPLACEMENT_VECTOR = np.random.random(2)
 
 class TestUnitaryFunctionRelated:
     """Basic tests over new functions related to gaussian gates"""
