@@ -26,7 +26,7 @@ pytestmark = pytest.mark.frontend
 
 def generate_valid_bs_sequence(delays, modes, random_func=np.random.rand):
     """
-    Generate sequences of valied beamsplitter angles for a time-domain program where
+    Generate sequences of valid beamsplitter angles for a time-domain program where
     the modes inside the delays loops are in vacuum.
 
     Args:
@@ -187,7 +187,7 @@ def test_cov_is_pure():
     assert is_pure_cov(cov_comp, hbar=sf.hbar)
 
 
-def test_space_unrolling_twice():
+def test_space_unrolling():
     """Tests that space-unrolling works and that it can be done twice"""
     delays = [1, 6, 36]
     modes = 216
@@ -205,10 +205,19 @@ def test_space_unrolling_twice():
 
     assert prog._is_space_unrolled == False
 
-    # space-unroll the program twice
-    prog.space_unroll()
     prog.space_unroll()
 
+    assert prog.timebins == 259
+    assert prog.num_subsystems == 259
+
+    # check that the number of gates are correct.
+    assert sum([isinstance(cmd.op, Sgate) for cmd in prog.circuit]) == 216
+    assert sum([isinstance(cmd.op, Rgate) for cmd in prog.circuit]) == 259-43 + 259-42 + 259-36
+    assert sum([isinstance(cmd.op, BSgate) for cmd in prog.circuit]) == 259-43 + 259-42 + 259-36
+
+    prog.space_unroll()
+
+    # space-unroll the program twice to check that it works
     assert prog._is_space_unrolled == True
 
 
