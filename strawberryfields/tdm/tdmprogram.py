@@ -18,7 +18,6 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
 from operator import itemgetter
-from math import ceil
 from collections.abc import Iterable
 
 import numpy as np
@@ -72,7 +71,7 @@ def input_check(args):
         raise ValueError("Gate-parameter lists must be of equal length.")
 
 
-def _get_mode_order(num_of_values, modes, N, timebins):
+def _get_mode_order(num_of_values, modes, N):
     """Get the order in which the modes were measured.
 
     The mode order is determined by the circuit and the mode-shifting occurring in
@@ -167,7 +166,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     """
     # calculate the total number of samples and the order in which they were measured
     num_of_values = len([i for j in all_samples.values() for i in j])
-    mode_order = _get_mode_order(num_of_values, modes, N, timebins)
+    mode_order = _get_mode_order(num_of_values, modes, N)
     idx_tracker = {i: 0 for i in mode_order}
 
     # iterate backwards through all_samples and add them into the correct mode
