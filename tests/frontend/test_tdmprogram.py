@@ -72,41 +72,6 @@ class TestTDMErrorRaising:
         with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
             singleloop(sq_r, alpha, phi, theta, shots)
 
-    def test_at_least_one_measurement(self):
-        """Checks circuit has at least one measurement operator"""
-        sq_r = 1.0
-        N = 3
-        shots = 1
-        alpha = [0] * 4
-        phi = [0] * 4
-        prog = tdmprogram.TDMProgram(N=N)
-        with pytest.raises(ValueError, match="Must be at least one measurement."):
-            with prog.context(alpha, phi, shift="default") as (p, q):
-                ops.Sgate(sq_r, 0) | q[2]
-                ops.BSgate(p[0]) | (q[1], q[2])
-                ops.Rgate(p[1]) | q[2]
-            eng = sf.Engine("gaussian")
-            eng.run(prog, shots=shots)
-
-    def test_spatial_modes_number_of_measurements_match(self):
-        """Checks number of spatial modes matches number of measurements"""
-        sq_r = 1.0
-        shots = 1
-        alpha = [0] * 4
-        phi = [0] * 4
-        theta = [0] * 4
-        with pytest.raises(
-            ValueError, match="Number of measurement operators must match number of spatial modes."
-        ):
-            prog = tdmprogram.TDMProgram(N=[3, 3])
-            with prog.context(alpha, phi, theta) as (p, q):
-                ops.Sgate(sq_r, 0) | q[2]
-                ops.BSgate(p[0]) | (q[1], q[2])
-                ops.Rgate(p[1]) | q[2]
-                ops.MeasureHomodyne(p[2]) | q[0]
-            eng = sf.Engine("gaussian")
-            result = eng.run(prog, shots=shots)
-
     def test_passing_list_of_tdmprograms(self):
         """Test that error is raised when passing a list containing TDM programs"""
         prog = tdmprogram.TDMProgram(N=2)
