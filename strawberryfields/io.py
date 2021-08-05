@@ -187,9 +187,6 @@ def to_program(bb):
 
 # pylint:disable=too-many-branches
 def _to_tdm_program(bb):
-    # pylint: disable=import-outside-toplevel
-    from strawberryfields.tdm.tdmprogram import TDMProgram
-
     prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
 
     def is_free_param(param):
