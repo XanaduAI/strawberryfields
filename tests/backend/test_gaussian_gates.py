@@ -45,7 +45,7 @@ class TestUnitaryFunctionRelated:
         assert np.allclose(_Sigma, expected_Sigma, atol=tol, rtol=0)
     
     @pytest.mark.parametrize("cutoff", [5,7])
-    def test_n_mode_gate(cutoff, tol):
+    def test_n_mode_gate(self, cutoff, tol):
         """Test if n_mode_gate is compatable with single and two-mode gate in tfbackend"""
         #single mode gate
         _pure = True
