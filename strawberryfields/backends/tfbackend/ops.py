@@ -487,7 +487,7 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
         return tf.stack(
             [
                 single_gaussian_gate_matrix(*choi_trick(S_, d_), cutoff, dtype=dtype.as_numpy_dtype)
-                for S_, d_ in tf.transpose([S, d])
+                for S_, d_ in zip(S, d)
             ]
         )
     return tf.convert_to_tensor(
@@ -786,7 +786,7 @@ def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     # "a": reserved for batching
     # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
     # matrix : out_1 out_2 ... in_1 in_2 ...
-    # *mode : Tuple(0,1,2,3,...)
+    # modes : Tuple(0,1,2,3,...)
     # in_modes : input state
     if batched:
         offset = 1
@@ -1028,7 +1028,7 @@ def two_mode_squeeze(
     return output
 
 
-def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
+def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
     if not is_symplectic(S.numpy(), rtol=0.00001, atol=0):
         raise ValueError("The matrix S is not symplectic")
@@ -1037,7 +1037,7 @@ def gaussian_gate(S, d, *modes, in_modes, cutoff, pure=True, batched=False, dtyp
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
-    output = n_mode_gate(matrix, *modes, in_modes=in_modes, pure=pure, batched=batched)
+    output = n_mode_gate(matrix, modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
 
 
