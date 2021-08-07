@@ -338,6 +338,17 @@ class BaseBackend:
         """
         raise NotImplementedError
 
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        """Apply the Mach-Zehnder interferometer operation to the specified modes.
+
+        Args:
+            phi_in (float): internal phase
+            phi_ex (float): external phase
+            mode1 (int): first mode that MZ interferometer acts on
+            mode2 (int): second mode that MZ interferometer acts on
+        """
+        raise NotImplementedError
+
     def loss(self, T, mode):
         r"""Perform a loss channel operation on the specified mode.
 
