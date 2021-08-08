@@ -138,8 +138,6 @@ class Program:
     def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
-        #: str: program type
-        self.type = None
         #: list[Command]: Commands constituting the quantum circuit in temporal order
         self.circuit = []
         #: bool: if True, no more Commands can be appended to the Program
