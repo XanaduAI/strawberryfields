@@ -141,6 +141,9 @@
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
+* Added native support in the Fock backends for the MZgate
+  [#610](https://github.com/XanaduAI/strawberryfields/issues/610)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -169,7 +172,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Bulmer, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
+Jake Bulmer, Sebastian Duque, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
