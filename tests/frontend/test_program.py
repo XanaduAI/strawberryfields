@@ -720,7 +720,7 @@ class TestValidation:
         new_prog = prog.compile(compiler=DummyCircuit())
 
         # check compiled program now has 5 gates
-        # the S2gate should decompose into two BS and two Sgates
+        # the MZgate should decompose into two BS and two Rgates
         assert len(new_prog) == 5
 
         # test gates are correct
