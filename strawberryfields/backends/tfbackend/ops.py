@@ -833,7 +833,6 @@ def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
         index_in_modes = indices_full[1 : 1 + 2 * num_modes]
         index_in_state = ""
         index_in_state_rest = ""
-        # *modes starts from 1 in this case.
         for i in range(num_modes):
             if i in modes:
                 index_in_state += indices_full[2 * i + 1] + indices_full[2 * i + 2]

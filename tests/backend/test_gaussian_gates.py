@@ -43,11 +43,10 @@ class TestUnitaryFunctionRelated:
         assert np.allclose(_C, expected_C, atol=tol, rtol=0)
         assert np.allclose(_mu, expected_mu, atol=tol, rtol=0)
         assert np.allclose(_Sigma, expected_Sigma, atol=tol, rtol=0)
-    
+
     @pytest.mark.parametrize("cutoff", [5,7])
-    def test_n_mode_gate(self, cutoff, tol):
-        """Test if n_mode_gate is compatable with single and two-mode gate in tfbackend"""
-        #single mode gate
+    def test_n_mode_gate_with_single_mode_gate(self, cutoff, tol):
+        """Test if n_mode_gate is compatable with single_mode_gate in case of pure=True/False and batched=True/False"""
         _pure = True
         matrix = np.random.random((cutoff,cutoff))
         mode = 1
@@ -59,7 +58,7 @@ class TestUnitaryFunctionRelated:
         in_modes =  np.random.random((batch,cutoff,cutoff,cutoff,cutoff))
         _batched = True
         assert np.allclose(single_mode_gate(matrix, mode, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode, in_modes = in_modes, pure=_pure, batched=_batched))
-        
+
         _pure = False
         matrix = np.random.random((cutoff,cutoff))
         mode = 1
@@ -71,7 +70,11 @@ class TestUnitaryFunctionRelated:
         in_modes =  np.random.random((batch,cutoff,cutoff,cutoff,cutoff))
         _batched = True
         assert np.allclose(single_mode_gate(matrix, mode, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode, in_modes = in_modes, pure=_pure, batched=_batched))
-        #two mode gate
+
+
+    @pytest.mark.parametrize("cutoff", [5,7])
+    def test_n_mode_gate_with_two_mode_gate(self, cutoff, tol):
+        """Test if n_mode_gate is compatable with two_mode_gate in case of pure=True/False and batched=True/False"""
         _pure = True
         matrix = np.random.random((cutoff,cutoff,cutoff,cutoff))
         mode1 = 1
@@ -84,7 +87,7 @@ class TestUnitaryFunctionRelated:
         in_modes =  np.random.random((batch,cutoff,cutoff,cutoff,cutoff,cutoff,cutoff))
         _batched = True
         assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2,in_modes = in_modes, pure=_pure, batched=_batched))
-        
+
         _pure = False
         matrix = np.random.random((cutoff,cutoff,cutoff,cutoff))
         mode1 = 0
@@ -99,7 +102,7 @@ class TestUnitaryFunctionRelated:
         mode2 = 2
         _batched = True
         assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2,in_modes = in_modes, pure=_pure, batched=_batched))
-    
+
 from thewalrus.quantum.fock_tensors import fock_tensor
 from thewalrus.symplectic import sympmat
 
