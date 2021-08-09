@@ -186,7 +186,7 @@ def project_reset(modes, x, state, pure, n, trunc):
 
     def intersperse(lst):
         # pylint: disable=missing-docstring
-        return tuple([lst[i // 2] for i in range(len(lst) * 2)])
+        return tuple(lst[i // 2] for i in range(len(lst) * 2))
 
     if pure:
         ret = np.zeros([trunc for i in range(n)], dtype=def_type)

@@ -98,7 +98,7 @@ class ModeMap:
         if self.valid(modes):
             new_map = []
             ctr = 0
-            for m in range(len(self._map)):
+            for m, _ in enumerate(self._map):
                 if m in modes or self._map[m] is None:
                     new_map.append(None)
                 else:

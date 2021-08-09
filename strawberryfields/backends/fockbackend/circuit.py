@@ -24,7 +24,6 @@ import numpy as np
 from numpy import sqrt, pi
 from scipy.special import factorial as bang
 from numba import jit
-from numba.typed import List
 
 from . import ops
 
