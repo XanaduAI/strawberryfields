@@ -41,6 +41,8 @@ from thewalrus.fock_gradients import squeezing as squeezing_tw
 from thewalrus.fock_gradients import grad_squeezing as grad_squeezing_tw
 from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
+from thewalrus.fock_gradients import mzgate as mzgate_tw
+from thewalrus.fock_gradients import grad_mzgate as grad_mzgate_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 
@@ -350,6 +352,42 @@ def beamsplitter_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex64):
         )
     return tf.convert_to_tensor(
         single_beamsplitter_matrix(theta, phi, cutoff, dtype=dtype.as_numpy_dtype)
+    )
+
+
+@tf.custom_gradient
+def single_mzgate_matrix(phi_in, phi_ex, cutoff, dtype=tf.complex64.as_numpy_dtype):
+    """creates a single mode mzgate matrix"""
+    phi_in = phi_in.numpy()
+    phi_ex = phi_ex.numpy()
+
+    gate = mzgate_tw(phi_in, phi_ex, cutoff, dtype)
+    gate = np.transpose(gate, [0, 2, 1, 3])
+
+    def grad(dy):
+        Dtheta, Dphi = grad_mzgate_tw(np.transpose(gate, [0, 2, 1, 3]), phi_in, phi_ex)
+        Dtheta = np.transpose(Dtheta, [0, 2, 1, 3])
+        Dphi = np.transpose(Dphi, [0, 2, 1, 3])
+        grad_theta = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dtheta)))
+        grad_phi = tf.math.real(tf.reduce_sum(dy * tf.math.conj(Dphi)))
+        return grad_theta, grad_phi, None
+
+    return gate, grad
+
+
+def mzgate_matrix(phi_in, phi_ex, cutoff, batched=False, dtype=tf.complex64):
+    """creates a single mode mzgate matrix accounting for batching"""
+    phi_in = tf.cast(phi_in, dtype)
+    phi_ex = tf.cast(phi_ex, dtype)
+    if batched:
+        return tf.stack(
+            [
+                single_mzgate_matrix(phi_in_, phi_ex_, cutoff, dtype=dtype.as_numpy_dtype)
+                for phi_in_, phi_ex_ in tf.transpose([phi_in, phi_ex])
+            ]
+        )
+    return tf.convert_to_tensor(
+        single_mzgate_matrix(phi_in, phi_ex, cutoff, dtype=dtype.as_numpy_dtype)
     )
 
 
@@ -791,6 +829,17 @@ def beamsplitter(
     theta = tf.cast(theta, dtype)
     phi = tf.cast(phi, dtype)
     matrix = beamsplitter_matrix(theta, phi, cutoff, batched, dtype)
+    output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
+    return output
+
+
+def mzgate(
+    phi_in, phi_ex, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+):
+    """returns beamsplitter unitary matrix on specified input modes"""
+    phi_in = tf.cast(phi_in, dtype)
+    phi_ex = tf.cast(phi_ex, dtype)
+    matrix = mzgate_matrix(phi_in, phi_ex, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
 
