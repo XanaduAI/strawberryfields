@@ -469,11 +469,11 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
     gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
 
     @tf.function
-    def grad(dy):
+    def grad(dL_dG_conj):
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
-        grad_C = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dC)))
-        grad_y = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dy)))
-        grad_R = tf.math.real(tf.reduce_sum(dy * tf.math.conj(dG_dR)))
+        grad_C = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC)))
+        grad_y = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dy)))
+        grad_R = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dR)))
         return grad_C, grad_y, grad_R, None, None
 
     return gate, grad
