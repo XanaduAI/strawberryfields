@@ -804,7 +804,7 @@ class BosonicBackend(BaseBosonic):
             raise NotImplementedError(
                 "Bosonic backend currently does not support " "multiple shots"
             )
-        #if isinstance(modes, int):
+        # if isinstance(modes, int):
         #    modes = [modes]
         samples = []
         for mode in modes:
