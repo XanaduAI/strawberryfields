@@ -72,41 +72,6 @@ class TestTDMErrorRaising:
         with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
             singleloop(sq_r, alpha, phi, theta, shots)
 
-    def test_at_least_one_measurement(self):
-        """Checks circuit has at least one measurement operator"""
-        sq_r = 1.0
-        N = 3
-        shots = 1
-        alpha = [0] * 4
-        phi = [0] * 4
-        prog = tdmprogram.TDMProgram(N=N)
-        with pytest.raises(ValueError, match="Must be at least one measurement."):
-            with prog.context(alpha, phi, shift="default") as (p, q):
-                ops.Sgate(sq_r, 0) | q[2]
-                ops.BSgate(p[0]) | (q[1], q[2])
-                ops.Rgate(p[1]) | q[2]
-            eng = sf.Engine("gaussian")
-            eng.run(prog, shots=shots)
-
-    def test_spatial_modes_number_of_measurements_match(self):
-        """Checks number of spatial modes matches number of measurements"""
-        sq_r = 1.0
-        shots = 1
-        alpha = [0] * 4
-        phi = [0] * 4
-        theta = [0] * 4
-        with pytest.raises(
-            ValueError, match="Number of measurement operators must match number of spatial modes."
-        ):
-            prog = tdmprogram.TDMProgram(N=[3, 3])
-            with prog.context(alpha, phi, theta) as (p, q):
-                ops.Sgate(sq_r, 0) | q[2]
-                ops.BSgate(p[0]) | (q[1], q[2])
-                ops.Rgate(p[1]) | q[2]
-                ops.MeasureHomodyne(p[2]) | q[0]
-            eng = sf.Engine("gaussian")
-            result = eng.run(prog, shots=shots)
-
     def test_passing_list_of_tdmprograms(self):
         """Test that error is raised when passing a list containing TDM programs"""
         prog = tdmprogram.TDMProgram(N=2)
@@ -679,6 +644,7 @@ class TestTDMcompiler:
         with pytest.raises(CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
 
+
 class TestTDMProgramFunctions:
     """Test functions in the ``tdmprogram`` module"""
 
@@ -715,6 +681,7 @@ class TestTDMProgramFunctions:
         res = move_vac_modes(samples, N, crop=crop)
 
         assert np.all(res == expected)
+
 
 class TestEngineTDMProgramInteraction:
     """Test the Engine class and its interaction with TDMProgram instances."""
@@ -759,6 +726,24 @@ class TestEngineTDMProgramInteraction:
         assert results.samples.shape[0] == 2
         assert prog.run_options["shots"] == 5
 
+    def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
+        """Test that multiple shots work when having the number of timebins be
+        a non-multiple of the number of concurrent modes"""
+        theta = [0] * 3
+        shots = 2
+
+        prog = sf.TDMProgram(N=2)
+        with prog.context(theta) as (p, q):
+            ops.Xgate(50) | q[1]
+            ops.MeasureHomodyne(p[0]) | q[0]
+        eng = sf.Engine("gaussian")
+        res = eng.run(prog, shots=shots)
+        samples = res.samples
+
+        expected = np.array([[[0, 50, 50]], [[50, 50, 50]]])
+
+        assert np.allclose(samples, expected, atol=4)
+
 
 class TestTDMValidation:
     """Test the validation of TDMProgram against the device specs"""
@@ -796,7 +781,7 @@ class TestTDMValidation:
             },
         }
         return DeviceSpec("TD2", device_spec, connection=None)
-    
+
     @staticmethod
     def compile_test_program(device, args=(-1, 1, 2, 3)):
         """Compiles a test program with the given gate arguments."""
