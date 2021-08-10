@@ -803,6 +803,58 @@ class BosonicModes:
 
         return vals
 
+    def measure_threshold(self, modes, shots=1):
+        r"""Performs photon number measurement on the given modes"""
+        if len(modes) == 1:
+            if self.active[modes[0]] is None:
+                raise ValueError("Cannot apply measurement, mode does not exist")
+
+            Idmat = self.hbar * np.eye(2) / 2
+            vacuum_fidelity = np.abs(self.fidelity_vacuum(modes))
+            measurement = np.random.choice((0, 1), p=[vacuum_fidelity, 1 - vacuum_fidelity])
+            samples = np.array([[measurement]])
+
+            # If there are no more modes to measure simply set everything to vacuum
+            if len(modes) == len(self.active):
+                for mode in modes:
+                    self.loss(0, mode)
+            # If there are other active modes simply update based on measurement
+            else:
+                mode_ind = np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
+                sigma_A, sigma_AB, sigma_B = ops.chop_in_blocks_multi(self.covs, mode_ind)
+                sigma_A_prime = sigma_A - sigma_AB @ np.linalg.inv(
+                    sigma_B + Idmat
+                ) @ sigma_AB.transpose(0, 2, 1)
+                r_A, r_B = ops.chop_in_blocks_vector_multi(
+                    self.means, np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
+                )
+                r_A_prime = r_A - np.einsum(
+                    "...ij,...j", sigma_AB @ np.linalg.inv(sigma_B + Idmat), r_B
+                )
+                if measurement == 1:
+                    self.means = np.append(
+                        ops.reassemble_vector_multi(r_A, mode_ind),
+                        ops.reassemble_vector_multi(r_A_prime, mode_ind),
+                        axis=0,
+                    )
+                    self.covs = np.append(
+                        ops.reassemble_multi(sigma_A, mode_ind),
+                        ops.reassemble_multi(sigma_A_prime, mode_ind),
+                        axis=0,
+                    )
+                    self.weights = np.append(
+                        self.weights / (1 - vacuum_fidelity),
+                        self.weights * (vacuum_fidelity / (vacuum_fidelity - 1)),
+                        axis=0,
+                    )
+                else:
+                    self.covs = ops.reassemble_multi(sigma_A_prime, mode_ind)
+                    self.means = ops.reassemble_vector_multi(r_A_prime, mode_ind)
+                    self.weights = self.weights #/ vacuum_fidelity
+            return samples
+
+        raise ValueError("Measure Threshold can only be applied to one mode at a time")
+
     def homodyne(self, mode, shots=1, eps=0.0002):
         r"""Performs an x-homodyne measurement on a mode, simulated by a generaldyne
         onto a highly squeezed state.

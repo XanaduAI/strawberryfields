@@ -52,6 +52,7 @@ def parameter_checker(parameters):
     return False
 
 
+# pylint: disable=abstract-method
 class BosonicBackend(BaseBosonic):
     r"""The BosonicBackend implements a simulation of quantum optical circuits
     in NumPy by representing states as linear combinations of Gaussian functions
@@ -797,7 +798,18 @@ class BosonicBackend(BaseBosonic):
         raise NotImplementedError("Bosonic backend does not yet support Fock measurements.")
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        raise NotImplementedError("Bosonic backend does not yet support threshold measurements.")
+        if select is not None:
+            raise NotImplementedError("Bosonic backend currently does not support " "postselection")
+        if shots != 1:
+            raise NotImplementedError(
+                "Bosonic backend currently does not support " "multiple shots"
+            )
+        if isinstance(modes, int):
+            modes = [modes]
+        samples = []
+        for mode in modes:
+            samples.append(self.circuit.measure_threshold([mode], shots))
+        return np.array([samples])
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.
