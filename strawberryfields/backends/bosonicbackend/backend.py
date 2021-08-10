@@ -808,7 +808,7 @@ class BosonicBackend(BaseBosonic):
             modes = [modes]
         samples = []
         for mode in modes:
-            samples.append(self.circuit.measure_threshold([mode], shots))
+            samples.append(self.circuit.measure_threshold([mode]))
         return np.array([samples])
 
     def state(self, modes=None, **kwargs):

@@ -803,7 +803,7 @@ class BosonicModes:
 
         return vals
 
-    def measure_threshold(self, modes, shots=1):
+    def measure_threshold(self, modes):
         r"""Performs photon number measurement on the given modes"""
         if len(modes) == 1:
             if self.active[modes[0]] is None:
