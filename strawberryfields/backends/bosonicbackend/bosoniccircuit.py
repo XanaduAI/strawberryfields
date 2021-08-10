@@ -850,7 +850,7 @@ class BosonicModes:
                 else:
                     self.covs = ops.reassemble_multi(sigma_A_prime, mode_ind)
                     self.means = ops.reassemble_vector_multi(r_A_prime, mode_ind)
-                    self.weights = self.weights #/ vacuum_fidelity
+                    self.weights = self.weights  # / vacuum_fidelity
             return samples
 
         raise ValueError("Measure Threshold can only be applied to one mode at a time")
