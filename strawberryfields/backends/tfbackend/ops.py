@@ -27,6 +27,7 @@ Contents
 
 """
 # pylint: disable=too-many-arguments
+import warnings
 
 from string import ascii_lowercase as indices
 from string import ascii_letters as indices_full
@@ -64,6 +65,17 @@ except ImportError:
     pass
 
 max_num_indices = len(indices)
+
+###################################################################
+
+# Warning message format
+
+def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+    """User warning formatter"""
+    # pylint: disable=unused-argument
+    return "{}:{}: {}: {}\n".format(filename, lineno, category.__name__, message)
+
+warnings.formatwarning = warning_on_one_line
 
 ###################################################################
 
@@ -470,6 +482,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
 
     @tf.function
     def grad(dL_dG_conj):
+        warning.warn("Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use update_symplectic for the optimization step.")
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
         grad_C = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC)))
         grad_y = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dy)))

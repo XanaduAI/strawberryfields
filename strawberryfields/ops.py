@@ -2250,9 +2250,7 @@ class Ggate(Gate):
     def __init__(self, S, d):
         super().__init__([S, d])
         self.ns = len(d)
-        warnings.warn(
-            "When you try to optimize the program with Ggate, you need to use the specific Optimizer <SymplecOpt> to update the symplectic matrix parameter!"
-        )
+
 
     def _apply(self, reg, backend, **kwargs):
         S, d = par_evaluate(self.p)
