@@ -141,7 +141,7 @@
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
-* Added native support in the Fock backends for the MZgate
+* Added native support in the Fock backends for the MZgate.
   [#610](https://github.com/XanaduAI/strawberryfields/issues/610)
 
 <h3>Breaking Changes</h3>
