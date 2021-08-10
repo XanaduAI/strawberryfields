@@ -107,12 +107,12 @@
 
   cov = eng.run(circuit).state.cov()
   ```
- 
+
 * A new compiler, ``passive``, allows for a circuit which only consists of passive
   elements to be compiled into a single ``PassiveChannel``.
   [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
 
-  ```python 
+  ```python
   from strawberryfields.ops import BSgate, LossChannel, Rgate
   import strawberryfields as sf
 
@@ -157,9 +157,13 @@
   by storing them as `blackbird.RegRefTransforms` in the resulting Blackbird program.
   [(#596)](https://github.com/XanaduAI/strawberryfields/pull/596)
 
-* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always 
-  used the wrong set of allowed gate parameter ranges to validate the parameters in a program. 
+* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always
+  used the wrong set of allowed gate parameter ranges to validate the parameters in a program.
   [(#605)](https://github.com/XanaduAI/strawberryfields/pull/605)
+
+* The correct samples are now returned when running a TDMProgram with several shots, where
+  `timebins % concurrent_modes != 0`.
+  [(#611)](https://github.com/XanaduAI/strawberryfields/pull/611)
 
 <h3>Documentation</h3>
 

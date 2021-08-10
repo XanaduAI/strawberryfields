@@ -585,7 +585,6 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 4
-        assert prog.type == "tdm"
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.7
         assert prog.circuit[0].op.p[1] == 0

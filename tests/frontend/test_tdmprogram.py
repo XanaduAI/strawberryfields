@@ -644,6 +644,7 @@ class TestTDMcompiler:
         with pytest.raises(CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
 
+
 class TestTDMProgramFunctions:
     """Test functions in the ``tdmprogram`` module"""
 
@@ -680,6 +681,7 @@ class TestTDMProgramFunctions:
         res = move_vac_modes(samples, N, crop=crop)
 
         assert np.all(res == expected)
+
 
 class TestEngineTDMProgramInteraction:
     """Test the Engine class and its interaction with TDMProgram instances."""
@@ -724,6 +726,24 @@ class TestEngineTDMProgramInteraction:
         assert results.samples.shape[0] == 2
         assert prog.run_options["shots"] == 5
 
+    def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
+        """Test that multiple shots work when having the number of timebins be
+        a non-multiple of the number of concurrent modes"""
+        theta = [0] * 3
+        shots = 2
+
+        prog = sf.TDMProgram(N=2)
+        with prog.context(theta) as (p, q):
+            ops.Xgate(50) | q[1]
+            ops.MeasureHomodyne(p[0]) | q[0]
+        eng = sf.Engine("gaussian")
+        res = eng.run(prog, shots=shots)
+        samples = res.samples
+
+        expected = np.array([[[0, 50, 50]], [[50, 50, 50]]])
+
+        assert np.allclose(samples, expected, atol=4)
+
 
 class TestTDMValidation:
     """Test the validation of TDMProgram against the device specs"""
@@ -761,7 +781,7 @@ class TestTDMValidation:
             },
         }
         return DeviceSpec("TD2", device_spec, connection=None)
-    
+
     @staticmethod
     def compile_test_program(device, args=(-1, 1, 2, 3)):
         """Compiles a test program with the given gate arguments."""
