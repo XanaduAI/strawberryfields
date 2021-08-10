@@ -35,7 +35,7 @@ class TestGaussianRepresentation:
             backend.measure_threshold([0, 1], shots=5)
 
 
-@pytest.mark.backends("gaussian")
+@pytest.mark.backends("gaussian", "bosonic")
 class TestRepresentationIndependent:
     """Basic implementation-independent tests."""
 
@@ -52,7 +52,6 @@ class TestRepresentationIndependent:
             backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_threshold(meas_modes)
-            print(meas_results)
             assert np.all(meas_results[0][0] == meas_results[0][1])
 
     def test_vacuum_measurements(self, setup_backend, pure):
