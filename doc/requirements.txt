@@ -14,5 +14,5 @@ sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2
 tensorflow==2.5.0
-thewalrus>=0.15.0
+http://xanadu-wheels.s3-website-us-east-1.amazonaws.com/thewalrus-0.16.0.dev0+20210730000214-cp38-cp38-manylinux2010_x86_64.whl#sha256=5eb17cd4530605ac05c96ba2033b6b413d97420e054d16182344128dfa6734f2
 toml
