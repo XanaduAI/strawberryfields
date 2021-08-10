@@ -657,13 +657,6 @@ class TestBosonicPrograms:
         with pytest.raises(NotApplicableError):
             backend.run_prog(prog)
 
-        prog = sf.Program(1)
-        with prog.context as q:
-            sf.ops.MeasureThreshold() | q[0]
-        backend = bosonic.BosonicBackend()
-        with pytest.raises(NotImplementedError):
-            backend.run_prog(prog)
-
     def test_non_initial_prep_error(self):
         """Tests that more than one non-Gaussian state preparations in the same mode
         raises an error."""
