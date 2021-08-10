@@ -2249,8 +2249,8 @@ class Ggate(Gate):
 
     def __init__(self, S, d):
         super().__init__([S, d])
-        self.ns = len(d)
-
+        #        self.ns = len(d)
+        self.ns = d.shape[0]
 
     def _apply(self, reg, backend, **kwargs):
         S, d = par_evaluate(self.p)

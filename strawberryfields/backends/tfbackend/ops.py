@@ -409,6 +409,7 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
+@tf.function
 def choi_trick(S, d, dtype=tf.complex64):
     """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
     m = S.shape[0] // 2
@@ -482,7 +483,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
     R = R.numpy()
     gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
 
-    @tf.function
+    #    @tf.function
     def grad(dL_dG_conj):
         warnings.warn(
             "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use update_symplectic for the optimization step."
@@ -491,7 +492,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
         grad_C = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC)))
         grad_y = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dy)))
         grad_R = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dR)))
-        return grad_C, grad_y, grad_R, None, None
+        return grad_R, grad_y, grad_C, None
 
     return gate, grad
 
