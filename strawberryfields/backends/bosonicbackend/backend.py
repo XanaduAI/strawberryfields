@@ -804,8 +804,8 @@ class BosonicBackend(BaseBosonic):
             raise NotImplementedError(
                 "Bosonic backend currently does not support " "multiple shots"
             )
-        if isinstance(modes, int):
-            modes = [modes]
+        #if isinstance(modes, int):
+        #    modes = [modes]
         samples = []
         for mode in modes:
             samples.append(self.circuit.measure_threshold([mode]))
