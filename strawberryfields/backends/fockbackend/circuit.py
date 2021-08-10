@@ -247,10 +247,8 @@ class Circuit:
             self._state = self._state.transpose(switch_list_1)
             self._state = self._state.transpose(switch_list_2)
 
-            if gate == "BSgate":
-                self._state = self._apply_BS(mat, self._state, self._trunc)
-            elif gate == "MZgate":
-                self._state = self._apply_MZ(mat, self._state, self._trunc)
+            if gate == "BSgate" or gate == "MZgate":
+                self._state = self._apply_two_mode_passive(mat, self._state, self._trunc)
             elif gate == "S2gate":
                 self._state = self._apply_S2(mat, self._state, self._trunc)
             else:
@@ -283,19 +281,12 @@ class Circuit:
             self._state = self._state.transpose(transpose_list)
             self._state = self._state.transpose(switch_list_1)
 
-            if gate == "BSgate":
-                self._state = self._apply_BS(mat, self._state, self._trunc)
+            if gate == "BSgate" or gate == "MZgate":
+                self._state = self._apply_two_mode_passive(mat, self._state, self._trunc)
                 self._state = self._state.transpose(switch_list_1)
 
                 self._state = self._state.transpose(switch_list_2)
-                self._state = self._apply_BS(mat.conj(), self._state, self._trunc)
-
-            elif gate == "MZgate":
-                self._state = self._apply_MZ(mat, self._state, self._trunc)
-                self._state = self._state.transpose(switch_list_1)
-
-                self._state = self._state.transpose(switch_list_2)
-                self._state = self._apply_MZ(mat.conj(), self._state, self._trunc)
+                self._state = self._apply_two_mode_passive(mat.conj(), self._state, self._trunc)
 
             elif gate == "S2gate":
                 self._state = self._apply_S2(mat, self._state, self._trunc)
@@ -315,7 +306,7 @@ class Circuit:
     # ignored in covtest (doesn't work well with the jit decorator)
     @staticmethod
     @jit(nopython=True)
-    def _apply_BS(mat, state, trunc):  # pragma: no cover
+    def _apply_two_mode_passive(mat, state, trunc):  # pragma: no cover
         r"""Applies the BS gate to the first bra in state.
 
         The beamsplitter matrix elements :math:`B_{ij}^{kl}` satisfy the selection
@@ -323,37 +314,6 @@ class Circuit:
 
         .. math::
             B_{ij}^{kl} \propto \delta_{i+j}^{k+l}
-
-        This implies that one can contract pure states (without loss of generality
-        we assume only two modes) using one less loop as follows:
-
-        .. math::
-            c'_{i, j} = \sum\limits_{k = \text{max}(1+i+j-n, 0)}
-                    ^{\text{min}(i+j, n-1) + 1}
-            B_{ik}^{j, i+j-k} c_{k, i+j-k}
-
-        where :math:`c_{kl}` is the tensor representing the two mode state and
-        :math:`n` is the cutoff in Fock space. Similarly for a mixed state it is
-        possible to do the update of the state using two less summations.
-        """
-        ret = np.zeros_like(state, dtype=np.complex128)
-        for i in range(trunc):
-            for j in range(trunc):
-                for k in range(max(1 + i + j - trunc, 0), min(i + j, trunc - 1) + 1):
-                    ret[i, j] += mat[i, k, j, i + j - k] * state[k, i + j - k]
-        return ret
-
-    # ignored in covtest (doesn't work well with the jit decorator)
-    @staticmethod
-    @jit(nopython=True)
-    def _apply_MZ(mat, state, trunc):  # pragma: no cover
-        r"""Applies the MZ gate to the first bra in state.
-
-        The Mach-Zehnder matrix elements :math:`B_{ij}^{kl}` satisfy the selection
-        rules
-
-        .. math::
-            MZ_{ij}^{kl} \propto \delta_{i+j}^{k+l}
 
         This implies that one can contract pure states (without loss of generality
         we assume only two modes) using one less loop as follows:
