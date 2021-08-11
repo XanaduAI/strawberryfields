@@ -15,6 +15,8 @@ r"""Unit tests for tdmprogram.py"""
 import copy
 from collections.abc import Iterable
 
+import inspect
+from strawberryfields.program_utils import CircuitError
 import pytest
 import numpy as np
 
@@ -69,41 +71,6 @@ class TestTDMErrorRaising:
         theta = [0, 0] + [0, np.pi / 2] + [np.pi / 2, 0] + [np.pi / 2]
         with pytest.raises(ValueError, match="Gate-parameter lists must be of equal length."):
             singleloop(sq_r, alpha, phi, theta, shots)
-
-    def test_at_least_one_measurement(self):
-        """Checks circuit has at least one measurement operator"""
-        sq_r = 1.0
-        N = 3
-        shots = 1
-        alpha = [0] * 4
-        phi = [0] * 4
-        prog = tdmprogram.TDMProgram(N=N)
-        with pytest.raises(ValueError, match="Must be at least one measurement."):
-            with prog.context(alpha, phi, shift="default") as (p, q):
-                ops.Sgate(sq_r, 0) | q[2]
-                ops.BSgate(p[0]) | (q[1], q[2])
-                ops.Rgate(p[1]) | q[2]
-            eng = sf.Engine("gaussian")
-            eng.run(prog, shots=shots)
-
-    def test_spatial_modes_number_of_measurements_match(self):
-        """Checks number of spatial modes matches number of measurements"""
-        sq_r = 1.0
-        shots = 1
-        alpha = [0] * 4
-        phi = [0] * 4
-        theta = [0] * 4
-        with pytest.raises(
-            ValueError, match="Number of measurement operators must match number of spatial modes."
-        ):
-            prog = tdmprogram.TDMProgram(N=[3, 3])
-            with prog.context(alpha, phi, theta) as (p, q):
-                ops.Sgate(sq_r, 0) | q[2]
-                ops.BSgate(p[0]) | (q[1], q[2])
-                ops.Rgate(p[1]) | q[2]
-                ops.MeasureHomodyne(p[2]) | q[0]
-            eng = sf.Engine("gaussian")
-            result = eng.run(prog, shots=shots)
 
     def test_passing_list_of_tdmprograms(self):
         """Test that error is raised when passing a list containing TDM programs"""
@@ -525,7 +492,7 @@ target = "TD2"
 tm = 4
 device_spec = {
     "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
-    "modes": {"concurrent": 2, "spatial": 1, "temporal": {"max": 100}},
+    "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
     "compiler": ["TD2"],
     "gate_parameters": {
         "p1": [0, [0, 6.283185307179586]],
@@ -555,7 +522,7 @@ class TestTDMcompiler:
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
         with pytest.raises(
-            sf.program_utils.CircuitError,
+            CircuitError,
             match="The gates or the order of gates used in the Program",
         ):
             prog.compile(device=device, compiler="TD2")
@@ -575,7 +542,7 @@ class TestTDMcompiler:
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
         with pytest.raises(
-            sf.program_utils.CircuitError, match="due to incompatible mode ordering."
+            CircuitError, match="due to incompatible mode ordering."
         ):
             prog.compile(device=device, compiler="TD2")
 
@@ -587,7 +554,7 @@ class TestTDMcompiler:
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameters_explicit_in_list(self):
@@ -601,7 +568,7 @@ class TestTDMcompiler:
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameter_second_argument(self):
@@ -620,7 +587,7 @@ class TestTDMcompiler:
             ops.Rgate(p[1]) | q[1]
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
-        with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameters_symbolic(self):
@@ -631,7 +598,7 @@ class TestTDMcompiler:
         phi = [0, np.pi / 2] * c
         theta = [0, 0] + [np.pi / 2, np.pi / 2]
         prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(sf.program_utils.CircuitError, match="due to incompatible parameter."):
+        with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_inconsistent_temporal_modes(self):
@@ -642,7 +609,7 @@ class TestTDMcompiler:
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
         prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(sf.program_utils.CircuitError, match="temporal modes, but the device"):
+        with pytest.raises(CircuitError, match="temporal modes, but the device"):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_inconsistent_concurrent_modes(self):
@@ -658,7 +625,7 @@ class TestTDMcompiler:
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
         prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(sf.program_utils.CircuitError, match="concurrent modes, but the device"):
+        with pytest.raises(CircuitError, match="concurrent modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
 
     def test_tdm_inconsistent_spatial_modes(self):
@@ -674,8 +641,9 @@ class TestTDMcompiler:
         phi = [0, np.pi / 2] * c
         theta = [0, 0] * c
         prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(sf.program_utils.CircuitError, match="spatial modes, but the device"):
+        with pytest.raises(CircuitError, match="spatial modes, but the device"):
             prog.compile(device=device1, compiler="TD2")
+
 
 class TestTDMProgramFunctions:
     """Test functions in the ``tdmprogram`` module"""
@@ -713,6 +681,7 @@ class TestTDMProgramFunctions:
         res = move_vac_modes(samples, N, crop=crop)
 
         assert np.all(res == expected)
+
 
 class TestEngineTDMProgramInteraction:
     """Test the Engine class and its interaction with TDMProgram instances."""
@@ -756,3 +725,85 @@ class TestEngineTDMProgramInteraction:
         results = eng.run(prog, shots=2)
         assert results.samples.shape[0] == 2
         assert prog.run_options["shots"] == 5
+
+    def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
+        """Test that multiple shots work when having the number of timebins be
+        a non-multiple of the number of concurrent modes"""
+        theta = [0] * 3
+        shots = 2
+
+        prog = sf.TDMProgram(N=2)
+        with prog.context(theta) as (p, q):
+            ops.Xgate(50) | q[1]
+            ops.MeasureHomodyne(p[0]) | q[0]
+        eng = sf.Engine("gaussian")
+        res = eng.run(prog, shots=shots)
+        samples = res.samples
+
+        expected = np.array([[[0, 50, 50]], [[50, 50, 50]]])
+
+        assert np.allclose(samples, expected, atol=4)
+
+
+class TestTDMValidation:
+    """Test the validation of TDMProgram against the device specs"""
+    @pytest.fixture(scope="class")
+    def device(self):
+        target = "TD2"
+        tm = 4
+        layout = f"""
+            name template_tdm
+            version 1.0
+            target {target} (shots=1)
+            type tdm (temporal_modes=2)
+            float array p0[1, {tm}] =
+                {{rs_array}}
+            float array p1[1, {tm}] =
+                {{r_array}}
+            float array p2[1, {tm}] =
+                {{bs_array}}
+            float array p3[1, {tm}] =
+                {{m_array}}
+            Sgate(p0) | 1
+            Rgate(p1) | 0
+            BSgate(p2, 0) | (0, 1)
+            MeasureHomodyne(p3) | 0
+        """
+        device_spec = {
+            "layout": inspect.cleandoc(layout),
+            "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
+            "compiler": [target],
+            "gate_parameters": {
+                "p0": [-1],
+                "p1": [1],
+                "p2": [2],
+                "p3": [3],
+            },
+        }
+        return DeviceSpec("TD2", device_spec, connection=None)
+
+    @staticmethod
+    def compile_test_program(device, args=(-1, 1, 2, 3)):
+        """Compiles a test program with the given gate arguments."""
+        alpha = [args[1]]
+        beta = [args[2]]
+        gamma = [args[3]]
+        prog = tdmprogram.TDMProgram(N=2)
+        with prog.context(alpha, beta, gamma) as (p, q):
+            ops.Sgate(args[0]) | q[1]  # Note that the Sgate has a second parameter that is non-zero
+            ops.Rgate(p[0]) | q[0]
+            ops.BSgate(p[1]) | (q[0], q[1])
+            ops.MeasureHomodyne(p[2]) | q[0]
+        prog.compile(device=device, compiler=device.compiler)
+
+    def test_validation_correct_args(self, device):
+        """Test that no error is raised when the tdm circuit explicit parameters within the allowed ranges"""
+        self.compile_test_program(device, args=(-1, 1, 2, 3))
+
+    @pytest.mark.parametrize("incorrect_index", list(range(4)))
+    def test_validation_incorrect_args(self, device, incorrect_index):
+        """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
+        args = [-1, 1, 2, 3]
+        args[incorrect_index] = -999
+        with pytest.raises(CircuitError, match="Parameter has value '-999' while its valid range is "):
+            self.compile_test_program(device, args=args)

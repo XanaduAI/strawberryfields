@@ -652,6 +652,24 @@ class BaseGaussian(BaseBackend):
         """
         raise NotImplementedError
 
+    def passive(self, T, modes):
+        r"""
+        Perform an arbitrary multimode passive operation
+
+        Args:
+            T (array): an NxN matrix acting on a N mode state
+            modes (int or Sequence[int]): Which modes to prepare the state in.
+
+        .. details::
+
+            Acts the following transformation on the state:
+
+            .. math::
+                a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
+
+        """
+        raise NotImplementedError
+
     def get_cutoff_dim(self):
         raise NotApplicableError
 

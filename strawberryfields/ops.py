@@ -25,11 +25,12 @@ import numpy as np
 from scipy.linalg import block_diag
 import scipy.special as ssp
 
+from thewalrus.symplectic import xxpp_to_xpxp
+
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
 import strawberryfields.decompositions as dec
 from .backends.states import BaseFockState, BaseGaussianState, BaseBosonicState
-from .backends.shared_ops import changebasis
 from .program_utils import Command, RegRef, MergeFailure
 from .parameters import (
     par_regref_deps,
@@ -390,9 +391,11 @@ class Channel(Transformation):
         # channels can be merged if they are the same class and share all the other parameters
         if self.p[1:] == other.p[1:]:
             # determine the combined first parameter
-            T = self.p[0] * other.p[0]
+
+            T = np.dot(other.p[0], self.p[0])
             # if one, replace with the identity
-            if T == 1:
+            T_arr = np.atleast_2d(T)
+            if np.allclose(T_arr, np.eye(T_arr.shape[0])):
                 return None
 
             # return a copy
@@ -867,8 +870,9 @@ class Catstate(Preparation):
         N = temp / pf.sqrt(2 * (1 + pf.cos(phi) * temp ** 4))
 
         # coherent states
-        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
-        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
+        # Need to cast  alpha to float before exponentiation to avoid overflow
+        c1 = ((1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
+        c2 = ((-1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
         # add them up with a relative phase
         ket = (c1 + pf.exp(1j * phi) * c2) * N
 
@@ -1246,7 +1250,7 @@ class MeasureHeterodyne(Measurement):
     \frac{1}{\pi}\bra{\vec{\alpha}}\rho\ket{\vec{\alpha}}`.
     The measured mode is reset to the vacuum state.
 
-    .. warning:: The heterodyne measurement can only be performed in the Gaussian backend.
+    .. warning:: The heterodyne measurement can only be performed in the Gaussian or Bosonic backends.
 
     Args:
         select (None, complex): (Optional) desired values of measurement result.
@@ -1416,6 +1420,31 @@ class MSgate(Channel):
         s = np.sqrt(sf.hbar / 2)
         ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
         return ancilla_val / s
+
+
+class PassiveChannel(Channel):
+    r"""Perform an arbitrary multimode passive operation
+
+    Args:
+        T (array): an NxN matrix acting on a N mode state
+
+    .. details::
+
+        Acts the following transformation on the state:
+
+        .. math::
+            a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
+
+    """
+
+    def __init__(self, T):
+        T = np.atleast_2d(T)
+        super().__init__([T])
+        self.ns = T.shape[0]
+
+    def _apply(self, reg, backend, **kwargs):
+        p = par_evaluate(self.p)
+        backend.passive(p[0], reg)
 
 
 # ====================================================================
@@ -1917,6 +1946,23 @@ class MZgate(Gate):
         ]
 
 
+class sMZgate(Gate):
+    r"""Symmetric Mach-Zehnder interferometer"""
+    ns = 2
+
+    def __init__(self, phi_in, phi_ex):
+        super().__init__([phi_in, phi_ex])
+
+    def _decompose(self, reg, **kwargs):
+        # into local phase shifts and two 50-50 beamsplitters
+        return [
+            Command(BSgate(np.pi / 4, np.pi / 2), reg),
+            Command(Rgate(self.p[1] - np.pi / 2), reg[1]),
+            Command(Rgate(self.p[0] - np.pi / 2), reg[0]),
+            Command(BSgate(np.pi / 4, np.pi / 2), reg),
+        ]
+
+
 class S2gate(Gate):
     r"""Two-mode squeezing gate.
 
@@ -2305,6 +2351,47 @@ class All(MetaOperation):
 # ====================================================================
 
 
+def _rectangular_compact_cmds(reg, phases):
+    cmds = []
+    m = phases["m"]
+    for j in range(0, m - 1, 2):
+        phi = phases["phi_ins"][j]
+        cmds.append(Command(Rgate(phi), reg[j]))
+    for layer in range(m):
+        if (layer + m + 1) % 2 == 0:
+            phi_bottom = phases["phi_edges"][m - 1, layer]
+            cmds.append(Command(Rgate(phi_bottom), reg[m - 1]))
+        for mode in range(layer % 2, m - 1, 2):
+            delta = phases["deltas"][mode, layer]
+            sigma = phases["sigmas"][mode, layer]
+            phi1 = sigma + delta
+            phi2 = sigma - delta
+            cmds.append(Command(sMZgate(phi1, phi2), (reg[mode], reg[mode + 1])))
+    for j, phi_j in phases["phi_outs"].items():
+        cmds.append(Command(Rgate(phi_j), reg[j]))
+    return cmds
+
+
+def _triangular_compact_cmds(reg, phases):
+    cmds = []
+    m = phases["m"]
+    for j in range(m - 1):
+        phi_j = phases["phi_ins"][j]
+        cmds.append(Command(Rgate(phi_j), reg[j + 1]))
+        for k in range(j + 1):
+            n = j - k
+            delta = phases["deltas"][n, k]
+            sigma = phases["sigmas"][n, k]
+            phi1 = sigma + delta
+            phi2 = sigma - delta
+            cmds.append(Command(sMZgate(phi1, phi2), (reg[n], reg[n + 1])))
+
+    for j in range(m):
+        zeta = phases["zetas"][j]
+        cmds.append(Command(Rgate(zeta), reg[j]))
+    return cmds
+
+
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
@@ -2333,6 +2420,10 @@ class Interferometer(Decomposition):
       To instead decompose the interferometer using the :class:`~.ops.MZgate`,
       use ``mesh='rectangular_symmetric'``.
 
+      To use the compact rectangular decomposition of Bell and Walmsley
+      (arXiv:2104.0756), use
+      ``mesh='rectangular_compact'``.
+
     * ``mesh='triangular'``: uses the scheme described in :cite:`reck1994`,
       resulting in a *triangular* array of :math:`M(M-1)/2` beamsplitters:
 
@@ -2340,6 +2431,9 @@ class Interferometer(Decomposition):
           :align: center
           :width: 30%
           :target: javascript:void(0);
+
+      To use the compact triangular decomposition, use
+      ``mesh='triangular_compact'``.
 
       Local phase shifts appear at the end of the beamsplitter array.
 
@@ -2358,7 +2452,13 @@ class Interferometer(Decomposition):
               placed after all interferometers, and all beamsplitters decomposed into
               pairs of symmetric beamsplitters and phase shifters
 
+            - ``rectangular_compact'`` - rectangular mesh, with two independant phase shifts
+              placed inside each MZI, extra phase shifts on edges and at the input and output.
+
             - ``'triangular'`` - triangular mesh
+
+            - ``'triangular_compact'`` - triangular mesh, with two independant phase shifts
+              placed inside each MZI.
 
         drop_identity (bool): If ``True``, decomposed gates with trivial parameters,
             such that they correspond to an identity operation, are removed.
@@ -2405,6 +2505,8 @@ class Interferometer(Decomposition):
             "rectangular_phase_end",
             "rectangular_symmetric",
             "triangular",
+            "rectangular_compact",
+            "triangular_compact",
         }
 
         if mesh not in allowed_meshes:
@@ -2415,13 +2517,22 @@ class Interferometer(Decomposition):
         self.identity = np.allclose(U, np.identity(len(U)), atol=_decomposition_merge_tol, rtol=0)
 
     def _decompose(self, reg, **kwargs):
+        # pylint: disable=too-many-branches
         mesh = kwargs.get("mesh", self.mesh)
         tol = kwargs.get("tol", self.tol)
         drop_identity = kwargs.get("drop_identity", self.drop_identity)
 
         cmds = []
 
-        if not self.identity or not drop_identity:
+        if mesh == "rectangular_compact":
+            phases = dec.rectangular_compact(self.p[0], rtol=tol, atol=tol)
+            cmds = _rectangular_compact_cmds(reg, phases)
+
+        elif mesh == "triangular_compact":
+            phases = dec.triangular_compact(self.p[0], rtol=tol, atol=tol)
+            cmds = _triangular_compact_cmds(reg, phases)
+
+        elif not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
             BS1, R, BS2 = decomp_fn(self.p[0], tol=tol)
 
@@ -2850,7 +2961,7 @@ class Gaussian(Preparation, Decomposition):
         D = np.diag(V)
         is_diag = np.all(V == np.diag(D))
 
-        BD = changebasis(self.ns) @ V @ changebasis(self.ns).T
+        BD = xxpp_to_xpxp(V)
         BD_modes = [BD[i * 2 : (i + 1) * 2, i * 2 : (i + 1) * 2] for i in range(BD.shape[0] // 2)]
         is_block_diag = (not is_diag) and np.all(BD == block_diag(*BD_modes))
 
@@ -2932,7 +3043,7 @@ one_args_gates = (Xgate, Zgate, Rgate, Pgate, Vgate, Kgate, CXgate, CZgate, CKga
 two_args_gates = (Dgate, Sgate, BSgate, MZgate, S2gate)
 gates = zero_args_gates + one_args_gates + two_args_gates
 
-channels = (LossChannel, ThermalLossChannel, MSgate)
+channels = (LossChannel, ThermalLossChannel, MSgate, PassiveChannel)
 
 simple_state_preparations = (
     Vacuum,

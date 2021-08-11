@@ -17,6 +17,9 @@ import pytest
 import numpy as np
 from scipy.linalg import qr, block_diag
 
+from thewalrus.symplectic import rotation as rot
+from thewalrus.symplectic import xpxp_to_xxpp, xxpp_to_xpxp
+
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import (
@@ -26,13 +29,8 @@ from strawberryfields.utils import (
     squeezed_state,
 )
 from strawberryfields import ops
-from strawberryfields.backends.shared_ops import (
-    haar_measure,
-    changebasis,
-    rotation_matrix as rot,
-)
 
-
+from strawberryfields.utils import random_interferometer as haar_measure
 # make the test file deterministic
 np.random.seed(42)
 
@@ -223,6 +221,38 @@ class TestGaussianBackendDecompositions:
         O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
+    def test_interferometer_rectangular_compact(self, setup_eng, tol):
+        """Test applying an interferometer using rectangular compact mesh"""
+        eng, p1 = setup_eng(3)
+
+        with p1.context as q:
+            ops.All(ops.Squeezed(0.5)) | q
+        init = eng.run(p1).state
+
+        p2 = sf.Program(p1)
+        with p2.context as q:
+            ops.Interferometer(u1, mesh='rectangular_compact') | q
+
+        state = eng.run(p2).state
+        O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
+        assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
+
+    def test_interferometer_triangular_compact(self, setup_eng, tol):
+        """Test applying an interferometer using triangular compact mesh"""
+        eng, p1 = setup_eng(3)
+
+        with p1.context as q:
+            ops.All(ops.Squeezed(0.5)) | q
+        init = eng.run(p1).state
+
+        p2 = sf.Program(p1)
+        with p2.context as q:
+            ops.Interferometer(u1, mesh='triangular_compact') | q
+
+        state = eng.run(p2).state
+        O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
+        assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
+
     def test_identity_interferometer(self, setup_eng, tol):
         """Test that applying an identity interferometer does nothing"""
         prog = sf.Program(3)
@@ -294,8 +324,7 @@ class TestGaussianBackendPrepareState:
         r = 0.1
         phi = 0.2312
         v1 = (hbar / 2) * np.diag([np.exp(-r), np.exp(r)])
-        A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
+        cov = xpxp_to_xxpp(block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3))
 
         with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
@@ -303,19 +332,6 @@ class TestGaussianBackendPrepareState:
         state = eng.run(prog).state
         assert np.allclose(state.cov(), cov, atol=tol)
 
-def from_xp(num_modes):
-    r"""Provides array of indices to order quadratures as (x1,p1,...,xn,pn)
-    starting from all x followed by all p i.e., (x1,...,xn,p1,..., pn).
-
-    Args:
-        num_modes (int): number of modes
-
-    Returns:
-        list: quadrature ordering for (x1,p1,...,xn,pn)
-    """
-    perm_inds_list = [(i, i + num_modes) for i in range(num_modes)]
-    perm_inds = [a for tup in perm_inds_list for a in tup]
-    return perm_inds
 
 @pytest.mark.backends("bosonic")
 class TestBosonicBackendPrepareState:
@@ -330,7 +346,7 @@ class TestBosonicBackendPrepareState:
 
         state = eng.run(prog).state
         
-        indices = from_xp(3)
+        indices = xxpp_to_xpxp(np.arange(2 * 3))
         cov = cov[:,indices][indices,:]
         assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
         assert np.all(state.means() == np.zeros((1,6)))
@@ -347,7 +363,7 @@ class TestBosonicBackendPrepareState:
 
         state = eng.run(prog).state
             
-        indices = from_xp(3)
+        indices = xxpp_to_xpxp(np.arange(2 * 3))
         cov = cov[:,indices][indices,:]
         assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
@@ -362,7 +378,7 @@ class TestBosonicBackendPrepareState:
 
         state = eng.run(prog).state
             
-        indices = from_xp(3)
+        indices = xxpp_to_xpxp(np.arange(2 * 3))
         cov = cov[:,indices][indices,:]
         means = means[indices]
         assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
@@ -378,7 +394,7 @@ class TestBosonicBackendPrepareState:
 
         state = eng.run(prog).state
             
-        indices = from_xp(3)
+        indices = xxpp_to_xpxp(np.arange(2 * 3))
         cov = cov[:,indices][indices,:]
         assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
@@ -389,15 +405,14 @@ class TestBosonicBackendPrepareState:
         r = 0.1
         phi = 0.2312
         v1 = (hbar / 2) * np.diag([np.exp(-r), np.exp(r)])
-        A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
+        cov = xpxp_to_xxpp(block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3))
 
         with prog.context as q:
             ops.Gaussian(cov, decomp=False) | q
 
         state = eng.run(prog).state
             
-        indices = from_xp(3)
+        indices = xxpp_to_xpxp(np.arange(2 * 3))
         cov = cov[:,indices][indices,:]
         assert np.allclose(state.covs(), np.expand_dims(cov,axis=0), atol=tol)
 
@@ -464,8 +479,7 @@ class TestGaussianBackendDecomposeState:
         r = 0.1
         phi = 0.2312
         v1 = (hbar / 2) * np.diag([np.exp(-r), np.exp(r)])
-        A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
+        cov = xpxp_to_xxpp(block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3))
 
         with prog.context as q:
             ops.Gaussian(cov) | q
@@ -536,8 +550,7 @@ class TestFockBackendDecomposeState:
         in_state = squeezed_state(r, phi, basis="fock", fock_dim=cutoff)
 
         v1 = (hbar / 2) * np.diag([np.exp(-2 * r), np.exp(2 * r)])
-        A = changebasis(3)
-        cov = A.T @ block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3) @ A
+        cov = xpxp_to_xxpp(block_diag(*[rot(phi) @ v1 @ rot(phi).T] * 3))
 
         with prog.context as q:
             ops.Gaussian(cov) | q
@@ -617,7 +630,7 @@ class TestDecompositionsGaussianGates:
             assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
             
         elif eng.backend_name == "bosonic":
-            indices = from_xp(2)
+            indices = xxpp_to_xpxp(np.arange(2 * 2))
             Vexpected = Vexpected[:,indices][indices,:]
             rexpected = rexpected[indices]
             assert np.allclose(state.covs(), np.expand_dims(Vexpected,axis=0), atol=tol, rtol=0)
@@ -655,7 +668,7 @@ class TestDecompositionsGaussianGates:
             assert np.allclose(state.means(), rexpected, atol=tol, rtol=0)
             
         elif eng.backend_name == "bosonic":
-            indices = from_xp(2)
+            indices = xxpp_to_xpxp(np.arange(2 * 2))
             Vexpected = Vexpected[:,indices][indices,:]
             rexpected = rexpected[indices]
             assert np.allclose(state.covs(), np.expand_dims(Vexpected,axis=0), atol=tol, rtol=0)

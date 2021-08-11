@@ -41,6 +41,7 @@ class Gaussian(Compiler):
         # channels
         "LossChannel",
         "ThermalLossChannel",
+        "PassiveChannel",
         # single mode gates
         "Dgate",
         "Sgate",
@@ -59,6 +60,7 @@ class Gaussian(Compiler):
         "CXgate": {},
         "CZgate": {},
         "MZgate": {},
+        "sMZgate": {},
         "Xgate": {},
         "Zgate": {},
         "Fouriergate": {},

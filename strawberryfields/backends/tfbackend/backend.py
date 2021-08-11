@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
 from .circuit import Circuit
-from .ops import mixed, partial_trace, reorder_modes
+from .ops import mix, partial_trace, reorder_modes
 from .states import FockStateTF
 
 
@@ -82,10 +82,13 @@ class TFBackend(BaseFock):
                 For each mode, the simulator can represent the Fock states :math:`\ket{0}, \ket{1}, \ldots, \ket{\text{cutoff_dim}-1}`.
             pure (bool): If True (default), use a pure state representation (otherwise will use a mixed state representation).
             batch_size (None or int): Size of the batch-axis dimension. If None, no batch-axis will be used.
+            dtype (tf.DType): Complex Tensorflow Tensor type representation, either ``tf.complex64`` (default) or ``tf.complex128``.
+                Note, ``tf.complex128`` will increase memory usage substantially.
         """
         cutoff_dim = kwargs.get("cutoff_dim", None)
         pure = kwargs.get("pure", True)
         batch_size = kwargs.get("batch_size", None)
+        dtype = kwargs.get("dtype", tf.complex64)
 
         if cutoff_dim is None:
             raise ValueError("Argument 'cutoff_dim' must be passed to the TensorFlow backend")
@@ -96,6 +99,8 @@ class TFBackend(BaseFock):
             raise ValueError("Argument 'cutoff_dim' must be a positive integer")
         if not isinstance(pure, bool):
             raise ValueError("Argument 'pure' must be either True or False")
+        if not dtype in (tf.complex64, tf.complex128):
+            raise ValueError("Argument 'dtype' must be a complex Tensorflow DType")
         if batch_size == 1:
             raise ValueError(
                 "batch_size of 1 not supported, please use different batch_size or set batch_size=None"
@@ -103,7 +108,7 @@ class TFBackend(BaseFock):
 
         with tf.name_scope("Begin_circuit"):
             self._modemap = ModeMap(num_subsystems)
-            circuit = Circuit(num_subsystems, cutoff_dim, pure, batch_size)
+            circuit = Circuit(num_subsystems, cutoff_dim, pure, batch_size, dtype)
 
         self._init_modes = num_subsystems
         self.circuit = circuit
@@ -231,6 +236,7 @@ class TFBackend(BaseFock):
             pure = self.circuit.state_is_pure
             num_modes = self.circuit.num_modes
             batched = self.circuit.batched
+            dtype = self.circuit.dtype
 
             # reduce rho down to specified subsystems
             if modes is None:
@@ -249,7 +255,7 @@ class TFBackend(BaseFock):
 
                 if pure:
                     # convert to mixed state representation
-                    reduced_state = mixed(s, batched)
+                    reduced_state = mix(s, batched)
                     pure = False
                 else:
                     reduced_state = s
@@ -271,7 +277,13 @@ class TFBackend(BaseFock):
 
             modenames = ["q[{}]".format(i) for i in np.array(self.get_modes())[modes]]
             state_ = FockStateTF(
-                s, len(modes), pure, self.circuit.cutoff_dim, batched=batched, mode_names=modenames
+                s,
+                len(modes),
+                pure,
+                self.circuit.cutoff_dim,
+                batched=batched,
+                mode_names=modenames,
+                dtype=dtype,
             )
         return state_
 

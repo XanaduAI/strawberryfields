@@ -15,6 +15,7 @@ r"""Unit tests for engine.py"""
 import pytest
 import numpy as np
 
+tf = pytest.importorskip("tensorflow", minversion="2.0")
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
@@ -43,12 +44,14 @@ batch_engines = [
     sf.Engine("gaussian", backend_options={"batch_size": 2, "cutoff_dim": 6}),
     sf.Engine("fock", backend_options={"batch_size": 2, "cutoff_dim": 6}),
     sf.Engine("tf", backend_options={"batch_size": 2, "cutoff_dim": 6}),
+    sf.Engine("tf", backend_options={"batch_size": 2, "cutoff_dim": 6, "dtype": tf.complex128}),
 ]
 
 engines = [
     sf.Engine("gaussian", backend_options={"cutoff_dim": 6}),
     sf.Engine("fock", backend_options={"cutoff_dim": 6}),
     sf.Engine("tf", backend_options={"cutoff_dim": 6}),
+    sf.Engine("tf", backend_options={"cutoff_dim": 6, "dtype": tf.complex128}),
 ]
 
 

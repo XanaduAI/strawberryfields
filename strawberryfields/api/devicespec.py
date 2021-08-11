@@ -23,6 +23,7 @@ from blackbird.error import BlackbirdSyntaxError
 
 import strawberryfields as sf
 from strawberryfields.compilers import Ranges
+from strawberryfields.tdm.tdmprogram import TDMProgram
 
 
 class DeviceSpec:
@@ -109,7 +110,7 @@ class DeviceSpec:
         if self.layout_is_formatted():
             return
 
-        if program.type == "tdm":
+        if isinstance(program, TDMProgram):
             self._spec["layout"] = self._spec["layout"].format(
                 target=self.target, tm=program.timebins
             )

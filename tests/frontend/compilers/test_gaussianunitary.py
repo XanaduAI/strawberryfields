@@ -19,6 +19,10 @@ import numpy as np
 import strawberryfields as sf
 import strawberryfields.ops as ops
 from strawberryfields.utils import random_symplectic
+from strawberryfields.compilers.gaussian_unitary import (
+    _apply_symp_one_mode_gate,
+    _apply_symp_two_mode_gate)
+from thewalrus.symplectic import expand, interferometer
 
 pytestmark = pytest.mark.frontend
 
@@ -45,8 +49,9 @@ def random_params(size, sq_bound, disp_bound):
 
 
 @pytest.mark.parametrize("depth", [1, 3, 6])
-@pytest.mark.parametrize("width", [5, 10, 15])
-def test_gaussian_program(depth, width):
+@pytest.mark.parametrize("width", [1, 2, 5, 10, 15])
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_gaussian_program(depth, width, compiler):
     """Tests that a circuit and its compiled version produce the same Gaussian state"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
@@ -60,7 +65,7 @@ def test_gaussian_program(depth, width):
             ops.Interferometer(V) | q
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -72,7 +77,8 @@ def test_gaussian_program(depth, width):
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
 @pytest.mark.parametrize("width", [5, 10])
-def test_symplectic_composition(depth, width):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_symplectic_composition(depth, width, compiler):
     """Tests that symplectic operations are composed correctly"""
     eng = sf.LocalEngine(backend="gaussian")
     eng1 = sf.LocalEngine(backend="gaussian")
@@ -83,12 +89,13 @@ def test_symplectic_composition(depth, width):
             S = random_symplectic(width, scale = 0.2)
             Snet = S @ Snet
             ops.GaussianTransform(S) | q
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     assert np.allclose(compiled_circuit.circuit[0].op.p[0], Snet)
 
 
 @pytest.mark.parametrize("depth", [1, 2, 3])
-def test_modes_subset(depth):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_modes_subset(depth, compiler):
     """Tests that the compiler recognizes which modes are not being modified and acts accordingly"""
 
     width = 10
@@ -104,7 +111,7 @@ def test_modes_subset(depth):
             for i, index in enumerate(indices):
                 ops.Sgate(s[i]) | q[index]
             ops.Interferometer(V) | tuple(q[i] for i in indices)
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -117,7 +124,8 @@ def test_modes_subset(depth):
     assert indices == sorted(list(indices))
 
 
-def test_non_primitive_gates():
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_non_primitive_gates(compiler):
     """Tests that the compiler is able to compile a number of non-primitive Gaussian gates"""
 
     width = 6
@@ -141,7 +149,8 @@ def test_non_primitive_gates():
         ops.Fourier | q[0]
         ops.Xgate(0.4) | q[1]
         ops.Zgate(0.5) | q[3]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+        ops.sMZgate(0.5,0.2) | (q[1], q[2])
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -151,10 +160,10 @@ def test_non_primitive_gates():
     assert np.allclose(mean, mean1)
 
 
-
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
-def test_displacements_only(depth, width):
+@pytest.mark.parametrize("compiler", ["gaussian_unitary", "gaussian_merge"])
+def test_displacements_only(depth, width, compiler):
     """Tests that a circuit and its compiled version produce
     the same Gaussian state when there are only displacements"""
     eng = sf.LocalEngine(backend="gaussian")
@@ -165,7 +174,7 @@ def test_displacements_only(depth, width):
             alphas = np.random.rand(width)+1j*np.random.rand(width)
             for i in range(width):
                 ops.Dgate(np.abs(alphas[i]), np.angle(alphas[i])) | q[i]
-    compiled_circuit = circuit.compile(compiler="gaussian_unitary")
+    compiled_circuit = circuit.compile(compiler=compiler)
     cv = eng.run(circuit).state.cov()
     mean = eng.run(circuit).state.means()
 
@@ -173,3 +182,37 @@ def test_displacements_only(depth, width):
     mean1 = eng1.run(compiled_circuit).state.means()
     assert np.allclose(cv, cv1)
     assert np.allclose(mean, mean1)
+
+
+@pytest.mark.parametrize("M", range(4, 8))
+def test_one_mode_gate_expand(M, tol):
+    """test _apply_symp_one_mode_gate applies correctly on a larger matrices"""
+    S = np.random.random((2*M, 2*M))
+    r = np.random.random(2*M)
+    S_G = interferometer(np.exp(1j * 0.3))
+
+    S1, r1 = _apply_symp_one_mode_gate(S_G, S.copy(), r.copy(), 1)
+   
+    S_G_expand = expand(S_G, [1], M)
+    S2 = S_G_expand @ S
+    r2 = S_G_expand @ r
+
+    assert np.allclose(S1, S2, atol=tol, rtol=0)
+    assert np.allclose(r1, r2, atol=tol, rtol=0)
+
+@pytest.mark.parametrize("M", range(4, 8))
+def test_two_mode_gate_expand(M, tol):
+    """test _apply_symp_two_mode_gate applies correctly"""
+    S = np.random.random((2*M, 2*M))
+    r = np.random.random(2*M)
+    S_G = interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2)))
+
+    S1, r1 = _apply_symp_two_mode_gate(S_G, S.copy(), r.copy(), 1, 3)
+   
+    S_G_expand = expand(S_G, [1, 3], M)
+    S2 = S_G_expand @ S
+    r2 = S_G_expand @ r
+
+    assert np.allclose(S1, S2, atol=tol, rtol=0)
+    assert np.allclose(r1, r2, atol=tol, rtol=0)
+

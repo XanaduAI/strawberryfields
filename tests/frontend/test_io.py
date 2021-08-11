@@ -322,8 +322,15 @@ class TestSFToBlackbirdConversion:
             ops.Zgate(2 * pf.sin(q[0].par)) | q[1]
 
         bb = io.to_blackbird(prog)
-        expected = {"op": "Zgate", "modes": [1], "args": ["2*sin(q0)"], "kwargs": {}}
-        assert bb.operations[-1] == expected
+        assert bb.operations[-1]["op"] == "Zgate"
+        assert bb.operations[-1]["modes"] == [1]
+
+        assert isinstance(bb.operations[-1]["args"][0], blackbird.RegRefTransform)
+        assert bb.operations[-1]["args"][0].func_str == "2*sin(q0)"
+        assert bb.operations[-1]["args"][0].regrefs == [0]
+
+        assert bb.operations[-1]["kwargs"] == {}
+
 
     def test_free_par_str(self):
         """Test a FreeParameter with some transformations converts properly"""
@@ -460,7 +467,6 @@ class TestBlackbirdToSFConversion:
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
 
-    @pytest.mark.skip("FIXME enable when blackbird.program.RegRefTransform is replaced with sympy.Symbol.")
     def test_gate_measured_par(self):
         """Test a gate with a MeasuredParameter argument."""
 
@@ -579,7 +585,6 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 4
-        assert prog.type == "tdm"
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.7
         assert prog.circuit[0].op.p[1] == 0

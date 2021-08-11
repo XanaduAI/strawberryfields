@@ -17,9 +17,10 @@ import pytest
 import numpy as np
 from scipy.stats import multivariate_normal
 
+from thewalrus.symplectic import rotation as rotm
+
 from strawberryfields import backends
 from strawberryfields import utils
-from strawberryfields.backends.shared_ops import rotation_matrix as rotm
 
 
 A = 0.3 + 0.1j
@@ -57,6 +58,27 @@ def test_vacuum(setup_backend, hbar, tol):
     backend = setup_backend(1)
     state = backend.state()
     W = state.wigner(0, XVEC, XVEC)
+
+    # exact wigner function
+    mu = [0, 0]
+    cov = np.identity(2) * hbar / 2.0
+    Wexact = wigner(GRID, mu, cov)
+
+    assert np.allclose(W, Wexact, atol=tol, rtol=0)
+
+
+def test_vacuum_one_point(setup_backend, hbar, tol):
+    """Test Wigner function for a Vacuum state is a standard
+    normal Gaussian at a single point"""
+    backend = setup_backend(1)
+    state = backend.state()
+    vec = np.array([0])
+    W = state.wigner(0, vec, vec)
+
+    X, P = np.meshgrid(vec, vec)
+    GRID = np.empty(X.shape + (2,))
+    GRID[:, :, 0] = X
+    GRID[:, :, 1] = P
 
     # exact wigner function
     mu = [0, 0]

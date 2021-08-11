@@ -240,7 +240,7 @@ class TestProgram:
             },
             "layout": None, "gate_parameters": {}, "compiler": [None]
         }
-        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+        spec = sf.api.DeviceSpec(target="simulon_gaussian", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -256,7 +256,7 @@ class TestProgram:
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect type of device spec mode entry."""
         device_dict = {"modes": 2, "layout": None, "gate_parameters": None, "compiler": [None]}
-        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+        spec = sf.api.DeviceSpec(target="simulon_gaussian", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -265,6 +265,53 @@ class TestProgram:
 
         with pytest.raises(KeyError, match="Have you specified the correct target?"):
             prog.assert_max_number_of_measurements(spec)
+    
+    def test_has_post_selection(self):
+        """Check that the ``has_post_selection`` property behaves as expected when it uses
+        post-selection or not.
+        """
+        # instantiate two programs for testing
+        prog_1, prog_2 = sf.Program(2), sf.Program(2)
+
+        # program with post-selection
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureHomodyne(select=0, phi=np.pi) | q[0]
+            ops.MeasureFock() | q[1]
+
+        # program without post-selection
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+        assert prog_1.has_post_selection
+        assert prog_2.has_post_selection is False
+
+    def test_has_feed_forward(self):
+        """Check that the ``has_feed_forward`` property behaves as expected when it uses
+        feed-forwarding or not.
+        """
+        # instantiate two programs for testing
+        prog_1, prog_2 = sf.Program(2), sf.Program(2)
+
+        # program with feed-forwarding
+        with prog_1.context as q:
+            ops.Sgate(0.54) | q[1]
+            ops.BSgate(0.42, 0.1) | (q[0], q[1])
+            ops.Sgate(q[0].par) | q[1]
+            ops.MeasureHeterodyne() | q[1]
+
+        # program without feed-forwarding
+        with prog_2.context as q:
+            ops.Sgate(0.54) | q[1]
+            ops.BSgate(0.42, 0.1) | (q[0], q[1])
+            ops.MeasureHomodyne(phi=np.pi) | q[1]
+        assert prog_1.has_feed_forward
+        assert prog_1.has_post_selection is False
+        assert prog_2.has_feed_forward is False
+        assert prog_2.has_post_selection is False
+
 
 class TestRegRefs:
     """Testing register references."""
@@ -500,7 +547,7 @@ class TestValidation:
             },
             "layout": None, "gate_parameters": {}, "compiler": [None]
         }
-        spec = sf.api.DeviceSpec(target="simulon", connection=None, spec=device_dict)
+        spec = sf.api.DeviceSpec(target="simulon_gaussian", connection=None, spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -675,7 +722,7 @@ class TestValidation:
         """Test that an exception is raised if the program
         contains a primitive not allowed on the circuit spec.
 
-        Here, we can simply use the guassian circuit spec and
+        Here, we can simply use the gaussian circuit spec and
         the Kerr gate as an existing example.
         """
         prog = sf.Program(3)
