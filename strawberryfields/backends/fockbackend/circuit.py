@@ -247,7 +247,7 @@ class Circuit:
             self._state = self._state.transpose(switch_list_1)
             self._state = self._state.transpose(switch_list_2)
 
-            if gate == "BSgate" or gate == "MZgate":
+            if gate in ("BSgate", "MZgate"):
                 self._state = self._apply_two_mode_passive(mat, self._state, self._trunc)
             elif gate == "S2gate":
                 self._state = self._apply_S2(mat, self._state, self._trunc)
@@ -281,7 +281,7 @@ class Circuit:
             self._state = self._state.transpose(transpose_list)
             self._state = self._state.transpose(switch_list_1)
 
-            if gate == "BSgate" or gate == "MZgate":
+            if gate in ("BSgate", "MZgate"):
                 self._state = self._apply_two_mode_passive(mat, self._state, self._trunc)
                 self._state = self._state.transpose(switch_list_1)
 
