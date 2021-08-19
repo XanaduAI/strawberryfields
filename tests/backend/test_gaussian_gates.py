@@ -81,12 +81,12 @@ class TestUnitaryFunctionRelated:
         mode2 = 2
         in_modes =  np.random.random((cutoff,cutoff,cutoff,cutoff))
         _batched = False
-        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2, in_modes = in_modes, pure=_pure, batched=_batched))
+        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, [mode1, mode2], in_modes = in_modes, pure=_pure, batched=_batched))
         batch = 3
         matrix = np.random.random((batch,cutoff,cutoff,cutoff,cutoff))
         in_modes =  np.random.random((batch,cutoff,cutoff,cutoff,cutoff,cutoff,cutoff))
         _batched = True
-        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2,in_modes = in_modes, pure=_pure, batched=_batched))
+        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, [mode1, mode2],in_modes = in_modes, pure=_pure, batched=_batched))
 
         _pure = False
         matrix = np.random.random((cutoff,cutoff,cutoff,cutoff))
@@ -94,14 +94,14 @@ class TestUnitaryFunctionRelated:
         mode2 = 1
         in_modes =  np.random.random((cutoff,cutoff,cutoff,cutoff))
         _batched = False
-        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2, in_modes = in_modes, pure=_pure, batched=_batched))
+        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, [mode1, mode2], in_modes = in_modes, pure=_pure, batched=_batched))
         batch = 3
         matrix = np.random.random((batch,cutoff,cutoff,cutoff,cutoff))
         in_modes =  np.random.random((batch,cutoff,cutoff,cutoff,cutoff,cutoff,cutoff))
         mode1 = 0
         mode2 = 2
         _batched = True
-        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, mode1, mode2,in_modes = in_modes, pure=_pure, batched=_batched))
+        assert np.allclose(two_mode_gate(matrix, mode1, mode2, in_modes, pure=_pure, batched=_batched),n_mode_gate(matrix, [mode1, mode2], in_modes = in_modes, pure=_pure, batched=_batched))
 
 from thewalrus.quantum.fock_tensors import fock_tensor
 from thewalrus.symplectic import sympmat
