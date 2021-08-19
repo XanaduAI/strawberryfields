@@ -82,4 +82,3 @@ class TestRepresentationIndependent:
 
             for i in range(num_modes):
                 assert meas_results[0][i] == 0 or meas_results[0][i] == 1
-
