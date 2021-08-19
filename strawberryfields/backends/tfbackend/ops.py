@@ -28,6 +28,15 @@ Contents
 """
 # pylint: disable=too-many-arguments
 import warnings
+class WarnOnlyOnce:
+    warnings = set()
+
+    @classmethod
+    def warn(cls,message):
+        h = hash(message)
+        if h not in cls.warnings:
+            warnings.warn(message)
+            cls.warnings.add(h)
 
 from string import ascii_lowercase as indices
 from string import ascii_letters as indices_full
@@ -409,13 +418,12 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
-@tf.function
+#@tf.function
 def choi_trick(S, d, dtype=tf.complex64):
     """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
-    m = S.shape[0] // 2
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
-    # m: num of modes
+    m = S.shape[0] // 2
     choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
     sh = tf.math.sinh(choi_r) * tf.eye(m, dtype=dtype)
@@ -483,17 +491,15 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
     R = R.numpy()
     gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
 
-    #    @tf.function
     def grad(dL_dG_conj):
-        warnings.warn(
+        WarnOnlyOnce.warn(
             "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use update_symplectic for the optimization step."
         )
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
-        grad_C = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC)))
-        grad_y = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dy)))
-        grad_R = tf.math.real(tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dR)))
+        grad_C = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
+        grad_y = tf.reduce_sum(dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape))))
+        grad_R = tf.reduce_sum(dL_dG_conj[..., None, None] * tf.math.conj(dG_dR), axis=list(range(len(dL_dG_conj.shape))))
         return grad_R, grad_y, grad_C, None
-
     return gate, grad
 
 
@@ -509,7 +515,7 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
             ]
         )
     return tf.convert_to_tensor(
-        single_gaussian_gate_matrix(*choi_trick(S, d), cutoff, dtype=dtype.as_numpy_dtype)
+        single_gaussian_gate_matrix(*choi_trick(S, d, dtype = dtype), cutoff, dtype=dtype.as_numpy_dtype)
     )
 
 
