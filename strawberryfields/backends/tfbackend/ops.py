@@ -78,17 +78,20 @@ def warning_on_one_line(message, category, filename, lineno, file=None, line=Non
 
 warnings.formatwarning = warning_on_one_line
 
+
 class WarnOnlyOnce:
     """Warning class to only warn the user once per program"""
+
     warnings = set()
 
     @classmethod
-    def warn(cls,message):
+    def warn(cls, message):
         """Redefine the warn function to check if the warning message has already displayed"""
         h = hash(message)
         if h not in cls.warnings:
             warnings.warn(message)
             cls.warnings.add(h)
+
 
 ###################################################################
 
@@ -420,7 +423,7 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
-#@tf.function
+# @tf.function
 def choi_trick(S, d, dtype=tf.complex64):
     """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
     S = tf.cast(S, dtype=dtype)
@@ -499,9 +502,15 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
         )
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
         grad_C = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
-        grad_y = tf.reduce_sum(dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape))))
-        grad_R = tf.reduce_sum(dL_dG_conj[..., None, None] * tf.math.conj(dG_dR), axis=list(range(len(dL_dG_conj.shape))))
+        grad_y = tf.reduce_sum(
+            dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
+        )
+        grad_R = tf.reduce_sum(
+            dL_dG_conj[..., None, None] * tf.math.conj(dG_dR),
+            axis=list(range(len(dL_dG_conj.shape))),
+        )
         return grad_R, grad_y, grad_C, None
+
     return gate, grad
 
 
@@ -517,7 +526,9 @@ def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
             ]
         )
     return tf.convert_to_tensor(
-        single_gaussian_gate_matrix(*choi_trick(S, d, dtype = dtype), cutoff, dtype=dtype.as_numpy_dtype)
+        single_gaussian_gate_matrix(
+            *choi_trick(S, d, dtype=dtype), cutoff, dtype=dtype.as_numpy_dtype
+        )
     )
 
 
