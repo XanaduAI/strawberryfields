@@ -495,12 +495,18 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
     y = y.numpy()
     R = R.numpy()
     gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
+    N = len(y)
+    transpose_list = np.concatenate([np.arange(N)[::2], np.arange(N)[1::2]])
+    gate = tf.transpose(gate, transpose_list)
 
     def grad(dL_dG_conj):
         WarnOnlyOnce.warn(
             "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use update_symplectic for the optimization step."
         )
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
+        dG_dC = tf.transpose(dG_dC, transpose_list)
+        dG_dR = tf.transpose(dG_dR, np.concatenate([transpose_list,[N, N+1]]))
+        dG_dy = tf.transpose(dG_dy, np.concatenate([transpose_list,[N]]))
         grad_C = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
         grad_y = tf.reduce_sum(
             dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
@@ -822,7 +828,7 @@ def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     # pylint: disable=too-many-branches,too-many-statements
     # "a": reserved for batching
     # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
-    # matrix : out_1 out_2 ... in_1 in_2 ...
+    # matrix : out_1 in_1 ... out_n in_n ...
     # modes : Tuple(0,1,2,3,...)
     # in_modes : input state
     if batched:
