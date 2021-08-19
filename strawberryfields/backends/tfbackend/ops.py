@@ -505,8 +505,8 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
         )
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
         dG_dC = tf.transpose(dG_dC, transpose_list)
-        dG_dR = tf.transpose(dG_dR, np.concatenate([transpose_list,[N, N+1]]))
-        dG_dy = tf.transpose(dG_dy, np.concatenate([transpose_list,[N]]))
+        dG_dR = tf.transpose(dG_dR, np.concatenate([transpose_list, [N, N + 1]]))
+        dG_dy = tf.transpose(dG_dy, np.concatenate([transpose_list, [N]]))
         grad_C = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
         grad_y = tf.reduce_sum(
             dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
