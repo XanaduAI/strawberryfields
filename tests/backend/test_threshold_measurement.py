@@ -64,8 +64,8 @@ class TestRepresentationIndependent:
             meas = backend.measure_threshold([0, 1, 2])[0]
             assert np.all(np.array(meas) == 0)
 
-
-    def test_binary_outcome(self, setup_backend, pure):
+    @pytest.mark.parametrize("alpha", [0, 1, 0.5+0.5j])
+    def test_binary_outcome(self, setup_backend, pure, alpha):
         """Test that the outcomes of a threshold measurement are zero or one."""
         num_modes = 2
         for _ in range(NUM_REPEATS):
@@ -73,7 +73,9 @@ class TestRepresentationIndependent:
             backend.reset(pure=pure)
 
             r = 0.5
+
             backend.squeeze(r, 0, 0)
+            backend.displacement(abs(alpha), np.angle(alpha), 0)
             backend.beamsplitter(np.pi/4, np.pi, 0, 1)
             meas_modes = [0, 1]
             meas_results = backend.measure_threshold(meas_modes)
@@ -81,7 +83,8 @@ class TestRepresentationIndependent:
             for i in range(num_modes):
                 assert meas_results[0][i] == 0 or meas_results[0][i] == 1
 
-    def test_single_mode_measurement(self, setup_backend, pure):
+    @pytest.mark.parametrize("alpha", [0, 1, 0.5+0.5j])
+    def test_single_mode_measurement(self, setup_backend, pure, alpha):
         """Test that the outcomes of a threshold measurement are zero or one."""
         num_modes = 1
         for _ in range(NUM_REPEATS):
@@ -90,9 +93,11 @@ class TestRepresentationIndependent:
 
             r = 0.5
             backend.squeeze(r, 0, 0)
+            backend.displacement(abs(alpha), np.angle(alpha), 0)
             meas_modes = [0]
             meas_results = backend.measure_threshold(meas_modes)
 
             for i in range(num_modes):
                 assert meas_results[0][i] == 0 or meas_results[0][i] == 1
+
 
