@@ -84,6 +84,7 @@ class WarnOnlyOnce:
 
     @classmethod
     def warn(cls,message):
+        """Redefine the warn function to check if the warning message has already displayed"""
         h = hash(message)
         if h not in cls.warnings:
             warnings.warn(message)
