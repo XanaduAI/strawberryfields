@@ -825,12 +825,18 @@ class BosonicModes:
                 sigma_A_prime = sigma_A - sigma_AB @ np.linalg.inv(
                     sigma_B + Idmat
                 ) @ sigma_AB.transpose(0, 2, 1)
-                r_A, r_B = ops.chop_in_blocks_vector_multi(
-                    self.means, np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
-                )
+                r_A, r_B = ops.chop_in_blocks_vector_multi(self.means, mode_ind)
                 r_A_prime = r_A - np.einsum(
                     "...ij,...j", sigma_AB @ np.linalg.inv(sigma_B + Idmat), r_B
                 )
+
+                reweights_exp_arg = np.einsum(
+                    "...j,...jk,...k", -r_B, np.linalg.inv(sigma_B + Idmat), -r_B
+                )
+                reweights = np.exp(-0.5 * reweights_exp_arg) / (
+                    np.sqrt(np.linalg.det(2 * np.pi * (sigma_B + Idmat)))
+                )
+
                 if measurement == 1:
                     self.means = np.append(
                         ops.reassemble_vector_multi(r_A, mode_ind),
@@ -844,13 +850,12 @@ class BosonicModes:
                     )
                     self.weights = np.append(
                         self.weights / (1 - vacuum_fidelity),
-                        self.weights * (vacuum_fidelity / (vacuum_fidelity - 1)),
+                        self.weights * (reweights * 2 * np.pi * self.hbar / (vacuum_fidelity - 1)),
                         axis=0,
                     )
                 else:
-                    self.covs = ops.reassemble_multi(sigma_A_prime, mode_ind)
-                    self.means = ops.reassemble_vector_multi(r_A_prime, mode_ind)
-                    self.weights = self.weights  # / vacuum_fidelity
+                    self.post_select_heterodyne(modes[0], 0)
+            self.loss(0, modes[0])
             return samples
 
         raise ValueError("Measure Threshold can only be applied to one mode at a time")
