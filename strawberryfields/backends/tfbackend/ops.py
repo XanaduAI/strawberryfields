@@ -28,15 +28,6 @@ Contents
 """
 # pylint: disable=too-many-arguments
 import warnings
-class WarnOnlyOnce:
-    warnings = set()
-
-    @classmethod
-    def warn(cls,message):
-        h = hash(message)
-        if h not in cls.warnings:
-            warnings.warn(message)
-            cls.warnings.add(h)
 
 from string import ascii_lowercase as indices
 from string import ascii_letters as indices_full
@@ -44,7 +35,6 @@ from string import ascii_letters as indices_full
 import tensorflow as tf
 import numpy as np
 from scipy.special import factorial
-
 
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
@@ -87,6 +77,17 @@ def warning_on_one_line(message, category, filename, lineno, file=None, line=Non
 
 
 warnings.formatwarning = warning_on_one_line
+
+class WarnOnlyOnce:
+    """Warning class to only warn the user once per program"""
+    warnings = set()
+
+    @classmethod
+    def warn(cls,message):
+        h = hash(message)
+        if h not in cls.warnings:
+            warnings.warn(message)
+            cls.warnings.add(h)
 
 ###################################################################
 
