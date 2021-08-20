@@ -225,7 +225,7 @@ class BosonicBackend(BaseBosonic):
             # Check if an operation other than New() has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
             isitnew = 1 - np.isin(labels, reg_list)
-            new_labels = np.asarray(labels)[np.logical_not(np.isin(labels,reg_list))]
+            new_labels = np.asarray(labels)[np.logical_not(np.isin(labels, reg_list))]
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
