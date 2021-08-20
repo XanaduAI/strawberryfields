@@ -392,17 +392,13 @@ class TestBosonicFockStates:
                 sf.ops.Fock(1) | q[0]
                 sf.ops.Fock(1) | q[1]
                 sf.ops.BSgate()| (q[0], q[1])
-                sf.ops.MeasureThreshold() | q[0]
-                sf.ops.MeasureThreshold() | q[1]
+                sf.ops.MeasureThreshold() | (q[0], q[1])
                 
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
-            print(results)
-            #res0 = results[0][0][0]
-            #if n == 0:
-            #    assert res0 == 0
-            #else:
-            #    assert res0 == 1
+            _, _, results = backend.run_prog(prog)
+            res0, res1 = results[0][0][0], results[1][0][0]
+            assert (([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0]))
 
     def test_g2_threshold(self):
         r"""Tests that the g^2 of a single photon is zero"""
@@ -412,13 +408,13 @@ class TestBosonicFockStates:
             with prog.context as q:
                 sf.ops.Fock(1) | q[0]
                 sf.ops.BSgate()| (q[0], q[1])
-                sf.ops.MeasureThreshold() | q[0]
-                sf.ops.MeasureThreshold() | q[1]
+                sf.ops.MeasureThreshold() | (q[0], q[1])
                 
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
-            print(results)
-
+            _, _, results = backend.run_prog(prog)
+            res0, res1 = results[0][0][0], results[1][0][0]
+            assert (([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0]))
 
 class TestBosonicGKPStates:
     r"""Tests the gkp method of the BosonicBackend class."""
