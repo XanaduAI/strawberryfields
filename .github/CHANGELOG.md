@@ -145,7 +145,7 @@
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
 * `measure_threshold` is now supported in the `bosonic` backend.
-  [(#615)](https://github.com/XanaduAI/strawberryfields/pull/618)
+  [(#618)](https://github.com/XanaduAI/strawberryfields/pull/618)
 
 <h3>Breaking Changes</h3>
 
