@@ -383,6 +383,43 @@ class TestBosonicFockStates:
             else:
                 assert res0 == 1
 
+    def test_hong_ou_mandel_threshold(self):
+        r"""Tests Hong-Ou-Mandel interference"""
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(2)
+            with prog.context as q:
+                sf.ops.Fock(1) | q[0]
+                sf.ops.Fock(1) | q[1]
+                sf.ops.BSgate()| (q[0], q[1])
+                sf.ops.MeasureThreshold() | q[0]
+                sf.ops.MeasureThreshold() | q[1]
+                
+            backend = bosonic.BosonicBackend()
+            results = backend.run_prog(prog)
+            print(results)
+            #res0 = results[0][0][0]
+            #if n == 0:
+            #    assert res0 == 0
+            #else:
+            #    assert res0 == 1
+
+    def test_g2_threshold(self):
+        r"""Tests that the g^2 of a single photon is zero"""
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(2)
+            with prog.context as q:
+                sf.ops.Fock(1) | q[0]
+                sf.ops.BSgate()| (q[0], q[1])
+                sf.ops.MeasureThreshold() | q[0]
+                sf.ops.MeasureThreshold() | q[1]
+                
+            backend = bosonic.BosonicBackend()
+            results = backend.run_prog(prog)
+            print(results)
+
+
 class TestBosonicGKPStates:
     r"""Tests the gkp method of the BosonicBackend class."""
 
