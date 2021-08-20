@@ -496,7 +496,7 @@ class BosonicModes:
         # Set new covariance elements
         self.covs[np.ix_(np.arange(self.covs.shape[0], dtype=int), mode_ind, mode_ind)] = V
 
-    def fidelity_coherent(self, alpha, modes=None):
+    def fidelity_coherent(self, alpha, modes=None, tol=1e-15):
         r"""Returns the fidelity to a coherent state.
 
         Args:
@@ -537,6 +537,10 @@ class BosonicModes:
             / np.sqrt(np.linalg.det(cov_sum))
         )
         fidelity = np.sum(weighted_exp)
+
+        # Numerical error can yield fidelity marginally greater than 1
+        if 1 - fidelity < 0 and fidelity - 1 < tol:
+            fidelity = 1
         return fidelity
 
     def fidelity_vacuum(self, modes=None):
@@ -812,7 +816,7 @@ class BosonicModes:
             Idmat = self.hbar * np.eye(2) / 2
             vacuum_fidelity = np.abs(self.fidelity_vacuum(modes))
             measurement = np.random.choice((0, 1), p=[vacuum_fidelity, 1 - vacuum_fidelity])
-            samples = np.array([[measurement]])
+            samples = measurement
 
             # If there are no more modes to measure simply set everything to vacuum
             if len(modes) == len(self.active):

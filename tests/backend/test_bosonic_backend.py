@@ -270,6 +270,30 @@ class TestBosonicCatStates:
         psi *= norm / (np.pi * sf.hbar) ** 0.25
 
         assert np.allclose(marginal, abs(psi) ** 2)
+        
+    def test_cat_threshold(self):
+        r"""Tests threshold measurement applied to a cat Bell state."""
+        # For large alpha, a beamsplitter effectively creates a cat Bell pair.
+        # The Bell pair is such that when there is vacuum in one mode, there is a
+        # cat state with large alpha (i.e. non-vacuum) in the other mode.
+        # This means the threshold outcomes should always be anti-correlated.
+        alpha = 4
+        phi = 0
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(2)
+            with prog.context as q:
+                sf.ops.Catstate(alpha, phi) | q[0]
+                sf.ops.Catstate(alpha, phi) | q[1]
+                sf.ops.BSgate() | (q[0],q[1])
+                sf.ops.MeasureThreshold() | q[0]
+                sf.ops.MeasureThreshold() | q[1]
+                
+                
+            backend = bosonic.BosonicBackend()
+            _, _, results = backend.run_prog(prog)
+            res0, res1 = results[0][0][0], results[1][0][0]
+            assert (([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0]))
 
 
 class TestBosonicFockStates:
@@ -340,7 +364,24 @@ class TestBosonicFockStates:
         backend.run_prog(prog)
         state = backend.state()
         assert np.allclose(state.parity_expectation([0]), (-1.0) ** n, atol=r_fock)
-
+        
+    @pytest.mark.parametrize("n", FOCK_VALS)
+    def test_fock_threshold(self, n):
+        r"""Tests that Fock states n > 0 always yield a click."""
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(1)
+            with prog.context as q:
+                sf.ops.Fock(n) | q[0]
+                sf.ops.MeasureThreshold() | q[0]
+                
+            backend = bosonic.BosonicBackend()
+            _, _, results = backend.run_prog(prog)
+            res0 = results[0][0][0]
+            if n == 0:
+                assert res0 == 0
+            else:
+                assert res0 == 1
 
 class TestBosonicGKPStates:
     r"""Tests the gkp method of the BosonicBackend class."""
