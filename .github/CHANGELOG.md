@@ -138,8 +138,12 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
+* `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
+  [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
+  
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
+
 
 <h3>Breaking Changes</h3>
 
