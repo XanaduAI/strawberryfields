@@ -225,6 +225,7 @@ class BosonicBackend(BaseBosonic):
             # Check if an operation other than New() has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
             isitnew = 1 - np.isin(labels, reg_list)
+            new_labels = np.asarray(labels)[np.logical_not(np.isin(labels,reg_list))]
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
@@ -234,7 +235,7 @@ class BosonicBackend(BaseBosonic):
                         "Symbolic non-Gaussian preparations have not been implemented "
                         "in the bosonic backend."
                     )
-                for reg in labels:
+                for reg in new_labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
                         weights, means, covs = [pars[i] for i in range(3)]
