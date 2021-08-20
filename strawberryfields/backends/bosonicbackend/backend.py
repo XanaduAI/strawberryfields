@@ -697,7 +697,8 @@ class BosonicBackend(BaseBosonic):
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
-            ]
+            ],
+            dtype=complex,
         )
         weights = weights / np.sum(weights)
         return weights, means, covs
