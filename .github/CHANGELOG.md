@@ -138,11 +138,15 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
+* `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
+  [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
+  
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
-* Added native support in the Fock backends for the MZgate.
+* Added native support in the Fock backend for the MZgate.
   [#610](https://github.com/XanaduAI/strawberryfields/issues/610)
+
 
 <h3>Breaking Changes</h3>
 
