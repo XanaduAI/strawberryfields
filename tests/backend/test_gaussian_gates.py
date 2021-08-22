@@ -139,9 +139,10 @@ class TestFockRepresentation:
         
     def test_gaussian_gate_with_backend(self, setup_backend, cutoff, tol):
         """Test the gaussian from the view of backend"""
+        num_mode = 2
         S = sympmat(num_mode)
         d = np.random.random(num_mode)
-        backend = setup_backend(1)
+        backend = setup_backend(num_mode)
         backend.prepare_vacuum_state(num_mode)
         backend.gaussian_gate(S, d, 0, 1)
         s = backend.state().ket()
