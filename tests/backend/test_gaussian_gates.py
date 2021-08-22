@@ -18,7 +18,7 @@ import pytest
 import numpy as np
 from scipy.linalg import expm
 from scipy.stats import unitary_group
-from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate, gaussian_gate_matrix, gaussian_gate
+from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate, single_gaussian_gate_matrix, gaussian_gate_matrix, gaussian_gate
 
 
 class TestUnitaryFunctionRelated:
@@ -108,6 +108,16 @@ from thewalrus.symplectic import sympmat
 
 @pytest.mark.backends("tf")
 class TestFockRepresentation:
+    @pytest.mark.parametrize("cutoff", [4,5])
+    @pytest.mark.parametrize("num_mode", [2,3])
+    def test_single_gaussian_gate_matrix_with_fock_tensor(self, num_mode, cutoff, tol):
+        """Test if the gaussian gate matrix has the right effect in the Fock basis"""
+        S = sympmat(num_mode)
+        d = np.random.random(num_mode)
+        Ggate_matrix = single_gaussian_gate_matrix(S, d, cutoff)
+        ref_state = fock_tensor(S, d, cutoff)
+        assert np.allclose(Ggate_matrix, ref_state, atol=tol, rtol=0.0)
+        
     @pytest.mark.parametrize("cutoff", [4,5])
     @pytest.mark.parametrize("num_mode", [2,3])
     def test_gaussian_gate_matrix_with_fock_tensor(self, num_mode, cutoff, tol):
