@@ -1,6 +1,74 @@
 # Release 0.19.0 (development release)
 
 <h3>New features since last release</h3>
+* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops`` module with the backend choice of ``tf``. N mode ``Ggate`` can be parametrized by a real symplectic matrix S (size 2N * 2N) and a diplacement vector d (size N). You can also get the gradients of this Gaussian gate by using the ``tape.gradient`` of TensorFlow. [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
+
+Example:
+```python
+import numpy as np
+import tensorflow as tf
+import strawberryfields as sf
+from thewalrus.symplectic import sympmat
+
+num_mode = 2
+cutoff = 10
+S = tf.Variable(sympmat(num_mode),dtype=tf.complex64)
+d = tf.Variable(np.random.random(num_mode),dtype=tf.complex64)
+
+eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+prog = sf.Program(2)
+
+with prog.context as q:
+    sf.ops.Ggate(S,d) | (q[0],q[1])
+
+state_out = eng.run(prog).state.ket()
+print(state_out)
+```
+ It needs to pay attention that, in order to update the two parameters S and d within a optimization task, you can apply the gradients of d on any optimizer, not with the S. (Because the real symplectic matrix is endowed in a Riemannian mannifold, you need to follow its rule to update.) Therefore, there is a function ``update_symplectic`` is prepared inside the library to update the S.
+[(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
+
+Example:
+```python
+import numpy as np
+import tensorflow as tf
+import strawberryfields as sf
+from thewalrus.symplectic import sympmat
+
+def overlap_loss(state, objective):
+    return -tf.abs(tf.reduce_sum(tf.math.conj(state)*objective))**2
+
+def norm_loss(state):
+    return -tf.abs(tf.linalg.norm(state))**2
+
+def loss(state, objective):
+    return overlap_loss(state, objective) + norm_loss(state)
+
+num_mode = 1
+cutoff = 10
+S = tf.Variable(sympmat(num_mode),dtype=tf.complex64)
+d = tf.Variable(np.random.random(num_mode),dtype=tf.complex64)
+kappa = tf.Variable(0.3,dtype=tf.complex64)
+objective = tf.Variable(np.eye(cutoff)[1],dtype=tf.complex64)
+
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.0001)
+eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+prog = sf.Program(1)
+
+with prog.context as q:
+    sf.ops.Ggate(S,d) | q
+    sf.ops.Kgate(kappa) | q
+
+loss_vals = []
+for _ in range(2000):
+    with tf.GradientTape() as tape:
+        state_out = eng.run(prog).state.ket()
+        loss_val = loss(state_out, objective)
+    
+    grad_S,gradients_d, gradients_kappa = tape.gradient(loss_val, [S,d,kappa])
+    optimizer.apply_gradients(zip([gradients_d, gradients_kappa],[d,kappa]))
+    S.assign(update_symplectic(S, grad_S, lr = 0.0001))
+    loss_vals.append(overlap_loss(state_out, objective))
+```
 
 * Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
  (``rectangular_compact`` and ``triangular_compact``) are now available in
