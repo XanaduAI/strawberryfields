@@ -144,7 +144,7 @@ class TestFockRepresentation:
         d = np.random.random(num_mode)
         backend = setup_backend(2)
         backend.prepare_vacuum_state([0, 1])
-        backend.gaussian_gate(S, d, 0, 1)
+        backend.gaussian_gate(S, d, [0, 1])
         s = backend.state().ket()
         X = np.zeros((cutoff, cutoff))
         X[0,0] = 1
