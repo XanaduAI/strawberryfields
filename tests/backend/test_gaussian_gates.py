@@ -18,7 +18,7 @@ import pytest
 import numpy as np
 from scipy.linalg import expm
 from scipy.stats import unitary_group
-from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate, single_gaussian_gate_matrix, gaussian_gate_matrix, gaussian_gate
+from strawberryfields.backends.tfbackend.ops import choi_trick, n_mode_gate, single_mode_gate, two_mode_gate, gaussian_gate
 
 
 class TestUnitaryFunctionRelated:
@@ -110,16 +110,6 @@ from thewalrus.symplectic import sympmat
 class TestFockRepresentation:
     @pytest.mark.parametrize("cutoff", [4,5])
     @pytest.mark.parametrize("num_mode", [2,3])
-    def test_single_gaussian_gate_matrix_with_fock_tensor(self, num_mode, cutoff, tol):
-        """Test if the gaussian gate matrix has the right effect in the Fock basis"""
-        S = sympmat(num_mode)
-        d = np.random.random(num_mode)
-        Ggate_matrix = single_gaussian_gate_matrix(S, d, cutoff)
-        ref_state = fock_tensor(S, d, cutoff)
-        assert np.allclose(Ggate_matrix, ref_state, atol=tol, rtol=0.0)
-        
-    @pytest.mark.parametrize("cutoff", [4,5])
-    @pytest.mark.parametrize("num_mode", [2,3])
     def test_gaussian_gate_matrix_with_fock_tensor(self, num_mode, cutoff, tol):
         """Test if the gaussian gate matrix has the right effect in the Fock basis"""
         S = sympmat(num_mode)
@@ -146,3 +136,17 @@ class TestFockRepresentation:
         Ggate_output = gaussian_gate(S, d, [0,1], in_modes = X, cutoff = cutoff, pure = True)
         ref_state = np.einsum("abcd,bd->ac",fock_tensor(S, d, cutoff), X)
         assert np.allclose(Ggate_output, ref_state, atol=tol, rtol=0.0)
+        
+    def test_gaussian_gate_with_backend(self, setup_backend, cutoff, tol):
+        """Test the gaussian from the view of backend"""
+        S = sympmat(num_mode)
+        d = np.random.random(num_mode)
+        backend = setup_backend(1)
+        backend.prepare_vacuum_state(num_mode)
+        backend.gaussian_gate(S, d, 0, 1)
+        s = backend.state().ket()
+        X = np.zeros((cutoff, cutoff))
+        X[0,0] = 1
+        ref_state = np.einsum("abcd,bd->ac",fock_tensor(S, d, cutoff), X)
+        assert np.allclose(s, ref_state, atol=tol, rtol=0.0)
+        
