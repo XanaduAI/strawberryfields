@@ -52,6 +52,7 @@ def parameter_checker(parameters):
     return False
 
 
+# pylint: disable=abstract-method
 class BosonicBackend(BaseBosonic):
     r"""The BosonicBackend implements a simulation of quantum optical circuits
     in NumPy by representing states as linear combinations of Gaussian functions
@@ -224,6 +225,7 @@ class BosonicBackend(BaseBosonic):
             # Check if an operation other than New() has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
             isitnew = 1 - np.isin(labels, reg_list)
+            new_labels = np.asarray(labels)[np.logical_not(np.isin(labels, reg_list))]
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
@@ -233,7 +235,7 @@ class BosonicBackend(BaseBosonic):
                         "Symbolic non-Gaussian preparations have not been implemented "
                         "in the bosonic backend."
                     )
-                for reg in labels:
+                for reg in new_labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
                         weights, means, covs = [pars[i] for i in range(3)]
@@ -696,7 +698,8 @@ class BosonicBackend(BaseBosonic):
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
-            ]
+            ],
+            dtype=complex,
         )
         weights = weights / np.sum(weights)
         return weights, means, covs
@@ -797,7 +800,17 @@ class BosonicBackend(BaseBosonic):
         raise NotImplementedError("Bosonic backend does not yet support Fock measurements.")
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        raise NotImplementedError("Bosonic backend does not yet support threshold measurements.")
+        if select is not None:
+            raise NotImplementedError("Bosonic backend currently does not support " "postselection")
+        if shots != 1:
+            raise NotImplementedError(
+                "Bosonic backend currently does not support " "multiple shots"
+            )
+
+        samples = []
+        for mode in modes:
+            samples.append(self.circuit.measure_threshold([mode]))
+        return np.array([samples])
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.
