@@ -3,6 +3,7 @@ appdirs
 ipykernel
 sphinx==2.2.2
 m2r
+numba==0.53.1
 networkx>=2.0
 numpy>=1.19.2
 plotly
