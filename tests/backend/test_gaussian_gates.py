@@ -39,7 +39,7 @@ class TestUnitaryFunctionRelated:
         OW = np.block([[W.real, -W.imag], [W.imag, W.real]])
         OV = np.block([[V.real, -V.imag], [V.imag, V.real]])
         S = OW@np.diag(np.concatenate([np.exp(-r), np.exp(r)]))@OV
-        expected_C, expected_mu, expected_Sigma = choi_trick(S, alpha, num_mode)
+        expected_C, expected_mu, expected_Sigma = choi_trick(S, alpha)
         assert np.allclose(_C, expected_C, atol=tol, rtol=0)
         assert np.allclose(_mu, expected_mu, atol=tol, rtol=0)
         assert np.allclose(_Sigma, expected_Sigma, atol=tol, rtol=0)

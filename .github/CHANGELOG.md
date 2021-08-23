@@ -24,7 +24,7 @@ with prog.context as q:
 state_out = eng.run(prog).state.ket()
 print(state_out)
 ```
- It needs to pay attention that, in order to update the two parameters S and d within a optimization task, you can apply the gradients of d on any optimizer, not with the S. (Because the real symplectic matrix is endowed in a Riemannian mannifold, you need to follow its rule to update.) Therefore, there is a function ``update_symplectic`` is prepared inside the library to update the S.
+ Note that in order to update the parameter S by using its gradient, you cannot use gradient descent directly (because it would not be symplectic after the update). Please use the function update_symplectic which is specifically for this purpose.
 [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
 Example:
