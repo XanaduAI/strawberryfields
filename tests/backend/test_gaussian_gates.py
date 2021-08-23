@@ -30,6 +30,7 @@ class TestUnitaryFunctionRelated:
         V = unitary_group.rvs(num_mode)
         r = np.random.random(num_mode) # r needs to be real
         alpha = np.random.random(num_mode) + 1j * np.random.random(num_mode)
+        d = np.concatenate([np.real(alpha),np.imag(alpha)])
         _C = np.exp(-0.5 * np.sum(np.abs(alpha) ** 2) - 0.5 * np.conj(alpha).T @ W @ np.diag(np.tanh(r)) @ W.T @ np.conj(alpha)) / np.sqrt(np.prod(np.cosh(r)))
         _mu = np.block([ np.conj(alpha).T @ W @ np.diag(np.tanh(r)) @ W.T + alpha.T, -np.conj(alpha).T @ W @ np.diag(1/np.cosh(r)) @ V])
         tanhr = np.diag(np.tanh(r))
@@ -39,10 +40,10 @@ class TestUnitaryFunctionRelated:
         OW = np.block([[W.real, -W.imag], [W.imag, W.real]])
         OV = np.block([[V.real, -V.imag], [V.imag, V.real]])
         S = OW@np.diag(np.concatenate([np.exp(-r), np.exp(r)]))@OV
-        expected_C, expected_mu, expected_Sigma = choi_trick(S, alpha)
+        expected_R, expected_y, expected_C = choi_trick(S, d)
         assert np.allclose(_C, expected_C, atol=tol, rtol=0)
-        assert np.allclose(_mu, expected_mu, atol=tol, rtol=0)
-        assert np.allclose(_Sigma, expected_Sigma, atol=tol, rtol=0)
+        assert np.allclose(_mu, expected_y, atol=tol, rtol=0)
+        assert np.allclose(_Sigma, expected_R, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("cutoff", [5,7])
     def test_n_mode_gate_with_single_mode_gate(self, cutoff, tol):

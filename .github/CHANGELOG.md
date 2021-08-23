@@ -8,11 +8,11 @@ Example:
 import numpy as np
 import tensorflow as tf
 import strawberryfields as sf
-from thewalrus.symplectic import sympmat
+from thewalrus.random import random_symplectic
 
 num_mode = 2
 cutoff = 10
-S = tf.Variable(sympmat(num_mode),dtype=tf.complex64)
+S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex64)
 d = tf.Variable(np.random.random(num_mode),dtype=tf.complex64)
 
 eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
@@ -32,7 +32,7 @@ Example:
 import numpy as np
 import tensorflow as tf
 import strawberryfields as sf
-from thewalrus.symplectic import sympmat
+from thewalrus.random import random_symplectic
 
 def overlap_loss(state, objective):
     return -tf.abs(tf.reduce_sum(tf.math.conj(state)*objective))**2
@@ -45,7 +45,7 @@ def loss(state, objective):
 
 num_mode = 1
 cutoff = 10
-S = tf.Variable(sympmat(num_mode),dtype=tf.complex64)
+S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex64)
 d = tf.Variable(np.random.random(num_mode),dtype=tf.complex64)
 kappa = tf.Variable(0.3,dtype=tf.complex64)
 objective = tf.Variable(np.eye(cutoff)[1],dtype=tf.complex64)

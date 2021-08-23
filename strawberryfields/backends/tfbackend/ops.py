@@ -429,6 +429,11 @@ def choi_trick(S, d, dtype=tf.complex64):
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
     m = S.shape[0] // 2
+    d = d.numpy()
+    alpha = np.zeros(m,dtype=np.complex64)
+    for i in range(m):
+        alpha[i] = d[i] + 1j*d[i+m]
+    alpha = tf.convert_to_tensor(alpha, dtype=dtype)
     choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
     sh = tf.math.sinh(choi_r) * tf.eye(m, dtype=dtype)
@@ -475,16 +480,16 @@ def choi_trick(S, d, dtype=tf.complex64):
     R = -tf.math.conj(E @ A_mat[: 2 * m, : 2 * m] @ E)
     y = tf.concat(
         [
-            tf.linalg.matvec(R[:m, :m], tf.math.conj(d)) + tf.transpose(d),
-            tf.linalg.matvec(R[m:, :m], tf.math.conj(d)),
+            tf.linalg.matvec(R[:m, :m], tf.math.conj(alpha)) + tf.transpose(alpha),
+            tf.linalg.matvec(R[m:, :m], tf.math.conj(alpha)),
         ],
         0,
     )
-    alpha = tf.concat([tf.cast(d, dtype=dtype), tf.zeros(m, dtype=dtype)], 0)
-    zeta = alpha + tf.linalg.matvec(tf.cast(R, dtype=dtype), tf.math.conj(alpha))
+    alpha_tilt = tf.concat([tf.cast(alpha, dtype=dtype), tf.zeros(m, dtype=dtype)], 0)
+    zeta = alpha_tilt + tf.linalg.matvec(tf.cast(R, dtype=dtype), tf.math.conj(alpha_tilt))
     C = tf.math.sqrt(
         tf.math.sqrt(tf.linalg.det(tf.eye(m, dtype=dtype) - R[:m, :m] @ tf.math.conj(R[:m, :m])))
-    ) * tf.exp(-0.5 * tf.reduce_sum(tf.math.conj(alpha) * zeta))
+    ) * tf.exp(-0.5 * tf.reduce_sum(tf.math.conj(alpha_tilt) * zeta))
     return R, y, C
 
 
