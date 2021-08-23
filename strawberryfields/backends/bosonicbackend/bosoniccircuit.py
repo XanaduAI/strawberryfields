@@ -496,7 +496,7 @@ class BosonicModes:
         # Set new covariance elements
         self.covs[np.ix_(np.arange(self.covs.shape[0], dtype=int), mode_ind, mode_ind)] = V
 
-    def fidelity_coherent(self, alpha, modes=None):
+    def fidelity_coherent(self, alpha, modes=None, tol=1e-15):
         r"""Returns the fidelity to a coherent state.
 
         Args:
@@ -537,6 +537,10 @@ class BosonicModes:
             / np.sqrt(np.linalg.det(cov_sum))
         )
         fidelity = np.sum(weighted_exp)
+
+        # Numerical error can yield fidelity marginally greater than 1
+        if 1 - fidelity < 0 and fidelity - 1 < tol:
+            fidelity = 1
         return fidelity
 
     def fidelity_vacuum(self, modes=None):
@@ -802,6 +806,63 @@ class BosonicModes:
                 self.loss(0, i)
 
         return vals
+
+    def measure_threshold(self, modes):
+        r"""Performs photon number measurement on the given modes"""
+        if len(modes) == 1:
+            if self.active[modes[0]] is None:
+                raise ValueError("Cannot apply measurement, mode does not exist")
+
+            Idmat = self.hbar * np.eye(2) / 2
+            vacuum_fidelity = np.abs(self.fidelity_vacuum(modes))
+            measurement = np.random.choice((0, 1), p=[vacuum_fidelity, 1 - vacuum_fidelity])
+            samples = measurement
+
+            # If there are no more modes to measure simply set everything to vacuum
+            if len(modes) == len(self.active):
+                for mode in modes:
+                    self.loss(0, mode)
+            # If there are other active modes simply update based on measurement
+            else:
+                mode_ind = np.concatenate((2 * np.array(modes), 2 * np.array(modes) + 1))
+                sigma_A, sigma_AB, sigma_B = ops.chop_in_blocks_multi(self.covs, mode_ind)
+                sigma_A_prime = sigma_A - sigma_AB @ np.linalg.inv(
+                    sigma_B + Idmat
+                ) @ sigma_AB.transpose(0, 2, 1)
+                r_A, r_B = ops.chop_in_blocks_vector_multi(self.means, mode_ind)
+                r_A_prime = r_A - np.einsum(
+                    "...ij,...j", sigma_AB @ np.linalg.inv(sigma_B + Idmat), r_B
+                )
+
+                reweights_exp_arg = np.einsum(
+                    "...j,...jk,...k", -r_B, np.linalg.inv(sigma_B + Idmat), -r_B
+                )
+                reweights = np.exp(-0.5 * reweights_exp_arg) / (
+                    np.sqrt(np.linalg.det(2 * np.pi * (sigma_B + Idmat)))
+                )
+
+                if measurement == 1:
+                    self.means = np.append(
+                        ops.reassemble_vector_multi(r_A, mode_ind),
+                        ops.reassemble_vector_multi(r_A_prime, mode_ind),
+                        axis=0,
+                    )
+                    self.covs = np.append(
+                        ops.reassemble_multi(sigma_A, mode_ind),
+                        ops.reassemble_multi(sigma_A_prime, mode_ind),
+                        axis=0,
+                    )
+                    self.weights = np.append(
+                        self.weights / (1 - vacuum_fidelity),
+                        self.weights * (reweights * 2 * np.pi * self.hbar / (vacuum_fidelity - 1)),
+                        axis=0,
+                    )
+                else:
+                    self.post_select_heterodyne(modes[0], 0)
+            self.loss(0, modes[0])
+            return samples
+
+        raise ValueError("Measure Threshold can only be applied to one mode at a time")
 
     def homodyne(self, mode, shots=1, eps=0.0002):
         r"""Performs an x-homodyne measurement on a mode, simulated by a generaldyne
