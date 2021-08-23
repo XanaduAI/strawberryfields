@@ -212,6 +212,8 @@ for _ in range(2000):
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
+* `measure_threshold` is now supported in the `bosonic` backend.
+  [(#618)](https://github.com/XanaduAI/strawberryfields/pull/618)
 
 <h3>Breaking Changes</h3>
 
@@ -245,7 +247,7 @@ for _ in range(2000):
 
 This release contains contributions from (in alphabetical order):
 
-Jake Bulmer, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
+J. Eli Bourassa, Jake Bulmer, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
