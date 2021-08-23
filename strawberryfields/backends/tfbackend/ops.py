@@ -430,9 +430,9 @@ def choi_trick(S, d, dtype=tf.complex64):
     d = tf.cast(d, dtype=dtype)
     m = S.shape[0] // 2
     d = d.numpy()
-    alpha = np.zeros(m,dtype=np.complex64)
+    alpha = np.zeros(m, dtype=np.complex64)
     for i in range(m):
-        alpha[i] = d[i] + 1j*d[i+m]
+        alpha[i] = d[i] + 1j * d[i + m]
     alpha = tf.convert_to_tensor(alpha, dtype=dtype)
     choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
