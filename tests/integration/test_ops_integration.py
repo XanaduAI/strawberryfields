@@ -404,11 +404,17 @@ class TestKetDensityMatrixIntegration:
         state2 = eng.run(prog).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
+
+from thewalrus.random import random_symplectic
+import tensorflow as tf
 @pytest.mark.backends("tf")
 class TestGaussianGateApplication:
     def test_multimode_gaussian_gate(self, setup_eng, tol):
         """Test applying gaussian gate on multiple modes"""
-        eng, prog = setup_eng(1)
+        num_mode = 2
+        eng, prog = setup_eng(num_mode)
+        S = tf.Variable(random_symplectic(num_mode))
+        d = tf.Variable(np.random.random(2*num_mode))
         with prog.context as q:
-            ops.Ggate | q
+            ops.Ggate(S,d) | q
         eng.run(prog)
