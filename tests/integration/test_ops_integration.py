@@ -409,5 +409,5 @@ class TestGaussianGateApplication:
         """Test applying gaussian gate on multiple modes"""
         eng, prog = setup_eng(3)
         with prog.context as q:
-            ops.Ggate | (q[0],q[1],q[2])
+            ops.Ggate | q
         eng.run(prog)
