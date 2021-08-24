@@ -137,17 +137,3 @@ class TestFockRepresentation:
         Ggate_output = gaussian_gate(S, d, [0,1], in_modes = X, cutoff = cutoff, pure = True)
         ref_state = np.einsum("abcd,bd->ac",fock_tensor(S, d, cutoff), X)
         assert np.allclose(Ggate_output, ref_state, atol=tol, rtol=0.0)
-        
-#    def test_gaussian_gate_with_backend(self, setup_backend, cutoff, tol):
-#        """Test the gaussian from the view of backend"""
-#        num_mode = 2
-#        S = sympmat(num_mode)
-#        d = np.random.random(num_mode)
-#        backend = setup_backend(2)
-#        backend.prepare_vacuum_state([0, 1])
-#        backend.gaussian_gate(S, d, 0, 1)
-#        s = backend.state().ket()
-#        X = np.zeros((cutoff, cutoff))
-#        X[0,0] = 1
-#        ref_state = np.einsum("abcd,bd->ac",fock_tensor(S, d, cutoff), X)
-#        assert np.allclose(s, ref_state, atol=tol, rtol=0.0)

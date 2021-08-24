@@ -409,9 +409,11 @@ from thewalrus.random import random_symplectic
 import tensorflow as tf
 @pytest.mark.backends("tf")
 class TestGaussianGateApplication:
-    def test_multimode_gaussian_gate(self, setup_eng):
+    def test_multimode_gaussian_gate(self, setup_eng, pure):
         """Test applying gaussian gate on multiple modes"""
-        num_mode = 2
+        if not pure:
+            pytest.skip("Test only runs on pure states")
+        num_mode = 3
         eng, prog = setup_eng(num_mode)
         S = tf.Variable(random_symplectic(num_mode), dtype = tf.complex128)
         d = tf.Variable(np.random.random(2*num_mode), dtype = tf.complex128)
@@ -420,7 +422,7 @@ class TestGaussianGateApplication:
         eng.run(prog)
         
     def test_gradient_gaussian_gate(self, setup_eng, pure):
-        num_mode = 2
+        num_mode = 4
         eng, prog = setup_eng(num_mode)
         S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
         d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
