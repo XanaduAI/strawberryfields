@@ -67,13 +67,7 @@ class TestGateApplication:
 
         # we must end up back in vacuum since G and G.H cancel each other
         assert np.all(eng.backend.is_vacuum(tol))
-        
-    def test_multimode_gaussian_gate(self, gate, setup_eng, tol):
-        """Test applying gaussian gate on multiple modes"""
-        eng, prog = setup_eng(3)
-        with prog.context as q:
-            ops.Ggate | (q[0],q[1],q[2])
-        eng.run(prog)
+
 
 class TestChannelApplication:
     """tests that involve channel application"""
@@ -409,3 +403,11 @@ class TestKetDensityMatrixIntegration:
             ops.DensityMatrix(state1) | q
         state2 = eng.run(prog).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
+
+class TestGaussianGateApplication:
+    def test_multimode_gaussian_gate(self, gate, setup_eng, tol):
+        """Test applying gaussian gate on multiple modes"""
+        eng, prog = setup_eng(3)
+        with prog.context as q:
+            ops.Ggate | (q[0],q[1],q[2])
+        eng.run(prog)
