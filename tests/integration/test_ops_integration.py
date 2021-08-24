@@ -404,10 +404,11 @@ class TestKetDensityMatrixIntegration:
         state2 = eng.run(prog).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
+@pytest.mark.backends("tf")
 class TestGaussianGateApplication:
     def test_multimode_gaussian_gate(self, setup_eng, tol):
         """Test applying gaussian gate on multiple modes"""
-        eng, prog = setup_eng(3)
+        eng, prog = setup_eng(1)
         with prog.context as q:
             ops.Ggate | q
         eng.run(prog)
