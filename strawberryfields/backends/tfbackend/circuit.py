@@ -564,6 +564,11 @@ class Circuit:
         #TODO: our S is not a scalar for sure. Use self._maybe_batch would raise error.
 #        S = self._maybe_batch(S)
 #        d = self._maybe_batch(d)
+        if len(d.shape) == 1:
+            self._batched = False
+        elif len(d.shape) == 2:
+            self._batched = True
+            self.batch_size = d.shape[0]
         new_state = ops.gaussian_gate(
             S,
             d,
