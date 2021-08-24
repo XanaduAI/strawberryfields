@@ -414,7 +414,7 @@ class TestGaussianGateApplication:
         if not pure:
             pytest.skip("Test only runs on pure states")
         num_mode = 3
-        eng, prog = setup_eng(num_mode, cutoff = 10)
+        eng, prog = setup_eng(num_mode, cutoff_dim = 10)
         S = tf.Variable(random_symplectic(num_mode), dtype = tf.complex128)
         d = tf.Variable(np.random.random(2*num_mode), dtype = tf.complex128)
         with prog.context as q:
@@ -423,7 +423,7 @@ class TestGaussianGateApplication:
         
     def test_gradient_gaussian_gate(self, setup_eng, pure):
         num_mode = 4
-        eng, prog = setup_eng(num_mode, cutoff = 10)
+        eng, prog = setup_eng(num_mode, cutoff_dim = 10)
         S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
         d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
         with prog.context as q:
