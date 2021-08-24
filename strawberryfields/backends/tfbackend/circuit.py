@@ -561,9 +561,9 @@ class Circuit:
         if not S.dtype == tf.complex128:
             S = tf.cast(S, tf.complex128)
             d = tf.cast(d, tf.complex128)
-        #TODO: our S is not a scalar for sure. Use self._maybe_batch would raise error.
-#        S = self._maybe_batch(S)
-#        d = self._maybe_batch(d)
+        # TODO: our S is not a scalar for sure. Use self._maybe_batch would raise error.
+        #        S = self._maybe_batch(S)
+        #        d = self._maybe_batch(d)
         if len(d.shape) == 1:
             self._batched = False
         elif len(d.shape) == 2:

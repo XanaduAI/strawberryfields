@@ -428,7 +428,7 @@ def choi_trick(S, d, dtype=tf.complex64):
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
     m = S.shape[0] // 2
-    alpha = (d[:m] + 1j*d[m:])/2
+    alpha = (d[:m] + 1j * d[m:]) / 2
     choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
     sh = tf.math.sinh(choi_r) * tf.eye(m, dtype=dtype)
@@ -831,7 +831,7 @@ def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     # matrix : out_1 in_1 ... out_n in_n ...
     # modes : Tuple(0,1,2,3,...)
     # in_modes : input state
-    in_modes = tf.cast(in_modes, dtype = matrix.dtype)
+    in_modes = tf.cast(in_modes, dtype=matrix.dtype)
     if batched:
         offset = 1
     else:
@@ -1076,7 +1076,7 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
     if batched:
-        for S_, d_ in zip(S,d):
+        for S_, d_ in zip(S, d):
             if (S_.shape[0]) != d_.shape[0]:
                 raise ValueError("The matrix S and the vector d do not have compatible dimensions")
             if not is_symplectic(S_.numpy()):

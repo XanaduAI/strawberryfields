@@ -2249,7 +2249,9 @@ class Ggate(Gate):
 
     def __init__(self, S, d):
         super().__init__([S, d])
-        self.ns = S.shape[1] // 2 #No matter S is batched or not, S.shape[1] is always twice the number of modes
+        self.ns = (
+            S.shape[1] // 2
+        )  # No matter S is batched or not, S.shape[1] is always twice the number of modes
 
     def _apply(self, reg, backend, **kwargs):
         S, d = par_evaluate(self.p)

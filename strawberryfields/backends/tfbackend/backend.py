@@ -224,8 +224,7 @@ class TFBackend(BaseFock):
             self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
 
     def gaussian_gate(self, S, d, *modes):
-        """Multimode gaussian gate parametrized by its symplectic matrix and displacement vector, the number of modes to be applied is not fixed
-        """
+        """Multimode gaussian gate parametrized by its symplectic matrix and displacement vector, the number of modes to be applied is not fixed"""
         with tf.name_scope("Gaussian_gate"):
             remapped_modes = self._remap_modes(modes)
             self.circuit.gaussian_gate(S, d, remapped_modes)
