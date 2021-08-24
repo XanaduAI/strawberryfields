@@ -364,6 +364,7 @@ def single_mzgate_matrix(phi_in, phi_ex, cutoff, dtype=tf.complex64.as_numpy_dty
     gate = mzgate_tw(phi_in, phi_ex, cutoff, dtype)
     gate = np.transpose(gate, [0, 2, 1, 3])
 
+    breakpoint()
     def grad(dy):
         Dtheta, Dphi = grad_mzgate_tw(np.transpose(gate, [0, 2, 1, 3]), phi_in, phi_ex)
         Dtheta = np.transpose(Dtheta, [0, 2, 1, 3])
@@ -836,7 +837,7 @@ def beamsplitter(
 def mzgate(
     phi_in, phi_ex, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
 ):
-    """returns beamsplitter unitary matrix on specified input modes"""
+    """returns mzgate unitary matrix on specified input modes"""
     phi_in = tf.cast(phi_in, dtype)
     phi_ex = tf.cast(phi_ex, dtype)
     matrix = mzgate_matrix(phi_in, phi_ex, cutoff, batched, dtype)
@@ -847,7 +848,7 @@ def mzgate(
 def two_mode_squeeze(
     r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
 ):
-    """returns beamsplitter unitary matrix on specified input modes"""
+    """returns two mode squeeze unitary matrix on specified input modes"""
     matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
     return output
