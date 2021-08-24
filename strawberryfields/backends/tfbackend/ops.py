@@ -423,13 +423,12 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
-# @tf.function
 def choi_trick(S, d, dtype=tf.complex64):
     """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
     m = S.shape[0] // 2
-    alpha = d[:m] + 1j*d[m:]
+    alpha = (d[:m] + 1j*d[m:])/2
     choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
     sh = tf.math.sinh(choi_r) * tf.eye(m, dtype=dtype)
