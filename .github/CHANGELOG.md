@@ -13,7 +13,7 @@ from thewalrus.random import random_symplectic
 num_mode = 2
 cutoff = 10
 S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex64)
-d = tf.Variable(np.random.random(num_mode),dtype=tf.complex64)
+d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex64)
 
 eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
 prog = sf.Program(2)
