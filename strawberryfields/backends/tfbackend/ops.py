@@ -1083,13 +1083,13 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
         for S_, d_ in zip(S,d):
             if (S_.shape[0]) != d_.shape[0]:
                 raise ValueError("The matrix S and the vector d do not have compatible dimensions")
-            if not is_symplectic(S_.numpy()):
-                raise ValueError("The matrix S is not symplectic")
+#            if not is_symplectic(S_.numpy()):
+#                raise ValueError("The matrix S is not symplectic")
     else:
         if (S.shape[0]) != d.shape[0]:
             raise ValueError("The matrix S and the vector d do not have compatible dimensions")
-        if not is_symplectic(S.numpy()):
-            raise ValueError("The matrix S is not symplectic")
+#        if not is_symplectic(S.numpy()):
+#            raise ValueError("The matrix S is not symplectic")
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
     output = n_mode_gate(matrix, modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
