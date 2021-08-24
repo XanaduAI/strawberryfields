@@ -405,7 +405,7 @@ class TestKetDensityMatrixIntegration:
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
 class TestGaussianGateApplication:
-    def test_multimode_gaussian_gate(self, gate, setup_eng, tol):
+    def test_multimode_gaussian_gate(self, setup_eng, tol):
         """Test applying gaussian gate on multiple modes"""
         eng, prog = setup_eng(3)
         with prog.context as q:
