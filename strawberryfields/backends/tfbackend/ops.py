@@ -494,7 +494,7 @@ def choi_trick(S, d, dtype=tf.complex64):
 
 
 @tf.custom_gradient
-def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dtype):
+def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
     C = C.numpy()
     y = y.numpy()
@@ -525,7 +525,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex64.as_numpy_dty
     return gate, grad
 
 
-def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex64):
+def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix accounting for batching"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
@@ -836,6 +836,7 @@ def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     # matrix : out_1 in_1 ... out_n in_n ...
     # modes : Tuple(0,1,2,3,...)
     # in_modes : input state
+    in_modes = tf.cast(in_modes, dtype = matrix.dtype)
     if batched:
         offset = 1
     else:
@@ -1075,7 +1076,7 @@ def two_mode_squeeze(
     return output
 
 
-def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
+def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex128):
     """returns gaussian gate unitary matrix on specified input modes"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
@@ -1083,13 +1084,13 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
         for S_, d_ in zip(S,d):
             if (S_.shape[0]) != d_.shape[0]:
                 raise ValueError("The matrix S and the vector d do not have compatible dimensions")
-#            if not is_symplectic(S_.numpy()):
-#                raise ValueError("The matrix S is not symplectic")
+            if not is_symplectic(S_.numpy()):
+                raise ValueError("The matrix S is not symplectic")
     else:
         if (S.shape[0]) != d.shape[0]:
             raise ValueError("The matrix S and the vector d do not have compatible dimensions")
-#        if not is_symplectic(S.numpy()):
-#            raise ValueError("The matrix S is not symplectic")
+        if not is_symplectic(S.numpy()):
+            raise ValueError("The matrix S is not symplectic")
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
     output = n_mode_gate(matrix, modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
