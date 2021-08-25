@@ -429,19 +429,15 @@ def choi_trick(S, d, dtype=tf.complex64):
     d = tf.cast(d, dtype=dtype)
     m = S.shape[0] // 2
     alpha = (d[:m] + 1j * d[m:]) / 2
-    choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
-    ch = tf.math.cosh(choi_r) * tf.eye(m, dtype=dtype)
-    sh = tf.math.sinh(choi_r) * tf.eye(m, dtype=dtype)
-    zh = tf.zeros([m, m], dtype=dtype)
-    Schoi = tf.concat(
-        [
-            tf.concat([ch, sh, zh, zh], 1),
-            tf.concat([sh, ch, zh, zh], 1),
-            tf.concat([zh, zh, ch, -sh], 1),
-            tf.concat([zh, zh, -sh, ch], 1),
-        ],
-        0,
+    choi_r=np.arcsinh(1.0)
+    ch = np.diag([np.cosh(choi_r)] * m)
+    sh = np.diag([np.sinh(choi_r)] * m)
+    zh = np.zeros([m, m])
+    Schoi = np.block(
+        [[ch, sh, zh, zh], [sh, ch, zh, zh], [zh, zh, ch, -sh], [zh, zh, -sh, ch]]
     )
+    Schoi = tf.convert_to_tensor(Schoi, dtype=dtype)
+    zh = tf.zeros([m, m], dtype=dtype)
     Sxx = S[:m, :m]
     Sxp = S[:m, m:]
     Spx = S[m:, :m]
@@ -469,6 +465,7 @@ def choi_trick(S, d, dtype=tf.complex64):
     X = tf.concat([tf.concat([zh, idl], 1), tf.concat([idl, zh], 1)], 0)
     sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype=dtype)
     A_mat = X @ (tf.eye(4 * m, dtype=dtype) - tf.linalg.inv(sigma_Q))
+    choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     E = tf.linalg.diag(
         tf.concat([tf.ones([m], dtype=dtype), tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r)], 0)
     )
