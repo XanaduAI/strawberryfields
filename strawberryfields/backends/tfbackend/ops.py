@@ -435,12 +435,12 @@ def choi_trick(S, d, dtype=tf.complex64):
     zh = tf.zeros([m, m], dtype=dtype)
     Schoi = tf.concat(
         [
-            tf.concat([ch, sh, zh, zh], 0),
-            tf.concat([sh, ch, zh, zh], 0),
-            tf.concat([zh, zh, ch, -sh], 0),
-            tf.concat([zh, zh, -sh, ch], 0),
+            tf.concat([ch, sh, zh, zh], 1),
+            tf.concat([sh, ch, zh, zh], 1),
+            tf.concat([zh, zh, ch, -sh], 1),
+            tf.concat([zh, zh, -sh, ch], 1),
         ],
-        1,
+        0,
     )
     Sxx = S[:m, :m]
     Sxp = S[:m, m:]
