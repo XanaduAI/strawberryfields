@@ -45,7 +45,9 @@ from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 from thewalrus._hermite_multidimensional import hermite_multidimensional_numba as gaussian_gate_tw
-from thewalrus._hermite_multidimensional import grad_hermite_multidimensional_numba as grad_gaussian_gate_tw
+from thewalrus._hermite_multidimensional import (
+    grad_hermite_multidimensional_numba as grad_gaussian_gate_tw,
+)
 from thewalrus.symplectic import is_symplectic
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
