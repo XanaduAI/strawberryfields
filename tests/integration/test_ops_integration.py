@@ -405,34 +405,34 @@ class TestKetDensityMatrixIntegration:
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
 
-from thewalrus.random import random_symplectic
-import tensorflow as tf
-@pytest.mark.backends("tf")
-class TestGaussianGateApplication:
-    def test_multimode_gaussian_gate(self, setup_eng, pure):
-        """Test applying gaussian gate on multiple modes"""
-        if not pure:
-            pytest.skip("Test only runs on pure states")
-        num_mode = 2
-        eng, prog = setup_eng(num_mode)
-        S = tf.Variable(random_symplectic(num_mode), dtype = tf.complex128)
-        d = tf.Variable(np.random.random(2*num_mode), dtype = tf.complex128)
-        with prog.context as q:
-            ops.Ggate(S,d) | q
-        eng.run(prog)
-        
-    def test_gradient_gaussian_gate(self, setup_eng, pure):
-        if not pure:
-            pytest.skip("Test only runs on pure states")
-        num_mode = 2
-        eng, prog = setup_eng(num_mode)
-        S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
-        d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
-        with prog.context as q:
-            sf.ops.Ggate(S, d) | q
-        with tf.GradientTape() as tape:
-#            if pure:
-            state = eng.run(prog).state.ket()
-#            else:
-#                state = eng.run(prog).state.dm()
-        grad = tape.gradient(state, [S, d])
+#from thewalrus.random import random_symplectic
+#import tensorflow as tf
+#@pytest.mark.backends("tf")
+#class TestGaussianGateApplication:
+#    def test_multimode_gaussian_gate(self, setup_eng, pure):
+#        """Test applying gaussian gate on multiple modes"""
+#        if not pure:
+#            pytest.skip("Test only runs on pure states")
+#        num_mode = 2
+#        eng, prog = setup_eng(num_mode)
+#        S = tf.Variable(random_symplectic(num_mode), dtype = tf.complex128)
+#        d = tf.Variable(np.random.random(2*num_mode), dtype = tf.complex128)
+#        with prog.context as q:
+#            ops.Ggate(S,d) | q
+#        eng.run(prog)
+#        
+#    def test_gradient_gaussian_gate(self, setup_eng, pure):
+#        if not pure:
+#            pytest.skip("Test only runs on pure states")
+#        num_mode = 2
+#        eng, prog = setup_eng(num_mode)
+#        S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
+#        d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
+#        with prog.context as q:
+#            sf.ops.Ggate(S, d) | q
+#        with tf.GradientTape() as tape:
+##            if pure:
+#            state = eng.run(prog).state.ket()
+##            else:
+##                state = eng.run(prog).state.dm()
+#        grad = tape.gradient(state, [S, d])
