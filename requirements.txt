@@ -1,7 +1,7 @@
 numpy==1.18.5
 scipy
 sympy>=1.5
-tensorflow>=2.0
+tensorflow>=2.4.0
 tensorboard>=2.0
 networkx>=2.0
 git+https://github.com/XanaduAI/blackbird@master#egg=quantum-blackbird
