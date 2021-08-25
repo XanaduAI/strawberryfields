@@ -430,8 +430,8 @@ class TestGaussianGateApplication:
         with prog.context as q:
             sf.ops.Ggate(S, d) | q
         with tf.GradientTape() as tape:
-        if pure:
-            state = eng.run(prog).state.ket()
-        else:
-            state = eng.run(prog).state.dm()
+            if pure:
+                state = eng.run(prog).state.ket()
+            else:
+                state = eng.run(prog).state.dm()
         grad = tape.gradient(state, [S, d])
