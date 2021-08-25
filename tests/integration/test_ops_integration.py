@@ -413,7 +413,7 @@ class TestGaussianGateApplication:
         """Test applying gaussian gate on multiple modes"""
         if not pure:
             pytest.skip("Test only runs on pure states")
-        num_mode = 3
+        num_mode = 2
         eng, prog = setup_eng(num_mode, cutoff_dim = 5)
         S = tf.Variable(random_symplectic(num_mode), dtype = tf.complex128)
         d = tf.Variable(np.random.random(2*num_mode), dtype = tf.complex128)
@@ -422,15 +422,17 @@ class TestGaussianGateApplication:
         eng.run(prog)
         
     def test_gradient_gaussian_gate(self, setup_eng, pure):
-        num_mode = 4
+        if not pure:
+            pytest.skip("Test only runs on pure states")
+        num_mode = 2
         eng, prog = setup_eng(num_mode, cutoff_dim = 5)
         S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
         d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
         with prog.context as q:
             sf.ops.Ggate(S, d) | q
         with tf.GradientTape() as tape:
-            if pure:
-                state = eng.run(prog).state.ket()
-            else:
-                state = eng.run(prog).state.dm()
+#            if pure:
+            state = eng.run(prog).state.ket()
+#            else:
+#                state = eng.run(prog).state.dm()
         grad = tape.gradient(state, [S, d])
