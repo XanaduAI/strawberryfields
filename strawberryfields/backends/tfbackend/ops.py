@@ -429,13 +429,11 @@ def choi_trick(S, d, dtype=tf.complex64):
     d = tf.cast(d, dtype=dtype)
     m = S.shape[0] // 2
     alpha = (d[:m] + 1j * d[m:]) / 2
-    choi_r=np.arcsinh(1.0)
+    choi_r = np.arcsinh(1.0)
     ch = np.diag([np.cosh(choi_r)] * m)
     sh = np.diag([np.sinh(choi_r)] * m)
     zh = np.zeros([m, m])
-    Schoi = np.block(
-        [[ch, sh, zh, zh], [sh, ch, zh, zh], [zh, zh, ch, -sh], [zh, zh, -sh, ch]]
-    )
+    Schoi = np.block([[ch, sh, zh, zh], [sh, ch, zh, zh], [zh, zh, ch, -sh], [zh, zh, -sh, ch]])
     Schoi = tf.convert_to_tensor(Schoi, dtype=dtype)
     zh = tf.zeros([m, m], dtype=dtype)
     Sxx = S[:m, :m]
