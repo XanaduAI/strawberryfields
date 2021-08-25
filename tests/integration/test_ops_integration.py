@@ -420,6 +420,7 @@ class TestGaussianGateApplication:
         with prog.context as q:
             ops.Ggate(S,d) | q
         eng.run(prog)
+        assert True
 #
 #    def test_gradient_gaussian_gate(self, setup_eng, pure):
 #        if not pure:
