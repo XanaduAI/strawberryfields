@@ -492,27 +492,23 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128.as_numpy_dt
     gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
     N = len(y)
     transpose_list = np.concatenate([np.arange(N)[::2], np.arange(N)[1::2]])
-    gate = tf.transpose(gate, transpose_list)
 
     def grad(dL_dG_conj):
         WarnOnlyOnce.warn(
             "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use update_symplectic for the optimization step."
         )
         dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
-        dG_dC = tf.transpose(dG_dC, transpose_list)
-        dG_dR = tf.transpose(dG_dR, np.concatenate([transpose_list, [N, N + 1]]))
-        dG_dy = tf.transpose(dG_dy, np.concatenate([transpose_list, [N]]))
-        grad_C = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
-        grad_y = tf.reduce_sum(
+        dL_dC_conj = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
+        dL_dy_conj = tf.reduce_sum(
             dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
         )
-        grad_R = tf.reduce_sum(
+        dL_dR_conj = tf.reduce_sum(
             dL_dG_conj[..., None, None] * tf.math.conj(dG_dR),
             axis=list(range(len(dL_dG_conj.shape))),
         )
-        return grad_R, grad_y, grad_C, None
+        return dL_dR_conj, dL_dy_conj, dL_dC_conj, None
 
-    return gate, grad
+    return tf.transpose(gate, transpose_list), grad
 
 
 def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex128):
