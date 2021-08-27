@@ -66,7 +66,7 @@ def prog():
         # measurement
         ops.MeasureX | q[0]
         ops.MeasureHomodyne(0.43, select=0.32) | q[2]
-        ops.MeasureHomodyne(phi=0.43, select=0.32) | q[2]
+        ops.MeasureHomodyne(0.43, select=0.32) | q[2]
 
     return prog
 
@@ -87,9 +87,9 @@ Sgate(1, 0.0) | 0
 Dgate(0.735934779718964, 0.7469555733762603) | 1
 S2gate(0.543, -0.12) | [0, 3]
 Interferometer(A0) | [0, 1, 2, 3]
-MeasureHomodyne(phi=0) | 0
-MeasureHomodyne(select=0.32, phi=0.43) | 2
-MeasureHomodyne(select=0.32, phi=0.43) | 2
+MeasureHomodyne(0) | 0
+MeasureHomodyne(0.43, select=0.32) | 2
+MeasureHomodyne(0.43, select=0.32) | 2
 """
 
 
@@ -280,8 +280,8 @@ class TestSFToBlackbirdConversion:
         expected = {
             "op": "MeasureHomodyne",
             "modes": [0],
-            "args": [],
-            "kwargs": {"phi": 0.43},
+            "args": [0.43],
+            "kwargs": {},
         }
 
         assert bb.operations[0] == expected
@@ -298,8 +298,8 @@ class TestSFToBlackbirdConversion:
         expected = {
             "op": "MeasureHomodyne",
             "modes": [0],
-            "args": [],
-            "kwargs": {"phi": 0.43, "select": 0.543},
+            "args": [0.43],
+            "kwargs": {"select": 0.543},
         }
 
         assert bb.operations[0] == expected
@@ -358,7 +358,7 @@ class TestSFToBlackbirdConversion:
         assert bb.operations[0] == {'kwargs': {}, 'args': [0.7, 0], 'op': 'Sgate', 'modes': [1]}
         assert bb.operations[1] == {'kwargs': {}, 'args': ['p0', 0.0], 'op': 'BSgate', 'modes': [0, 1]}
         assert bb.operations[2] == {'kwargs': {}, 'args': ['p1'], 'op': 'Rgate', 'modes': [1]}
-        assert bb.operations[3] == {'kwargs': {'phi': 'p2'}, 'args': [], 'op': 'MeasureHomodyne', 'modes': [0]}
+        assert bb.operations[3] == {'kwargs': {}, 'args': ['p2'], 'op': 'MeasureHomodyne', 'modes': [0]}
 
         assert bb.programtype == {'name': 'tdm', 'options': {'temporal_modes': 2}}
         assert list(bb._var.keys()) == ["p0", "p1", "p2"]
