@@ -66,7 +66,7 @@ def prog():
         # measurement
         ops.MeasureX | q[0]
         ops.MeasureHomodyne(0.43, select=0.32) | q[2]
-        ops.MeasureHomodyne(0.43, select=0.32) | q[2]
+        ops.MeasureHomodyne(phi=0.43, select=0.32) | q[2]
 
     return prog
 
