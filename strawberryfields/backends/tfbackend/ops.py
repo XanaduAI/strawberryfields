@@ -364,7 +364,6 @@ def single_mzgate_matrix(phi_in, phi_ex, cutoff, dtype=tf.complex64.as_numpy_dty
     gate = mzgate_tw(phi_in, phi_ex, cutoff, dtype)
     gate = np.transpose(gate, [0, 2, 1, 3])
 
-    breakpoint()
     def grad(dy):
         Dtheta, Dphi = grad_mzgate_tw(np.transpose(gate, [0, 2, 1, 3]), phi_in, phi_ex)
         Dtheta = np.transpose(Dtheta, [0, 2, 1, 3])
