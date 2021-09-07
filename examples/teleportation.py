@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 import strawberryfields as sf
-from strawberryfields.ops import *
+from strawberryfields.ops import (
+    Coherent,
+    Squeezed,
+    BSgate,
+    Xgate,
+    Zgate,
+    MeasureX,
+    MeasureP,
+)
 
 import numpy as np
 from numpy import pi, sqrt
@@ -10,7 +18,7 @@ np.random.seed(42)
 
 prog = sf.Program(3)
 
-alpha = 1+0.5j
+alpha = 1 + 0.5j
 r = np.abs(alpha)
 phi = np.angle(alpha)
 
@@ -21,7 +29,7 @@ with prog.context as q:
     Squeezed(2) | q[2]
 
     # apply gates
-    BS = BSgate(pi/4, pi)
+    BS = BSgate(pi / 4, pi)
     BS | (q[1], q[2])
     BS | (q[0], q[1])
 
@@ -34,7 +42,7 @@ with prog.context as q:
     Xgate(sqrt(2) * q[0].par) | q[2]
     Zgate(sqrt(2) * q[1].par) | q[2]
 
-eng = sf.Engine('fock', backend_options={'cutoff_dim': 15})
+eng = sf.Engine("fock", backend_options={"cutoff_dim": 15})
 result = eng.run(prog, shots=1, modes=None, compile_options={})
 
 # view output state and fidelity

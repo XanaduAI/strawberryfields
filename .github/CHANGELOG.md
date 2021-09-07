@@ -107,12 +107,12 @@
 
   cov = eng.run(circuit).state.cov()
   ```
- 
+
 * A new compiler, ``passive``, allows for a circuit which only consists of passive
   elements to be compiled into a single ``PassiveChannel``.
   [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
 
-  ```python 
+  ```python
   from strawberryfields.ops import BSgate, LossChannel, Rgate
   import strawberryfields as sf
 
@@ -138,8 +138,14 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
+* `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
+  [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
+
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
+
+* `measure_threshold` is now supported in the `bosonic` backend.
+  [(#618)](https://github.com/XanaduAI/strawberryfields/pull/618)
 
 <h3>Breaking Changes</h3>
 
@@ -153,9 +159,17 @@
   by storing them as `blackbird.RegRefTransforms` in the resulting Blackbird program.
   [(#596)](https://github.com/XanaduAI/strawberryfields/pull/596)
 
-* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always 
-  used the wrong set of allowed gate parameter ranges to validate the parameters in a program. 
+* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always
+  used the wrong set of allowed gate parameter ranges to validate the parameters in a program.
   [(#605)](https://github.com/XanaduAI/strawberryfields/pull/605)
+
+* The correct samples are now returned when running a TDMProgram with several shots, where
+  `timebins % concurrent_modes != 0`.
+  [(#611)](https://github.com/XanaduAI/strawberryfields/pull/611)
+
+* Measurement arguments are now stored as non-keyword arguments, instead of keyword arguments, in
+  the resulting Blackbird program when using the `io.to_blackbird()` converter function.
+  [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
 
 <h3>Documentation</h3>
 
@@ -169,7 +183,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Jake Bulmer, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
+J. Eli Bourassa, Jake Bulmer, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0 (current release)
 
