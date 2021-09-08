@@ -43,7 +43,7 @@ with prog.context as q:
     Zgate(sqrt(2) * q[1].par) | q[2]
 
 eng = sf.Engine("fock", backend_options={"cutoff_dim": 15})
-result = eng.run(prog, shots=1, modes=None, compile_options={})
+result = eng.run(prog)
 
 # view output state and fidelity
 print(result.samples)
