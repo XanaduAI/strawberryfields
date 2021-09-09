@@ -484,7 +484,7 @@ def choi_trick(S, d, dtype=tf.complex128):
 
 
 @tf.custom_gradient
-def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128.as_numpy_dtype):
+def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix"""
     gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C], tf.complex128)
     N = y.shape[-1] // 2
@@ -508,7 +508,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128.as_numpy_dt
         )
         return dL_dR_conj, dL_dy_conj, dL_dC_conj, None
 
-    return tf.transpose(gate, transpose_list), grad
+    return tf.cast(tf.transpose(gate, transpose_list), dtype), grad
 
 
 def gaussian_gate_matrix(S, d, cutoff: int, batched=False, dtype=tf.complex128):
@@ -811,8 +811,9 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     return output
 
 
-def autobatch(indices: list, batched: bool) -> list:
-    return [0] * batched + [i + batched for i in indices]
+def autobatch(_indices: list, batched: bool) -> list:
+    'automatically adds batching index'
+    return [0] * batched + [i + batched for i in _indices]
 
 
 def oioi_to_ooii(array, batched: bool):
