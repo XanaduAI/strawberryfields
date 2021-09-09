@@ -414,11 +414,11 @@ class TestGaussianGateApplication:
         num_mode = 1
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
-        S = tf.Variable(random_symplectic(num_mode), dtype = tf.complex128)
-        d = tf.Variable(np.random.random(2*num_mode), dtype = tf.complex128)
+        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2*num_mode), dtype=tf.complex128)
         with prog.context as q:
-            ops.Ggate(S,d) | q
-        eng.run(prog)
+            ops.Ggate(S, d) | q
+        eng.run(prog).state.ket()
     def test_gradient_gaussian_gate(self, pure):
         if not pure:
             pytest.skip("Test only runs on pure states")
