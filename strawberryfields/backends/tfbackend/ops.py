@@ -812,7 +812,7 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
 
 
 def autobatch(_indices: list, batched: bool) -> list:
-    'automatically adds batching index'
+    "automatically adds batching index"
     return [0] * batched + [i + batched for i in _indices]
 
 
