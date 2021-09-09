@@ -811,63 +811,6 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     return output
 
 
-def autobatch(_indices: list, batched: bool) -> list:
-    "automatically adds batching index"
-    return [0] * batched + [i + batched for i in _indices]
-
-
-def oioi_to_ooii(array, batched: bool):
-    """
-    Convert from out-in-out-in to out-out-in-in representation
-    """
-    perm = [2 * m for m in range(array.ndim // 2)] + [2 * m + 1 for m in range(array.ndim // 2)]
-    return tf.transpose(array, autobatch(perm, batched))
-
-
-def ooii_to_oioi(array_ooii, batched):
-    """
-    Convert from out-out-in-in to out-in-out-in representation
-    """
-    N = array_ooii.ndim // 2
-    perm = [m for p in range(N) for m in (p, p + N)]  # e.g. [0, 4, 1, 5, 2, 6, 3, 7]
-    array_ioio = tf.transpose(array_ooii, autobatch(perm, batched))
-    return array_ioio
-
-
-def make_square(array, batched):
-    """
-    Convert from 2N-dim array to d x d square matrix
-    """
-    d = int(np.sqrt(np.prod(array.shape[batched:])))
-    matrix = tf.reshape(array, (-1, d, d) if batched else (d, d))
-    return matrix
-
-
-# def n_mode_gate(matrix, modes, in_modes, pure=False, batched=False):
-#     U = oioi_to_ooii(matrix, batched)
-#     U = make_square(U, batched)
-#     state = in_modes if pure else oioi_to_ooii(in_modes, batched)
-#     indices_l = modes
-#     indices_r = [m + state.ndim // 2 for m in modes] if not pure else []
-#     other_indices = [m for m in range(state.ndim) if m not in indices_l + indices_r]
-#     perm = other_indices + indices_l + indices_r
-#     state = tf.transpose(state, autobatch(perm, batched))
-
-#     if not pure:
-#         d = int(np.sqrt(np.prod(state.shape[batched:])))
-#         state = tf.reshape(state, (state.shape[0], other_indices, d, d) if batched else (other_indices, d, d))
-#         output = tf.einsum("bij,blk,b...jk->b...il", U, tf.math.conj(U), state) if batched else tf.einsum("ij,lk,...jk->...il", U, tf.math.conj(U), state)
-#     else:
-#         d = int(np.prod(state.shape[batched:]))  # no sqrt
-#         import pdb
-#         pdb.set_trace()
-#         state = tf.reshape(state, [state.shape[0]] + other_indices + [d] if batched else other_indices + [d])
-#         output = tf.einsum("bij,b...j->b...i", U, state) if batched else tf.einsum("ij,...j->...i", U, state)
-
-#     output = tf.reshape(output, state.shape[:-1] + indices_l + indices_r)
-#     return tf.transpose(output, autobatch([perm.index(m) for m in perm], batched))
-
-
 def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     """basic form:
     'abcd,efg...b...d...xyz->efg...a...c...xyz' (pure state)
