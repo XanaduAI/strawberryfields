@@ -1931,6 +1931,7 @@ class MZgate(Gate):
     with special cases
 
         .. math::
+
             U(\pi, \pi) &= \left( \begin{array}{cc}
                             1 & 0 \\
                             0 & 1\\
