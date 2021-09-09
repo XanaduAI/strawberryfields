@@ -1932,15 +1932,15 @@ class MZgate(Gate):
 
         .. math::
 
-            U(\pi, \pi) = \left( \begin{array}{cc}
+            U(\pi, \pi) &= \left( \begin{array}{cc}
                             1 & 0 \\
                             0 & 1\\
                         \end{array}right), \\
-            U(0, 0) = i \left( \begin{array}{cc}
+            U(0, 0) &= i \left( \begin{array}{cc}
                             0 & 1 \\
                             1 & 0\\
                         \end{array}\right),\\
-            U(\pi/2, \phi_{ex}) = -\frac{1}{\sqrt{2}} \left( \begin{array}{cc}
+            U(\pi/2, \phi_{ex}) &= -\frac{1}{\sqrt{2}} \left( \begin{array}{cc}
                             e^{i (\phi_{ex} -\tfrac{\pi}{4})} & e^{-i \tfrac{\pi}{4}} \\
                             e^{i (\phi_{ex} -\tfrac{\pi}{4})} & -e^{-i \tfrac{\pi}{4}}\\
                         \end{array}\right).
