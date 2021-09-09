@@ -1935,15 +1935,15 @@ class MZgate(Gate):
             U(\pi, \pi) = \left( \begin{array}{cc}
                             1 & 0 \\
                             0 & 1\\
-                        \right), \\
+                        \end{array}right), \\
             U(0, 0) = i \left( \begin{array}{cc}
                             0 & 1 \\
                             1 & 0\\
-                        \right),\\
+                        \end{array}\right),\\
             U(\pi/2, \phi_{ex}) = -\frac{1}{\sqrt{2}} \left( \begin{array}{cc}
                             e^{i (\phi_{ex} -\tfrac{\pi}{4})} & e^{-i \tfrac{\pi}{4}} \\
                             e^{i (\phi_{ex} -\tfrac{\pi}{4})} & -e^{-i \tfrac{\pi}{4}}\\
-                        \right).
+                        \end{array}\right).
 
     The last example corresponds to a 50/50 two-mode interferometer.
 
