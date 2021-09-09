@@ -1925,9 +1925,9 @@ class MZgate(Gate):
 
         .. math::
 
-            U(\phi_{in}, \phi_{ex}) = \frac{1}{2} \left(\begin{array}{cc}  
-                                \left(-1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  i \left(1+e^{i \phi_{in} }\right) \\  
-                                i \left(1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  \left(1-e^{i \phi_{in} }\right) \\
+            U(\phi_{in}, \phi_{ex}) = \frac{1}{2} \left(\begin{array}{cc}
+                                \left(-1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  i \left(1+e^{i \phi_{in} }\right)\\ 
+                                i \left(1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  \left(1-e^{i \phi_{in} }\right)\\
                                 \end{array}\right)
 
     with special cases
