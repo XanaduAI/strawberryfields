@@ -558,17 +558,8 @@ class Circuit:
         """
         Apply the N-mode gaussian gates to the specified mode.
         """
-        if not S.dtype == tf.complex128:
-            S = tf.cast(S, tf.complex128)
-            d = tf.cast(d, tf.complex128)
-        # TODO: our S is not a scalar for sure. Use self._maybe_batch would raise error.
-        #        S = self._maybe_batch(S)
-        #        d = self._maybe_batch(d)
-        if len(d.shape) == 1:
-            self._batched = False
-        elif len(d.shape) == 2:
-            self._batched = True
-            self.batch_size = d.shape[0]
+        self._batched = len(d.shape) == 2
+        self._batch_size = d.shape[0] if self._batched else None
         new_state = ops.gaussian_gate(
             S,
             d,
@@ -577,7 +568,6 @@ class Circuit:
             cutoff=self._cutoff_dim,
             pure=self._state_is_pure,
             batched=self._batched,
-            dtype=S.dtype,
         )
         self._update_state(new_state)
 

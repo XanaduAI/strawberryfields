@@ -423,7 +423,7 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
-def choi_trick(S, d, dtype=tf.complex64):
+def choi_trick(S, d, dtype=tf.complex128):
     """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
     S = tf.cast(S, dtype=dtype)
     d = tf.cast(d, dtype=dtype)
@@ -486,18 +486,18 @@ def choi_trick(S, d, dtype=tf.complex64):
 @tf.custom_gradient
 def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128.as_numpy_dtype):
     """creates a N-mode gaussian gate matrix"""
-    C = C.numpy()
-    y = y.numpy()
-    R = R.numpy()
-    gate = gaussian_gate_tw(R, cutoff, y, C=C, dtype=dtype)
-    N = len(y)
-    transpose_list = np.concatenate([np.arange(N)[::2], np.arange(N)[1::2]])
+    gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C], tf.complex128)
+    N = y.shape[-1] // 2
+    transpose_list = [x for pair in zip(range(N), range(N, 2 * N)) for x in pair]
 
     def grad(dL_dG_conj):
         WarnOnlyOnce.warn(
-            "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use update_symplectic for the optimization step."
+            "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use sf.update_symplectic() for the optimization step."
         )
-        dG_dC, dG_dR, dG_dy = grad_gaussian_gate_tw(gate, R, cutoff, y, C=C, dtype=dtype)
+        dL_dG_conj = tf.transpose(dL_dG_conj, [transpose_list.index(i) for i in range(2 * N)])
+        dG_dC, dG_dR, dG_dy = tf.numpy_function(
+            grad_gaussian_gate_tw, [gate, R, y, C], [tf.complex128] * 3
+        )
         dL_dC_conj = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
         dL_dy_conj = tf.reduce_sum(
             dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
@@ -511,7 +511,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128.as_numpy_dt
     return tf.transpose(gate, transpose_list), grad
 
 
-def gaussian_gate_matrix(S, d, cutoff, batched=False, dtype=tf.complex128):
+def gaussian_gate_matrix(S, d, cutoff: int, batched=False, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix accounting for batching"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
@@ -811,6 +811,62 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     return output
 
 
+def autobatch(indices: list, batched: bool) -> list:
+    return [0] * batched + [i + batched for i in indices]
+
+
+def oioi_to_ooii(array, batched: bool):
+    """
+    Convert from out-in-out-in to out-out-in-in representation
+    """
+    perm = [2 * m for m in range(array.ndim // 2)] + [2 * m + 1 for m in range(array.ndim // 2)]
+    return tf.transpose(array, autobatch(perm, batched))
+
+
+def ooii_to_oioi(array_ooii, batched):
+    """
+    Convert from out-out-in-in to out-in-out-in representation
+    """
+    N = array_ooii.ndim // 2
+    perm = [m for p in range(N) for m in (p, p + N)]  # e.g. [0, 4, 1, 5, 2, 6, 3, 7]
+    array_ioio = tf.transpose(array_ooii, autobatch(perm, batched))
+    return array_ioio
+
+
+def make_square(array, batched):
+    """
+    Convert from 2N-dim array to d x d square matrix
+    """
+    d = int(np.sqrt(np.prod(array.shape[batched:])))
+    matrix = tf.reshape(array, (-1, d, d) if batched else (d, d))
+    return matrix
+
+
+# def n_mode_gate(matrix, modes, in_modes, pure=False, batched=False):
+#     U = oioi_to_ooii(matrix, batched)
+#     U = make_square(U, batched)
+#     state = in_modes if pure else oioi_to_ooii(in_modes, batched)
+#     indices_l = modes
+#     indices_r = [m + state.ndim // 2 for m in modes] if not pure else []
+#     other_indices = [m for m in range(state.ndim) if m not in indices_l + indices_r]
+#     perm = other_indices + indices_l + indices_r
+#     state = tf.transpose(state, autobatch(perm, batched))
+
+#     if not pure:
+#         d = int(np.sqrt(np.prod(state.shape[batched:])))
+#         state = tf.reshape(state, (state.shape[0], other_indices, d, d) if batched else (other_indices, d, d))
+#         output = tf.einsum("bij,blk,b...jk->b...il", U, tf.math.conj(U), state) if batched else tf.einsum("ij,lk,...jk->...il", U, tf.math.conj(U), state)
+#     else:
+#         d = int(np.prod(state.shape[batched:]))  # no sqrt
+#         import pdb
+#         pdb.set_trace()
+#         state = tf.reshape(state, [state.shape[0]] + other_indices + [d] if batched else other_indices + [d])
+#         output = tf.einsum("bij,b...j->b...i", U, state) if batched else tf.einsum("ij,...j->...i", U, state)
+
+#     output = tf.reshape(output, state.shape[:-1] + indices_l + indices_r)
+#     return tf.transpose(output, autobatch([perm.index(m) for m in perm], batched))
+
+
 def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     """basic form:
     'abcd,efg...b...d...xyz->efg...a...c...xyz' (pure state)
@@ -823,17 +879,13 @@ def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
     # modes : Tuple(0,1,2,3,...)
     # in_modes : input state
     in_modes = tf.cast(in_modes, dtype=matrix.dtype)
-    if batched:
-        offset = 1
-    else:
-        offset = 0
     if pure:
-        num_modes = len(in_modes.shape) - offset
+        num_modes = len(in_modes.shape) - batched
     else:
-        num_modes = (len(in_modes.shape) - offset) // 2
+        num_modes = (len(in_modes.shape) - batched) // 2
     if num_modes == 0:
         raise ValueError("'in_modes' must have at least one mode")
-    if len(indices_full) - 2 * num_modes - offset < 0:
+    if len(indices_full) - 2 * num_modes - batched < 0:
         raise NotImplementedError("Exceed the max number of supported modes for this operation")
     if min(modes) < 0 or max(modes) >= num_modes:
         raise ValueError("'mode' argument is not compatible with number of in_modes")
