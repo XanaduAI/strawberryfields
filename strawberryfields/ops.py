@@ -1921,12 +1921,12 @@ class MZgate(Gate):
 
     This gate becomes the identity for ``phi_in=np.pi`` and ``phi_ex=0``, and permutes the modes
     for ``phi_in=0`` and ``phi_ex=0``. More generally, it corresponds to an interferometer operation
-    with unitary matrix 
+    with unitary matrix
 
         .. math::
-        
+
             U(\phi_{in}, \phi_{ex}) = \frac{1}{2} \left(\begin{array}{cc}  
-                                    \left(-1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  i \left(1+e^{i \phi_{in} }\right) \\  
+                                \left(-1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  i \left(1+e^{i \phi_{in} }\right) \\  
                                 i \left(1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  \left(1-e^{i \phi_{in} }\right) \\
                                 \end{array}\right)
 
