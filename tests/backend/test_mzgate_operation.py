@@ -22,8 +22,9 @@ import numpy as np
 
 PHI_IN = np.linspace(0, 2 * np.pi, 8, endpoint=False, dtype=np.float64)
 PHI_EX = np.linspace(0, 2 * np.pi, 8, endpoint=False, dtype=np.float64)
-ALPHA = np.linspace(0.0, 0.1, 3, dtype=np.float64)
 
+# PHI_IN = [np.pi/2]
+# PHI_EX = [np.pi/4]
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
@@ -31,13 +32,13 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("phi_in", PHI_IN)
     @pytest.mark.parametrize("phi_ex", PHI_EX)
-    @pytest.mark.parametrize("alpha", ALPHA)
-    def test_normalized_mzgate_output(self, setup_backend, phi_in, phi_ex, alpha, tol):
+    def test_normalized_mzgate_output(self, setup_backend, phi_in, phi_ex, tol):
         """Tests if a range of MZ gate outputs states are normalized."""
 
         backend = setup_backend(2)
 
-        backend.displacement(alpha, np.pi / 3, 1)
+        backend.prepare_fock_state(1, 0)
+        backend.prepare_fock_state(1, 1)
         backend.mzgate(phi_in, phi_ex, 0, 1)
         state = backend.state()
         tr = state.trace()
@@ -45,13 +46,13 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("phi_in", PHI_IN)
     @pytest.mark.parametrize("phi_ex", PHI_EX)
-    @pytest.mark.parametrize("alpha", ALPHA)
-    def test_gate_operation_equals_decomposition(self, setup_backend, phi_in, phi_ex, alpha, tol):
+    def test_gate_operation_equals_decomposition(self, setup_backend, phi_in, phi_ex, tol):
         """Tests if a range of MZ gate outputs states are equal to the gate decomposition."""
 
         # decomposition
         backend1 = setup_backend(2)
-        backend1.displacement(alpha, np.pi / 3, 1)
+        backend1.prepare_fock_state(1, 0)
+        backend1.prepare_fock_state(1, 1)
         backend1.rotation(phi_ex, 0)
         backend1.beamsplitter(np.pi / 4, np.pi / 2, 0, 1)
         backend1.rotation(phi_in, 0)
@@ -59,7 +60,8 @@ class TestFockRepresentation:
 
         # gate
         backend2 = setup_backend(2)
-        backend2.displacement(alpha, np.pi / 3, 1)
+        backend2.prepare_fock_state(1, 0)
+        backend2.prepare_fock_state(1, 1)
         backend2.mzgate(phi_in, phi_ex, 0, 1)
 
         assert np.allclose(backend1.state().dm(), backend1.state().dm(), atol=tol, rtol=0)
