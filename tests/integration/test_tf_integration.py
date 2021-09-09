@@ -22,7 +22,7 @@ from scipy.special import factorial
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
-from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal, BSgate, Ket, S2gate, Fock
+from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal, BSgate, MZgate, Ket, S2gate, Fock
 
 
 # this test file is only supported by the TF backend
@@ -535,6 +535,39 @@ class TestGradient:
         theta_grad, phi_grad = tape.gradient(prob02, [theta, phi])
         assert np.allclose(theta_grad, np.sin(4*THETA), atol=tol, rtol=0)
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
+
+    def test_MZ_state_gradients(self, setup_eng, cutoff, tol, batch_size):
+        """Tests whether the gradient for the state created by interfering two single photons at
+        a beam splitter is correct."""
+        if batch_size is not None:
+            pytest.skip(
+                "Cannot calculate gradient in batch mode, as tape.gradient "
+                "cannot differentiate non-scalar output."
+            )
+
+        THETA = 0.3
+        PHI = 0.2
+
+        eng, prog = setup_eng(2)
+        _theta, _phi = prog.params("theta", "phi")
+        photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
+        photon_11[1, 1] = 1.0 + 0.0j
+
+        with prog.context as q:
+            Ket(photon_11) | (q[0], q[1])
+            MZgate(_theta, _phi) | (q[0], q[1])
+
+        theta = tf.Variable(THETA)
+        phi = tf.Variable(PHI)
+
+        with tf.GradientTape(persistent=True) as tape:
+            state = eng.run(prog, args={"theta": theta, "phi": phi}).state
+            prob11 = tf.abs(state.ket()[1, 1])**2
+            prob02 = tf.abs(state.ket()[0, 2])**2
+
+        theta_grad, phi_grad = tape.gradient(prob11, [theta, phi])
+        # TODO: implement assertions
+        # assert np.allclose(theta_grad, -4 * np.sin(2*THETA)*np.cos(2*THETA), atol=tol, rtol=0)
 
     def test_2mode_squeezed_vacuum_gradients(self, setup_eng, cutoff, tol, batch_size):
         """Tests whether the gradient for the probability of the states |0,0> and |1,1>
