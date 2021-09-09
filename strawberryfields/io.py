@@ -75,7 +75,7 @@ def to_blackbird(prog, version="1.0"):
 
             if cmd.op.p:
                 # argument is quadrature phase
-                op["kwargs"]["phi"] = cmd.op.p[0]
+                op["args"] = cmd.op.p
 
             if op["op"] == "MeasureFock":
                 # special case to take into account 'dark_counts' keyword argument
