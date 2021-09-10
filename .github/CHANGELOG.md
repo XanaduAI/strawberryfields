@@ -140,7 +140,7 @@
 
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
-  
+
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
@@ -171,6 +171,10 @@
 * The correct samples are now returned when running a TDMProgram with several shots, where
   `timebins % concurrent_modes != 0`.
   [(#611)](https://github.com/XanaduAI/strawberryfields/pull/611)
+
+* Measurement arguments are now stored as non-keyword arguments, instead of keyword arguments, in
+  the resulting Blackbird program when using the `io.to_blackbird()` converter function.
+  [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
 
 <h3>Documentation</h3>
 
