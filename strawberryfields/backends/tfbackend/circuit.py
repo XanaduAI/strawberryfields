@@ -498,8 +498,8 @@ class Circuit:
         """
         Apply a MZ-gate operator to the two specified modes.
         """
-        phi_in = self._maybe_batch(mode1)
-        phi_ex = self._maybe_batch(mode2)
+        phi_in = self._maybe_batch(phi_in)
+        phi_ex = self._maybe_batch(phi_ex)
         self._check_incompatible_batches(phi_in, phi_ex)
         new_state = ops.mzgate(
             phi_in,
