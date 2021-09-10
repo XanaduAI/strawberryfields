@@ -20,11 +20,8 @@ import pytest
 
 import numpy as np
 
-# PHI_IN = np.linspace(0, 2 * np.pi, 8, endpoint=False, dtype=np.float64)
-# PHI_EX = np.linspace(0, 2 * np.pi, 8, endpoint=False, dtype=np.float64)
-
-PHI_IN = [np.pi/2]
-PHI_EX = [np.pi/4]
+PHI_IN = np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64)
+PHI_EX = np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64)
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
@@ -48,7 +45,30 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("phi_in", PHI_IN)
     @pytest.mark.parametrize("phi_ex", PHI_EX)
-    def test_gate_operation_equals_decomposition(self, setup_backend, phi_in, phi_ex, tol):
+    def test_mzgate_two_photon_input(self, setup_backend, phi_in, phi_ex, tol):
+        """Tests if a range of MZ gate outputs states are equal to the gate decomposition."""
+
+        cutoff = 6
+        photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
+        photon_11[1, 1] = 1.0 + 0.0j
+
+        # decomposition
+        backend = setup_backend(2)
+        backend.prepare_ket_state(photon_11, [0,1])
+        backend.rotation(phi_ex, 0)
+        backend.beamsplitter(np.pi / 4, np.pi / 2, 0, 1)
+        backend.rotation(phi_in, 0)
+        backend.beamsplitter(np.pi / 4, np.pi / 2, 0, 1)
+        state = backend.state()
+        amp_11 = np.abs(state.ket()[1,1])**2
+        amp_02 = np.abs(state.ket()[0,2])**2
+
+        assert np.allclose(amp_11, np.cos(phi_in)**2, atol=tol, rtol=0)
+        assert np.allclose(amp_02, (0.5)*np.sin(phi_in)**2, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("phi_in", PHI_IN)
+    @pytest.mark.parametrize("phi_ex", PHI_EX)
+    def test_mzgate_operation_equals_decomposition(self, setup_backend, phi_in, phi_ex, tol):
         """Tests if a range of MZ gate outputs states are equal to the gate decomposition."""
 
         cutoff = 6
