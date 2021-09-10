@@ -28,12 +28,12 @@ with gate_teleportation.context as q:
     # compare against the expected output
     # X(q1/sqrt(2)).F.P(0.5).X(q0/sqrt(0.5)).F.|z>
     # not including the corrections
-    Squeezed(0.1) | q[3]
-    Fourier       | q[3]
-    Xgate(q[0])   | q[3]
-    Pgate(0.5)    | q[3]
-    Fourier       | q[3]
-    Xgate(q[1])   | q[3]
+    Squeezed(0.1)   | q[3]
+    Fourier         | q[3]
+    Xgate(q[0].par) | q[3]
+    Pgate(0.5)      | q[3]
+    Fourier         | q[3]
+    Xgate(q[1].par) | q[3]
     # end circuit
 
 results = eng.run(gate_teleportation)
