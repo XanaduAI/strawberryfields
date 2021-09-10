@@ -8,9 +8,13 @@ from strawberryfields.ops import *
 eng = sf.Engine(backend="gaussian")
 gaussian_cloning = sf.Program(4)
 
+alpha = 0.7+1.2j
+r = np.abs(alpha)
+phi = np.angle(alpha)
+
 with gaussian_cloning.context as q:
     # state to be cloned
-    Coherent(0.7+1.2j) | q[0]
+    Coherent(r, phi) | q[0]
 
     # 50-50 beamsplitter
     BS = BSgate(pi/4, 0)
@@ -50,4 +54,4 @@ for i in range(reps):
 
 print("Fidelity of cloned state:", np.mean(f))
 print("Mean displacement of cloned state:", np.mean(a))
-print("Mean covariance matrix of cloned state:", np.cov([a.real, a.imag]))
+print("Mean covariance matrix of cloned state:\n", np.cov([a.real, a.imag]))

@@ -1,41 +1,51 @@
 #!/usr/bin/env python3
 import strawberryfields as sf
-from strawberryfields.ops import *
-from strawberryfields.utils import scale
+from strawberryfields.ops import (
+    Coherent,
+    Squeezed,
+    BSgate,
+    Xgate,
+    Zgate,
+    MeasureX,
+    MeasureP,
+)
+
+import numpy as np
 from numpy import pi, sqrt
 
-# initialize engine and program objects
-eng = sf.Engine(backend="gaussian")
-teleportation = sf.Program(3)
+# set the random seed
+np.random.seed(42)
 
-with teleportation.context as q:
-    psi, alice, bob = q[0], q[1], q[2]
+prog = sf.Program(3)
 
-    # state to be teleported:
-    Coherent(1+0.5j) | psi
+alpha = 1 + 0.5j
+r = np.abs(alpha)
+phi = np.angle(alpha)
 
-    # 50-50 beamsplitter
-    BS = BSgate(pi/4, 0)
+with prog.context as q:
+    # prepare initial states
+    Coherent(r, phi) | q[0]
+    Squeezed(-2) | q[1]
+    Squeezed(2) | q[2]
 
-    # maximally entangled states
-    Squeezed(-2) | alice
-    Squeezed(2) | bob
-    BS | (alice, bob)
+    # apply gates
+    BS = BSgate(pi / 4, pi)
+    BS | (q[1], q[2])
+    BS | (q[0], q[1])
 
-    # Alice performs the joint measurement
-    # in the maximally entangled basis
-    BS | (psi, alice)
-    MeasureX | psi
-    MeasureP | alice
+    # Perform homodyne measurements
+    MeasureX | q[0]
+    MeasureP | q[1]
 
-    # Bob conditionally displaces his mode
-    # based on Alice's measurement result
-    Xgate(psi.par*sqrt(2)) | bob
-    Zgate(alice.par*sqrt(2)) | bob
-    # end circuit
+    # Displacement gates conditioned on
+    # the measurements
+    Xgate(sqrt(2) * q[0].par) | q[2]
+    Zgate(sqrt(2) * q[1].par) | q[2]
 
-results = eng.run(teleportation)
-# view Bob's output state and fidelity
-print(results.samples)
-print(results.state.displacement([2]))
-print(results.state.fidelity_coherent([0, 0, 1+0.5j]))
+eng = sf.Engine("fock", backend_options={"cutoff_dim": 15})
+result = eng.run(prog)
+
+# view output state and fidelity
+print(result.samples)
+print(result.state)
+print(result.state.fidelity_coherent([0, 0, alpha]))
