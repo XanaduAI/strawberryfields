@@ -545,29 +545,33 @@ class TestGradient:
                 "cannot differentiate non-scalar output."
             )
 
-        THETA = 0.3
-        PHI = 0.2
+        PHI_IN = 0.3
+        PHI_EX = 0.2
 
         eng, prog = setup_eng(2)
-        _theta, _phi = prog.params("theta", "phi")
+        _phi_in, _phi_ex = prog.params("phi_in", "phi_ex")
         photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
         photon_11[1, 1] = 1.0 + 0.0j
 
         with prog.context as q:
             Ket(photon_11) | (q[0], q[1])
-            MZgate(_theta, _phi) | (q[0], q[1])
+            MZgate(_phi_in, _phi_ex) | (q[0], q[1])
 
-        theta = tf.Variable(THETA)
-        phi = tf.Variable(PHI)
+        phi_in = tf.Variable(PHI_IN)
+        phi_ex = tf.Variable(PHI_EX)
 
         with tf.GradientTape(persistent=True) as tape:
-            state = eng.run(prog, args={"theta": theta, "phi": phi}).state
+            state = eng.run(prog, args={"phi_in": phi_in, "phi_ex": phi_ex}).state
             prob11 = tf.abs(state.ket()[1, 1])**2
             prob02 = tf.abs(state.ket()[0, 2])**2
 
-        theta_grad, phi_grad = tape.gradient(prob11, [theta, phi])
-        # TODO: implement assertions
-        # assert np.allclose(theta_grad, -4 * np.sin(2*THETA)*np.cos(2*THETA), atol=tol, rtol=0)
+        phi_in_grad, phi_ex_grad = tape.gradient(prob11, [phi_in, phi_ex])
+        assert np.allclose(phi_in_grad, -np.sin(2*PHI_IN), atol=tol, rtol=0)
+        assert np.allclose(phi_ex_grad, 0, atol=tol, rtol=0)
+
+        phi_in_grad, phi_ex_grad = tape.gradient(prob02, [phi_in, phi_ex])
+        assert np.allclose(phi_in_grad, np.sin(PHI_IN)*np.cos(PHI_IN), atol=tol, rtol=0)
+        assert np.allclose(phi_ex_grad, 0, atol=tol, rtol=0)
 
     def test_2mode_squeezed_vacuum_gradients(self, setup_eng, cutoff, tol, batch_size):
         """Tests whether the gradient for the probability of the states |0,0> and |1,1>
