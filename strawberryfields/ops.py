@@ -1913,13 +1913,39 @@ class MZgate(Gate):
             (R(\phi_{in})\otimes I) BS\left(\frac{\pi}{4}, \frac{\pi}{2}\right)
             (R(\phi_{ex})\otimes I)
 
+
     Args:
         phi_in (float): internal phase
         phi_ex (float): external phase
 
 
-    This gate becomes the identity for ``phi_in=np.pi`` and ``phi_ex=0``, and permutes the modes
-    for ``phi_in=0`` and ``phi_ex=0``.
+    It corresponds to an interferometer operation with unitary matrix
+
+    .. math::
+
+        U(\phi_{in}, \phi_{ex}) = \frac{1}{2} \left(\begin{array}{cc}
+            \left(-1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  i \left(1+e^{i \phi_{in} }\right)\\
+            i \left(1+e^{i \phi_{in} }\right) e^{i \phi_{ex} } &  \left(1-e^{i \phi_{in} }\right)\\
+            \end{array}\right)
+
+    with special cases
+
+    .. math::
+
+        U(\pi, \pi) &= \left( \begin{array}{cc}
+            1 & 0 \\
+            0 & 1\\
+            \end{array}\right),\\
+        U(0, 0) &= i \left( \begin{array}{cc}
+            0 & 1 \\
+            1 & 0\\
+            \end{array}\right),\\
+        U(\pi/2, \phi_{ex}) &= -\frac{1}{\sqrt{2}} \left( \begin{array}{cc}
+            e^{i (\phi_{ex} -\tfrac{\pi}{4})} & e^{-i \tfrac{\pi}{4}} \\
+            e^{i (\phi_{ex} -\tfrac{\pi}{4})} & -e^{-i \tfrac{\pi}{4}}\\
+            \end{array}\right).
+
+    The last example corresponds to a 50/50 two-mode interferometer.
 
     """
     ns = 2
