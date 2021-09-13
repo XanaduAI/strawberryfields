@@ -45,8 +45,11 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("phi_in", PHI_IN)
     @pytest.mark.parametrize("phi_ex", PHI_EX)
-    def test_mzgate_two_photon_input(self, setup_backend, phi_in, phi_ex, tol):
+    def test_mzgate_two_photon_input(self, setup_backend, phi_in, phi_ex, batch_size, tol):
         """Tests if a range of MZ gate outputs states are equal to the gate decomposition."""
+
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
 
         cutoff = 6
         photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
@@ -68,8 +71,11 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("phi_in", PHI_IN)
     @pytest.mark.parametrize("phi_ex", PHI_EX)
-    def test_mzgate_operation_equals_decomposition(self, setup_backend, phi_in, phi_ex, tol):
+    def test_mzgate_operation_equals_decomposition(self, setup_backend, phi_in, phi_ex, batch_size,tol):
         """Tests if a range of MZ gate outputs states are equal to the gate decomposition."""
+
+        if batch_size is not None:
+            pytest.skip("Does not support batch mode")
 
         cutoff = 6
         photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
