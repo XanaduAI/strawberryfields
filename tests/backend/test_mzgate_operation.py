@@ -60,8 +60,8 @@ class TestFockRepresentation:
         backend.rotation(phi_in, 0)
         backend.beamsplitter(np.pi / 4, np.pi / 2, 0, 1)
         state = backend.state()
-        amp_11 = np.abs(state.ket()[1,1])**2
-        amp_02 = np.abs(state.ket()[0,2])**2
+        amp_11 = state.all_fock_probs()[1,1]
+        amp_02 = state.all_fock_probs()[0,2]
 
         assert np.allclose(amp_11, np.cos(phi_in)**2, atol=tol, rtol=0)
         assert np.allclose(amp_02, (0.5)*np.sin(phi_in)**2, atol=tol, rtol=0)
@@ -83,16 +83,16 @@ class TestFockRepresentation:
         backend1.rotation(phi_in, 0)
         backend1.beamsplitter(np.pi / 4, np.pi / 2, 0, 1)
         state1 = backend1.state()
-        amp_11_decomp = np.abs(state1.ket()[1,1])
-        amp_02_decomp = np.abs(state1.ket()[0,2])
+        amp_11_decomp = state1.all_fock_probs()[1,1]
+        amp_02_decomp = state1.all_fock_probs()[0,2]
 
         # gate
         backend2 = setup_backend(2)
         backend2.prepare_ket_state(photon_11, [0,1])
         backend2.mzgate(phi_in, phi_ex, 0, 1)
         state2 = backend2.state()
-        amp_11_gate = np.abs(state2.ket()[1,1])
-        amp_02_gate = np.abs(state2.ket()[0,2])
+        amp_11_gate = state2.all_fock_probs()[1,1]
+        amp_02_gate = state2.all_fock_probs()[0,2]
 
         assert np.allclose(amp_11_gate, amp_11_decomp, atol=tol, rtol=0)
         assert np.allclose(amp_02_gate, amp_02_decomp, atol=tol, rtol=0)
