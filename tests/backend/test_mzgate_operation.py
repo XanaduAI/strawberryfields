@@ -20,8 +20,8 @@ import pytest
 
 import numpy as np
 
-PHI_IN = list(np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64))
-PHI_EX = list(np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64))
+PHI_IN = np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64)
+PHI_EX = np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64)
 
 @pytest.mark.backends("fock", "tf")
 class TestFockRepresentation:
