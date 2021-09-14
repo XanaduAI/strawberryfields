@@ -265,7 +265,7 @@ class TestProgram:
 
         with pytest.raises(KeyError, match="Have you specified the correct target?"):
             prog.assert_max_number_of_measurements(spec)
-    
+
     def test_has_post_selection(self):
         """Check that the ``has_post_selection`` property behaves as expected when it uses
         post-selection or not.
@@ -646,7 +646,7 @@ class TestValidation:
             remote = False
             local = True
             interactive = True
-            primitives = {'S2gate', 'Interferometer'}
+            primitives = {'S2gate', 'Interferometer', 'MZgate'}
             decompositions = set()
 
         prog = sf.Program(3)
@@ -654,19 +654,21 @@ class TestValidation:
         with prog.context as q:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
+            ops.MZgate(0.1,0.6) | [q[0], q[1]]
 
         new_prog = prog.compile(compiler=DummyCircuit())
 
-        # check compiled program only has two gates
-        assert len(new_prog) == 2
+        # check compiled program only has three gates
+        assert len(new_prog) == 3
 
         # test gates are correct
         circuit = new_prog.circuit
         assert circuit[0].op.__class__.__name__ == "S2gate"
         assert circuit[1].op.__class__.__name__ == "Interferometer"
+        assert circuit[2].op.__class__.__name__ == "MZgate"
 
-    def test_decompositions(self):
-        """Test that decompositions take
+    def test_S2gate_decompositions(self):
+        """Test that S2gate decomposition take
         place if the circuit spec requests it."""
 
         class DummyCircuit(Compiler):
@@ -694,6 +696,38 @@ class TestValidation:
         assert circuit[0].op.__class__.__name__ == "BSgate"
         assert circuit[1].op.__class__.__name__ == "Sgate"
         assert circuit[2].op.__class__.__name__ == "Sgate"
+        assert circuit[3].op.__class__.__name__ == "BSgate"
+        assert circuit[4].op.__class__.__name__ == "Interferometer"
+
+    def test_MZgate_decomposition(self):
+        """Test that decompositions take
+        place if the circuit spec requests it."""
+
+        class DummyCircuit(Compiler):
+            modes = None
+            remote = False
+            local = True
+            interactive = True
+            primitives = {'S2gate', 'Interferometer', 'BSgate', 'Sgate', 'MZgate', 'Rgate'}
+            decompositions = {'MZgate': {}}
+
+        prog = sf.Program(3)
+        U = np.array([[0, 1], [1, 0]])
+        with prog.context as q:
+            ops.MZgate(0.6,0.7) | [q[0], q[1]]
+            ops.Interferometer(U) | [q[0], q[1]]
+
+        new_prog = prog.compile(compiler=DummyCircuit())
+
+        # check compiled program now has 5 gates
+        # the MZgate should decompose into two BS and two Rgates
+        assert len(new_prog) == 5
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "Rgate"
+        assert circuit[1].op.__class__.__name__ == "BSgate"
+        assert circuit[2].op.__class__.__name__ == "Rgate"
         assert circuit[3].op.__class__.__name__ == "BSgate"
         assert circuit[4].op.__class__.__name__ == "Interferometer"
 

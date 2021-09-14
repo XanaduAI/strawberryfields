@@ -1953,6 +1953,10 @@ class MZgate(Gate):
     def __init__(self, phi_in, phi_ex):
         super().__init__([phi_in, phi_ex])
 
+    def _apply(self, reg, backend, **kwargs):
+        phi_in, phi_ex = par_evaluate(self.p)
+        backend.mzgate(phi_in, phi_ex, *reg)
+
     def _decompose(self, reg, **kwargs):
         # into local phase shifts and two 50-50 beamsplitters
         return [

@@ -32,6 +32,7 @@ from thewalrus.fock_gradients import (
     squeezing as squeezing_tw,
     two_mode_squeezing as two_mode_squeezing_tw,
     beamsplitter as beamsplitter_tw,
+    mzgate as mzgate_tw,
 )
 
 def_type = np.complex128
@@ -185,7 +186,7 @@ def project_reset(modes, x, state, pure, n, trunc):
 
     def intersperse(lst):
         # pylint: disable=missing-docstring
-        return tuple([lst[i // 2] for i in range(len(lst) * 2)])
+        return tuple(lst[i // 2] for i in range(len(lst) * 2))
 
     if pure:
         ret = np.zeros([trunc for i in range(n)], dtype=def_type)
@@ -326,6 +327,20 @@ def beamsplitter(theta, phi, trunc):
 
     # Transpose needed because of different conventions in SF and The Walrus.
     return BS_tw.transpose((0, 2, 1, 3))
+
+
+@functools.lru_cache()
+def mzgate(phi_in, phi_ex, cutoff):
+    r"""The MZ gate :math:`\mathrm{MZ}(\phi_{in}, \phi_{ex})`.
+
+    Uses the `MZ gate operation from The Walrus`_ to calculate the Fock representation of the Mach-Zehnder interferometer.
+
+    .. _`MZ gate operation from The Walrus`: https://the-walrus.readthedocs.io/en/latest/code/api/thewalrus.fock_gradients.mzgate.html
+    """
+    ret = mzgate_tw(phi_in, phi_ex, cutoff)
+
+    # Transpose needed because of different conventions in SF and The Walrus.
+    return ret.transpose((0, 2, 1, 3))
 
 
 @functools.lru_cache()

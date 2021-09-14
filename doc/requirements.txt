@@ -15,5 +15,5 @@ sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2
 tensorflow==2.5.0
-thewalrus>=0.15.0
+thewalrus>=0.16.0
 toml
