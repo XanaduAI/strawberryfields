@@ -513,7 +513,7 @@ class TDMProgram(Program):
                     program_param = self.rolled_circuit[i].op.p[k]
 
                     # make sure that hardcoded parameters in the device layout are correct
-                    if not isinstance(param_name, str):
+                    if not isinstance(param_name, str) and not par_is_symbolic(param_name):
                         if not program_param == param_name:
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
@@ -525,8 +525,8 @@ class TDMProgram(Program):
                         continue
 
                     # Obtain the relevant parameter range from the device
-                    param_range = device.gate_parameters[param_name]
-                    if par_is_symbolic(program_param):
+                    param_range = device.gate_parameters.get(str(param_name))
+                    if param_range and par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                         local_p_vals = self.parameters.get(program_param.name, [])
 
@@ -540,7 +540,7 @@ class TDMProgram(Program):
                                     )
                                 )
 
-                    else:
+                    elif param_range:
                         # If it is a numerical value check directly
                         if not program_param in param_range:
                             raise CircuitError(
