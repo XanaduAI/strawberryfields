@@ -601,6 +601,20 @@ class TestTDMcompiler:
         with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
+    def test_tdm_parameters_not_in_devicespec(self):
+        """Test the correct error is raised when the tdm circuit symbolic parameters are not found
+        in the device specification"""
+        spec = copy.deepcopy(device_spec)
+        # "p1" removed from device spec, but is still used in layout
+        del spec["gate_parameters"]["p1"]
+
+        c = 2
+        prog = singleloop_program(
+            0.5643, [np.pi / 4, 0] * c, [0, np.pi / 2] * c, [0, 0, np.pi / 2, np.pi / 2]
+        )
+        with pytest.raises(CircuitError, match="not found in device specification"):
+            prog.compile(device=DeviceSpec("TDM", spec, connection=None), compiler="TDM")
+
     def test_tdm_inconsistent_temporal_modes(self):
         """Test the correct error is raised when the tdm circuit has too many temporal modes"""
         sq_r = 0.5643
