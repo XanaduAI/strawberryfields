@@ -170,7 +170,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     idx_tracker = {i: 0 for i in mode_order}
 
     # iterate backwards through all_samples and add them into the correct mode
-    new_samples = dict()
+    new_samples = {}
     timebin_idx = 0
     for i, mode in enumerate(mode_order):
         mode_idx = modes[i % len(N)]
@@ -684,7 +684,7 @@ class TDMProgram(Program):
         for _ in range(shots):
             # save previous mode index of a command to be able to check when modes
             # are looped back to the start (not allowed when space-unrolling)
-            previous_mode_index = dict()
+            previous_mode_index = {}
 
             for cmd in self.rolled_circuit:
                 previous_mode_index[cmd] = 0
