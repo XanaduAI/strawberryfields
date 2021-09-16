@@ -526,7 +526,14 @@ class TDMProgram(Program):
 
                     # Obtain the relevant parameter range from the device
                     param_range = device.gate_parameters.get(str(param_name))
-                    if param_range and par_is_symbolic(program_param):
+                    if param_range is None:
+                        raise CircuitError(
+                            "Program cannot be used with the device '{}' "
+                            "due to parameter '{}' not found in device specification.".format(
+                                device.target, param_name
+                            )
+                        )
+                    if par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                         local_p_vals = self.parameters.get(program_param.name, [])
 
@@ -540,7 +547,7 @@ class TDMProgram(Program):
                                     )
                                 )
 
-                    elif param_range:
+                    else:
                         # If it is a numerical value check directly
                         if not program_param in param_range:
                             raise CircuitError(
