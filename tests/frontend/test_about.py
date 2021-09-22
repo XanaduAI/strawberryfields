@@ -40,7 +40,6 @@ def test_about(capfd):
     assert "Blackbird version" in out
 
 
-
 def test_cite(capfd):
     """sf.cite works."""
     sf.cite()

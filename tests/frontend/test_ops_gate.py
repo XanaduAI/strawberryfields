@@ -75,7 +75,6 @@ class TestGateBasics:
         if gate in ops.two_args_gates:
             return gate(C, B)
 
-
     def test_merge_inverse(self, G):
         """gate merged with its inverse is the identity"""
         assert G.merge(G.H) is None
@@ -85,10 +84,10 @@ class TestGateBasics:
         if isinstance(G, Q.__class__):
             pytest.skip("Gates are the same type.")
 
-        with pytest.raises(MergeFailure, match='Not the same gate family.'):
+        with pytest.raises(MergeFailure, match="Not the same gate family."):
             Q.merge(G)
 
-        with pytest.raises(MergeFailure, match='Not the same gate family.'):
+        with pytest.raises(MergeFailure, match="Not the same gate family."):
             G.merge(Q)
 
     def test_merge_incompatible_gate(self, gate):
@@ -107,7 +106,7 @@ class TestGateBasics:
 
     def test_wrong_number_subsystems(self, G):
         """wrong number of subsystems"""
-        with pytest.raises(ValueError, match='Wrong number of subsystems.'):
+        with pytest.raises(ValueError, match="Wrong number of subsystems."):
             if G.ns == 1:
                 G.__or__([0, 1])
             else:
@@ -116,7 +115,9 @@ class TestGateBasics:
     def test_repeated_index(self, G):
         """multimode gates: can't repeat the same index"""
         if G.ns == 2:
-            with pytest.raises(RegRefError, match='Trying to act on the same subsystem more than once.'):
+            with pytest.raises(
+                RegRefError, match="Trying to act on the same subsystem more than once."
+            ):
                 G.__or__([0, 0])
 
     def test_non_trivial_merging(self, G, H):
@@ -165,6 +166,7 @@ class TestGateBasics:
         # dagger should negate the first param
         assert applied_params == [-orig_params[0]] + orig_params[1:]
 
+
 class TestGKPBasics:
     """Test the basic properties of the GKP state preparation"""
 
@@ -175,7 +177,11 @@ class TestGKPBasics:
     @pytest.mark.parametrize("s", ["square"])
     def test_gkp_str_representation(self, state, ampl, eps, r, s):
         """Test the string representation of the GKP operation"""
-        assert str(ops.GKP(state=state, ampl_cutoff=ampl, epsilon=eps, representation=r, shape=s)) == f'GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s})'
+        assert (
+            str(ops.GKP(state=state, ampl_cutoff=ampl, epsilon=eps, representation=r, shape=s))
+            == f"GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s})"
+        )
+
 
 @pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
 class TestComplexError:
@@ -187,7 +193,7 @@ class TestComplexError:
         with pytest.raises(ValueError, match="cannot be complex"):
             prog = Program(1)
             with prog.context as q:
-                gate(0.2+1j) | q
+                gate(0.2 + 1j) | q
 
             eng = Engine("gaussian")
             res = eng.run(prog)
@@ -208,6 +214,7 @@ class TestComplexError:
 
             eng = Engine("gaussian")
             res = eng.run(prog)
+
 
 def test_merge_measured_pars():
     """Test merging two gates with measured parameters."""

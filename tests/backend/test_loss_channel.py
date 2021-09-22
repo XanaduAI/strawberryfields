@@ -43,9 +43,7 @@ class TestRepresentationIndependent:
 
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS)
     @pytest.mark.parametrize("phase_alpha", PHASE_ALPHAS)
-    def test_full_loss_channel_on_coherent_states(
-        self, setup_backend, mag_alpha, phase_alpha, tol
-    ):
+    def test_full_loss_channel_on_coherent_states(self, setup_backend, mag_alpha, phase_alpha, tol):
         """Tests the full-loss channel on various states (result should be vacuum)."""
 
         T = 0.0
@@ -58,7 +56,7 @@ class TestRepresentationIndependent:
 
 # at the moment the Fock backends don't support
 # thermal loss channels.
-@pytest.mark.backends("gaussian","bosonic")
+@pytest.mark.backends("gaussian", "bosonic")
 class TestThermalLossChannel:
     """Tests that make use of the Gaussian representation to test
     thermal loss channels."""
@@ -114,9 +112,7 @@ class TestThermalLossChannel:
 
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("nbar", MAG_ALPHAS)
-    def test_thermal_loss_channel_on_squeezed_state(
-        self, nbar, T, setup_backend, pure, tol, hbar
-    ):
+    def test_thermal_loss_channel_on_squeezed_state(self, nbar, T, setup_backend, pure, tol, hbar):
         """Tests thermal loss channel on a squeezed state"""
         backend = setup_backend(1)
         r = 0.432
@@ -127,12 +123,16 @@ class TestThermalLossChannel:
             res = state.cov()
         elif state._basis == "bosonic":
             res = state.covs()
-        exp = np.diag(
-            [
-                T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
-                T * np.exp(2 * r) + (1 - T) * (2 * nbar + 1),
-            ]
-        )*hbar/2
+        exp = (
+            np.diag(
+                [
+                    T * np.exp(-2 * r) + (1 - T) * (2 * nbar + 1),
+                    T * np.exp(2 * r) + (1 - T) * (2 * nbar + 1),
+                ]
+            )
+            * hbar
+            / 2
+        )
 
         print(res, exp)
 
@@ -160,9 +160,7 @@ class TestFockRepresentation:
 
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("n", range(MAX_FOCK))
-    def test_normalized_after_loss_channel_on_fock_state(
-        self, setup_backend, T, n, tol
-    ):
+    def test_normalized_after_loss_channel_on_fock_state(self, setup_backend, T, n, tol):
         """Tests if a range of loss states are normalized."""
 
         backend = setup_backend(1)
@@ -205,9 +203,7 @@ class TestFockRepresentation:
             numer_state = s.dm()
         n = np.arange(cutoff)
         ref_state = (
-            np.exp(-0.5 * np.abs(rootT_alpha) ** 2)
-            * rootT_alpha ** n
-            / np.sqrt(factorial(n))
+            np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha ** n / np.sqrt(factorial(n))
         )
         ref_state = np.outer(ref_state, np.conj(ref_state))
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)
