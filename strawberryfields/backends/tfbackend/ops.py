@@ -1130,14 +1130,14 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
 
 def update_symplectic(S, dS, lr):
     """returns the updated syplectic matrix S according to its geodesic.
-        S (Tensor): symplectic matrix to be updated.
-        dS (Tensor): euclidean gradient of S.
-        lr (float): learning rate.
+    S (Tensor): symplectic matrix to be updated.
+    dS (Tensor): euclidean gradient of S.
+    lr (float): learning rate.
     """
     Jmat = sympmat(S.shape[1] // 2)
     Z = np.matmul(np.transpose(S), dS)
     Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
-    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))),read_value=False)
+    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
     return S
 
 
