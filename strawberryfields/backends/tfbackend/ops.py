@@ -35,6 +35,7 @@ from string import ascii_letters as indices_full
 import tensorflow as tf
 import numpy as np
 from scipy.special import factorial
+from scipy.linalg import expm
 
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
@@ -48,7 +49,7 @@ from thewalrus._hermite_multidimensional import hermite_multidimensional_numba a
 from thewalrus._hermite_multidimensional import (
     grad_hermite_multidimensional_numba as grad_gaussian_gate_tw,
 )
-from thewalrus.symplectic import is_symplectic
+from thewalrus.symplectic import is_symplectic, sympmat
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -1076,6 +1077,19 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
     output = n_mode_gate(matrix, modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
+
+
+def update_symplectic(S, dS, lr):
+    """returns the updated syplectic matrix S according to its geodesic.
+        S (Tensor): symplectic matrix to be updated.
+        dS (Tensor): euclidean gradient of S.
+        lr (float): learning rate.
+    """
+    Jmat = sympmat(S.shape[1] // 2)
+    Z = np.matmul(np.transpose(S), dS)
+    Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
+    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))),read_value=False)
+    return S
 
 
 def loss_channel(T, mode, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
