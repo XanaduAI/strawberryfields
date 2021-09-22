@@ -198,6 +198,11 @@ class TFBackend(BaseFock):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.beamsplitter(theta, phi, remapped_modes[0], remapped_modes[1])
 
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        with tf.name_scope("MZgate"):
+            remapped_modes = self._remap_modes([mode1, mode2])
+            self.circuit.mzgate(phi_in, phi_ex, remapped_modes[0], remapped_modes[1])
+
     def two_mode_squeeze(self, r, phi, mode1, mode2):
         with tf.name_scope("Two-mode_squeezing"):
             remapped_modes = self._remap_modes([mode1, mode2])

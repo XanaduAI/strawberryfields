@@ -494,6 +494,26 @@ class Circuit:
         )
         self._update_state(new_state)
 
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        """
+        Apply a MZ-gate operator to the two specified modes.
+        """
+        phi_in = self._maybe_batch(phi_in)
+        phi_ex = self._maybe_batch(phi_ex)
+        self._check_incompatible_batches(phi_in, phi_ex)
+        new_state = ops.mzgate(
+            phi_in,
+            phi_ex,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
+        )
+        self._update_state(new_state)
+
     def two_mode_squeeze(self, r, phi, mode1, mode2):
         """
         Apply a two-mode squeezing operator to the two specified modes.
