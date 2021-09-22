@@ -170,7 +170,7 @@ def reshape_samples(all_samples, modes, N, timebins):
     idx_tracker = {i: 0 for i in mode_order}
 
     # iterate backwards through all_samples and add them into the correct mode
-    new_samples = dict()
+    new_samples = {}
     timebin_idx = 0
     for i, mode in enumerate(mode_order):
         mode_idx = modes[i % len(N)]
@@ -513,7 +513,7 @@ class TDMProgram(Program):
                     program_param = self.rolled_circuit[i].op.p[k]
 
                     # make sure that hardcoded parameters in the device layout are correct
-                    if not isinstance(param_name, str):
+                    if not isinstance(param_name, str) and not par_is_symbolic(param_name):
                         if not program_param == param_name:
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
@@ -525,7 +525,14 @@ class TDMProgram(Program):
                         continue
 
                     # Obtain the relevant parameter range from the device
-                    param_range = device.gate_parameters[param_name]
+                    param_range = device.gate_parameters.get(str(param_name))
+                    if param_range is None:
+                        raise CircuitError(
+                            "Program cannot be used with the device '{}' "
+                            "due to parameter '{}' not found in device specification.".format(
+                                device.target, param_name
+                            )
+                        )
                     if par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                         local_p_vals = self.parameters.get(program_param.name, [])
@@ -677,7 +684,7 @@ class TDMProgram(Program):
         for _ in range(shots):
             # save previous mode index of a command to be able to check when modes
             # are looped back to the start (not allowed when space-unrolling)
-            previous_mode_index = dict()
+            previous_mode_index = {}
 
             for cmd in self.rolled_circuit:
                 previous_mode_index[cmd] = 0
