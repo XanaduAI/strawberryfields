@@ -309,8 +309,8 @@ def orbit_cardinality(orbit: list, modes: int) -> Union[int, float]:
     # hence return float using the qarg `exact=True`
     if modes > 170:
         return factorial(modes, exact=True) / np.prod(factorial(counts, exact=True))
-    else:
-        return int(factorial(modes, exact=False) / np.prod(factorial(counts, exact=False)))
+
+    return int(factorial(modes, exact=False) / np.prod(factorial(counts, exact=False)))
 
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
