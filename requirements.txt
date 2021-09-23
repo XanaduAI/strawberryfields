@@ -1,5 +1,5 @@
 numpy>=1.19.2
-scipy
+scipy>=1.7.1
 sympy>=1.5
 tensorflow>=2.0
 tensorboard>=2.0
@@ -7,8 +7,8 @@ networkx>=2.0
 git+https://github.com/XanaduAI/blackbird@master#egg=quantum-blackbird
 python-dateutil==2.8.0
 thewalrus>=0.16.0
-toml
-appdirs
+toml>=0.10.2
+appdirs>=1.4.4
 numba>=0.48.0
 requests==2.22.0
 urllib3==1.25.8
