@@ -1,4 +1,4 @@
-# Release 0.19.0
+# Release 0.19.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -190,7 +190,7 @@ This release contains contributions from (in alphabetical order):
 J. Eli Bourassa, Jake Bulmer, Sebastian Duque, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
 
 
-# Release 0.18.0 (current release)
+# Release 0.18.0
 
 <h3>New features since last release</h3>
 
