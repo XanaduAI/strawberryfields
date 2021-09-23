@@ -1,4 +1,4 @@
-# Release 0.19.0 (development release)
+# Release 0.19.0
 
 <h3>New features since last release</h3>
 
@@ -151,8 +151,6 @@
 * `measure_threshold` is now supported in the `bosonic` backend.
   [(#618)](https://github.com/XanaduAI/strawberryfields/pull/618)
 
-
-<h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
 
