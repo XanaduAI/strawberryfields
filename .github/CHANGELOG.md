@@ -172,6 +172,9 @@
   `timebins % concurrent_modes != 0`.
   [(#611)](https://github.com/XanaduAI/strawberryfields/pull/611)
 
+* Fixes the formula used for sampling generaldyne outcomes in the gaussian backend.
+  [(#614)](https://github.com/XanaduAI/strawberryfields/pull/614)
+
 * Measurement arguments are now stored as non-keyword arguments, instead of keyword arguments, in
   the resulting Blackbird program when using the `io.to_blackbird()` converter function.
   [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
