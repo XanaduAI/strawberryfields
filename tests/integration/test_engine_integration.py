@@ -54,7 +54,7 @@ def test_load_backend(name, expected, cutoff):
 
 class TestEngineReset:
     """Test engine reset functionality"""
-    
+
     def test_init_vacuum(self, setup_eng, tol):
         """Test that the engine is initialized to the vacuum state"""
         eng, prog = setup_eng(2)
@@ -120,29 +120,31 @@ class TestProperExecution:
         # one entry for each measured mode
         assert len(res.samples[0]) == 1
         # the same samples can also be found in the regrefs
-        assert np.equal([r.val for r in prog.register if r.val is not None], np.ravel(res.samples)).all()
+        assert np.equal(
+            [r.val for r in prog.register if r.val is not None], np.ravel(res.samples)
+        ).all()
         # first mode was measured
-        if eng.backend_name == 'tf':
+        if eng.backend_name == "tf":
             assert isinstance(res.samples[0][0], tf.Tensor)
         else:
             assert isinstance(res.samples[0], (numbers.Number, np.ndarray))
         # second mode was not measured
         assert prog.register[1].val is None
-    
+
     @pytest.mark.backends("bosonic")
     def test_return_ancillae_samples(self, setup_eng):
         """Engine returns measurement samples from ancillary states
         used for measurement-based gates."""
         eng, prog = setup_eng(1)
-        
+
         with prog.context as q:
             ops.MSgate(1, avg=False) | q
             ops.MSgate(1, avg=False) | q
         res = eng.run(prog)
-        
+
         assert isinstance(eng, sf.engine.BosonicEngine)
         assert len(res.ancilla_samples[0]) == 2
-        assert str(res) == '<Result: shots=0, num_modes=0, num_ancillae=2, contains state=True>'
+        assert str(res) == "<Result: shots=0, num_modes=0, num_ancillae=2, contains state=True>"
 
     # TODO: Some of these tests should probably check *something* after execution
 
@@ -163,7 +165,9 @@ class TestProperExecution:
         eng.run(prog)
 
     @pytest.mark.backends("tf")
-    @pytest.mark.skipif("BATCHED" not in os.environ, reason="Test for when combining batched samples")
+    @pytest.mark.skipif(
+        "BATCHED" not in os.environ, reason="Test for when combining batched samples"
+    )
     def test_combine_batched_samples(self, batch_size, setup_eng):
         """Test that batched samples are forwarded to ``Result.combine_samples`` correctly"""
         eng, prog = setup_eng(4)
@@ -252,7 +256,7 @@ class TestProperExecution:
             BS | (alice, bob)
             ops.Del | alice
             R | bob
-            charlie, = ops.New(1)
+            (charlie,) = ops.New(1)
             BS | (bob, charlie)
             ops.MeasureX | bob
             ops.Del | bob
@@ -318,7 +322,7 @@ class TestProperExecution:
     @pytest.mark.backends("gaussian")
     def test_measurefock_shots(self, setup_eng):
         """Tests that passing shots with a program containing MeasureFock
-           returns a result whose entries have the right shapes and values"""
+        returns a result whose entries have the right shapes and values"""
         shots = 5
         expected = np.zeros(dtype=int, shape=(shots,))
 
@@ -359,7 +363,9 @@ class TestProperExecution:
             ops.MeasureFock() | q
 
         backend_name = eng.backend.__str__()
-        with pytest.raises(NotImplementedError,
-                            match=r"""(Measure|MeasureFock) has not been implemented in {} """
-                            """for the arguments {{'shots': {}}}""".format(backend_name, shots)):
+        with pytest.raises(
+            NotImplementedError,
+            match=r"""(Measure|MeasureFock) has not been implemented in {} """
+            """for the arguments {{'shots': {}}}""".format(backend_name, shots),
+        ):
             eng.run(p1, shots=shots).samples

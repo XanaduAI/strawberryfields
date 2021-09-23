@@ -23,4 +23,4 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Run Black
-        run: black -l 100 strawberryfields/ --check
+        run: black -l 100 strawberryfields/ tests/ --check

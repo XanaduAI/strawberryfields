@@ -372,7 +372,7 @@ class TestShrink:
         assert resized == list(range(dim))
 
     def test_input_clique_then_output_clique(self, dim):
-        """Test that if the input is already a clique, then the output is the same clique. """
+        """Test that if the input is already a clique, then the output is the same clique."""
         graph = nx.lollipop_graph(dim, dim)
         subgraph = list(range(dim))  # this is a clique, the "candy" of the lollipop
 
@@ -484,7 +484,7 @@ class TestShrink:
 
 @pytest.mark.parametrize("dim", range(2, 10))
 class TestIsClique:
-    """Tests for the function `strawberryfields.apps.clique.is_clique` """
+    """Tests for the function `strawberryfields.apps.clique.is_clique`"""
 
     def test_no_false_negatives(self, dim):
         """Tests that cliques are labelled as such"""
@@ -513,7 +513,7 @@ class TestC0:
         assert res | s == set(range(dim))
 
     def test_c_0_comp_graph(self, dim):
-        """ Tests that the set :math:`c_0` for a node in a clique consists of all remaining nodes"""
+        """Tests that the set :math:`c_0` for a node in a clique consists of all remaining nodes"""
         A = nx.complete_graph(dim)
         S = [dim - 1]
         K = clique.c_0(S, A)
@@ -538,7 +538,7 @@ class TestC1:
 
     def test_c_1_comp_graph(self, dim):
         """Tests that :math:`c_1` set is correctly generated for an almost-complete graph, where
-        edge (0, 1) is removed """
+        edge (0, 1) is removed"""
         A = nx.complete_graph(dim)
         A.remove_edge(0, 1)
         S = list(range(1, dim))
@@ -547,7 +547,7 @@ class TestC1:
         assert c1 == [(1, 0)]
 
     def test_c_1_swap_to_clique(self, dim):
-        """Tests that :math:`c_1` set gives a valid clique after swapping """
+        """Tests that :math:`c_1` set gives a valid clique after swapping"""
         A = nx.complete_graph(dim)
         A.remove_edge(0, 1)
         S = list(range(1, dim))

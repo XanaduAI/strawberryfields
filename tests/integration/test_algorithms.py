@@ -19,7 +19,8 @@ import numpy as np
 import strawberryfields as sf
 from strawberryfields.ops import *
 
-@pytest.mark.parametrize('cutoff', [10], indirect=True)  # override default cutoff fixture
+
+@pytest.mark.parametrize("cutoff", [10], indirect=True)  # override default cutoff fixture
 def test_teleportation_fidelity(setup_eng, pure):
     """Test that teleportation of a coherent state has high fidelity"""
     eng, prog = setup_eng(3)
@@ -77,18 +78,19 @@ def test_gaussian_gate_teleportation(setup_eng, pure):
         Fourier | q[3]
 
     state = eng.run(prog).state
-    
+
     if eng.backend_name == "gaussian":
         cov1 = state.reduced_gaussian(2)[1]
         cov2 = state.reduced_gaussian(3)[1]
-        
+
     elif eng.backend_name == "bosonic":
         cov1 = state.reduced_bosonic(2)[1]
         cov2 = state.reduced_bosonic(3)[1]
-        
+
     assert np.allclose(cov1, cov2, atol=0.05, rtol=0)
 
-@pytest.mark.backends("fock","tf","gaussian")
+
+@pytest.mark.backends("fock", "tf", "gaussian")
 def test_gaussian_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     """Test that GBS returns expected Fock probabilities"""
     eng, prog = setup_eng(4)
@@ -184,7 +186,7 @@ def test_boson_sampling_fock_probs(setup_eng, batch_size, tol):
     assert np.allclose(probs, results, atol=tol, rtol=0)
 
 
-@pytest.mark.parametrize('cutoff', [4], indirect=True)  # override default cutoff fixture
+@pytest.mark.parametrize("cutoff", [4], indirect=True)  # override default cutoff fixture
 @pytest.mark.backends("tf", "fock")
 def test_hamiltonian_simulation_fock_probs(setup_eng, pure, batch_size, tol):
     """Test that Hamiltonian simulation returns expected Fock probabilities"""
@@ -250,12 +252,12 @@ class TestGaussianCloning:
             Coherent(a, phi) | q[0]
             self.gaussian_cloning_circuit(q)
 
-        state = eng.run(prog, **{'modes': [0, 3]}).state
+        state = eng.run(prog, **{"modes": [0, 3]}).state
         if eng.backend_name == "gaussian":
             coh = np.array([state.is_coherent(i) for i in range(2)])
             # check all outputs are coherent states
             assert np.all(coh)
-            
+
         disp = state.displacement()
 
         # check outputs are identical clones
@@ -277,7 +279,7 @@ class TestGaussianCloning:
         a_list = np.empty([shots], dtype=np.complex128)
 
         for i in range(shots):
-            state = eng.run(prog, **{'modes': [0]}).state
+            state = eng.run(prog, **{"modes": [0]}).state
             eng.reset()
             f_list[i] = state.fidelity_coherent([0.7 + 1.2j])
             a_list[i] = state.displacement()

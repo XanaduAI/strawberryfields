@@ -123,7 +123,7 @@ def test_single_parameter_list_program():
     eng.run(prog)
 
     assert isinstance(prog.loop_vars, Iterable)
-    assert prog.parameters == {'p0': [1, 2]}
+    assert prog.parameters == {"p0": [1, 2]}
 
 
 class TestSingleLoopNullifier:
@@ -541,9 +541,7 @@ class TestTDMcompiler:
             ops.Rgate(p[1]) | q[1]
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
-        with pytest.raises(
-            CircuitError, match="due to incompatible mode ordering."
-        ):
+        with pytest.raises(CircuitError, match="due to incompatible mode ordering."):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameters_explicit(self):
@@ -662,33 +660,24 @@ class TestTDMcompiler:
 class TestTDMProgramFunctions:
     """Test functions in the ``tdmprogram`` module"""
 
-    @pytest.mark.parametrize("N, crop, expected", [
-        (
-            1,
-            False,
-            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
-        ),
-        (
-            1,
-            True,
-            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
-        ),
-        (
-            3,
-            False,
-            [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]
-        ),
-        (
-            [1, 4],
-            False,
-            [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]
-        ),
-        (
-            [4],
-            True,
-            [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]
-        ),
-    ])
+    @pytest.mark.parametrize(
+        "N, crop, expected",
+        [
+            (
+                1,
+                False,
+                [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+            ),
+            (
+                1,
+                True,
+                [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+            ),
+            (3, False, [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]),
+            ([1, 4], False, [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]),
+            ([4], True, [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]),
+        ],
+    )
     def test_move_vac_modes(self, N, crop, expected):
         """Test the `move_vac_modes` function"""
         samples = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]])
@@ -705,7 +694,7 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
@@ -717,7 +706,7 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
@@ -731,7 +720,7 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
@@ -761,6 +750,7 @@ class TestEngineTDMProgramInteraction:
 
 class TestTDMValidation:
     """Test the validation of TDMProgram against the device specs"""
+
     @pytest.fixture(scope="class")
     def device(self):
         target = "TD2"
@@ -819,5 +809,7 @@ class TestTDMValidation:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         args = [-1, 1, 2, 3]
         args[incorrect_index] = -999
-        with pytest.raises(CircuitError, match="Parameter has value '-999' while its valid range is "):
+        with pytest.raises(
+            CircuitError, match="Parameter has value '-999' while its valid range is "
+        ):
             self.compile_test_program(device, args=args)
