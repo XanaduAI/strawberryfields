@@ -194,6 +194,7 @@ orbits = [
     [(1, 1, 1, 1), 5, 5],
     [(1, 1, 2), 5, 30],
     [(1, 2, 3), 5, 60],
+    [(2, 1), 171, 29070.0]
 ]
 
 
@@ -202,7 +203,7 @@ def test_orbit_cardinality(orbit, max_photon, expected):
     """Test if function ``strawberryfields.apps.similarity.orbit_cardinality`` returns the
     correct number of samples for some hard-coded examples."""
 
-    assert similarity.orbit_cardinality(list(orbit), max_photon) == expected
+    assert np.allclose(similarity.orbit_cardinality(list(orbit), max_photon), expected)
 
 
 events = [
