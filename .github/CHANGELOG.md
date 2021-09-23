@@ -144,7 +144,7 @@
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
-* Speed improvements to ``gaussian_unitary`` compiler
+* Speed improvements to ``gaussian_unitary`` compiler.
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
 * Added native support in the Fock backend for the MZgate.
@@ -192,8 +192,8 @@
 This release contains contributions from (in alphabetical order):
 
 
-J. Eli Bourassa, Jake Bulmer, Sebastian Duque, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton, Antal Száva, Federico Rueda, Yuan Yao.
-
+J. Eli Bourassa, Jake Bulmer, Sebastian Duque, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton,
+Antal Száva, Federico Rueda, Yuan Yao.
 
 # Release 0.18.0
 
