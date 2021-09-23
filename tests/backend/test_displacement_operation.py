@@ -73,7 +73,7 @@ class TestFockRepresentation:
     @pytest.mark.parametrize("p", PHASE_ALPHAS)
     def test_coherent_state_fock_elements(self, setup_backend, r, p, cutoff, pure, tol):
         r"""Tests if a range of alpha-displaced states have the correct Fock basis elements:
-           |\alpha> = exp(-0.5 |\alpha|^2) \sum_n \alpha^n / \sqrt{n!} |n>
+        |\alpha> = exp(-0.5 |\alpha|^2) \sum_n \alpha^n / \sqrt{n!} |n>
         """
 
         backend = setup_backend(1)
@@ -86,7 +86,7 @@ class TestFockRepresentation:
             numer_state = state.dm()
 
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * r ** 2) * (r*np.exp(1j*p)) ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * r ** 2) * (r * np.exp(1j * p)) ** n / np.sqrt(fac(n))
 
         if not pure:
             ref_state = np.outer(ref_state, np.conj(ref_state))

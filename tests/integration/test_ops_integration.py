@@ -24,12 +24,13 @@ from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
 from thewalrus.quantum import is_valid_cov
 
-from scipy.stats import unitary_group 
+from scipy.stats import unitary_group
 
 # make test deterministic
 np.random.seed(42)
 A = 0.1234
 B = -0.543
+
 
 @pytest.mark.parametrize("gate", ops.gates)
 class TestGateApplication:
@@ -51,8 +52,9 @@ class TestGateApplication:
         """Test applying gate inverses after the gate cancels out"""
         eng, prog = setup_eng(2)
 
-        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and\
-           isinstance(eng.backend, BaseGaussian):
+        if isinstance(G, (ops.Vgate, ops.Kgate, ops.CKgate)) and isinstance(
+            eng.backend, BaseGaussian
+        ):
             pytest.skip("Non-Gaussian gates cannot be applied to the Gaussian backend")
 
         with prog.context as q:
@@ -99,7 +101,7 @@ class TestChannelApplication:
         assert np.allclose(var, nbar ** 2 + nbar, atol=tol, rtol=0)
 
     @pytest.mark.backends("gaussian")
-    @pytest.mark.parametrize("M", range(1,5))
+    @pytest.mark.parametrize("M", range(1, 5))
     def test_passive_channel_vacuum(self, M, setup_eng, tol):
         """test that you get vacuum on all modes if you apply a channel with all zero"""
         eng, prog = setup_eng(M)
@@ -107,13 +109,13 @@ class TestChannelApplication:
         with prog.context as q:
             for i in range(M):
                 ops.Dgate(abs(A), np.angle(A)) | q[i]
-            ops.PassiveChannel(np.zeros((M,M))) | q
+            ops.PassiveChannel(np.zeros((M, M))) | q
 
         eng.run(prog)
         assert np.all(eng.backend.is_vacuum(tol))
 
     @pytest.mark.backends("gaussian")
-    @pytest.mark.parametrize("M", range(2,7))
+    @pytest.mark.parametrize("M", range(2, 7))
     def test_passive_channel(self, M, setup_eng, tol):
         """check that passive channel is consistent with unitary methods"""
         U = unitary_group.rvs(M)
@@ -140,7 +142,7 @@ class TestChannelApplication:
                 ops.Sgate(1) | q[i]
                 ops.Dgate(A) | q[i]
                 ops.LossChannel(loss_in[i]) | q[i]
-            ops.Interferometer(U) | q 
+            ops.Interferometer(U) | q
             for i in range(M):
                 ops.LossChannel(loss_out[i]) | q[i]
 
@@ -150,7 +152,7 @@ class TestChannelApplication:
 
         assert np.allclose(cov1, cov2, atol=tol, rtol=0)
         assert np.allclose(mu1, mu2, atol=tol, rtol=0)
-        
+
         u, s, v = np.linalg.svd(T)
 
         eng, prog = setup_eng(M)
@@ -158,10 +160,10 @@ class TestChannelApplication:
             for i in range(M):
                 ops.Sgate(1) | q[i]
                 ops.Dgate(A) | q[i]
-            ops.Interferometer(v) | q 
+            ops.Interferometer(v) | q
             for i in range(M):
-                ops.LossChannel(s[i]**2) | q[i]
-            ops.Interferometer(u) | q 
+                ops.LossChannel(s[i] ** 2) | q[i]
+            ops.Interferometer(u) | q
 
         state = eng.run(prog).state
         cov3 = state.cov()
@@ -170,13 +172,13 @@ class TestChannelApplication:
         assert np.allclose(cov1, cov3, atol=tol, rtol=0)
         assert np.allclose(mu1, mu3, atol=tol, rtol=0)
 
-        T1 = u * s 
+        T1 = u * s
         eng, prog = setup_eng(M)
         with prog.context as q:
             for i in range(M):
                 ops.Sgate(1) | q[i]
                 ops.Dgate(A) | q[i]
-            ops.PassiveChannel(v) | q 
+            ops.PassiveChannel(v) | q
             ops.PassiveChannel(T1) | q
 
         state = eng.run(prog).state
@@ -185,6 +187,7 @@ class TestChannelApplication:
 
         assert np.allclose(cov1, cov4, atol=tol, rtol=0)
         assert np.allclose(mu1, mu4, atol=tol, rtol=0)
+
 
 class TestPreparationApplication:
     """Tests that involve state preparation application"""
@@ -216,7 +219,7 @@ class TestPreparationApplication:
     @pytest.mark.backends("tf", "fock")
     def test_ket_gaussian_state_object(self, setup_eng):
         """Test exception if loading a ket from a Gaussian state object"""
-        eng = sf.Engine('gaussian')
+        eng = sf.Engine("gaussian")
         prog = sf.Program(1)
         state = eng.run(prog).state
 
@@ -271,7 +274,7 @@ class TestPreparationApplication:
     @pytest.mark.backends("tf", "fock")
     def test_dm_gaussian_state_object(self, setup_eng):
         """Test exception if loading a ket from a Gaussian state object"""
-        eng = sf.Engine('gaussian')
+        eng = sf.Engine("gaussian")
         prog = sf.Program(1)
         state = eng.run(prog).state
 
@@ -309,7 +312,7 @@ class TestKetDensityMatrixIntegration:
         ket0 = ket0 / np.linalg.norm(ket0)
         with prog.context as q:
             ops.Ket(ket0) | q[0]
-        state = eng.run(prog, **{'modes': [0]}).state
+        state = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state.dm(), np.outer(ket0, ket0.conj()), atol=tol, rtol=0)
 
         eng.reset()
@@ -318,7 +321,7 @@ class TestKetDensityMatrixIntegration:
         state1 = BaseFockState(ket0, 1, True, cutoff)
         with prog.context as q:
             ops.Ket(state1) | q[0]
-        state2 = eng.run(prog, **{'modes': [0]}).state
+        state2 = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
     def test_ket_two_mode(self, setup_eng, hbar, cutoff, tol):
@@ -333,9 +336,7 @@ class TestKetDensityMatrixIntegration:
         with prog.context as q:
             ops.Ket(ket) | q
         state = eng.run(prog).state
-        assert np.allclose(
-            state.dm(), np.einsum("ij,kl->ikjl", ket, ket.conj()), atol=tol, rtol=0
-        )
+        assert np.allclose(state.dm(), np.einsum("ij,kl->ikjl", ket, ket.conj()), atol=tol, rtol=0)
 
         eng.reset()
 
@@ -367,7 +368,7 @@ class TestKetDensityMatrixIntegration:
         rho = np.outer(ket, ket.conj())
         with prog.context as q:
             ops.DensityMatrix(rho) | q[0]
-        state = eng.run(prog, **{'modes': [0]}).state
+        state = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state.dm(), rho, atol=tol, rtol=0)
 
         eng.reset()
@@ -376,7 +377,7 @@ class TestKetDensityMatrixIntegration:
         state1 = BaseFockState(rho, 1, False, cutoff)
         with prog.context as q:
             ops.DensityMatrix(state1) | q[0]
-        state2 = eng.run(prog, **{'modes': [0]}).state
+        state2 = eng.run(prog, **{"modes": [0]}).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
     def test_dm_two_mode(self, setup_eng, hbar, cutoff, tol):

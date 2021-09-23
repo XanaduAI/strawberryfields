@@ -297,7 +297,7 @@ class TestProbOrbitExact:
         """Tests if the call to _get_state function is performed correctly and probabilities over all
         permutations of the given orbit are summed correctly. The test monkeypatches the fock_prob
         function so that the probability is the same for each sample permutation and
-        is equal to 1/8. For a 4-mode graph, [1, 1] has 6 possible permutations. """
+        is equal to 1/8. For a 4-mode graph, [1, 1] has 6 possible permutations."""
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
             m.setattr(
@@ -581,8 +581,8 @@ class TestFeatureVectorOrbits:
 
     def test_correct_vector_returned(self, monkeypatch):
         """Test if function correctly constructs the feature vector. The ``prob_orbit_exact``
-         and ``prob_orbit_mc`` function called within ``feature_vector_orbits`` are
-         monkeypatched to return hard-coded outputs that depend only on the orbit."""
+        and ``prob_orbit_mc`` function called within ``feature_vector_orbits`` are
+        monkeypatched to return hard-coded outputs that depend only on the orbit."""
 
         with monkeypatch.context() as m:
             m.setattr(
@@ -621,7 +621,7 @@ class TestFeatureVectorEvents:
 
     def test_invalid_event_photon_numbers(self):
         """Test if function raises a ``ValueError`` when the list of event photons numbers
-         is empty."""
+        is empty."""
         g = nx.complete_graph(5)
         with pytest.raises(
             ValueError, match="List of photon numbers must have at least one element"
@@ -668,8 +668,8 @@ class TestFeatureVectorEvents:
 
     def test_correct_vector_returned(self, monkeypatch):
         """Test if function correctly constructs the feature vector. The ``prob_event_exact``
-         and ``prob_event_mc`` function called within ``feature_vector_events`` are
-         monkeypatched to return hard-coded outputs that depend only on the orbit."""
+        and ``prob_event_mc`` function called within ``feature_vector_events`` are
+        monkeypatched to return hard-coded outputs that depend only on the orbit."""
 
         with monkeypatch.context() as m:
             m.setattr(
@@ -753,7 +753,7 @@ class TestFeatureVectorEventsSampling:
 
     def test_invalid_event_photon_numbers(self):
         """Test if function raises a ``ValueError`` when the list of event photons numbers
-         is empty."""
+        is empty."""
         with pytest.raises(
             ValueError, match="List of photon numbers must have at least one element"
         ):
