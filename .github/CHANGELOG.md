@@ -3,18 +3,18 @@
 <h3>New features since last release</h3>
 
 * Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
- (``rectangular_compact`` and ``triangular_compact``) are now available in
- the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
- [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
+  (``rectangular_compact`` and ``triangular_compact``) are now available in
+  the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
+  [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
 
- This decomposition allows for lower depth photonic circuits in physical devices by applying two
- independent phase shifts in parallel inside each Mach-Zehnder interferometer.
- ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2
- for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
+  This decomposition allows for lower depth photonic circuits in physical devices by applying two
+  independent phase shifts in parallel inside each Mach-Zehnder interferometer.
+  ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2
+  for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
 
- Example:
+  Example:
 
- ```python
+  ```python
   import numpy as np
   from strawberryfields import Program
   from strawberryfields.ops import Interferometer
@@ -37,7 +37,7 @@
   Uout = S[:M,:M] + 1j * S[M:,:M] # unitary transformation
 
   print(np.allclose(U, Uout))
- ```
+  ```
 
 * A new compiler, ``GaussianMerge``, has been added. It is aimed at reducing calculation
   overhead for non-Gaussian circuits by minimizing the amount of Gaussian operations
@@ -132,7 +132,7 @@
 
 <h3>Improvements</h3>
 
-* Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
+* `backends/tfbackend/ops.py` is cleaned up to reduce line count, clarify function
   similarity across backend ops, and replace `tensorflow.tensordot` with
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
@@ -144,10 +144,10 @@
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
-* Speed improvements to ``gaussian_unitary`` compiler.
+* Speed improvements are addded to ``gaussian_unitary`` compiler.
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
-* Added native support in the Fock backend for the MZgate.
+* Adds native support in the Fock backend for the MZgate.
   [(#610)](https://github.com/XanaduAI/strawberryfields/issues/610)
 
 * `measure_threshold` is now supported in the `bosonic` backend.
@@ -156,19 +156,19 @@
 
 <h3>Bug fixes</h3>
 
-* Fixed an unexpected behaviour that can result in increasing memory usage due
+* Fixes an unexpected behaviour that can result in increasing memory usage due
   to ``sympy.lambdify`` caching too much data using ``linecache``.
   [(#579)](https://github.com/XanaduAI/strawberryfields/pull/579)
 
-* Keep symbolic expressions when converting a Strawberry Fields circuit to a Blackbird program
+* Keeps symbolic expressions when converting a Strawberry Fields circuit to a Blackbird program
   by storing them as `blackbird.RegRefTransforms` in the resulting Blackbird program.
   [(#596)](https://github.com/XanaduAI/strawberryfields/pull/596)
 
-* Fixed a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always
+* Fixes a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always
   used the wrong set of allowed gate parameter ranges to validate the parameters in a program.
   [(#605)](https://github.com/XanaduAI/strawberryfields/pull/605)
 
-* The correct samples are now returned when running a TDMProgram with several shots, where
+* The correct samples are now returned when running a `TDMProgram` with several shots, where
   `timebins % concurrent_modes != 0`.
   [(#611)](https://github.com/XanaduAI/strawberryfields/pull/611)
 
@@ -179,7 +179,9 @@
   the resulting Blackbird program when using the `io.to_blackbird()` converter function.
   [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
 
-* Now factorials of numbers larger than 170 are calculated approximately and stored on a `float`.
+* Factorials of numbers larger than 170 are now calculated using long integer arithmetic, using
+  the flag `exact=True` in `scipy.special.factorial`, when calling
+  `sf.apps.similarity.orbit_cardinality`.
   [(#628)](https://github.com/XanaduAI/strawberryfields/pull/628)
 
 <h3>Documentation</h3>
@@ -193,7 +195,6 @@
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
-
 
 J. Eli Bourassa, Jake Bulmer, Sebastian Duque, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton,
 Antal Száva, Federico Rueda, Yuan Yao.
