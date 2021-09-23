@@ -31,7 +31,8 @@ class TestJob:
         job = Job("abc", status=JobStatus.QUEUED, connection=connection)
 
         with pytest.raises(
-            AttributeError, match="The result is undefined for jobs that are not completed",
+            AttributeError,
+            match="The result is undefined for jobs that are not completed",
         ):
             job.result
 

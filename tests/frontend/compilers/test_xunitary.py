@@ -181,7 +181,6 @@ X8_CIRCUIT = textwrap.dedent(
 )
 
 
-
 class TestXCompilation:
     """Tests for compilation using the X8_01 circuit specification"""
 
@@ -306,7 +305,7 @@ class TestXCompilation:
         with pytest.raises(CircuitError, match="S2gates do not appear on the correct modes."):
             res = prog.compile(compiler="Xunitary")
 
-    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
         """Test that squeezing gates are correctly merged"""
         prog = sf.Program(2 * num_pairs)
@@ -314,10 +313,10 @@ class TestXCompilation:
 
         with prog.context as q:
 
-            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[0 + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE / 2) | (q[0], q[0 + num_pairs])
             for i in range(1, num_pairs):
                 ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
-            ops.S2gate(SQ_AMPLITUDE/2) | (q[0], q[0 + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE / 2) | (q[0], q[0 + num_pairs])
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q
@@ -325,7 +324,7 @@ class TestXCompilation:
         res = prog.compile(compiler="Xunitary")
         assert np.allclose(res.circuit[0].op.p[0], SQ_AMPLITUDE)
 
-    @pytest.mark.parametrize("num_pairs", [4,5,6,7])
+    @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_s2gate_repeated_modes_wrong_phase(self, num_pairs):
         """Test that an error is raised if there is an attempt to merge squeezing gates
         with different phase values"""
@@ -337,7 +336,7 @@ class TestXCompilation:
             ops.S2gate(SQ_AMPLITUDE) | (q[0], q[0 + num_pairs])
             for i in range(1, num_pairs):
                 ops.S2gate(SQ_AMPLITUDE) | (q[i], q[i + num_pairs])
-            ops.S2gate(SQ_AMPLITUDE/2, 0.5) | (q[0], q[0 + num_pairs])
+            ops.S2gate(SQ_AMPLITUDE / 2, 0.5) | (q[0], q[0 + num_pairs])
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs))
             ops.Interferometer(U) | tuple(q[i] for i in range(num_pairs, 2 * num_pairs))
             ops.MeasureFock() | q

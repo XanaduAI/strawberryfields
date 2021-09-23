@@ -176,7 +176,9 @@ class TestRemoteEngineIntegration:
         engine = RemoteEngine("X8")
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
-        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler fock."
+        assert (
+            caplog.records[-1].message == "Compiling program for device X8_01 using compiler fock."
+        )
         assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
 
         # check program is compiled to match the chip template
@@ -207,10 +209,14 @@ class TestRemoteEngineIntegration:
         _, target, res_prog, _ = engine.run_async(prog, shots=10)
 
         assert engine.device_spec.default_compiler == "Xunitary"
-        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xunitary."
+        assert (
+            caplog.records[-1].message
+            == "Compiling program for device X8_01 using compiler Xunitary."
+        )
 
     class MockProgram:
         """A mock program for testing"""
+
         def __init__(self):
             self.run_options = {}
 
@@ -221,7 +227,9 @@ class TestRemoteEngineIntegration:
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = []
 
-        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(
+            Connection, "create_job", lambda self, target, program, run_options: program
+        )
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
@@ -230,9 +238,7 @@ class TestRemoteEngineIntegration:
         prog._compile_info = (X8_spec, "dummy_compiler")
 
         engine = sf.RemoteEngine("X8")
-        with pytest.raises(
-            ValueError, match="Cannot use program compiled"
-        ):
+        with pytest.raises(ValueError, match="Cannot use program compiled"):
             program = engine.run_async(prog, shots=10)
 
     def test_compile(self, prog, monkeypatch, caplog):
@@ -242,7 +248,9 @@ class TestRemoteEngineIntegration:
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = []
 
-        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(
+            Connection, "create_job", lambda self, target, program, run_options: program
+        )
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
@@ -253,7 +261,10 @@ class TestRemoteEngineIntegration:
         program = engine.run_async(prog, shots=10)
 
         assert isinstance(program, self.MockProgram)
-        assert caplog.records[-1].message == "Compiling program for device X8_01 using compiler Xunitary."
+        assert (
+            caplog.records[-1].message
+            == "Compiling program for device X8_01 using compiler Xunitary."
+        )
 
     def test_recompilation_run_async(self, prog, monkeypatch, caplog):
         """Test that recompilation happens when the recompile keyword argument
@@ -264,7 +275,9 @@ class TestRemoteEngineIntegration:
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = compiler
 
-        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(
+            Connection, "create_job", lambda self, target, program, run_options: program
+        )
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
 
         compile_options = {"compiler": compiler}
@@ -279,9 +292,11 @@ class TestRemoteEngineIntegration:
         program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
 
         # No recompilation, original Program
-        assert caplog.records[-1].message == (f"Recompiling program for device "
-                f"{device.target} using the specified compiler options: "
-                                    f"{compile_options}.")
+        assert caplog.records[-1].message == (
+            f"Recompiling program for device "
+            f"{device.target} using the specified compiler options: "
+            f"{compile_options}."
+        )
 
     def test_recompilation_precompiled(self, prog, monkeypatch, caplog):
         """Test that recompilation happens when:
@@ -295,7 +310,9 @@ class TestRemoteEngineIntegration:
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = []
 
-        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(
+            Connection, "create_job", lambda self, target, program, run_options: program
+        )
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
@@ -313,7 +330,10 @@ class TestRemoteEngineIntegration:
         # Setting recompile in keyword arguments
         program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
         assert isinstance(program, self.MockProgram)
-        assert caplog.records[-1].message == "Recompiling program for device X8_01 using compiler Xunitary."
+        assert (
+            caplog.records[-1].message
+            == "Recompiling program for device X8_01 using compiler Xunitary."
+        )
 
     def test_recompilation_run(self, prog, monkeypatch, caplog):
         """Test that recompilation happens when the recompile keyword argument
@@ -324,7 +344,9 @@ class TestRemoteEngineIntegration:
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = compiler
 
-        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: MockJob(program))
+        monkeypatch.setattr(
+            Connection, "create_job", lambda self, target, program, run_options: MockJob(program)
+        )
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
 
         class MockJob:
@@ -353,9 +375,11 @@ class TestRemoteEngineIntegration:
 
         # No recompilation, original Program
         assert caplog.records[-1].message == ("The remote job 0 has been completed.")
-        assert caplog.records[-2].message == (f"Recompiling program for device "
-                f"{device.target} using the specified compiler options: "
-                                    f"{compile_options}.")
+        assert caplog.records[-2].message == (
+            f"Recompiling program for device "
+            f"{device.target} using the specified compiler options: "
+            f"{compile_options}."
+        )
 
     def test_validation(self, prog, monkeypatch, caplog):
         """Test that validation happens (no recompilation) when the target
@@ -366,7 +390,9 @@ class TestRemoteEngineIntegration:
         test_device_dict = mock_device_dict.copy()
         test_device_dict["compiler"] = compiler
 
-        monkeypatch.setattr(Connection, "create_job", lambda self, target, program, run_options: program)
+        monkeypatch.setattr(
+            Connection, "create_job", lambda self, target, program, run_options: program
+        )
         monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
 
         engine = sf.RemoteEngine("X8_01")
@@ -379,5 +405,7 @@ class TestRemoteEngineIntegration:
         program = engine.run_async(prog, shots=10)
 
         # No recompilation, original Program
-        assert caplog.records[-1].message == (f"Program previously compiled for {device.target} using {prog.compile_info[1]}. "
-                                              f"Validating program against the Xstrict compiler.")
+        assert caplog.records[-1].message == (
+            f"Program previously compiled for {device.target} using {prog.compile_info[1]}. "
+            f"Validating program against the Xstrict compiler."
+        )

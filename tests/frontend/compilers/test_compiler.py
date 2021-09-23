@@ -37,6 +37,7 @@ class TestAbstractCircuitSpec:
         class DummyCircuit(Compiler):
             """Dummy circuit used to instantiate
             the abstract base class"""
+
             modes = 0
             remote = False
             local = True
@@ -66,11 +67,11 @@ class TestAbstractCircuitSpec:
         assert len(circuit) == 5
 
         # check gates are correct
-        assert circuit[0]['name'] == 'Sgate'
-        assert circuit[1]['name'] == 'Dgate'
-        assert circuit[2]['name'] == 'BSgate'
-        assert circuit[3]['name'] == 'MeasureFock'
-        assert circuit[4]['name'] == 'MeasureFock'
+        assert circuit[0]["name"] == "Sgate"
+        assert circuit[1]["name"] == "Dgate"
+        assert circuit[2]["name"] == "BSgate"
+        assert circuit[3]["name"] == "MeasureFock"
+        assert circuit[4]["name"] == "MeasureFock"
 
         # check topology/edges between nodes
         edges = {(i, j) for i, j, d in top.edges().data()}
@@ -85,6 +86,7 @@ class TestAbstractCircuitSpec:
         class DummyCircuit(Compiler):
             """Dummy circuit used to instantiate
             the abstract base class"""
+
             modes = 0
             remote = False
             local = True
@@ -114,16 +116,16 @@ class TestAbstractCircuitSpec:
         assert len(circuit) == 5
 
         # check gates are correct
-        assert circuit[0]['name'] == 'Sgate'
-        assert circuit[1]['name'] == 'Dgate'
-        assert circuit[2]['name'] == 'BSgate'
-        assert circuit[3]['name'] == 'MeasureFock'
-        assert circuit[4]['name'] == 'MeasureFock'
+        assert circuit[0]["name"] == "Sgate"
+        assert circuit[1]["name"] == "Dgate"
+        assert circuit[2]["name"] == "BSgate"
+        assert circuit[3]["name"] == "MeasureFock"
+        assert circuit[4]["name"] == "MeasureFock"
 
         # check arguments
-        assert circuit[0]['args'] == [0, 0]
-        assert circuit[1]['args'] == [-7.123]
-        assert circuit[2]['args'] == [0]
+        assert circuit[0]["args"] == [0, 0]
+        assert circuit[1]["args"] == [-7.123]
+        assert circuit[2]["args"] == [0]
 
         # check topology/edges between nodes
         edges = {(i, j) for i, j, d in top.edges().data()}
