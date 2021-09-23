@@ -284,7 +284,7 @@ def orbits(photon_number: int) -> Generator[list, None, None]:
         yield sorted(a[: k + 1], reverse=True)
 
 
-def orbit_cardinality(orbit: list, modes: int) -> int:
+def orbit_cardinality(orbit: list, modes: int) -> Union[int, float]:
     """Gives the number of samples belonging to the input orbit.
 
     For example, there are three possible samples in the orbit [2, 1, 1] with three modes: [1, 1,
@@ -304,7 +304,13 @@ def orbit_cardinality(orbit: list, modes: int) -> int:
     """
     sample = orbit + [0] * (modes - len(orbit))
     counts = list(Counter(sample).values())
-    return int(factorial(modes) / np.prod(factorial(counts)))
+
+    # factorials of numbers larger than 170 do not fit into a int,
+    # hence return float using the qarg `exact=True`
+    if modes > 170:
+        return factorial(modes, exact=True) / np.prod(factorial(counts, exact=True))
+
+    return int(factorial(modes, exact=False) / np.prod(factorial(counts, exact=False)))
 
 
 def event_cardinality(photon_number: int, max_count_per_mode: int, modes: int) -> int:
