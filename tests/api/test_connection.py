@@ -53,6 +53,7 @@ port = 443
 test_host = "SomeHost"
 test_token = "SomeToken"
 
+
 class MockResponse:
     """A mock response with a JSON or binary body."""
 
@@ -98,10 +99,17 @@ class TestConnection:
         monkeypatch.setattr(
             requests,
             "request",
-            mock_return(MockResponse(
-                200,
-                {"layout": "", "modes": 42, "compiler": [], "gate_parameters": {"param": [[0, 1]]}}
-            )),
+            mock_return(
+                MockResponse(
+                    200,
+                    {
+                        "layout": "",
+                        "modes": 42,
+                        "compiler": [],
+                        "gate_parameters": {"param": [[0, 1]]},
+                    },
+                )
+            ),
         )
 
         device_spec = connection.get_device_spec(target)
@@ -126,7 +134,9 @@ class TestConnection:
         id_, status = "123", JobStatus.QUEUED
 
         monkeypatch.setattr(
-            requests, "request", mock_return(MockResponse(201, {"id": id_, "status": status})),
+            requests,
+            "request",
+            mock_return(MockResponse(201, {"id": id_, "status": status})),
         )
 
         job = connection.create_job("X8_01", prog, {"shots": 1})
@@ -153,7 +163,9 @@ class TestConnection:
             for i in range(1, 10)
         ]
         monkeypatch.setattr(
-            requests, "request", mock_return(MockResponse(200, {"data": jobs})),
+            requests,
+            "request",
+            mock_return(MockResponse(200, {"data": jobs})),
         )
 
         jobs = connection.get_all_jobs(after=datetime(2020, 1, 5))
@@ -233,7 +245,9 @@ class TestConnection:
             np.save(buf, result_samples)
             buf.seek(0)
             monkeypatch.setattr(
-                requests, "request", mock_return(MockResponse(200, binary_body=buf.getvalue())),
+                requests,
+                "request",
+                mock_return(MockResponse(200, binary_body=buf.getvalue())),
             )
 
         result = connection.get_job_result("123")
@@ -285,7 +299,7 @@ class TestConnection:
         """Test that the access token is created by passing the expected headers."""
         path = "/auth/realms/platform/protocol/openid-connect/token"
 
-        data={
+        data = {
             "grant_type": "refresh_token",
             "refresh_token": test_token,
             "client_id": "public",
@@ -297,8 +311,8 @@ class TestConnection:
         conn = Connection(token=test_token, host=test_host)
         conn._refresh_access_token()
         expected_headers = {
-            'Accept-Version': conn.api_version,
-            'User-Agent': conn.user_agent,
+            "Accept-Version": conn.api_version,
+            "User-Agent": conn.user_agent,
         }
         expected_url = f"https://{test_host}:443{path}"
         spy.assert_called_once_with(expected_url, headers=expected_headers, data=data)

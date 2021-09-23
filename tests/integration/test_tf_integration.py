@@ -280,7 +280,7 @@ class TestTwoModes:
 
     def test_eval_true_state_fock_prob(self, setup_eng, cutoff, tol):
         """Tests whether the probability of a Fock measurement outcome on the state returns
-         a tensor with the correct value."""
+        a tensor with the correct value."""
         n1 = cutoff // 2
         n2 = cutoff // 3
 
@@ -318,13 +318,14 @@ class TestThreeModes:
         nbar1, var_n1 = state.mean_photon(1)
         nbar2, var_n2 = state.mean_photon(2)
 
-        assert np.allclose(nbar0, 0., atol=tol, rtol=0)
-        assert np.allclose(nbar1, 1., atol=tol, rtol=0)
-        assert np.allclose(nbar2, 0., atol=tol, rtol=0)
+        assert np.allclose(nbar0, 0.0, atol=tol, rtol=0)
+        assert np.allclose(nbar1, 1.0, atol=tol, rtol=0)
+        assert np.allclose(nbar2, 0.0, atol=tol, rtol=0)
 
-        assert np.allclose(var_n0, 0., atol=tol, rtol=0)
-        assert np.allclose(var_n1, 0., atol=tol, rtol=0)
-        assert np.allclose(var_n2, 0., atol=tol, rtol=0)
+        assert np.allclose(var_n0, 0.0, atol=tol, rtol=0)
+        assert np.allclose(var_n1, 0.0, atol=tol, rtol=0)
+        assert np.allclose(var_n2, 0.0, atol=tol, rtol=0)
+
 
 class TestGradient:
     """Integration tests for the gradient computation"""
@@ -513,7 +514,7 @@ class TestGradient:
 
         eng, prog = setup_eng(2)
         _theta, _phi = prog.params("theta", "phi")
-        photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
+        photon_11 = np.zeros((cutoff, cutoff), dtype=np.complex64)
         photon_11[1, 1] = 1.0 + 0.0j
 
         with prog.context as q:
@@ -525,15 +526,15 @@ class TestGradient:
 
         with tf.GradientTape(persistent=True) as tape:
             state = eng.run(prog, args={"theta": theta, "phi": phi}).state
-            prob11 = tf.abs(state.ket()[1, 1])**2
-            prob02 = tf.abs(state.ket()[0, 2])**2
+            prob11 = tf.abs(state.ket()[1, 1]) ** 2
+            prob02 = tf.abs(state.ket()[0, 2]) ** 2
 
         theta_grad, phi_grad = tape.gradient(prob11, [theta, phi])
-        assert np.allclose(theta_grad, -4 * np.sin(2*THETA)*np.cos(2*THETA), atol=tol, rtol=0)
+        assert np.allclose(theta_grad, -4 * np.sin(2 * THETA) * np.cos(2 * THETA), atol=tol, rtol=0)
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
 
         theta_grad, phi_grad = tape.gradient(prob02, [theta, phi])
-        assert np.allclose(theta_grad, np.sin(4*THETA), atol=tol, rtol=0)
+        assert np.allclose(theta_grad, np.sin(4 * THETA), atol=tol, rtol=0)
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
 
     def test_MZ_state_gradients(self, setup_eng, cutoff, tol, batch_size):
@@ -550,7 +551,7 @@ class TestGradient:
 
         eng, prog = setup_eng(2)
         _phi_in, _phi_ex = prog.params("phi_in", "phi_ex")
-        photon_11 = np.zeros((cutoff,cutoff), dtype=np.complex64)
+        photon_11 = np.zeros((cutoff, cutoff), dtype=np.complex64)
         photon_11[1, 1] = 1.0 + 0.0j
 
         with prog.context as q:
@@ -562,20 +563,20 @@ class TestGradient:
 
         with tf.GradientTape(persistent=True) as tape:
             state = eng.run(prog, args={"phi_in": phi_in, "phi_ex": phi_ex}).state
-            prob11 = tf.abs(state.ket()[1, 1])**2
-            prob02 = tf.abs(state.ket()[0, 2])**2
+            prob11 = tf.abs(state.ket()[1, 1]) ** 2
+            prob02 = tf.abs(state.ket()[0, 2]) ** 2
 
         phi_in_grad, phi_ex_grad = tape.gradient(prob11, [phi_in, phi_ex])
-        assert np.allclose(phi_in_grad, -np.sin(2*PHI_IN), atol=tol, rtol=0)
+        assert np.allclose(phi_in_grad, -np.sin(2 * PHI_IN), atol=tol, rtol=0)
         assert np.allclose(phi_ex_grad, 0, atol=tol, rtol=0)
 
         phi_in_grad, phi_ex_grad = tape.gradient(prob02, [phi_in, phi_ex])
-        assert np.allclose(phi_in_grad, np.sin(PHI_IN)*np.cos(PHI_IN), atol=tol, rtol=0)
+        assert np.allclose(phi_in_grad, np.sin(PHI_IN) * np.cos(PHI_IN), atol=tol, rtol=0)
         assert np.allclose(phi_ex_grad, 0, atol=tol, rtol=0)
 
     def test_2mode_squeezed_vacuum_gradients(self, setup_eng, cutoff, tol, batch_size):
         """Tests whether the gradient for the probability of the states |0,0> and |1,1>
-         created by an S2gate is correct."""
+        created by an S2gate is correct."""
         if batch_size is not None:
             pytest.skip(
                 "Cannot calculate gradient in batch mode, as tape.gradient "
@@ -599,16 +600,19 @@ class TestGradient:
 
         with tf.GradientTape(persistent=True) as tape:
             state = eng.run(prog, args={"r": r, "phi": phi}).state
-            prob00 = tf.abs(state.ket()[0, 0])**2
-            prob11 = tf.abs(state.ket()[1, 1])**2
+            prob00 = tf.abs(state.ket()[0, 0]) ** 2
+            prob11 = tf.abs(state.ket()[1, 1]) ** 2
 
         r_grad, phi_grad = tape.gradient(prob00, [r, phi])
-        assert np.allclose(r_grad, -2*np.tanh(R)/np.cosh(R)**2, atol=tol, rtol=0)
+        assert np.allclose(r_grad, -2 * np.tanh(R) / np.cosh(R) ** 2, atol=tol, rtol=0)
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
 
         r_grad, phi_grad = tape.gradient(prob11, [r, phi])
-        assert np.allclose(r_grad, 2*(np.sinh(R) - np.sinh(R)**3)/np.cosh(R)**5, atol=tol, rtol=0)
+        assert np.allclose(
+            r_grad, 2 * (np.sinh(R) - np.sinh(R) ** 3) / np.cosh(R) ** 5, atol=tol, rtol=0
+        )
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
+
 
 @pytest.mark.xfail(
     reason="If this test passes, then the _einsum_v1 patch is no longer needed.",
@@ -672,5 +676,3 @@ def test_einsum_complex_gradients(tol):
 
     # gradient of f0 and f1 should fail
     assert np.allclose(grads[0], grads[1], atol=tol, rtol=0)
-
-

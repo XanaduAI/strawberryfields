@@ -110,8 +110,7 @@ class TestFockRepresentation:
         random_kets = np.array(
             [
                 (lambda ket: ket / np.linalg.norm(ket))(
-                    np.random.uniform(-1, 1, cutoff)
-                    + 1j * np.random.uniform(-1, 1, cutoff)
+                    np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
                 )
                 for _ in range(batch_size)
             ]
@@ -137,13 +136,9 @@ class TestFockRepresentation:
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
 
         np.random.seed(SEED)
-        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
-            -1, 1, cutoff
-        )
+        random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
         random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
-        random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(
-            -1, 1, cutoff
-        )
+        random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
         random_ket2 = random_ket2 / np.linalg.norm(random_ket2)
 
         backend = setup_backend(1)
@@ -170,9 +165,7 @@ class TestFockRepresentation:
         assert np.allclose(state.trace(), 1.0, atol=tol, rtol=0.0)
         assert np.allclose(rho_probs, ket_probs, atol=tol, rtol=0.0)
 
-    def test_prepare_random_dm_state(
-        self, setup_backend, batch_size, pure, cutoff, tol
-    ):
+    def test_prepare_random_dm_state(self, setup_backend, batch_size, pure, cutoff, tol):
         """Tests if a random dm state is correctly prepared."""
 
         np.random.seed(SEED)
@@ -204,17 +197,13 @@ class TestFockRepresentation:
         assert np.allclose(rho_probs, kets_mixed_probs, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("theta", PHASE_ALPHAS)
-    def test_rotated_superposition_states(
-        self, setup_backend, theta, pure, cutoff, tol
-    ):
+    def test_rotated_superposition_states(self, setup_backend, theta, pure, cutoff, tol):
         r"""Tests if a range of phase-shifted superposition states are equal to the form of
         \sum_n exp(i * theta * n)|n>"""
 
         backend = setup_backend(1)
 
-        ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(
-            cutoff
-        )
+        ref_state = np.array([np.exp(1j * theta * k) for k in range(cutoff)]) / np.sqrt(cutoff)
 
         if not pure:
             ref_state = np.outer(ref_state, np.conj(ref_state))

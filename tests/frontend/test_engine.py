@@ -288,7 +288,7 @@ class TestEngineProgramInteraction:
 
         assert result.all_samples[1] == [0]
         assert result.all_samples[3] == [0]
-        assert [bool(i) for i in result.all_samples[2]] == [0,1]
+        assert [bool(i) for i in result.all_samples[2]] == [0, 1]
 
     @pytest.mark.parametrize("eng", engines)
     def test_all_samples_multi_runs(self, eng):
@@ -306,7 +306,7 @@ class TestEngineProgramInteraction:
         # of measurements
         assert result.all_samples[1] == [0]
         assert result.all_samples[3] == [0]
-        assert [bool(i) for i in result.all_samples[2]] == [0,1]
+        assert [bool(i) for i in result.all_samples[2]] == [0, 1]
 
         prog = sf.Program(5)
         with prog.context as q:
@@ -358,6 +358,7 @@ class TestEngineProgramInteraction:
         assert np.array_equal(result.all_samples[3][0].numpy(), np.array([[0], [0]]))
         assert np.array_equal(result.all_samples[2][0].numpy(), np.array([[0], [0]]))
         assert np.array_equal(result.all_samples[2][1].numpy(), np.array([[0], [0]]))
+
 
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""

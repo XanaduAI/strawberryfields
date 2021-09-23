@@ -57,7 +57,7 @@ clean-docs:
 
 .PHONY : format
 format: 
-	black -l 100 strawberryfields
+	black -l 100 strawberryfields tests
 
 test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps test-api
 

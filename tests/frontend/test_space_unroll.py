@@ -101,7 +101,9 @@ def test_lossless_no_mixing_no_rotation_U(delays, modes):
 def test_no_entanglement_between_padding_and_computational_modes(delays, modes):
     """Test that the U matrix is the identity if there is no beamsplitter mixing and no rotations"""
     delays = list(delays)
-    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+    angles = np.concatenate(
+        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+    )
     d = len(delays)
     n, N = get_mode_indices(delays)
     prog = sf.TDMProgram([N])
@@ -135,7 +137,9 @@ def test_is_permutation_when_angle_pi_on_two(delays, modes):
     """Checks that if all the beamsplitters are cross then the absolute value output matrix is a permutation matrix"""
     delays = list(delays)
     net = modes + sum(delays)
-    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+    angles = np.concatenate(
+        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+    )
     angles[0] = np.pi / 2 * np.random.randint(2, size=net)
     angles[1] = np.pi / 2 * np.random.randint(2, size=net)
     angles[2] = np.pi / 2 * np.random.randint(2, size=net)
@@ -162,7 +166,9 @@ def test_cov_is_pure():
     """Tests space unrolling when going into the Gaussian backend"""
     delays = [1, 6, 36]
     modes = 216
-    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+    angles = np.concatenate(
+        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+    )
     net = modes + sum(delays)
     d = len(delays)
     n, N = get_mode_indices(delays)
@@ -191,7 +197,9 @@ def test_space_unrolling():
     """Tests that space-unrolling works and that it can be done twice"""
     delays = [1, 6, 36]
     modes = 216
-    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+    angles = np.concatenate(
+        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+    )
 
     d = len(delays)
     n, N = get_mode_indices(delays)
@@ -212,8 +220,12 @@ def test_space_unrolling():
 
     # check that the number of gates are correct.
     assert sum([isinstance(cmd.op, Sgate) for cmd in prog.circuit]) == 216
-    assert sum([isinstance(cmd.op, Rgate) for cmd in prog.circuit]) == 259-43 + 259-42 + 259-36
-    assert sum([isinstance(cmd.op, BSgate) for cmd in prog.circuit]) == 259-43 + 259-42 + 259-36
+    assert (
+        sum([isinstance(cmd.op, Rgate) for cmd in prog.circuit]) == 259 - 43 + 259 - 42 + 259 - 36
+    )
+    assert (
+        sum([isinstance(cmd.op, BSgate) for cmd in prog.circuit]) == 259 - 43 + 259 - 42 + 259 - 36
+    )
 
     prog.space_unroll()
 
@@ -225,7 +237,9 @@ def test_rolling_space_unrolled():
     """Tests that rolling a space-unrolled circuit works"""
     delays = [1, 6, 36]
     modes = 216
-    angles = np.concatenate([generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)])
+    angles = np.concatenate(
+        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+    )
 
     d = len(delays)
     n, N = get_mode_indices(delays)

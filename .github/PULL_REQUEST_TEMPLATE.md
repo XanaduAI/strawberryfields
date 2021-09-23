@@ -12,9 +12,9 @@ Please complete the following checklist when submitting a PR:
 
 - [ ] Ensure that the test suite passes, by running `make test`.
 
-- [ ] Ensure that code is properly formatted, by running `make format` or `black -l 100
-      strawberryfields`. You will need to have the Black code format installed: `pip install
-      black`.
+- [ ] Ensure that code and tests are properly formatted, by running `make format` or `black -l 100
+      <filename>` on any relevant files. You will need to have the Black code format installed: 
+      `pip install black`.
 
 - [ ] Add a new entry to the `.github/CHANGELOG.md` file, summarizing the
       change, and including a link back to the PR.

@@ -42,13 +42,13 @@ def test_free_parameters(setup_eng, tol):
     """Programs with free parameters."""
 
     eng, prog = setup_eng(1)
-    x = prog.params('x')  # free parameter
+    x = prog.params("x")  # free parameter
     with prog.context as q:
         ops.Dgate(x) | q
-        ops.Sgate(-1.2 * x * pf.sin(x**2 - 0.1)) | q
+        ops.Sgate(-1.2 * x * pf.sin(x ** 2 - 0.1)) | q
 
     with pytest.raises(ParameterError, match="Unknown free parameter"):
-        eng.run(prog, args={'foo': 1.0})
+        eng.run(prog, args={"foo": 1.0})
     with pytest.raises(ParameterError, match="unbound parameter with no default value"):
         eng.run(prog)
 
@@ -72,6 +72,7 @@ def test_free_parameters(setup_eng, tol):
 @pytest.fixture(scope="function")
 def eng_prog_params(batch_size, setup_eng):
     """Engine and Program instances, and an attached set of Operation parameters."""
+
     def func1(x):
         return abs(2 * x ** 2 - 3 * x + 1)
 
@@ -89,6 +90,7 @@ def eng_prog_params(batch_size, setup_eng):
         params.append(np.random.uniform(size=(batch_size,)))
 
     return eng, prog, params
+
 
 @pytest.mark.parametrize("G", testset)
 def test_parameters_with_operations(eng_prog_params, G):
