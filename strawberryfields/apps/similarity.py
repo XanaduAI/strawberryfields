@@ -305,7 +305,7 @@ def orbit_cardinality(orbit: list, modes: int) -> Union[int, float]:
     sample = orbit + [0] * (modes - len(orbit))
     counts = list(Counter(sample).values())
 
-    # factorials of numbers larger than 170 do not fit into a int, 
+    # factorials of numbers larger than 170 do not fit into a int,
     # hence return float using the qarg `exact=True`
     if modes > 170:
         return factorial(modes, exact=True) / np.prod(factorial(counts, exact=True))
