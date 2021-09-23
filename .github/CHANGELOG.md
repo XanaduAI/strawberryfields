@@ -146,7 +146,7 @@
 
 
 * Added native support in the Fock backend for the MZgate.
-  [#610](https://github.com/XanaduAI/strawberryfields/issues/610)
+  [(#610)](https://github.com/XanaduAI/strawberryfields/issues/610)
 
 * `measure_threshold` is now supported in the `bosonic` backend.
   [(#618)](https://github.com/XanaduAI/strawberryfields/pull/618)
@@ -175,6 +175,9 @@
 * Measurement arguments are now stored as non-keyword arguments, instead of keyword arguments, in
   the resulting Blackbird program when using the `io.to_blackbird()` converter function.
   [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
+  
+* Now factorials of numbers larger than 170 are calculated approximately and stored on a `float`.
+  [(#628)](https://github.com/XanaduAI/strawberryfields/pull/628)
 
 <h3>Documentation</h3>
 
