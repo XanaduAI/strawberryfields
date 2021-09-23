@@ -130,7 +130,6 @@
      [-0.6708+8.2152e-17j  0.6708+0.0000e+00j]]) | (q[0], q[1])
   ```
 
-
 <h3>Improvements</h3>
 
 * Cleanup `backends/tfbackend/ops.py` to reduce line count, clarify function
@@ -138,12 +137,15 @@
   broadcasting.
   [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
 
+* Support is added for using a ``TDMProgram`` to construct time-domain circuits with Fock
+  measurements and multiple loops.
+  [(#601)](https://github.com/XanaduAI/strawberryfields/pull/601)
+
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
 * Speed improvements to ``gaussian_unitary`` compiler
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
-
 
 * Added native support in the Fock backend for the MZgate.
   [(#610)](https://github.com/XanaduAI/strawberryfields/issues/610)
@@ -173,7 +175,7 @@
 * Measurement arguments are now stored as non-keyword arguments, instead of keyword arguments, in
   the resulting Blackbird program when using the `io.to_blackbird()` converter function.
   [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
-  
+
 * Now factorials of numbers larger than 170 are calculated approximately and stored on a `float`.
   [(#628)](https://github.com/XanaduAI/strawberryfields/pull/628)
 
