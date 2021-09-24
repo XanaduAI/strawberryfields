@@ -4,7 +4,7 @@ sympy
 tensorflow
 tensorboard
 networkx
-git+https://github.com/XanaduAI/blackbird@master#egg=quantum-blackbird
+quantum-blackbird
 python-dateutil
 thewalrus
 toml
