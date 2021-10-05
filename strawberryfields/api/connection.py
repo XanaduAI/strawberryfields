@@ -285,8 +285,7 @@ class Connection:
             def int_to_int64(samples):
                 if np.issubdtype(samples.dtype, np.integer):
                     return samples.astype(np.int64)
-                else:
-                    return samples
+                return samples
 
             if isinstance(samples, dict):
                 samples = {key: int_to_int64(value) for key, value in samples}
