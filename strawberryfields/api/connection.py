@@ -288,7 +288,7 @@ class Connection:
                 return samples
 
             if isinstance(samples, dict):
-                samples = {key: int_to_int64(value) for key, value in samples}
+                samples = {key: int_to_int64(value) for key, value in samples.items()}
             else:
                 samples = int_to_int64(samples)
 
