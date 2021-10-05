@@ -2,6 +2,9 @@
 
 <h3>New features since last release</h3>
 
+* Cloud devices can now return dictionaries of numpy arrays, and comporession can be used to reduce the data payload.
+  [(#633)](https://github.com/XanaduAI/strawberryfields/pull/633)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
