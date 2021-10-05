@@ -78,3 +78,18 @@ class TestResult:
         assert "shots" not in out
         assert "timebins" not in out
         assert f"contains state={stateful}" in out
+
+    @pytest.mark.parametrize("stateful", [True, False])
+    def test_dict_print(self, stateful, capfd):
+        """Test that printing a result object with a dict of samples
+        provides the correct output."""
+        samples = {"ones": np.ones((2, 3, 4, 5)), "twos": 2*np.ones((2, 3, 4, 5))}
+        result = Result(samples, is_stateful=stateful)
+        print(result)
+        out, err = capfd.readouterr()
+        assert "modes" not in out
+        assert "shots" not in out
+        assert "timebins" not in out
+        assert "ones" in out
+        assert "twos" in out
+        assert f"contains state={stateful}" in out

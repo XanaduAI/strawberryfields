@@ -254,6 +254,86 @@ class TestConnection:
 
         assert np.array_equal(result.samples, result_samples)
 
+
+    @pytest.mark.parametrize(
+        "result_dtype",
+        [
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float32,
+            np.float64,
+        ],
+    )
+    @pytest.mark.parametrize("compressed", [True, False])
+    def test_get_job_result_dict(self, connection, result_dtype, compressed, monkeypatch):
+        """Tests a successful job result request."""
+        array1 = np.array([[1, 2], [3, 4]], dtype=result_dtype)
+        array2 = np.array([[5, 6, 7]], dtype=result_dtype)
+
+        with io.BytesIO() as buf:
+            if compressed:
+                np.savez_compressed(buf, array1=array1, array2=array2)
+            else:
+                np.savez(buf, array1=array1, array2=array2)
+            buf.seek(0)
+            monkeypatch.setattr(
+                requests,
+                "request",
+                mock_return(MockResponse(200, binary_body=buf.getvalue())),
+            )
+
+        result = connection.get_job_result("123")
+        assert isinstance(result.samples, dict)
+        assert np.array_equal(result.samples["array1"], array1)
+        assert np.array_equal(result.samples["array2"], array2)
+        if np.issubdtype(result_dtype, np.integer):
+            assert result.samples["array1"].dtype == np.int64
+            assert result.samples["array2"].dtype == np.int64
+
+    @pytest.mark.parametrize(
+        "result_dtype",
+        [
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.uint16,
+            np.uint32,
+            np.uint64,
+            np.float32,
+            np.float64,
+        ],
+    )
+    @pytest.mark.parametrize("compressed", [True, False])
+    def test_get_job_result_dict_single_samples_array(self, connection, result_dtype, compressed, monkeypatch):
+        """Tests a successful job result request."""
+        array1 = np.array([[1, 2], [3, 4]], dtype=result_dtype)
+
+        with io.BytesIO() as buf:
+            if compressed:
+                np.savez_compressed(buf, _single_samples_array=array1)
+            else:
+                np.savez(buf, _single_samples_array=array1)
+            buf.seek(0)
+            monkeypatch.setattr(
+                requests,
+                "request",
+                mock_return(MockResponse(200, binary_body=buf.getvalue())),
+            )
+
+        result = connection.get_job_result("123")
+        assert np.array_equal(result.samples, array1)
+        if np.issubdtype(result_dtype, np.integer):
+            assert result.samples.dtype == np.int64
+
+
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""
         monkeypatch.setattr(requests, "request", mock_return(MockResponse(404, {})))

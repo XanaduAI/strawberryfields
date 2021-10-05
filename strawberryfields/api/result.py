@@ -135,6 +135,12 @@ class Result:
 
     def __repr__(self):
         """String representation."""
+        if isinstance(self.samples, dict):
+            # if samples is a dict (of arrays), simply display the available keys
+            return "<Result: keys={}, contains state={}>".format(
+                self.samples.keys(), self._is_stateful
+            )
+
         if self.samples.ndim == 2:
             # if samples has dim 2, assume they're from a standard Program
             shots, modes = self.samples.shape
