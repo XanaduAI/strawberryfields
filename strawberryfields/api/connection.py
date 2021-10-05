@@ -282,20 +282,25 @@ class Connection:
             # Samples represent photon numbers.
             # Convert to int64, to avoid unexpected behaviour
             # when users postprocess these samples.
-            def int_to_int64(samples): 
+            def int_to_int64(samples):
                 if np.issubdtype(samples.dtype, np.integer):
                     return samples.astype(np.int64)
                 else:
                     return samples
+
             if isinstance(samples, dict):
                 samples = {key: int_to_int64(value) for key, value in samples}
             else:
                 samples = int_to_int64(samples)
 
-            # The npz format can be used to compress data. In this case samples is 
-            # a dict at this point, but the user might expect a single array. For 
+            # The npz format can be used to compress data. In this case samples is
+            # a dict at this point, but the user might expect a single array. For
             # this case we use the special key ``single_samples_array``.
-            if isinstance(samples, dict) and "_single_samples_array" in samples and len(samples) == 1:
+            if (
+                isinstance(samples, dict)
+                and "_single_samples_array" in samples
+                and len(samples) == 1
+            ):
                 samples = samples["_single_samples_array"]
 
             return Result(samples, is_stateful=False)

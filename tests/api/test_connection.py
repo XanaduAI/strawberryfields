@@ -254,7 +254,6 @@ class TestConnection:
 
         assert np.array_equal(result.samples, result_samples)
 
-
     @pytest.mark.parametrize(
         "result_dtype",
         [
@@ -312,7 +311,9 @@ class TestConnection:
         ],
     )
     @pytest.mark.parametrize("compressed", [True, False])
-    def test_get_job_result_dict_single_samples_array(self, connection, result_dtype, compressed, monkeypatch):
+    def test_get_job_result_dict_single_samples_array(
+        self, connection, result_dtype, compressed, monkeypatch
+    ):
         """Tests a successful job result request."""
         array1 = np.array([[1, 2], [3, 4]], dtype=result_dtype)
 
@@ -332,7 +333,6 @@ class TestConnection:
         assert np.array_equal(result.samples, array1)
         if np.issubdtype(result_dtype, np.integer):
             assert result.samples.dtype == np.int64
-
 
     def test_get_job_result_error(self, connection, monkeypatch):
         """Tests a failed job result request."""

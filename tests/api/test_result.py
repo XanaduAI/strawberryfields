@@ -83,7 +83,7 @@ class TestResult:
     def test_dict_print(self, stateful, capfd):
         """Test that printing a result object with a dict of samples
         provides the correct output."""
-        samples = {"ones": np.ones((2, 3, 4, 5)), "twos": 2*np.ones((2, 3, 4, 5))}
+        samples = {"ones": np.ones((2, 3, 4, 5)), "twos": 2 * np.ones((2, 3, 4, 5))}
         result = Result(samples, is_stateful=stateful)
         print(result)
         out, err = capfd.readouterr()
