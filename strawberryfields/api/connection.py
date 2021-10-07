@@ -295,11 +295,8 @@ class Connection:
             # The npz format can be used to compress data. In this case samples is
             # a dict at this point, but the user might expect a single array. For
             # this case we use the special key ``single_samples_array``.
-            if (
-                isinstance(samples, dict)
-                and len(samples) == 1
-            ):
-                samples = next(samples.values())
+            if isinstance(samples, dict) and len(samples) == 1:
+                samples = next(iter(samples.values()))
 
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
