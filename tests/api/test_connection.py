@@ -267,6 +267,8 @@ class TestConnection:
             np.uint64,
             np.float32,
             np.float64,
+            np.complex64,
+            np.complex128,
         ],
     )
     @pytest.mark.parametrize("compressed", [True, False])
@@ -308,6 +310,8 @@ class TestConnection:
             np.uint64,
             np.float32,
             np.float64,
+            np.complex64,
+            np.complex128,
         ],
     )
     @pytest.mark.parametrize("compressed", [True, False])
@@ -319,9 +323,9 @@ class TestConnection:
 
         with io.BytesIO() as buf:
             if compressed:
-                np.savez_compressed(buf, _single_samples_array=array1)
+                np.savez_compressed(buf, array1=array1)
             else:
-                np.savez(buf, _single_samples_array=array1)
+                np.savez(buf, array1=array1)
             buf.seek(0)
             monkeypatch.setattr(
                 requests,

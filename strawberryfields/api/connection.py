@@ -297,10 +297,9 @@ class Connection:
             # this case we use the special key ``single_samples_array``.
             if (
                 isinstance(samples, dict)
-                and "_single_samples_array" in samples
                 and len(samples) == 1
             ):
-                samples = samples["_single_samples_array"]
+                samples = next(samples.values())
 
             return Result(samples, is_stateful=False)
         raise RequestFailedError(
