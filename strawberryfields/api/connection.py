@@ -293,8 +293,7 @@ class Connection:
                 samples = int_to_int64(samples)
 
             # The npz format can be used to compress data. In this case samples is
-            # a dict at this point, but the user might expect a single array. For
-            # this case we use the special key ``single_samples_array``.
+            # a dict with one entry but the user might expect a single array.
             if isinstance(samples, dict) and len(samples) == 1:
                 samples = next(iter(samples.values()))
 
