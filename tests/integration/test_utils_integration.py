@@ -288,6 +288,7 @@ class TestInitialStatesAgreeFock:
         with pytest.raises(ValueError, match="cannot be complex"):
             ket = utils.cat_state(alpha, p, fock_dim=cutoff)
 
+
 @pytest.mark.backends("fock", "bosonic")
 class TestGKPTestConsistency:
     def test_gkp_state_parity(self, setup_eng, cutoff, bsize, pure, tol):
