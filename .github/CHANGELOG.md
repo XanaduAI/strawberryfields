@@ -1,22 +1,238 @@
-# Release 0.18.0 (development release)
+# Release 0.20.0 (development release)
 
 <h3>New features since last release</h3>
 
-* Adds the Bosonic backend, which can simulate states represented as linear 
-  combinations of Gaussian functions in phase space.   
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+# Release 0.19.0 (current release)
+
+<h3>New features since last release</h3>
+
+* Compact decompositions as described in <https://arxiv.org/abs/2104.07561>,
+  (``rectangular_compact`` and ``triangular_compact``) are now available in
+  the ``sf.decompositions`` module, and as options in the ``Interferometer`` operation.
+  [(#584)](https://github.com/XanaduAI/strawberryfields/pull/584)
+
+  This decomposition allows for lower depth photonic circuits in physical devices by applying two
+  independent phase shifts in parallel inside each Mach-Zehnder interferometer.
+  ``rectangular_compact`` reduces the layers of phase shifters from 2N+1 to N+2
+  for an N mode interferometer when compared to e.g. ``rectangular_MZ``.
+
+  Example:
+
+  ```python
+  import numpy as np
+  from strawberryfields import Program
+  from strawberryfields.ops import Interferometer
+  from scipy.stats import unitary_group
+
+  M = 10
+
+  # generate a 10x10 Haar random unitary
+  U = unitary_group.rvs(M)
+
+  prog = Program(M)
+
+  with prog.context as q:
+      Interferometer(U, mesh='rectangular_compact') | q
+
+  # check that applied unitary is correct
+  compiled_circuit = prog.compile(compiler="gaussian_unitary")
+  commands = compiled_circuit.circuit
+  S = commands[0].op.p[0] # symplectic transformation
+  Uout = S[:M,:M] + 1j * S[M:,:M] # unitary transformation
+
+  print(np.allclose(U, Uout))
+  ```
+
+* A new compiler, ``GaussianMerge``, has been added. It is aimed at reducing calculation
+  overhead for non-Gaussian circuits by minimizing the amount of Gaussian operations
+  in a circuit, while retaining the same functionality.
+  [(#591)](https://github.com/XanaduAI/strawberryfields/pull/591)
+
+  ``GaussianMerge`` merges Gaussian operations, where allowed, into ``GaussianTransform``
+  and ``Dgate`` operations. It utilizes the existing ``GaussianUnitary`` compiler to
+  merge operations and Directed Acyclic Graphs to determine which operations can be merged.
+
+  ```python
+  modes = 4
+  cutoff_dim = 6
+
+  # prepare an intial state with 4 photons in as many modes
+  initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
+  initial_state[1, 1, 1, 1] = 1
+
+  prog = sf.Program(4)
+
+  with prog.context as q:
+      ops.Ket(initial_state) | q  # Initial state preparation
+      # Gaussian Layer
+      ops.S2gate(0.01, 0.01) | (q[0], q[1])
+      ops.BSgate(1.9, 1.7) | (q[1], q[2])
+      ops.BSgate(0.9, 0.2) | (q[0], q[1])
+      # Non-Gaussian Layer
+      ops.Kgate(0.5) | q[3]
+      ops.CKgate(0.7) | (q[2], q[3])
+      # Gaussian Layer
+      ops.BSgate(1.0, 0.4) | (q[0], q[1])
+      ops.BSgate(2.0, 1.5) | (q[1], q[2])
+      ops.Dgate(0.01) | q[0]
+      ops.Dgate(0.01) | q[0]
+      ops.Sgate(0.01, 0.01) | q[1]
+      # Non-Gaussian Layer
+      ops.Vgate(0.5) | q[2]
+
+  prog_merged = prog.compile(compiler="gaussian_merge")
+  ```
+
+* A new operation, ``PassiveChannel`` has been added. It allows for arbitrary linear/passive transformations
+  (i.e., any operation which is linear in creation operators). Currently only supported by the ``gaussian``
+  backend. [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
+  ```python
+  from strawberryfields.ops import PassiveChannel, Sgate
+  import strawberryfields as sf
+  from scipy.stats import unitary_group
+  import numpy as np
+
+  M = 4
+
+  circuit = sf.Program(M)
+  U1 = unitary_group.rvs(M)
+  U2 = unitary_group.rvs(M)
+  losses = np.random.random(M)
+
+  T = U2 @ np.diag(losses) @ U1
+
+  eng = sf.Engine(backend='gaussian')
+  circuit = sf.Program(M)
+  with circuit.context as q:
+      for i in range(M):
+          ops.Sgate(1) | q[i]
+      ops.PassiveChannel(T) | q
+
+  cov = eng.run(circuit).state.cov()
+  ```
+
+* A new compiler, ``passive``, allows for a circuit which only consists of passive
+  elements to be compiled into a single ``PassiveChannel``.
+  [(#600)](https://github.com/XanaduAI/strawberryfields/pull/600)
+
+  ```python
+  from strawberryfields.ops import BSgate, LossChannel, Rgate
+  import strawberryfields as sf
+
+  circuit = sf.Program(2)
+  with circuit.context as q:
+      Rgate(np.pi) | q[0]
+      BSgate(0.25 * np.pi, 0) | (q[0], q[1])
+      LossChannel(0.9) | q[1]
+
+  compiled_circuit = circuit.compile(compiler="passive")
+  ```
+  ```pycon
+  >>> print(compiled_circuit)
+     PassiveChannel([[-0.7071+8.6596e-17j -0.7071+0.0000e+00j]
+     [-0.6708+8.2152e-17j  0.6708+0.0000e+00j]]) | (q[0], q[1])
+  ```
+
+<h3>Improvements</h3>
+
+* `backends/tfbackend/ops.py` is cleaned up to reduce line count, clarify function
+  similarity across backend ops, and replace `tensorflow.tensordot` with
+  broadcasting.
+  [(#567)](https://github.com/XanaduAI/strawberryfields/pull/567)
+
+* Support is added for using a ``TDMProgram`` to construct time-domain circuits with Fock
+  measurements and multiple loops.
+  [(#601)](https://github.com/XanaduAI/strawberryfields/pull/601)
+
+* `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
+  [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
+
+* Speed improvements are addded to ``gaussian_unitary`` compiler.
+  [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
+
+* Adds native support in the Fock backend for the MZgate.
+  [(#610)](https://github.com/XanaduAI/strawberryfields/issues/610)
+
+* `measure_threshold` is now supported in the `bosonic` backend.
+  [(#618)](https://github.com/XanaduAI/strawberryfields/pull/618)
+
+
+<h3>Bug fixes</h3>
+
+* Fixes an unexpected behaviour that can result in increasing memory usage due
+  to ``sympy.lambdify`` caching too much data using ``linecache``.
+  [(#579)](https://github.com/XanaduAI/strawberryfields/pull/579)
+
+* Keeps symbolic expressions when converting a Strawberry Fields circuit to a Blackbird program
+  by storing them as `blackbird.RegRefTransforms` in the resulting Blackbird program.
+  [(#596)](https://github.com/XanaduAI/strawberryfields/pull/596)
+
+* Fixes a bug in the validation step of `strawberryfields.tdm.TdmProgram.compile` which almost always
+  used the wrong set of allowed gate parameter ranges to validate the parameters in a program.
+  [(#605)](https://github.com/XanaduAI/strawberryfields/pull/605)
+
+* The correct samples are now returned when running a `TDMProgram` with several shots, where
+  `timebins % concurrent_modes != 0`.
+  [(#611)](https://github.com/XanaduAI/strawberryfields/pull/611)
+
+* Fixes the formula used for sampling generaldyne outcomes in the gaussian backend.
+  [(#614)](https://github.com/XanaduAI/strawberryfields/pull/614)
+
+* Measurement arguments are now stored as non-keyword arguments, instead of keyword arguments, in
+  the resulting Blackbird program when using the `io.to_blackbird()` converter function.
+  [(#622)](https://github.com/XanaduAI/strawberryfields/pull/622)
+
+* Factorials of numbers larger than 170 are now calculated using long integer arithmetic, using
+  the flag `exact=True` in `scipy.special.factorial`, when calling
+  `sf.apps.similarity.orbit_cardinality`.
+  [(#628)](https://github.com/XanaduAI/strawberryfields/pull/628)
+
+<h3>Documentation</h3>
+
+* References to the ``simulon`` simulator target have been rewritten to
+  ``simulon_gaussian`` to reflect changes made on the Xanadu Quantum Cloud. The
+  language has been modified to imply that multiple simulators could be
+  available on XQC.
+  [(#576)](https://github.com/XanaduAI/strawberryfields/pull/576)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+J. Eli Bourassa, Jake Bulmer, Sebastian Duque, Theodor Isacsson, Aaron Robertson, Jeremy Swinarton,
+Antal Száva, Federico Rueda, Yuan Yao.
+
+# Release 0.18.0
+
+<h3>New features since last release</h3>
+
+* Adds the Bosonic backend, which can simulate states represented as linear
+  combinations of Gaussian functions in phase space.
   [(#533)](https://github.com/XanaduAI/strawberryfields/pull/533)
   [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
   [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
   [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
   [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
-  
-  It can be regarded as a generalization of the Gaussian backend, since 
-  transformations on states correspond to modifications of the means and 
-  covariances of each Gaussian in the linear combination, along with changes to 
-  the coefficients of the linear combination. Example states that can be 
-  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill, 
+  [(#549)](https://github.com/XanaduAI/strawberryfields/pull/549)
+
+  It can be regarded as a generalization of the Gaussian backend, since
+  transformations on states correspond to modifications of the means and
+  covariances of each Gaussian in the linear combination, along with changes to
+  the coefficients of the linear combination. Example states that can be
+  expressed using the new backend include all Gaussian, Gottesman-Kitaev-Preskill,
   cat and Fock states.
-  
+
   ```python
   prog = sf.Program(1)
   eng = sf.Engine('bosonic')
@@ -31,25 +247,36 @@
   plt.hist(samples, bins=100)
   plt.show()
   ```
-  
-* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation 
+
+* Adds the `sf.ops.GKP` operation, which allows the Gottesman-Kitaev-Preskill
+  state to be initialized on both the Bosonic and Fock backends.
+  [(#553)](https://github.com/XanaduAI/strawberryfields/pull/553)
+  [(#546)](https://github.com/XanaduAI/strawberryfields/pull/546)
+
+  GKP states are qubits, with the qubit state defined by:
+
+  .. math:: \ket{\psi}\_{gkp} = \cos\frac{\theta}{2}\ket{0}\_{gkp} + e^{-i\phi}\sin\frac{\theta}{2}\ket{1}\_{gkp},
+
+  where the computational basis states are :math:`\ket{\mu}_{gkp} = \sum_{n} \ket{(2n+\mu)\sqrt{\pi\hbar}}_{q}`.
+
+* Adds the measurement-based squeezing gate `MSgate`; a new front-end operation
   for the Bosonic backend.
   [(#538)](https://github.com/XanaduAI/strawberryfields/pull/538)
   [(#539)](https://github.com/XanaduAI/strawberryfields/pull/539)
   [(#541)](https://github.com/XanaduAI/strawberryfields/pull/541)
-  
-  `MSgate` is an implementation of inline squeezing that can be performed by 
-  interacting the target state with an ancillary squeezed vacuum state at a 
-  beamsplitter, measuring the ancillary mode with homodyne, and then applying 
-  a feed-forward displacement. The channel is implemented either on average 
-  (as a Gaussian CPTP map) or in the single-shot implementation. If the 
+
+  `MSgate` is an implementation of inline squeezing that can be performed by
+  interacting the target state with an ancillary squeezed vacuum state at a
+  beamsplitter, measuring the ancillary mode with homodyne, and then applying
+  a feed-forward displacement. The channel is implemented either on average
+  (as a Gaussian CPTP map) or in the single-shot implementation. If the
   single-shot implementation is used, the measurement outcome of the ancillary
   mode is stored in the results object.
-  
+
   ```python
   prog = sf.Program(1)
   eng = sf.Engine('bosonic')
-  
+
   with prog.context as q:
       sf.ops.Catstate(alpha=2) | q
       r = 0.3
@@ -57,19 +284,68 @@
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=True) | q
       # Single-shot map
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
-  
+
   results = eng.run(prog)
   ancilla_samples = results.ancilla_samples
-  
+
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)
   wigner = results.state.wigner(0, xvec, pvec)
-  
+
   plt.contourf(xvec, pvec, wigner)
   plt.show()
   ```
-  
-<h3>Breaking Changes</h3>
+
+* The `tf` backend now accepts the Tensor DType as argument.
+  [(#562)](https://github.com/XanaduAI/strawberryfields/pull/562)
+
+  Allows high cutoff dimension to give numerically correct calculations:
+
+  ```python
+  prog = sf.Program(2)
+  eng  = sf.Engine("tf", backend_options={"cutoff_dim": 50, "dtype": tf.complex128})
+  with prog.context as q:
+      Sgate(0.8) | q[0]
+      Sgate(0.8) | q[1]
+      BSgate(0.5,0.5) | (q[0], q[1])
+      BSgate(0.5,0.5) | (q[0], q[1])
+  state = eng.run(prog).state
+  N0, N0var = state.mean_photon(0)
+  N1, N1var = state.mean_photon(1)
+  print(N0)
+  print(N1)
+  print("analytical:", np.sinh(0.8)**2)
+  ```
+
+<h3>Improvements</h3>
+
+* Program compilation has been modified to support the XQC simulation service,
+  Simulon.
+  [(#545)](https://github.com/XanaduAI/strawberryfields/pull/545)
+
+* The `sympmat`, `rotation_matrix`, and `haar_measure` functions have been removed from
+  `backends/shared_ops.py`. These functions are now imported from The Walrus.
+  In addition, various outdated functionality from the `shared_ops.py` file has been removed,
+  including the caching of beamsplitter and squeezing pre-factors.
+  [(#560)](https://github.com/XanaduAI/strawberryfields/pull/560)
+  [(#558)](https://github.com/XanaduAI/strawberryfields/pull/558)
+
+* Sample processing in the `TDMProgram` is now more efficient, by replacing
+  calls to `pop` with fancy indexing.
+  [(#548)](https://github.com/XanaduAI/strawberryfields/pull/548)
+
+* No `VisibleDeprecationWarning` is raised when using the state `wigner`
+  method.
+  [(#564)](https://github.com/XanaduAI/strawberryfields/pull/564)
+
+* The backend utility module `shared_ops.py` has been removed, with all of its
+  functionality now provided by The Walrus.
+  [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
+
+<h3>Breaking changes</h3>
+
+* Removes support for Python 3.6.
+  [(#573)](https://github.com/XanaduAI/strawberryfields/pull/573)
 
 <h3>Bug fixes</h3>
 
@@ -77,17 +353,37 @@
   instead of the incorrect version number `1.0.0`.
   [(#540)](https://github.com/XanaduAI/strawberryfields/pull/540)
 
+* TDM programs now expect a flat (not nested) dictionary of `modes` in device
+  specifications obtained from the XQC platform API.
+  [(#566)](https://github.com/XanaduAI/strawberryfields/pull/566)
+
+* Fixes a bug in the `CatState` operation, whereby the operation would return incorrect
+  results for a high cutoff value.
+  [(#557)](https://github.com/XanaduAI/strawberryfields/pull/557)
+  [(#556)](https://github.com/XanaduAI/strawberryfields/pull/556)
+
 <h3>Documentation</h3>
+
+* The "Hardware" quickstart page has been renamed to "Xanadu Quantum Cloud" to encompass both hardware
+  and cloud simulators. A new "Cloud simulator" entry has been added, describing how to submit
+  programs to be executed via the XQC simulator.
+  [(#547)](https://github.com/XanaduAI/strawberryfields/pull/547)
+
+* Cleanup docs to make contribution easier.
+  [(#561)](https://github.com/XanaduAI/strawberryfields/pull/561)
+
+* Add development requirements and format script to make contribution easier.
+  [(#563)](https://github.com/XanaduAI/strawberryfields/pull/563)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac, 
-Nicolás Quesada, Krishna Kumar Sabapathy, Jeremy Swinarton, Antal Száva, Ilan 
-Tzitrin.
+J. Eli Bourassa, Guillaume Dauphinais, Ish Dhand, Theodor Isacsson, Josh Izaac,
+Leonhard Neuhaus, Nicolás Quesada, Aaron Robertson, Krishna Kumar Sabapathy,
+Jeremy Swinarton, Antal Száva, Ilan Tzitrin.
 
-# Release 0.17.0 (current release)
+# Release 0.17.0
 
 <h3>New features since last release</h3>
 

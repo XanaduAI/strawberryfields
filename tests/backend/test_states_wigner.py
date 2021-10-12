@@ -17,9 +17,10 @@ import pytest
 import numpy as np
 from scipy.stats import multivariate_normal
 
+from thewalrus.symplectic import rotation as rotm
+
 from strawberryfields import backends
 from strawberryfields import utils
-from strawberryfields.backends.shared_ops import rotation_matrix as rotm
 
 
 A = 0.3 + 0.1j
@@ -57,6 +58,27 @@ def test_vacuum(setup_backend, hbar, tol):
     backend = setup_backend(1)
     state = backend.state()
     W = state.wigner(0, XVEC, XVEC)
+
+    # exact wigner function
+    mu = [0, 0]
+    cov = np.identity(2) * hbar / 2.0
+    Wexact = wigner(GRID, mu, cov)
+
+    assert np.allclose(W, Wexact, atol=tol, rtol=0)
+
+
+def test_vacuum_one_point(setup_backend, hbar, tol):
+    """Test Wigner function for a Vacuum state is a standard
+    normal Gaussian at a single point"""
+    backend = setup_backend(1)
+    state = backend.state()
+    vec = np.array([0])
+    W = state.wigner(0, vec, vec)
+
+    X, P = np.meshgrid(vec, vec)
+    GRID = np.empty(X.shape + (2,))
+    GRID[:, :, 0] = X
+    GRID[:, :, 1] = P
 
     # exact wigner function
     mu = [0, 0]
@@ -109,6 +131,7 @@ def test_two_mode_squeezed(setup_backend, hbar, tol):
     assert np.allclose(W0, W0exact, atol=0.01, rtol=0)
     assert np.allclose(W1, W1exact, atol=0.01, rtol=0)
 
+
 def fock_1_state_quad(setup_backend, hbar, tol):
     """Test the quadrature probability distribution
     functions for the |1> Fock state"""
@@ -120,15 +143,18 @@ def fock_1_state_quad(setup_backend, hbar, tol):
     x_vals = state.x_quad_values(0, XVEC, XVEC)
     p_vals = state.p_quad_values(0, XVEC, XVEC)
 
-    #Exact probability distribution
+    # Exact probability distribution
     def exact(a):
-        return 0.5 * np.sqrt(1/(np.pi * hbar)) * np.exp(-1*(a**2)/hbar) * (4/hbar)*(a**2)
+        return (
+            0.5 * np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a ** 2) / hbar) * (4 / hbar) * (a ** 2)
+        )
 
     exact_x = np.array([exact(x) for x in XVEC])
     exact_p = np.array([exact(p) for p in XVEC])
 
     assert np.allclose(x_vals, exact_x, atol=tol, rtol=0)
     assert np.allclose(p_vals, exact_p, atol=tol, rtol=0)
+
 
 def vacuum_state_quad(setup_backend, hbar, tol):
     """Test the quadrature probability distribution
@@ -141,15 +167,16 @@ def vacuum_state_quad(setup_backend, hbar, tol):
     x_vals = state.x_quad_values(0, XVEC, XVEC)
     p_vals = state.p_quad_values(0, XVEC, XVEC)
 
-    #Exact probability distribution
+    # Exact probability distribution
     def exact(a):
-        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*(a**2)/hbar)
+        return np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a ** 2) / hbar)
 
     exact_x = np.array([exact(x) for x in XVEC])
     exact_p = np.array([exact(p) for p in XVEC])
 
     assert np.allclose(x_vals, exact_x, atol=tol, rtol=0)
     assert np.allclose(p_vals, exact_p, atol=tol, rtol=0)
+
 
 def coherent_state_quad(setup_backend, hbar, tol):
     """Test the quadrature probability distribution
@@ -162,9 +189,12 @@ def coherent_state_quad(setup_backend, hbar, tol):
     x_vals = state.x_quad_values(0, XVEC, XVEC)
     p_vals = state.p_quad_values(0, XVEC, XVEC)
 
-    #Exact probability distribution
+    # Exact probability distribution
     def x_exact(a):
-        return np.sqrt(1/(np.pi * hbar)) * np.exp(-1*((a - 0.5 * np.sqrt(2 * hbar))**2)/hbar)
+        return np.sqrt(1 / (np.pi * hbar)) * np.exp(
+            -1 * ((a - 0.5 * np.sqrt(2 * hbar)) ** 2) / hbar
+        )
+
     def p_exact(a):
         return np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a ** 2) / hbar)
 

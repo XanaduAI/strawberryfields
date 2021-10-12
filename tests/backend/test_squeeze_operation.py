@@ -42,10 +42,7 @@ def matrix_elem(n, r, m):
     res = np.sum(
         (-1) ** ((n - k) / 2)
         * np.exp(
-            (lg(m + 1) + lg(n + 1)) / 2
-            - lg(k + 1)
-            - lg((m - k) / 2 + 1)
-            - lg((n - k) / 2 + 1)
+            (lg(m + 1) + lg(n + 1)) / 2 - lg(k + 1) - lg((m - k) / 2 + 1) - lg((n - k) / 2 + 1)
         )
         * (np.sinh(r) / 2 + eps) ** ((n + m - 2 * k) / 2)
         / (np.cosh(r) ** ((n + m + 1) / 2))

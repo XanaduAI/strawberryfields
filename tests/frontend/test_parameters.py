@@ -17,9 +17,16 @@ import pytest
 import numpy as np
 
 import strawberryfields as sf
-from strawberryfields.parameters import (par_is_symbolic, par_regref_deps, par_str, par_evaluate,
-                                         MeasuredParameter, FreeParameter, par_funcs as pf,
-                                         ParameterError)
+from strawberryfields.parameters import (
+    par_is_symbolic,
+    par_regref_deps,
+    par_str,
+    par_evaluate,
+    MeasuredParameter,
+    FreeParameter,
+    par_funcs as pf,
+    ParameterError,
+)
 from strawberryfields.program_utils import RegRef
 
 
@@ -56,7 +63,7 @@ class TestParameter:
     @pytest.mark.parametrize("r", TEST_VALUES)
     def test_par_is_symbolic(self, r):
         """Recognizing symbolic parameters."""
-        p = FreeParameter('x')
+        p = FreeParameter("x")
         q = MeasuredParameter(RegRef(0))
 
         assert not par_is_symbolic(r)
@@ -94,7 +101,7 @@ class TestParameter:
         R = set(r)
 
         s = 0.4
-        x = FreeParameter('x')
+        x = FreeParameter("x")
         p = MeasuredParameter(r[0])
         q = MeasuredParameter(r[1])
 
@@ -112,25 +119,27 @@ class TestParameter:
         a = 0.1234567
         b = np.array([0, 0.987654])
         c = MeasuredParameter(RegRef(1))
-        d = FreeParameter('x')
+        d = FreeParameter("x")
 
-        assert par_str(a) == '0.1235'  # rounded to 4 decimals
-        assert par_str(b) == '[0.     0.9877]'
-        assert par_str(c) == 'q1'
-        assert par_str(d) == '{x}'
-        assert par_str(b * d) == '[0 0.987654*{x}]'  # not rounded to 4 decimals due to Sympy's internal settings (object array!)
+        assert par_str(a) == "0.1235"  # rounded to 4 decimals
+        assert par_str(b) == "[0.     0.9877]"
+        assert par_str(c) == "q1"
+        assert par_str(d) == "{x}"
+        assert (
+            par_str(b * d) == "[0 0.987654*{x}]"
+        )  # not rounded to 4 decimals due to Sympy's internal settings (object array!)
 
     def test_raw_parameter_printing(self):
         """Raw printing of parameter expressions."""
 
         c = MeasuredParameter(RegRef(1))
-        d = FreeParameter('x')
+        d = FreeParameter("x")
 
-        assert str(c) == 'q1'
-        assert str(d) == '{x}'
-        assert str(0.1234567 * d) == '0.1234567*{x}'
-        assert str(np.array([0, 1, -3, 0.987654]) * d) == '[0 1.0*{x} -3.0*{x} 0.987654*{x}]'
-        assert str(pf.exp(1 + c) / d ** 2) == 'exp(q1 + 1)/{x}**2'
+        assert str(c) == "q1"
+        assert str(d) == "{x}"
+        assert str(0.1234567 * d) == "0.1234567*{x}"
+        assert str(np.array([0, 1, -3, 0.987654]) * d) == "[0 1.0*{x} -3.0*{x} 0.987654*{x}]"
+        assert str(pf.exp(1 + c) / d ** 2) == "exp(q1 + 1)/{x}**2"
 
     def test_par_functions_with_arrays(self):
         """Parameter functions with array arguments."""
@@ -154,7 +163,7 @@ class TestParameter:
 
     @pytest.mark.parametrize("p", TEST_VALUES)
     def test_par_evaluate(self, p):
-        x = FreeParameter('x')
+        x = FreeParameter("x")
         with pytest.raises(ParameterError, match="unbound parameter with no default value"):
             par_evaluate(x)
 
@@ -197,8 +206,8 @@ class TestParameter:
     @pytest.mark.parametrize("q", TEST_VALUES)
     def test_parameter_arithmetic(self, p, q):
         """Test parameter arithmetic works as expected,"""
-        pp = FreeParameter('x')
-        qq = FreeParameter('y')
+        pp = FreeParameter("x")
+        qq = FreeParameter("y")
         pp.val = p
         qq.val = q
         binary_arithmetic(pp, qq, p, q)
@@ -208,7 +217,7 @@ class TestParameter:
     # adding an array to an array works elementwise in numpy, but symbolically one array is added to each element of the other array...
     def test_parameter_left_literal_arithmetic(self, p, q):
         """Test parameter arithmetic works as expected."""
-        qq = FreeParameter('x')
+        qq = FreeParameter("x")
         qq.val = q
         binary_arithmetic(p, qq, p, q)
 
@@ -216,14 +225,14 @@ class TestParameter:
     @pytest.mark.parametrize("q", SCALAR_TEST_VALUES)
     def test_parameter_right_literal_arithmetic(self, p, q):
         """Test parameter arithmetic works as expected."""
-        pp = FreeParameter('x')
+        pp = FreeParameter("x")
         pp.val = p
         binary_arithmetic(pp, q, p, q)
 
     @pytest.mark.parametrize("p", TEST_VALUES)
     def test_parameter_unary_negation(self, p):
         """Test unary negation works as expected."""
-        pp = FreeParameter('x')
+        pp = FreeParameter("x")
         pp.val = p
         assert par_evaluate(-p) == pytest.approx(-p)
         assert par_evaluate(-pp) == pytest.approx(-p)
@@ -269,6 +278,7 @@ def applied_cmds(monkeypatch):
 class TestParameterTFIntegration:
     """Test integration of the parameter handling system with
     various gates and TensorFlow"""
+
     pytest.importorskip("tensorflow", minversion="2.0")
 
     @staticmethod
@@ -299,12 +309,13 @@ class TestParameterTFIntegration:
     def test_single_mode_gate_complex_phase(self, backend, gate, applied_cmds):
         """Test non-decomposed single mode gates with complex phase arguments."""
         import tensorflow as tf
-        mapping = {'r': tf.Variable(0.1), 'phi': tf.Variable(0.2)}
+
+        mapping = {"r": tf.Variable(0.1), "phi": tf.Variable(0.2)}
         prog = self.create_program(gate, mapping)
 
         # verify bound parameters are correct
-        assert prog.free_params['r'].val is mapping['r']
-        assert prog.free_params['phi'].val is mapping['phi']
+        assert prog.free_params["r"].val is mapping["r"]
+        assert prog.free_params["phi"].val is mapping["phi"]
 
         # assert executed program is constructed correctly
         eng = sf.LocalEngine(backend)
@@ -319,12 +330,13 @@ class TestParameterTFIntegration:
     def test_two_mode_gate_complex_phase(self, backend, gate, applied_cmds):
         """Test non-decomposed two-mode gates with complex phase arguments."""
         import tensorflow as tf
-        mapping = {'r': tf.Variable(0.1), 'phi': tf.Variable(0.2)}
+
+        mapping = {"r": tf.Variable(0.1), "phi": tf.Variable(0.2)}
         prog = self.create_program(gate, mapping)
 
         # verify bound parameters are correct
-        assert prog.free_params['r'].val is mapping['r']
-        assert prog.free_params['phi'].val is mapping['phi']
+        assert prog.free_params["r"].val is mapping["r"]
+        assert prog.free_params["phi"].val is mapping["phi"]
 
         # assert executed program is constructed correctly
         eng = sf.LocalEngine(backend)
@@ -338,11 +350,12 @@ class TestParameterTFIntegration:
     def test_zgate_decompose(self, backend, hbar, applied_cmds):
         """Test parameter processing occuring within the Zgate._decompose method."""
         import tensorflow as tf
-        mapping = {'p': tf.Variable(0.1)}
+
+        mapping = {"p": tf.Variable(0.1)}
         prog = self.create_program(sf.ops.Zgate, mapping)
 
         # verify bound parameters are correct
-        assert prog.free_params['p'].val is mapping['p']
+        assert prog.free_params["p"].val is mapping["p"]
 
         # assert executed program is constructed correctly
         eng = sf.LocalEngine(backend)
@@ -351,13 +364,14 @@ class TestParameterTFIntegration:
         assert len(applied_cmds) == 1
         assert isinstance(applied_cmds[0].op, sf.ops.Dgate)
         assert par_evaluate(applied_cmds[0].op.p[0]) == mapping["p"] / np.sqrt(2 * hbar)
-        assert applied_cmds[0].op.p[1] == np.pi/2
+        assert applied_cmds[0].op.p[1] == np.pi / 2
 
     @pytest.mark.parametrize("gate", [sf.ops.Dgate, sf.ops.Coherent, sf.ops.DisplacedSqueezed, sf.ops.Catstate])
     def test_complex_symbolic_tf(self, gate):
         """Test that passing a TF Variable to gates that previously accepted
         complex parameters raises an error when using the TF backend."""
         import tensorflow as tf
+
         with pytest.raises(ValueError, match="cannot be complex"):
 
             prog = sf.Program(1)
@@ -366,7 +380,7 @@ class TestParameterTFIntegration:
             with prog.context as q:
                 gate(alpha) | q[0]
 
-            eng = sf.Engine("tf", backend_options={"cutoff_dim":5})
+            eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
 
             with tf.GradientTape() as tape:
-                res = eng.run(prog, args={"alpha": tf.Variable(0.5+1j)})
+                res = eng.run(prog, args={"alpha": tf.Variable(0.5 + 1j)})

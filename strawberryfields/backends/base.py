@@ -98,7 +98,7 @@ class ModeMap:
         if self.valid(modes):
             new_map = []
             ctr = 0
-            for m in range(len(self._map)):
+            for m, _ in enumerate(self._map):
                 if m in modes or self._map[m] is None:
                     new_map.append(None)
                 else:
@@ -335,6 +335,17 @@ class BaseBackend:
             phi (float): phase angle
             mode1 (int): first mode that beamsplitter acts on
             mode2 (int): second mode that beamsplitter acts on
+        """
+        raise NotImplementedError
+
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        """Apply the Mach-Zehnder interferometer operation to the specified modes.
+
+        Args:
+            phi_in (float): internal phase
+            phi_ex (float): external phase
+            mode1 (int): first mode that MZ interferometer acts on
+            mode2 (int): second mode that MZ interferometer acts on
         """
         raise NotImplementedError
 
@@ -649,6 +660,24 @@ class BaseGaussian(BaseBackend):
                 If the modes are not sorted, this is taken into account when preparing the state.
                 I.e., when a two mode state is prepared with ``modes=[3,1]``, the first
                 mode of the given state goes into mode 3 and the second mode goes into mode 1.
+        """
+        raise NotImplementedError
+
+    def passive(self, T, modes):
+        r"""
+        Perform an arbitrary multimode passive operation
+
+        Args:
+            T (array): an NxN matrix acting on a N mode state
+            modes (int or Sequence[int]): Which modes to prepare the state in.
+
+        .. details::
+
+            Acts the following transformation on the state:
+
+            .. math::
+                a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
+
         """
         raise NotImplementedError
 

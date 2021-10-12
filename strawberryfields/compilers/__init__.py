@@ -45,6 +45,8 @@ from .gaussian import Gaussian
 from .bosonic import Bosonic
 from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
+from .gaussian_merge import GaussianMerge
+from .passive import Passive
 
 compilers = (
     Fock,
@@ -55,6 +57,8 @@ compilers = (
     Xcov,
     Xstrict,
     Xunitary,
+    GaussianMerge,
+    Passive,
 )
 
 compiler_db = {c.short_name: c for c in compilers}

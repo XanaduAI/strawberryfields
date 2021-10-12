@@ -28,6 +28,7 @@ from strawberryfields.api import Connection, Job, Result
 from strawberryfields.api.job import FailedJobError
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
+from strawberryfields.tdm.tdmprogram import TDMProgram
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
@@ -427,15 +428,15 @@ class LocalEngine(BaseEngine):
         # pylint: disable=import-outside-toplevel
         from strawberryfields.tdm.tdmprogram import reshape_samples
 
-        # At this time we do not support lists of tdm programs
-        valid_tdm_program = (
-            not isinstance(program, collections.abc.Sequence) and program.type == "tdm"
-        )
-        if valid_tdm_program:
+        received_rolled_circuit = False
+        if isinstance(program, TDMProgram):
             # priority order for the shots value should be kwargs > run_options > 1
             shots = kwargs.get("shots", program.run_options.get("shots", 1))
+            # if a tdm program is input in a rolled state, then unroll it
+            if not program.is_unrolled:
+                received_rolled_circuit = True
+                program.unroll(shots=shots)
 
-            program.unroll(shots=shots)
             # Shots >1 for a TDM program simply corresponds to creating
             # multiple copies of the program, and appending them to run sequentially.
             # As a result, we set the backend shots to 1 for the Gaussian backend.
@@ -452,7 +453,7 @@ class LocalEngine(BaseEngine):
             # in the list
             program_lst = program
             for p in program:
-                if p.type == "tdm":
+                if isinstance(p, TDMProgram):
                     raise NotImplementedError("Lists of TDM programs are not currently supported")
 
                 temp_run_options.update(p.run_options)
@@ -495,13 +496,17 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if valid_tdm_program:
-            result._all_samples = reshape_samples(
-                result.all_samples, program.measured_modes, program.N, program.timebins
-            )
-            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
-            result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
-            program.roll()
+        if isinstance(program, TDMProgram):
+            if isinstance(result.all_samples, dict) and len(result.all_samples) > 0:
+                result._all_samples = reshape_samples(
+                    result.all_samples, program.measured_modes, program.N, program.timebins
+                )
+                # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+                result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
+            if received_rolled_circuit:
+                # if the tdm circuit is received in a rolled state, and unrolled
+                # for execution, roll it back again
+                program.roll()
         modes = temp_run_options["modes"]
 
         if modes is None or modes:
@@ -659,7 +664,7 @@ class RemoteEngine:
         kwargs.update(self._backend_options)
 
         device = self.device_spec
-        if program.type == "tdm" and not device.layout_is_formatted():
+        if isinstance(program, TDMProgram) and not device.layout_is_formatted():
             device.fill_template(program)
 
         compiler_name = compile_options.get("compiler", device.default_compiler)

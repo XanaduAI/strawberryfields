@@ -110,7 +110,7 @@ class TestBosonicCatStates:
         means and covariances."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", ampl_cutoff=1e-6, D=1) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -133,7 +133,7 @@ class TestBosonicCatStates:
         low cutoff and low D produce fewer weights when alpha !=0."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=1) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", ampl_cutoff=1e-6, D=1) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -142,7 +142,7 @@ class TestBosonicCatStates:
 
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha, phi, representation="real", cutoff=1e-6, D=10) | q[0]
+            sf.ops.Catstate(alpha, phi, representation="real", ampl_cutoff=1e-6, D=10) | q[0]
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -271,6 +271,29 @@ class TestBosonicCatStates:
 
         assert np.allclose(marginal, abs(psi) ** 2)
 
+    def test_cat_threshold(self):
+        r"""Tests threshold measurement applied to a cat Bell state."""
+        # For large alpha, a beamsplitter effectively creates a cat Bell pair.
+        # The Bell pair is such that when there is vacuum in one mode, there is a
+        # cat state with large alpha (i.e. non-vacuum) in the other mode.
+        # This means the threshold outcomes should always be anti-correlated.
+        alpha = 4
+        phi = 0
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(2)
+            with prog.context as q:
+                sf.ops.Catstate(alpha, phi) | q[0]
+                sf.ops.Catstate(alpha, phi) | q[1]
+                sf.ops.BSgate() | (q[0], q[1])
+                sf.ops.MeasureThreshold() | q[0]
+                sf.ops.MeasureThreshold() | q[1]
+
+            backend = bosonic.BosonicBackend()
+            _, _, results = backend.run_prog(prog)
+            res0, res1 = results[0][0][0], results[1][0][0]
+            assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
+
 
 class TestBosonicFockStates:
     r"""Tests fock state method of the BosonicBackend class."""
@@ -340,6 +363,57 @@ class TestBosonicFockStates:
         backend.run_prog(prog)
         state = backend.state()
         assert np.allclose(state.parity_expectation([0]), (-1.0) ** n, atol=r_fock)
+
+    @pytest.mark.parametrize("n", FOCK_VALS)
+    def test_fock_threshold(self, n):
+        r"""Tests that Fock states n > 0 always yield a click."""
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(1)
+            with prog.context as q:
+                sf.ops.Fock(n) | q[0]
+                sf.ops.MeasureThreshold() | q[0]
+
+            backend = bosonic.BosonicBackend()
+            _, _, results = backend.run_prog(prog)
+            res0 = results[0][0][0]
+            if n == 0:
+                assert res0 == 0
+            else:
+                assert res0 == 1
+
+    def test_hong_ou_mandel_threshold(self):
+        r"""Tests Hong-Ou-Mandel interference"""
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(2)
+            with prog.context as q:
+                sf.ops.Fock(1) | q[0]
+                sf.ops.Fock(1) | q[1]
+                sf.ops.BSgate() | (q[0], q[1])
+                sf.ops.MeasureThreshold() | (q[0], q[1])
+
+            backend = bosonic.BosonicBackend()
+            results = backend.run_prog(prog)
+            _, _, results = backend.run_prog(prog)
+            res0, res1 = results[0][0][0], results[1][0][0]
+            assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
+
+    def test_g2_threshold(self):
+        r"""Tests that the g^2 of a single photon is zero"""
+        num_repeats = 50
+        for _ in range(num_repeats):
+            prog = sf.Program(2)
+            with prog.context as q:
+                sf.ops.Fock(1) | q[0]
+                sf.ops.BSgate() | (q[0], q[1])
+                sf.ops.MeasureThreshold() | (q[0], q[1])
+
+            backend = bosonic.BosonicBackend()
+            results = backend.run_prog(prog)
+            _, _, results = backend.run_prog(prog)
+            res0, res1 = results[0][0][0], results[1][0][0]
+            assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
 
 class TestBosonicGKPStates:
@@ -434,6 +508,33 @@ class TestBosonicGKPStates:
         backend = bosonic.BosonicBackend()
         with pytest.raises(NotImplementedError):
             backend.run_prog(prog)
+
+    @pytest.mark.parametrize("fock_eps", [0.1, 0.2, 0.3])
+    def test_gkp_wigner_compare_backends(self, fock_eps):
+        """Test correct Wigner function are generated by comparing fock and bosonic outputs.
+        Since the fock backend cannot simulate very small epsilon, we restrict to fock_eps>0.1."""
+        theta = np.pi / 8
+        phi = np.pi / 6
+        ket = [theta, phi]
+        xvec = np.linspace(-1, 1, 200)
+        prog_fock = sf.Program(1)
+        with prog_fock.context as q:
+            sf.ops.GKP(epsilon=fock_eps, state=ket) | q
+        cutoff = 100
+        hbar = 2
+        eng_fock = sf.Engine("fock", backend_options={"cutoff_dim": cutoff, "hbar": hbar})
+        gkp_fock = eng_fock.run(prog_fock).state
+        W_fock = gkp_fock.wigner(0, xvec, xvec)
+
+        prog_bosonic = sf.Program(1)
+
+        with prog_bosonic.context as q:
+            sf.ops.GKP(epsilon=fock_eps, state=ket) | q
+        hbar = 2
+        eng_bosonic = sf.Engine("bosonic", backend_options={"hbar": hbar})
+        gkp_bosonic = eng_bosonic.run(prog_bosonic).state
+        W_bosonic = gkp_bosonic.wigner(0, xvec, xvec)
+        assert np.allclose(W_fock, W_bosonic)
 
 
 class TestBosonicUserSpecifiedState:
@@ -628,13 +729,6 @@ class TestBosonicPrograms:
             sf.ops.Kgate(1) | q[0]
         backend = bosonic.BosonicBackend()
         with pytest.raises(NotApplicableError):
-            backend.run_prog(prog)
-
-        prog = sf.Program(1)
-        with prog.context as q:
-            sf.ops.MeasureThreshold() | q[0]
-        backend = bosonic.BosonicBackend()
-        with pytest.raises(NotImplementedError):
             backend.run_prog(prog)
 
     def test_non_initial_prep_error(self):

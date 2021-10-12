@@ -24,6 +24,7 @@ import numpy as np
 
 import blackbird
 import strawberryfields.program as sfp
+from strawberryfields.tdm.tdmprogram import TDMProgram
 import strawberryfields.parameters as sfpar
 from . import ops
 
@@ -45,6 +46,8 @@ def to_blackbird(prog, version="1.0"):
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
     bb._modes = list(prog.reg_refs.keys())
+
+    isMeasuredParameter = lambda x: isinstance(x, sfpar.MeasuredParameter)
 
     # TODO not sure if this makes sense: the program has *already been* compiled using this target
     if prog.target is not None:
@@ -72,7 +75,7 @@ def to_blackbird(prog, version="1.0"):
 
             if cmd.op.p:
                 # argument is quadrature phase
-                op["kwargs"]["phi"] = cmd.op.p[0]
+                op["args"] = cmd.op.p
 
             if op["op"] == "MeasureFock":
                 # special case to take into account 'dark_counts' keyword argument
@@ -83,14 +86,18 @@ def to_blackbird(prog, version="1.0"):
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
                     # SymPy object, convert to string
-                    a = str(a)
+                    if any(map(isMeasuredParameter, a.free_symbols)):
+                        # check if there are any measured parameters in `a`
+                        a = blackbird.RegRefTransform(a)
+                    else:
+                        a = str(a)
                 op["args"].append(a)
 
-        # If program type is "tdm" then add the looped-over arrays to the
+        # If program is a TDMProgram then add the looped-over arrays to the
         # blackbird program. `prog.loop_vars` are symbolic parameters (e.g.
         # `{p0}`), which should be replaced with `p.name` (e.g. `p0`) inside the
         # Blackbird operation (keyword) arguments.
-        if prog.type == "tdm":
+        if isinstance(prog, TDMProgram):
             for p in prog.loop_vars:
                 for i, ar in enumerate(op["args"]):
                     if str(p) == str(ar):
@@ -101,7 +108,7 @@ def to_blackbird(prog, version="1.0"):
 
         bb._operations.append(op)
     # add the specific "tdm" metadata to the Blackbird program
-    if prog.type == "tdm":
+    if isinstance(prog, TDMProgram):
         bb._type["name"] = "tdm"
         bb._type["options"].update(
             {
@@ -180,9 +187,6 @@ def to_program(bb):
 
 # pylint:disable=too-many-branches
 def _to_tdm_program(bb):
-    # pylint: disable=import-outside-toplevel
-    from strawberryfields.tdm.tdmprogram import TDMProgram
-
     prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
 
     def is_free_param(param):
@@ -293,7 +297,7 @@ def generate_code(prog, eng=None):
     """
     code_seq = ["import strawberryfields as sf", "from strawberryfields import ops\n"]
 
-    if prog.type == "tdm":
+    if isinstance(prog, TDMProgram):
         code_seq.append(f"prog = sf.TDMProgram(N={prog.N})")
     else:
         code_seq.append(f"prog = sf.Program({prog.num_subsystems})")
@@ -314,8 +318,8 @@ def generate_code(prog, eng=None):
             else:
                 code_seq.append(f'eng = sf.Engine("{eng.backend_name}")')
 
-    # check if program is of TDM type and format the context as appropriate
-    if prog.type == "tdm":
+    # check if program is a TDMProgram and format the context as appropriate
+    if isinstance(prog, TDMProgram):
         # if the context arrays contain pi-values, factor out multiples of np.pi
         tdm_params = [f"[{_factor_out_pi(par)}]" for par in prog.tdm_params]
         code_seq.append("\nwith prog.context(" + ", ".join(tdm_params) + ") as (p, q):")
@@ -325,7 +329,7 @@ def generate_code(prog, eng=None):
     # add the operations, and replace any free parameters with e.g. `p[0]`, `p[1]`
     for cmd in prog.circuit:
         name = cmd.op.__class__.__name__
-        if prog.type == "tdm":
+        if isinstance(prog, TDMProgram):
             format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
             params_str = _factor_out_pi(cmd.op.p).format(**format_dict)
         else:

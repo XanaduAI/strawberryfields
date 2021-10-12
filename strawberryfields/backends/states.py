@@ -26,12 +26,12 @@ from scipy.stats import multivariate_normal
 from scipy.special import factorial
 from scipy.integrate import simps
 
+from thewalrus.symplectic import rotation as _R
+from thewalrus.symplectic import xpxp_to_xxpp
+
 import thewalrus.quantum as twq
 
 import strawberryfields as sf
-
-from .shared_ops import rotation_matrix as _R
-from .shared_ops import changebasis
 
 indices = string.ascii_lowercase
 
@@ -1256,8 +1256,7 @@ class BaseGaussianState(BaseState):
         if phi != 0:
             # rotate all modes of the covariance matrix and vector of means
             R = _R(phi)
-            C = changebasis(self._modes)
-            rot = C.T @ block_diag(*([R] * self._modes)) @ C
+            rot = xpxp_to_xxpp(block_diag(*([R] * self._modes)))
 
             mu = rot.T @ mu
             cov = rot.T @ cov @ rot
@@ -1628,11 +1627,16 @@ class BaseBosonicState(BaseState):
 
         wigner = 0
         for i, weight_i in enumerate(weights):
-            exp_arg = (
-                np.array([X - means[i, 0], P - means[i, 1]])
-                @ np.linalg.inv(covs[i])
-                @ np.array([X - means[i, 0], P - means[i, 1]])
-            )
+
+            if X.shape == P.shape:
+                arr = np.array([X - means[i, 0], P - means[i, 1]])
+                arr = arr.squeeze()
+            else:
+                # need to specify dtype for creating an ndarray from ragged
+                # sequences
+                arr = np.array([X - means[i, 0], P - means[i, 1]], dtype=object)
+
+            exp_arg = arr @ np.linalg.inv(covs[i]) @ arr
             prefactor = 1 / (np.sqrt(np.linalg.det(2 * np.pi * covs[i])))
             wigner += (weight_i * prefactor) * np.exp(-0.5 * (exp_arg))
 

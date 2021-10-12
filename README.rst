@@ -102,7 +102,7 @@ We welcome contributions—simply fork the Strawberry Fields repository, and the
 
 We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects or applications built on Strawberry Fields.
 
-See our `contributions page <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_
+See our `contributions page <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md>`_ and `changelog <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHANGELOG.md>`_
 for more details, and then check out some of the Strawberry Fields `challenges <https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md>`_ for some inspiration.
 
 Authors

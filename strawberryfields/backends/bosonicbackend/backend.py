@@ -23,8 +23,9 @@ import numpy as np
 from scipy.special import comb
 from scipy.linalg import block_diag
 
+from thewalrus.symplectic import xxpp_to_xpxp
+
 from strawberryfields.backends import BaseBosonic
-from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseBosonicState
 
 from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
@@ -51,6 +52,7 @@ def parameter_checker(parameters):
     return False
 
 
+# pylint: disable=abstract-method
 class BosonicBackend(BaseBosonic):
     r"""The BosonicBackend implements a simulation of quantum optical circuits
     in NumPy by representing states as linear combinations of Gaussian functions
@@ -223,6 +225,7 @@ class BosonicBackend(BaseBosonic):
             # Check if an operation other than New() has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
             isitnew = 1 - np.isin(labels, reg_list)
+            new_labels = np.asarray(labels)[np.logical_not(np.isin(labels, reg_list))]
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
@@ -232,7 +235,7 @@ class BosonicBackend(BaseBosonic):
                         "Symbolic non-Gaussian preparations have not been implemented "
                         "in the bosonic backend."
                     )
-                for reg in labels:
+                for reg in new_labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
                         weights, means, covs = [pars[i] for i in range(3)]
@@ -377,13 +380,12 @@ class BosonicBackend(BaseBosonic):
 
         # convert xp-ordering to symmetric ordering
         means = np.vstack([r[:N], r[N:]]).reshape(-1, order="F")
-        C = changebasis(N)
-        cov = C @ V @ C.T
+        cov = xxpp_to_xpxp(V)
 
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
-    def prepare_cat(self, alpha, phi, representation, cutoff, D):
+    def prepare_cat(self, alpha, phi, representation, ampl_cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
@@ -392,7 +394,7 @@ class BosonicBackend(BaseBosonic):
             alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
-            cutoff (float): if using the ``'real'`` representation, this determines
+            ampl_cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
             D (float): for ``'real'`` representation, quality parameter of approximation
 
@@ -440,9 +442,9 @@ class BosonicBackend(BaseBosonic):
             return weights, means, covs
 
         # The only remaining option is a real-valued cat state
-        return self.prepare_cat_real_rep(alpha, phi, cutoff, D)
+        return self.prepare_cat_real_rep(alpha, phi, ampl_cutoff, D)
 
-    def prepare_cat_real_rep(self, alpha, phi, cutoff, D):
+    def prepare_cat_real_rep(self, alpha, phi, ampl_cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
@@ -452,7 +454,7 @@ class BosonicBackend(BaseBosonic):
         Args:
             alpha (complex): alpha value of cat state
             phi (float): phi value of cat state
-            cutoff (float): this determines how many terms to keep
+            ampl_cutoff (float): this determines how many terms to keep
             D (float): quality parameter of approximation
 
         Returns:
@@ -478,7 +480,7 @@ class BosonicBackend(BaseBosonic):
                 * np.sqrt(2)
                 * a
                 / (np.pi * np.sqrt(hbar))
-                * np.sqrt((-2 * (E + v) * np.log(cutoff / prefac)))
+                * np.sqrt((-2 * (E + v) * np.log(ampl_cutoff / prefac)))
             )
         )
 
@@ -520,7 +522,7 @@ class BosonicBackend(BaseBosonic):
         cov = np.concatenate((cov_real, cov))
 
         # filter out 0 components
-        filt = ~np.isclose(weights, 0, atol=cutoff)
+        filt = ~np.isclose(weights, 0, atol=ampl_cutoff)
         weights = weights[filt]
         means = means[filt]
         cov = cov[filt]
@@ -533,7 +535,7 @@ class BosonicBackend(BaseBosonic):
 
         return weights, means, cov
 
-    def prepare_gkp(self, state, epsilon, cutoff, representation="real", shape="square"):
+    def prepare_gkp(self, state, epsilon, ampl_cutoff, representation="real", shape="square"):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
@@ -545,7 +547,7 @@ class BosonicBackend(BaseBosonic):
         Args:
             state (list): ``[theta,phi]`` for qubit definition above
             epsilon (float): finite energy parameter of the state
-            cutoff (float): this determines how many terms to keep
+            ampl_cutoff (float): this determines how many terms to keep
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
 
@@ -616,7 +618,7 @@ class BosonicBackend(BaseBosonic):
                 np.sqrt(
                     -4
                     / np.pi
-                    * np.log(cutoff)
+                    * np.log(ampl_cutoff)
                     * (1 + np.exp(-2 * epsilon))
                     / (1 - np.exp(-2 * epsilon))
                 )
@@ -643,7 +645,7 @@ class BosonicBackend(BaseBosonic):
 
         # Calculate the weights for each peak
         weights = coeff(means)
-        filt = abs(weights) > cutoff
+        filt = abs(weights) > ampl_cutoff
         weights = weights[filt]
 
         weights /= np.sum(weights)
@@ -696,7 +698,8 @@ class BosonicBackend(BaseBosonic):
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
-            ]
+            ],
+            dtype=complex,
         )
         weights = weights / np.sum(weights)
         return weights, means, covs
@@ -797,7 +800,17 @@ class BosonicBackend(BaseBosonic):
         raise NotImplementedError("Bosonic backend does not yet support Fock measurements.")
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        raise NotImplementedError("Bosonic backend does not yet support threshold measurements.")
+        if select is not None:
+            raise NotImplementedError("Bosonic backend currently does not support " "postselection")
+        if shots != 1:
+            raise NotImplementedError(
+                "Bosonic backend currently does not support " "multiple shots"
+            )
+
+        samples = []
+        for mode in modes:
+            samples.append(self.circuit.measure_threshold([mode]))
+        return np.array([samples])
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.

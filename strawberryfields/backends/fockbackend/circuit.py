@@ -24,7 +24,6 @@ import numpy as np
 from numpy import sqrt, pi
 from scipy.special import factorial as bang
 from numba import jit
-from numba.typed import List
 
 from . import ops
 
@@ -221,14 +220,14 @@ class Circuit:
         """Applies a two-mode gate to the state.
 
         Applies the specified two-mode gate to the state using custom tensor contractions and
-        the Numba compiler for faster application. Currently, only the beamsplitter and the
-        two-mode squeeze gate are supported.
+        the Numba compiler for faster application. Currently, only the beamsplitter, the
+        Mach-Zehnder and two-mode squeeze gate are supported.
 
         Args:
             mat (array[complex]): The numeric operator to be applied to the state, of shape `[trunc]*(2*n)`
             modes (list[int]): The list of modes to which the operator is applied on
             gate (str): The gate that is being applied. This argument determines the selection rules that
-                are used. Options are ``"BSgate"`` and ``"S2gate"``.
+                are used. Options are ``"BSgate"``, ``"MZgate`` and ``"S2gate"``.
 
         Returns:
             array[complex]: The state after application of the two-mode operation
@@ -248,14 +247,14 @@ class Circuit:
             self._state = self._state.transpose(switch_list_1)
             self._state = self._state.transpose(switch_list_2)
 
-            if gate == "BSgate":
-                self._state = self._apply_BS(mat, self._state, self._trunc)
+            if gate in ("BSgate", "MZgate"):
+                self._state = self._apply_two_mode_passive(mat, self._state, self._trunc)
             elif gate == "S2gate":
                 self._state = self._apply_S2(mat, self._state, self._trunc)
             else:
                 raise NotImplementedError(
-                    "Currently, selection rules are only implemented for the BSgate "
-                    "and the S2gate. The {} gate is not supported".format(gate)
+                    "Currently, selection rules are only implemented for the BSgate, "
+                    "the MZgate and the S2gate. The {} gate is not supported".format(gate)
                 )
 
             self._state = self._state.transpose(switch_list_2)
@@ -282,12 +281,12 @@ class Circuit:
             self._state = self._state.transpose(transpose_list)
             self._state = self._state.transpose(switch_list_1)
 
-            if gate == "BSgate":
-                self._state = self._apply_BS(mat, self._state, self._trunc)
+            if gate in ("BSgate", "MZgate"):
+                self._state = self._apply_two_mode_passive(mat, self._state, self._trunc)
                 self._state = self._state.transpose(switch_list_1)
 
                 self._state = self._state.transpose(switch_list_2)
-                self._state = self._apply_BS(mat.conj(), self._state, self._trunc)
+                self._state = self._apply_two_mode_passive(mat.conj(), self._state, self._trunc)
 
             elif gate == "S2gate":
                 self._state = self._apply_S2(mat, self._state, self._trunc)
@@ -307,7 +306,7 @@ class Circuit:
     # ignored in covtest (doesn't work well with the jit decorator)
     @staticmethod
     @jit(nopython=True)
-    def _apply_BS(mat, state, trunc):  # pragma: no cover
+    def _apply_two_mode_passive(mat, state, trunc):  # pragma: no cover
         r"""Applies the BS gate to the first bra in state.
 
         The beamsplitter matrix elements :math:`B_{ij}^{kl}` satisfy the selection
@@ -555,6 +554,13 @@ class Circuit:
         mat = ops.beamsplitter(theta, phi, self._trunc)
         self._state = self.apply_twomode_gate(mat, [mode1, mode2], gate="BSgate")
 
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        """
+        Applies a MZ gate.
+        """
+        mat = ops.mzgate(phi_in, phi_ex, self._trunc)
+        self._state = self.apply_twomode_gate(mat, [mode1, mode2], gate="MZgate")
+
     def squeeze(self, r, theta, mode):
         """
         Applies a squeezing gate.
@@ -792,3 +798,14 @@ class Circuit:
 
         # `homodyne_sample` will always be a single value since multiple shots is not supported
         return np.array([[homodyne_sample]])
+
+    def prepare_gkp(self, theta, phi, epsilon, ampl_cutoff, mode):
+        """
+        Prepares a mode in a GKP state.
+        """
+
+        if self._pure:
+            self.prepare(ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc), mode)
+        else:
+            st = ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc)
+            self.prepare(np.outer(st, st.conjugate()), mode)

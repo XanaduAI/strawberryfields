@@ -1,9 +1,11 @@
+docutils==0.16
 appdirs
 ipykernel
 sphinx==2.2.2
 m2r
+numba==0.53.1
 networkx>=2.0
-numpy>=1.16.3
+numpy>=1.19.2
 plotly
 quantum-blackbird
 scipy>=1.0.0
@@ -12,6 +14,6 @@ sphinx-autodoc-typehints==1.10.3
 sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2
-tensorflow-tensorboard==0.1.8
-tensorflow==2.0.3
+tensorflow==2.5.1
+thewalrus>=0.16.0
 toml

@@ -10,6 +10,7 @@ help:
 	@echo "  dist               to package the source distribution"
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
+	@echo "  format             to run black formatting"
 	@echo "  test               to run the test suite for entire codebase"
 	@echo "  test-[component]   to run the test suite for frontend, fock, tf, gaussian or apps"
 	@echo "  coverage           to generate a coverage report for entire codebase"
@@ -53,6 +54,10 @@ docs:
 clean-docs:
 	make -C doc clean
 	rm -rf doc/code/api
+
+.PHONY : format
+format: 
+	black -l 100 strawberryfields tests
 
 test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps test-api
 

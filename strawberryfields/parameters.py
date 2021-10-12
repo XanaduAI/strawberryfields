@@ -96,6 +96,8 @@ What we cannot do at the moment:
 import collections.abc
 import functools
 import types
+import linecache
+import blackbird
 
 import numpy as np
 import sympy
@@ -191,13 +193,25 @@ def par_evaluate(params, dtype=None):
 
         # using lambdify we can also substitute np.ndarrays and tf.Tensors for the atoms
         atoms = list(p.atoms(MeasuredParameter, FreeParameter))
+
+        if not atoms:
+            # If there are not atomic values, we just convert to elementary
+            # Python types
+            return float(p) if p.is_real else complex(p)
+
         # evaluate the atoms of the expression
         vals = [k._eval_evalf(None) for k in atoms]
         # use the tensorflow printer if any of the symbolic parameter values are TF objects
         # (we do it like this to avoid importing tensorflow if it's not needed)
         is_tf = (type(v).__module__.startswith("tensorflow") for v in vals)
         printer = "tensorflow" if any(is_tf) else "numpy"
+
         func = sympy.lambdify(atoms, p, printer)
+
+        # sympy.lambdify caches data using linecache, if called many times this
+        # can make up for a lot of memory used. We clear the cache here to
+        # avoid that.
+        linecache.clearcache()
 
         if dtype is not None:
             # cast the input values
@@ -244,6 +258,8 @@ def par_convert(args, prog):
     """
 
     def do_convert(a):
+        if isinstance(a, blackbird.RegRefTransform):
+            a = a.expr
         if isinstance(a, sympy.Basic):
             # substitute SF symbolic parameter objects for Blackbird ones
             s = {}

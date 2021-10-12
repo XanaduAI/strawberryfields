@@ -15,6 +15,7 @@ r"""Unit tests for engine.py"""
 import pytest
 import numpy as np
 
+tf = pytest.importorskip("tensorflow", minversion="2.0")
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.base import BaseBackend
@@ -43,12 +44,14 @@ batch_engines = [
     sf.Engine("gaussian", backend_options={"batch_size": 2, "cutoff_dim": 6}),
     sf.Engine("fock", backend_options={"batch_size": 2, "cutoff_dim": 6}),
     sf.Engine("tf", backend_options={"batch_size": 2, "cutoff_dim": 6}),
+    sf.Engine("tf", backend_options={"batch_size": 2, "cutoff_dim": 6, "dtype": tf.complex128}),
 ]
 
 engines = [
     sf.Engine("gaussian", backend_options={"cutoff_dim": 6}),
     sf.Engine("fock", backend_options={"cutoff_dim": 6}),
     sf.Engine("tf", backend_options={"cutoff_dim": 6}),
+    sf.Engine("tf", backend_options={"cutoff_dim": 6, "dtype": tf.complex128}),
 ]
 
 
@@ -285,7 +288,7 @@ class TestEngineProgramInteraction:
 
         assert result.all_samples[1] == [0]
         assert result.all_samples[3] == [0]
-        assert [bool(i) for i in result.all_samples[2]] == [0,1]
+        assert [bool(i) for i in result.all_samples[2]] == [0, 1]
 
     @pytest.mark.parametrize("eng", engines)
     def test_all_samples_multi_runs(self, eng):
@@ -303,7 +306,7 @@ class TestEngineProgramInteraction:
         # of measurements
         assert result.all_samples[1] == [0]
         assert result.all_samples[3] == [0]
-        assert [bool(i) for i in result.all_samples[2]] == [0,1]
+        assert [bool(i) for i in result.all_samples[2]] == [0, 1]
 
         prog = sf.Program(5)
         with prog.context as q:
@@ -355,6 +358,7 @@ class TestEngineProgramInteraction:
         assert np.array_equal(result.all_samples[3][0].numpy(), np.array([[0], [0]]))
         assert np.array_equal(result.all_samples[2][0].numpy(), np.array([[0], [0]]))
         assert np.array_equal(result.all_samples[2][1].numpy(), np.array([[0], [0]]))
+
 
 class TestMultipleShotsErrors:
     """Test if errors are raised correctly when using multiple shots."""

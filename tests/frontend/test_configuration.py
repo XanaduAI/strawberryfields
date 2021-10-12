@@ -146,7 +146,7 @@ class TestLoadConfig:
                 m.setattr(os, "getcwd", lambda: tmpdir)
                 configuration = conf.load_config()
 
-        assert "does not contain an \"api\" section" in caplog.text
+        assert 'does not contain an "api" section' in caplog.text
 
     def test_directories_to_check_with_sf_conf(self, monkeypatch, tmpdir):
         """Test that the directories_to_check function returns three
@@ -170,9 +170,11 @@ class TestLoadConfig:
 
             assert ["First", "Second"] == directories
 
+
 test_file_name = "test_file.toml"
 default_file_name = "config.toml"
 test_kwargs = [{}, {"filename": test_file_name}]
+
 
 class TestActiveConfigs:
     """Test the active_configs function and its auxiliary functions."""
@@ -226,8 +228,10 @@ class TestActiveConfigs:
 
             captured = capsys.readouterr()
 
-            general_message_1 = "\nThe following Strawberry Fields configuration files were found "\
-                            "with the name \"{}\":\n".format(test_file_name)
+            general_message_1 = (
+                "\nThe following Strawberry Fields configuration files were found "
+                'with the name "{}":\n'.format(test_file_name)
+            )
             single_config = "\n* " + active_configs[0] + " (active)\n"
 
             general_message_2 = "\nThe following directories were checked:\n\n"
@@ -236,8 +240,15 @@ class TestActiveConfigs:
             second_dir_msg = "* " + temp_dirs[1] + "\n"
             third_dir_msg = "* " + temp_dirs[2] + "\n"
 
-            assert captured.out == general_message_1 + single_config +\
-                                   general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
+            assert (
+                captured.out
+                == general_message_1
+                + single_config
+                + general_message_2
+                + first_dir_msg
+                + second_dir_msg
+                + third_dir_msg
+            )
 
     def test_print_active_configs_multiple_configs(self, capsys, monkeypatch):
         """Checks that the correct message is outputted for a single
@@ -251,8 +262,10 @@ class TestActiveConfigs:
 
             captured = capsys.readouterr()
 
-            general_message_1 = "\nThe following Strawberry Fields configuration files were found "\
-                            "with the name \"{}\":\n".format(test_file_name)
+            general_message_1 = (
+                "\nThe following Strawberry Fields configuration files were found "
+                'with the name "{}":\n'.format(test_file_name)
+            )
             first_config = "\n* " + active_configs[0] + " (active)\n"
             second_config = "* " + active_configs[1] + "\n"
             third_config = "* " + active_configs[2] + "\n"
@@ -263,8 +276,17 @@ class TestActiveConfigs:
             second_dir_msg = "* " + temp_dirs[1] + "\n"
             third_dir_msg = "* " + temp_dirs[2] + "\n"
 
-            assert captured.out == general_message_1 + first_config + second_config + third_config +\
-                                   general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
+            assert (
+                captured.out
+                == general_message_1
+                + first_config
+                + second_config
+                + third_config
+                + general_message_2
+                + first_dir_msg
+                + second_dir_msg
+                + third_dir_msg
+            )
 
     def test_print_active_configs_no_configs(self, capsys, monkeypatch):
         """Checks that the correct message is outputted if no configuration
@@ -277,8 +299,10 @@ class TestActiveConfigs:
 
             captured = capsys.readouterr()
 
-            general_message_1 = "\nNo Strawberry Fields configuration files were found with the "\
-                            "name \"{}\".\n\n".format(test_file_name)
+            general_message_1 = (
+                "\nNo Strawberry Fields configuration files were found with the "
+                'name "{}".\n\n'.format(test_file_name)
+            )
 
             general_message_2 = "\nThe following directories were checked:\n\n"
 
@@ -286,8 +310,14 @@ class TestActiveConfigs:
             second_dir_msg = "* " + temp_dirs[1] + "\n"
             third_dir_msg = "* " + temp_dirs[2] + "\n"
 
-            assert captured.out == general_message_1 +\
-                                   general_message_2 + first_dir_msg + second_dir_msg + third_dir_msg
+            assert (
+                captured.out
+                == general_message_1
+                + general_message_2
+                + first_dir_msg
+                + second_dir_msg
+                + third_dir_msg
+            )
 
 
 class TestCreateConfigObject:
@@ -316,6 +346,7 @@ class TestCreateConfigObject:
             )
             == OTHER_EXPECTED_CONFIG
         )
+
 
 class TestRemoveConfigFile:
     """Test the removal of configuration files"""
@@ -379,6 +410,7 @@ class TestRemoveConfigFile:
 
             assert not os.path.exists(filename_1)
             assert not os.path.exists(filename_2)
+
 
 class TestGetConfigFilepath:
     """Tests for the find_config_file function."""

@@ -15,23 +15,11 @@
 """Gaussian backend"""
 import warnings
 
-from numpy import (
-    empty,
-    concatenate,
-    array,
-    identity,
-    arctan2,
-    angle,
-    sqrt,
-    vstack,
-    zeros_like,
-    allclose,
-    ix_,
-)
+from numpy import empty, concatenate, array, identity, sqrt, vstack, zeros_like, allclose, ix_
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
+from thewalrus.symplectic import xxpp_to_xpxp
 
 from strawberryfields.backends import BaseGaussian
-from strawberryfields.backends.shared_ops import changebasis
 from strawberryfields.backends.states import BaseGaussianState
 
 from .gaussiancircuit import GaussianModes
@@ -199,8 +187,7 @@ class GaussianBackend(BaseGaussian):
 
         # convert xp-ordering to symmetric ordering
         means = vstack([r[:N], r[N:]]).reshape(-1, order="F")
-        C = changebasis(N)
-        cov = C @ V @ C.T
+        cov = xxpp_to_xpxp(V)
 
         self.circuit.fromscovmat(cov, modes)
         self.circuit.fromsmean(means, modes)
@@ -210,6 +197,11 @@ class GaussianBackend(BaseGaussian):
 
     def loss(self, T, mode):
         self.circuit.loss(T, mode)
+
+    def passive(self, T, modes):
+        T_expand = identity(self.circuit.nlen, dtype=T.dtype)
+        T_expand[ix_(modes, modes)] = T
+        self.circuit.apply_u(T_expand)
 
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
@@ -256,16 +248,15 @@ class GaussianBackend(BaseGaussian):
 
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
+        mean = self.circuit.smeanxp()
         # check we are sampling from a gaussian state with zero mean
-        if not allclose(mu, zeros_like(mu)):
-            raise NotImplementedError(
-                "Threshold measurement is only supported for " "Gaussian states with zero mean"
-            )
+
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
-        samples = torontonian_sample_state(reduced_cov, shots)
+        reduced_mean = mean[modes_idxs]
+        samples = torontonian_sample_state(mu=reduced_mean, cov=reduced_cov, samples=shots)
 
         return samples
 

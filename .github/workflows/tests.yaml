@@ -41,17 +41,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.6
+          python-version: 3.8
 
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-ci.txt
           pip install wheel codecov pytest pytest-cov pytest-randomly pytest-mock --upgrade
 
       - name: Install Strawberry Fields
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-ci.txt
           python3 setup.py bdist_wheel
           pip install dist/StrawberryFields*.whl
 
