@@ -255,7 +255,7 @@ def test_merge_measured_pars():
         assert D.merge(G)
 
 
-@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
+@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed, ops.Catstate])
 def test_tf_batch_in_gates_previously_supporting_complex(gate):
     """Test if gates that previously accepted complex arguments support the input of TF tensors in
     batch form"""
@@ -274,7 +274,7 @@ def test_tf_batch_in_gates_previously_supporting_complex(gate):
     eng.run(prog, args={"theta": _theta})
 
 
-@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed])
+@pytest.mark.parametrize("gate", [ops.Dgate, ops.Coherent, ops.DisplacedSqueezed, ops.Catstate])
 def test_tf_batch_complex_raise(gate):
     """Test if an error is raised if complex TF tensors with a batch dimension are input for gates
     that previously accepted complex arguments"""

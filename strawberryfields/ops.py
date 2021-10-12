@@ -909,6 +909,10 @@ class Catstate(Preparation):
 
         l = np.arange(cutoff_dim)[:, np.newaxis]
 
+        # turn alpha into numpy array if it's a tf.Tensor
+        if hasattr(alpha, "numpy"):
+            alpha = alpha.numpy()
+
         # normalization constant
         temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
         N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
