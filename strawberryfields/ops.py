@@ -239,9 +239,10 @@ class Operation:
         Raises:
             ValueError: there were complex arguments specified
         """
-        tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in arguments)
+        is_tf_complex = any((hasattr(arg, "numpy") and np.iscomplex(arg).any()) for arg in arguments)
+        is_complex = any((not hasattr(arg, "numpy") and np.iscomplex(arg)) for arg in arguments)
 
-        if (np.iscomplex(arguments)).any() or tf_complex:
+        if is_tf_complex or is_complex:
             raise ValueError(f"The arguments of {gate_info} cannot be complex")
 
 
