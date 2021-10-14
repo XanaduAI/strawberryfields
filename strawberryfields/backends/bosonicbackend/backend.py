@@ -385,15 +385,15 @@ class BosonicBackend(BaseBosonic):
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
-    def prepare_cat(self, a, phi, p, representation, ampl_cutoff, D):
+    def prepare_cat(self, a, theta, p, representation, ampl_cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`.
 
         Args:
             a (float): displacement magnitude :math:`|\alpha|`
-            phi (float): displacement angle :math:`\phi`
-            p (float): parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
+            theta (float): displacement angle :math:`\theta`
+            p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             ampl_cutoff (float): if using the ``'real'`` representation, this determines
@@ -404,7 +404,8 @@ class BosonicBackend(BaseBosonic):
             tuple: arrays of the weights, means and covariances for the state
         """
 
-        alpha = a * np.exp(1j * phi)
+        alpha = a * np.exp(1j * theta)
+        phi = np.pi * p
 
         if representation not in ("complex", "real"):
             raise ValueError(
@@ -423,7 +424,6 @@ class BosonicBackend(BaseBosonic):
         hbar = self.circuit.hbar
 
         if representation == "complex":
-            phi = np.pi * p
 
             # Mean of |alpha><alpha| term
             rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
@@ -466,7 +466,6 @@ class BosonicBackend(BaseBosonic):
         """
         # Normalization factor
         norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
-        phi = np.pi * phi
         hbar = self.circuit.hbar
 
         # Defining useful constants
