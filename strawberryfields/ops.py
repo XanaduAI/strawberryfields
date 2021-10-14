@@ -870,8 +870,8 @@ class Catstate(Preparation):
         the squeezed single photon state :math:`S\ket{1}`.
     """
 
-    def __init__(self, a=0.0, phi=0.0, p=0, representation="complex", cutoff=1e-12, D=2):
-        super().__init__([a, phi, p, representation, cutoff, D])
+    def __init__(self, a=0.0, phi=0.0, p=0, representation="complex", ampl_cutoff=1e-12, D=2):
+        super().__init__([a, phi, p, representation, ampl_cutoff, D])
 
     def _apply(self, reg, backend, **kwargs):
 
