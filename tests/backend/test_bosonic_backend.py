@@ -504,13 +504,15 @@ class TestBosonicUserSpecifiedState:
     """Checks the Bosonic preparation method."""
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_complex_weight(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("p", [0,1])
+    def test_complex_weight(self, alpha, phi, p):
         r"""Checks that Bosonic creates a state with user-specifed weights, means
         and covariances."""
         dummy_backend = bosonic.BosonicBackend()
         dummy_backend.begin_circuit(1)
         # Get weights, means and covs for a cat state
-        weights, means, covs = dummy_backend.prepare_cat(alpha, 0, "complex", 0, 0)
+        weights, means, covs = dummy_backend.prepare_cat(alpha, phi, p, "complex", 0, 2)
 
         # Initiate the state, but use Bosonic method
         backend = bosonic.BosonicBackend()
@@ -524,7 +526,7 @@ class TestBosonicUserSpecifiedState:
         backend2 = bosonic.BosonicBackend()
         prog2 = sf.Program(1)
         with prog2.context as q2:
-            sf.ops.Catstate(alpha) | q2[0]
+            sf.ops.Catstate(alpha, phi, p, D=2) | q2[0]
         backend2.run_prog(prog2)
         state2 = backend2.state()
 
