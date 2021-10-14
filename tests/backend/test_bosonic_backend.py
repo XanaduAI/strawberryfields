@@ -198,53 +198,25 @@ class TestBosonicCatStates:
         assert np.allclose(wigner_fock, wigner_real, rtol=1e-3, atol=1e-6)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_cat_state_parity(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("representation", ["complex","real"])
+    @pytest.mark.parametrize("p,expected_parity", [(0,1),(1,-1)])
+    def test_cat_state_parity(self, alpha, phi, representation, p, expected_parity):
         r"""Checks that the real and complex cat state representations
         yield the correct parity."""
-        # for phi = 0, should yield parity of 1
-        prog_complex_cat = sf.Program(1)
-        with prog_complex_cat.context as qc:
-            sf.ops.Catstate(alpha) | qc[0]
+        prog_cat = sf.Program(1)
+        with prog_cat.context as q:
+            sf.ops.Catstate(alpha, phi, p, representation) | q[0]
 
-        prog_real_cat = sf.Program(1)
-        with prog_real_cat.context as qr:
-            sf.ops.Catstate(alpha, representation="real") | qr[0]
+        backend = bosonic.BosonicBackend()
+        backend.run_prog(prog_cat)
+        state = backend.state()
+        parity = state.parity_expectation([0])
 
-        backend_complex = bosonic.BosonicBackend()
-        backend_complex.run_prog(prog_complex_cat)
-        state_complex = backend_complex.state()
-        parity_complex = state_complex.parity_expectation([0])
-
-        backend_real = bosonic.BosonicBackend()
-        backend_real.run_prog(prog_real_cat)
-        state_real = backend_real.state()
-        parity_real = state_real.parity_expectation([0])
-
-        assert np.allclose(parity_complex, 1)
-        assert np.allclose(parity_real, 1)
-
-        # for phi = 1, should yield parity of -1 unless alpha == 0
-        if alpha != 0:
-            prog_complex_cat = sf.Program(1)
-            with prog_complex_cat.context as qc:
-                sf.ops.Catstate(alpha, 1) | qc[0]
-
-            prog_real_cat = sf.Program(1)
-            with prog_real_cat.context as qr:
-                sf.ops.Catstate(alpha, 1, representation="real") | qr[0]
-
-            backend_complex = bosonic.BosonicBackend()
-            backend_complex.run_prog(prog_complex_cat)
-            state_complex = backend_complex.state()
-            parity_complex = state_complex.parity_expectation([0])
-
-            backend_real = bosonic.BosonicBackend()
-            backend_real.run_prog(prog_real_cat)
-            state_real = backend_real.state()
-            parity_real = state_real.parity_expectation([0])
-
-            assert np.allclose(parity_complex, -1)
-            assert np.allclose(parity_real, -1)
+        # for p = 0, should yield parity of 1
+        # for p = 1, should yield parity of -1 unless alpha == 0
+        if not(p==1 and alpha==0):
+            assert np.allclose(parity, expected_parity)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     def test_cat_marginal(self, alpha):
