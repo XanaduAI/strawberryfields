@@ -160,7 +160,7 @@ class TestBosonicCatStates:
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
-    @pytest.mark.parametrize("representation", ["complex","real"])
+    @pytest.mark.parametrize("representation", ["complex", "real"])
     def test_cat_state_wigners(self, alpha, phi, representation):
         r"""Checks that the real and complex cat state representations
         have the same Wigner functions as the cat state from the Fock
@@ -190,8 +190,8 @@ class TestBosonicCatStates:
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
-    @pytest.mark.parametrize("representation", ["complex","real"])
-    @pytest.mark.parametrize("p,expected_parity", [(0,1),(1,-1)])
+    @pytest.mark.parametrize("representation", ["complex", "real"])
+    @pytest.mark.parametrize("p,expected_parity", [(0, 1), (1, -1)])
     def test_cat_state_parity(self, alpha, phi, representation, p, expected_parity):
         r"""Checks that the real and complex cat state representations
         yield the correct parity."""
@@ -206,7 +206,7 @@ class TestBosonicCatStates:
 
         # for p = 0, should yield parity of 1
         # for p = 1, should yield parity of -1 unless alpha == 0
-        if not(p==1 and alpha==0):
+        if not (p == 1 and alpha == 0):
             assert np.allclose(parity, expected_parity)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
@@ -505,7 +505,7 @@ class TestBosonicUserSpecifiedState:
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
-    @pytest.mark.parametrize("p", [0,1])
+    @pytest.mark.parametrize("p", [0, 1])
     def test_complex_weight(self, alpha, phi, p):
         r"""Checks that Bosonic creates a state with user-specifed weights, means
         and covariances."""
