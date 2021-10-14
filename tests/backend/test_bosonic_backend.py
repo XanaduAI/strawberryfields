@@ -160,7 +160,8 @@ class TestBosonicCatStates:
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
-    def test_cat_state_wigners(self, alpha, phi):
+    @pytest.mark.parametrize("representation", ["complex","real"])
+    def test_cat_state_wigners(self, alpha, phi, representation):
         r"""Checks that the real and complex cat state representations
         have the same Wigner functions as the cat state from the Fock
         backend."""
@@ -168,20 +169,12 @@ class TestBosonicCatStates:
         p = np.linspace(-2 * alpha, 2 * alpha, 100)
 
         prog_complex_cat = sf.Program(1)
-        with prog_complex_cat.context as qc:
-            sf.ops.Catstate(alpha, phi) | qc[0]
+        with prog_complex_cat.context as qb:
+            sf.ops.Catstate(alpha, phi, representation=representation) | qb[0]
 
-        prog_real_cat = sf.Program(1)
-        with prog_real_cat.context as qr:
-            sf.ops.Catstate(alpha, phi, representation="real", D=10) | qr[0]
-
-        backend_complex = bosonic.BosonicBackend()
-        backend_complex.run_prog(prog_complex_cat)
-        wigner_complex = backend_complex.state().wigner(0, x, p)
-
-        backend_real = bosonic.BosonicBackend()
-        backend_real.run_prog(prog_real_cat)
-        wigner_real = backend_real.state().wigner(0, x, p)
+        backend_bosonic = bosonic.BosonicBackend()
+        backend_bosonic.run_prog(prog_complex_cat)
+        wigner_bosonic = backend_bosonic.state().wigner(0, x, p)
 
         prog_cat_fock = sf.Program(1)
         with prog_cat_fock.context as qf:
@@ -193,9 +186,7 @@ class TestBosonicCatStates:
         results = eng.run(prog_cat_fock)
         wigner_fock = results.state.wigner(0, x, p)
 
-        assert np.allclose(wigner_complex, wigner_real, rtol=1e-3, atol=1e-6)
-        assert np.allclose(wigner_complex, wigner_fock, rtol=1e-3, atol=1e-6)
-        assert np.allclose(wigner_fock, wigner_real, rtol=1e-3, atol=1e-6)
+        assert np.allclose(wigner_bosonic, wigner_fock, rtol=1e-3, atol=1e-6)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
