@@ -116,11 +116,6 @@ Features
   <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
   your quantum programs with our end-to-end differentiable TensorFlow backend
 
-..
-
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows
-  anyone to run a quantum computing simulation via **drag and drop**
-
 
 How to cite
 ===========
