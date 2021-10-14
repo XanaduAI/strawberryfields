@@ -88,12 +88,12 @@ class TestBosonicCatStates:
 
             # Weights should be real if phi is an integer
             if phi % 1 == 0:
-                assert np.allclose(state.weights().real, state.weights())
+                assert np.isreal(state.weights()).all()
             else:
-                assert not np.allclose(state.weights().real, state.weights())
+                assert np.iscomplexobj(state.weights())
             # Covs should be real, means complex
-            assert not np.allclose(state.means().real, state.means())
-            assert np.allclose(state.covs().real, state.covs())
+            assert np.isreal(state.covs()).all()
+            assert np.iscomplexobj(state.means())
         else:
             assert state.num_weights == 1
             assert state.weights().shape == (1,)
