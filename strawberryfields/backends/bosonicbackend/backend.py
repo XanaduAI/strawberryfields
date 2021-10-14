@@ -385,14 +385,16 @@ class BosonicBackend(BaseBosonic):
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
-    def prepare_cat(self, alpha, phi, representation, ampl_cutoff, D):
+    def prepare_cat(self, a, phi, p, representation, ampl_cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
         :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
 
         Args:
-            alpha (complex): alpha value of cat state
-            phi (float): phi value of cat state
+            a (float): displacement magnitude :math:`|\alpha|`
+            phi (float): displacement angle :math:`\phi`
+            p (float): parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
+            cat state, and ``p=1`` an odd cat state.
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             ampl_cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
@@ -401,6 +403,8 @@ class BosonicBackend(BaseBosonic):
         Returns:
             tuple: arrays of the weights, means and covariances for the state
         """
+
+        alpha = a * np.exp(1j * phi)
 
         if representation not in ("complex", "real"):
             raise ValueError(
@@ -419,7 +423,7 @@ class BosonicBackend(BaseBosonic):
         hbar = self.circuit.hbar
 
         if representation == "complex":
-            phi = np.pi * phi
+            phi = np.pi * p
 
             # Mean of |alpha><alpha| term
             rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
