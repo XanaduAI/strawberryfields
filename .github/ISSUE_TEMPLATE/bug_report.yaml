@@ -1,6 +1,6 @@
 name: Bug report
 description: File a bug report
-title: '[BUG]'
+title: '[replace with a short descriptive title for your report]'
 labels: "bug"
 
 body:

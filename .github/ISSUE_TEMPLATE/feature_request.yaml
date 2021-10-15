@@ -1,5 +1,6 @@
 name: Feature request
 description: Suggest a new feature
+title: '[replace with a short descriptive title for your request]'
 labels: "enhancement"
 
 body:
