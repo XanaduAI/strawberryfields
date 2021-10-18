@@ -10,7 +10,7 @@ body:
       value: |
           ## Before posting a bug report
           Search existing GitHub issues to make sure the issue does not already exist:
-          https://github.com/xanaduai/strawberryfields/issues
+          https://github.com/XanaduAI/strawberryfields/issues
   - type: checkboxes
     id: terms
     attributes:
