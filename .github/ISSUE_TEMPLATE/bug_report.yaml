@@ -59,12 +59,12 @@ body:
     validations:
       required: true
   - type: markdown
-    id: source code and tracebacks
+    id: source-code-and-tracebacks
     attributes:
       value: |
-      ## source code and tracebacks
+        ## source code and tracebacks
 
-      Any additional code snippets and error tracebacks related to the issue?
+        Any additional code snippets and error tracebacks related to the issue?
   - type: textarea
     id: sourcecode
     attributes:
@@ -78,7 +78,7 @@ body:
       description: Please include the error tracebacks related to the issue here. This will be automatically formatted into code, so no need for backticks.
       render: shell
   - type: textarea
-    id: additional info
+    id: additional-info
     attributes:
       label:  Additional information
       description: Please include any additional information, configuration or data that might be necessary to reproduce the issue.
