@@ -24,7 +24,7 @@ import sympy
 
 pytestmark = pytest.mark.bosonic
 
-ALPHA_VALS = np.linspace(-1, 1, 5)
+ALPHA_VALS = np.linspace(0, 1, 5)
 PHI_VALS = np.linspace(0, 1, 3)
 FOCK_VALS = np.arange(5, dtype=int)
 r_fock = 0.05
@@ -538,12 +538,13 @@ class TestBosonicPrograms:
     """Tests that small programs run and return the correct output."""
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_init_circuit(self, alpha, r):
+    def test_init_circuit(self, alpha, phi, r):
         """Checks init_circuit only prepares non-Gaussian states and vacuum."""
         prog = sf.Program(3)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             # this line should have no effect since it is a Gaussian prep
             # that would be picked up in run_prog, but not init_circuit
             sf.ops.Squeezed(r) | q[1]
@@ -564,13 +565,14 @@ class TestBosonicPrograms:
         assert np.allclose(covs, covs_compare)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_different_preparations(self, alpha, r):
+    def test_different_preparations(self, alpha, phi, r):
         """Runs a program with non-Gaussian and Gaussian preparations."""
         prog = sf.Program(3)
 
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             sf.ops.Squeezed(r) | q[1]
 
         backend = bosonic.BosonicBackend()
@@ -596,12 +598,13 @@ class TestBosonicPrograms:
         assert np.allclose(state.covs(), covs_compare)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_measurement(self, alpha, r):
+    def test_measurement(self, alpha, phi, r):
         """Runs a program with measurements."""
         prog = sf.Program(2)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             sf.ops.Squeezed(r) | q[1]
             sf.ops.MeasureX | q[0]
             sf.ops.MeasureHD | q[1]
@@ -618,12 +621,13 @@ class TestBosonicPrograms:
             assert samples[i].shape == (1,)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("shots", SHOTS_VALS)
-    def test_measurement_many_shots(self, alpha, shots):
+    def test_measurement_many_shots(self, alpha, phi, shots):
         """Runs a program with measurements."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             sf.ops.MeasureHomodyne(0) | q[0]
 
         backend = bosonic.BosonicBackend()
@@ -661,13 +665,14 @@ class TestBosonicPrograms:
         assert len(ancilla_samples[1]) == 2
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_add_new_mode(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    def test_add_new_mode(self, alpha, phi):
         """Tests adding a new mode in a program context."""
         prog = sf.Program(1)
         with prog.context as q:
             sf.ops.Vacuum() | q[0]
             q = q + (sf.ops.New(n=1),)
-            sf.ops.Catstate(alpha) | q[1]
+            sf.ops.Catstate(alpha, phi) | q[1]
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
         state = backend.state()
