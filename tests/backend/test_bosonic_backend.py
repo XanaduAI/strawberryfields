@@ -25,7 +25,7 @@ import sympy
 pytestmark = pytest.mark.bosonic
 
 ALPHA_VALS = np.linspace(0, 1, 5)
-PHI_VALS = np.linspace(0, 1, 3)
+PHI_VALS = np.linspace(0, np.pi, 3)
 FOCK_VALS = np.arange(5, dtype=int)
 r_fock = 0.05
 EPS_VALS = np.array([0.01, 0.05, 0.1, 0.5])
