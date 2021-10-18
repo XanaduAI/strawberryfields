@@ -210,11 +210,12 @@ class TestBosonicCatStates:
             assert np.allclose(parity, expected_parity)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_cat_marginal(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    def test_cat_marginal(self, alpha, phi):
         """Tests marginal method in BaseBosonicState."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q
+            sf.ops.Catstate(alpha, phi) | q
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -226,11 +227,12 @@ class TestBosonicCatStates:
         marginal = state.marginal(0, x)
 
         # Calculate the wavefunction directly
-        disp = np.sqrt(2 * sf.hbar) * alpha
-        norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha) ** 2))
+        alpha_complex = alpha * np.exp(1j * phi)
+        disp = np.sqrt(2 * sf.hbar) * alpha_complex
+        norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha_complex) ** 2))
         psi = np.exp(-((x - disp) ** 2) / (2 * sf.hbar))
         psi += np.exp(-((x + disp) ** 2) / (2 * sf.hbar))
-        psi *= norm / (np.pi * sf.hbar) ** 0.25
+        psi *= norm * np.exp(-alpha_complex.imag ** 2) / (np.pi * sf.hbar) ** 0.25
 
         assert np.allclose(marginal, abs(psi) ** 2)
 
