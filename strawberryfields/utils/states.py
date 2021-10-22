@@ -308,7 +308,7 @@ def cat_state(a, phi=0, p=0, fock_dim=5):
     theta = np.pi * p
 
     # normalisation constant
-    temp = np.exp(-0.5 * np.abs(alpha) ** 2)
+    temp = np.exp(-0.5 * a ** 2)
     N = temp / np.sqrt(2 * (1 + np.cos(theta) * temp ** 4))
 
     # coherent states
