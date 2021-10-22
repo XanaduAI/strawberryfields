@@ -838,7 +838,7 @@ class Catstate(Preparation):
     Args:
         a (float): displacement magnitude :math:`|\alpha|`
         phi (float): displacement angle :math:`\phi`
-        p (float): parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
+        p (float): Parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
         representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             (Bosonic backend only)
