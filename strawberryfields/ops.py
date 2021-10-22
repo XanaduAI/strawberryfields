@@ -247,7 +247,7 @@ class Operation:
         )
 
         if is_tf_complex or is_complex:
-            raise ValueError(f"The arguments of {gate_info} cannot be complex")
+            raise ValueError(f"The arguments of {gate_info} cannot be complex.")
 
 
 # ====================================================================
