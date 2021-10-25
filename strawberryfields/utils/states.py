@@ -298,9 +298,10 @@ def cat_state(a, phi=0, p=0, fock_dim=5):
         array: the cat state
     """
 
-    tf_complex = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [a, phi, p])
+    # check if a parameter is complex when possibly casted to numpy dtype
+    is_complex_obj = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [a, phi, p])
 
-    if (np.iscomplex([a, phi])).any() or tf_complex:
+    if (np.iscomplex([a, phi])).any() or is_complex_obj:
         raise ValueError("Arguments of the cat_state (a, r, p) cannot be complex")
 
     alpha = a * np.exp(1j * phi)
