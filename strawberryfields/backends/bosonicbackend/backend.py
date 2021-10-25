@@ -395,8 +395,8 @@ class BosonicBackend(BaseBosonic):
         Args:
             a (float): displacement magnitude :math:`|\alpha|`
             theta (float): displacement angle :math:`\theta`
-            p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
-            cat state, and ``p=1`` an odd cat state.
+            p (float): Parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+                cat state, and ``p=1`` an odd cat state.
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             ampl_cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
@@ -463,8 +463,8 @@ class BosonicBackend(BaseBosonic):
         Args:
             a (float): displacement magnitude :math:`|\alpha|`
             theta (float): displacement angle :math:`\theta`
-            p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
-            cat state, and ``p=1`` an odd cat state
+            p (float): Parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+                cat state, and ``p=1`` an odd cat state.
             ampl_cutoff (float): this determines how many terms to keep
             D (float): quality parameter of approximation
 
