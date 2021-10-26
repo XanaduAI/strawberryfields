@@ -161,7 +161,7 @@ class BosonicBackend(BaseBosonic):
 
                             # Internally also store all the measurement outcomes
                             if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
+                                all_samples[r.ind] = []
                             all_samples[r.ind].append(val[:, i])
 
                     applied.append(cmd)
