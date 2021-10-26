@@ -139,6 +139,7 @@ Code details
 
 """
 import sys
+from .backend import TFBackend
 
 try:
     import tensorflow
@@ -168,6 +169,3 @@ if not (tf_available and tf_version[:2] == "2."):
     sys.excepthook = excepthook
 
     raise ImportError(tf_info)
-
-
-from .backend import TFBackend

@@ -615,6 +615,8 @@ class Circuit:
         Returns:
             tuple[int]: The Fock number measurement results for each mode.
         """
+        # pylint: disable=unused-argument
+
         # allow integer (non-list) arguments
         # not part of the API, but provided for convenience
         if isinstance(modes, int):
@@ -863,14 +865,8 @@ class Circuit:
             # \psi_n(x) = 1/sqrt[2^n n!](\frac{m \omega}{\pi \hbar})^{1/4}
             #             \exp{-\frac{m \omega}{2\hbar} x^2} H_n(\sqrt{\frac{m \omega}{\pi}} x)
             # where H_n(x) is the (physicists) nth Hermite polynomial
-            if "max" in kwargs:
-                q_mag = kwargs["max"]
-            else:
-                q_mag = 10
-            if "num_bins" in kwargs:
-                num_bins = kwargs["num_bins"]
-            else:
-                num_bins = 100000
+            q_mag = kwargs.get("max", 10)
+            num_bins = kwargs.get("kwargs", 100000)
             if "q_tensor" in self._cache:
                 # use cached q_tensor
                 q_tensor = self._cache["q_tensor"]
