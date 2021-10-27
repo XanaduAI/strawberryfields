@@ -420,6 +420,7 @@ class TestGaussianGateApplication:
         with prog.context as q:
             ops.Ggate(S, d) | q
         eng.run(prog).state.ket()
+
     def test_gradient_gaussian_gate(self, pure):
         if not pure:
             pytest.skip("Test only runs on pure states")
@@ -436,6 +437,7 @@ class TestGaussianGateApplication:
             else:
                 state = eng.run(prog).state.dm()
         grad = tape.gradient(state, [S, d])
+
     def test_Ggate_optimization(self, pure):
         if not pure:
             pytest.skip("Test only runs on pure states")
