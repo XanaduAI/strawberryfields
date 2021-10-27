@@ -461,7 +461,7 @@ class TestGaussianGateApplication:
             eng.reset()
             grad_S, gradients_d = tape.gradient(loss_val, [S, d])
             optimizer.apply_gradients([(gradients_d, d)])
-            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr=.05)
+            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr=0.05)
             loss_vals.append(loss_val)
             print(loss_val)
         assert all([bool(l1 > l2) for l1, l2 in zip(loss_vals, loss_vals[1:])])
