@@ -418,6 +418,7 @@ class TestGaussianGateApplication:
         d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
         with prog.context as q:
             ops.Ggate(S, d) | q
+        # tests that no exceptions are raised
         eng.run(prog).state.ket()
 
     def test_gradient_gaussian_gate(self, setup_backend, pure):
@@ -435,30 +436,32 @@ class TestGaussianGateApplication:
                 state = eng.run(prog).state.ket()
             else:
                 state = eng.run(prog).state.dm()
-        grad = tape.gradient(state, [S, d])
+        # tests that no exceptions are raised
+        tape.gradient(state, [S, d])
 
     def test_Ggate_optimization(self, setup_backend, pure):
         if not pure:
             pytest.skip("Test only runs on pure states")
-        num_mode = 1
+        num_mode = 2
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
-        optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.001)
         S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
         d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
 
+        prog = sf.Program(num_mode)
+        with prog.context as q:
+            ops.Ggate(S, d) | q
+
         loss_vals = []
         for _ in range(10):
-            prog = sf.Program(num_mode)
-            with prog.context as q:
-                ops.Ggate(S, d) | q
             with tf.GradientTape() as tape:
                 state_out = eng.run(prog).state.ket()
                 loss_val = tf.abs(state_out[1, 1] - 0.25) ** 2
-
+            eng.reset()
             grad_S, gradients_d = tape.gradient(loss_val, [S, d])
-            grad_S = tf.math.real(grad_S)
-            gradients_d = tf.math.real(gradients_d)
-            optimizer.apply_gradients(zip([gradients_d], [d]))
-            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr=1.0)
+            optimizer.apply_gradients([(gradients_d, d)])
+            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr=.05)
             loss_vals.append(loss_val)
+            print(loss_val)
+        assert all([bool(l1 > l2) for l1, l2 in zip(loss_vals, loss_vals[1:])])
