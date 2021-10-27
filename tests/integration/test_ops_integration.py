@@ -408,6 +408,8 @@ class TestKetDensityMatrixIntegration:
 
 from thewalrus.random import random_symplectic
 import tensorflow as tf
+
+
 @pytest.mark.backends("tf")
 class TestGaussianGateApplication:
     def test_multimode_gaussian_gate(self, pure):
@@ -416,7 +418,7 @@ class TestGaussianGateApplication:
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
         S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
-        d = tf.Variable(np.random.random(2*num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
         with prog.context as q:
             ops.Ggate(S, d) | q
         eng.run(prog).state.ket()
@@ -427,8 +429,8 @@ class TestGaussianGateApplication:
         num_mode = 2
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
-        S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
-        d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
+        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
         with prog.context as q:
             sf.ops.Ggate(S, d) | q
         with tf.GradientTape() as tape:
@@ -445,21 +447,21 @@ class TestGaussianGateApplication:
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
         optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-        S = tf.Variable(random_symplectic(num_mode),dtype=tf.complex128)
-        d = tf.Variable(np.random.random(2*num_mode),dtype=tf.complex128)
+        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
 
         loss_vals = []
         for _ in tqdm(range(10)):
             prog = sf.Program(num_mode)
             with prog.context as q:
-                ops.Ggate(S,d) | q
+                ops.Ggate(S, d) | q
             with tf.GradientTape() as tape:
                 state_out = eng.run(prog).state.ket()
-                loss_val = tf.abs(state_out[1,1] - 0.25)**2
+                loss_val = tf.abs(state_out[1, 1] - 0.25) ** 2
 
-            grad_S, gradients_d = tape.gradient(loss_val, [S,d])
+            grad_S, gradients_d = tape.gradient(loss_val, [S, d])
             grad_S = tf.math.real(grad_S)
             gradients_d = tf.math.real(gradients_d)
             optimizer.apply_gradients(zip([gradients_d], [d]))
-            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr = 1.0)
+            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr=1.0)
             loss_vals.append(loss_val)
