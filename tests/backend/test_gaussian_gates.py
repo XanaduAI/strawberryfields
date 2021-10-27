@@ -19,6 +19,8 @@ import numpy as np
 import tensorflow as tf
 from scipy.linalg import expm
 from scipy.stats import unitary_group
+from thewalrus.quantum.fock_tensors import fock_tensor
+from thewalrus.symplectic import sympmat
 from strawberryfields.backends.tfbackend.ops import (
     choi_trick,
     n_mode_gate,
@@ -29,13 +31,12 @@ from strawberryfields.backends.tfbackend.ops import (
 )
 
 
-@pytest.mark.fock
-@pytest.mark.tf
+@pytest.mark.backends("tf", "fock")
 class TestUnitaryFunctionRelated:
     """Basic tests over new functions related to gaussian gates"""
 
     @pytest.mark.parametrize("num_mode", [4, 5])
-    def test_choi_trick(self, num_mode, tol):
+    def test_choi_trick(self, setup_backend, num_mode, tol):
         """Test if we can get correct C, mu, Sigma from S, d"""
         W = unitary_group.rvs(num_mode)
         V = unitary_group.rvs(num_mode)
@@ -64,7 +65,7 @@ class TestUnitaryFunctionRelated:
         assert np.allclose(_R, expected_R, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("cutoff", [5, 7])
-    def test_n_mode_gate_with_single_mode_gate(self, cutoff, tol):
+    def test_n_mode_gate_with_single_mode_gate(self, setup_backend, cutoff, tol):
         """Test if n_mode_gate is compatable with single_mode_gate in case of pure=True/False and batched=True/False"""
         _pure = True
         matrix = tf.convert_to_tensor(np.random.random((cutoff, cutoff)))
@@ -104,7 +105,7 @@ class TestUnitaryFunctionRelated:
         )
 
     @pytest.mark.parametrize("cutoff", [5, 7])
-    def test_n_mode_gate_with_two_mode_gate(self, cutoff, tol):
+    def test_n_mode_gate_with_two_mode_gate(self, setup_backend, cutoff, tol):
         """Test if n_mode_gate is compatable with two_mode_gate in case of pure=True/False and batched=True/False"""
         _pure = True
         matrix = np.random.random((cutoff, cutoff, cutoff, cutoff))
@@ -147,16 +148,11 @@ class TestUnitaryFunctionRelated:
         )
 
 
-from thewalrus.quantum.fock_tensors import fock_tensor
-from thewalrus.symplectic import sympmat
-
-
-@pytest.mark.fock
-@pytest.mark.tf
+@pytest.mark.backends("tf", "fock")
 class TestFockRepresentation:
     @pytest.mark.parametrize("cutoff", [4, 5])
     @pytest.mark.parametrize("num_mode", [2, 3])
-    def test_gaussian_gate_matrix_with_fock_tensor(self, num_mode, cutoff, tol):
+    def test_gaussian_gate_matrix_with_fock_tensor(self, setup_backend, num_mode, cutoff, tol):
         """Test if the gaussian gate matrix has the right effect in the Fock basis"""
         S = sympmat(num_mode)
         d = np.random.random(2 * num_mode)
@@ -183,7 +179,7 @@ class TestFockRepresentation:
         assert np.allclose(Ggate_matrix[2], ref_state, atol=tol, rtol=0.0)
 
     @pytest.mark.parametrize("cutoff", [4, 5])
-    def test_gaussian_gate_output(self, cutoff, tol):
+    def test_gaussian_gate_output(self, setup_backend, cutoff, tol):
         """Test if the output state of the gaussian gate has the right effect on states in the Fock basis"""
         S = sympmat(2)
         d = np.random.random(4)

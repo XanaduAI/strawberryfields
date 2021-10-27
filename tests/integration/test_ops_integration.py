@@ -15,7 +15,7 @@ r"""Integration tests for frontend operations applied to the backend"""
 import pytest
 
 import numpy as np
-
+import tensorflow as tf
 import strawberryfields as sf
 from strawberryfields import ops
 
@@ -23,6 +23,7 @@ from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
 from thewalrus.quantum import is_valid_cov
+from thewalrus.random import random_symplectic
 
 from scipy.stats import unitary_group
 
@@ -406,13 +407,9 @@ class TestKetDensityMatrixIntegration:
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
 
-from thewalrus.random import random_symplectic
-import tensorflow as tf
-
-
-@pytest.mark.backends("tf")
+@pytest.mark.backends("tf", "fock")
 class TestGaussianGateApplication:
-    def test_multimode_gaussian_gate(self, pure):
+    def test_multimode_gaussian_gate(self, setup_backend, pure):
         """Test applying gaussian gate on multiple modes"""
         num_mode = 1
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
@@ -423,7 +420,7 @@ class TestGaussianGateApplication:
             ops.Ggate(S, d) | q
         eng.run(prog).state.ket()
 
-    def test_gradient_gaussian_gate(self, pure):
+    def test_gradient_gaussian_gate(self, setup_backend, pure):
         if not pure:
             pytest.skip("Test only runs on pure states")
         num_mode = 2
@@ -440,7 +437,7 @@ class TestGaussianGateApplication:
                 state = eng.run(prog).state.dm()
         grad = tape.gradient(state, [S, d])
 
-    def test_Ggate_optimization(self, pure):
+    def test_Ggate_optimization(self, setup_backend, pure):
         if not pure:
             pytest.skip("Test only runs on pure states")
         num_mode = 1
