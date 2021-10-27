@@ -76,7 +76,7 @@ def prog():
     return prog
 
 
-test_prog_not_compiled = """\
+test_blackbird_prog_not_compiled = """\
 name test_program
 version 1.0
 
@@ -95,6 +95,27 @@ Interferometer(A0) | [0, 1, 2, 3]
 MeasureHomodyne(0) | 0
 MeasureHomodyne(0.43, select=0.32) | 2
 MeasureHomodyne(0.43, select=0.32) | 2
+"""
+
+test_xir_prog_not_compiled = """\
+gate Vacuum[0];
+gate Squeezed(x, y)[0];
+gate Sgate(x, y)[0];
+gate Dgate(x, y)[0];
+gate S2gate(x, y)[0, 1];
+gate Interferometer(x)[0, 1, 2, 3];
+gate MeasureHomodyne(x)[0];
+
+Vacuum | [1];
+Squeezed(0.12, 0.0) | [2];
+Sgate(1, 0.0) | [0];
+Dgate(0.735934779718964, 0.7469555733762603) | [1];
+S2gate(0.543, -0.12) | [0, 3];
+Interferometer(0.219546940711-0.256534554457j) | [0, 1, 2, 3];
+// , 0.611076853957+0.524178937791j, -0.102700187435+0.474478834685j, -0.027250232925+0.03729094623j, 0.451281863394+0.602582912475j, 0.456952590016+0.01230749109j, 0.131625867435-0.450417744715j, 0.035283194078-0.053244267184j, 0.038710094355+0.492715562066j, -0.019212744068-0.321842852355j, -0.240776471286+0.524432833034j, -0.458388143039+0.329633367819j, -0.156619083736+0.224568570065j, 0.109992223305-0.163750223027j, -0.421179844245+0.183644837982j, 0.818769184612+0.068015658737j])[0, 1, 2, 3];
+MeasureHomodyne(0) | [0];
+MeasureHomodyne(phi: 0.43, select:0.32) | [2];
+MeasureHomodyne(phi: 0.43, select:0.32) | [2];
 """
 
 
@@ -384,7 +405,7 @@ class TestSFToBlackbirdConversion:
         assert np.all(bb._var["p0"] == np.array([[1, 2]]))
         assert np.all(bb._var["p1"] == np.array([[3, 4]]))
         assert np.all(bb._var["p2"] == np.array([[5, 6]]))
-        assert bb.modes == [0, 1]
+        assert bb.modes == {0, 1}
 
 
 class TestBlackbirdToSFConversion:
@@ -672,6 +693,284 @@ class TestBlackbirdToSFConversion:
             io.to_program(bb)
 
 
+class TestSFtoXIRConversion:
+    """TODO"""
+
+    def test_empty_program(self):
+        """Test that an empty program is correctly converted"""
+        # create a test program
+        sf_prog = Program(4, name="test_program")
+        xir_prog = io.to_xir(sf_prog)
+
+        assert xir_prog.serialize() == ""
+        assert xir_prog.version == "0.1.0"
+
+    def test_gate_noarg(self):
+        """Test gate with no argument converts"""
+        # create a test program
+        sf_prog = Program(1)
+
+        with prog.context as q:
+            ops.Vac | q[0]
+
+        xir_prog = io.to_xir(sf_prog)
+        statements = ["Vac"]
+
+        assert xir_prog.statements[0].name == "Vacuum"
+        assert xir_prog.statements[0].name == "Vacuum"
+
+    def test_gate_arg(self):
+        """Test gate with argument converts"""
+        # create a test program
+        prog = Program(2)
+
+        with prog.context as q:
+            ops.Sgate(0.54, 0.324) | q[1]
+
+        bb = io.to_blackbird(prog)
+        expected = {"op": "Sgate", "modes": [1], "args": [0.54, 0.324], "kwargs": {}}
+
+        assert bb.operations[0] == expected
+
+    def test_gate_kwarg(self):
+        """Test gate with keyword argument converts"""
+        # create a test program
+        prog = Program(2)
+
+        with prog.context as q:
+            ops.Dgate(np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)) | q[1]
+
+        bb = io.to_blackbird(prog)
+        # Note: due to how SF stores quantum commands with the Parameter class,
+        # all kwargs get converted to positional args internally.
+        expected = {
+            "op": "Dgate",
+            "modes": [1],
+            "args": [np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)],
+            "kwargs": {},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_two_mode_gate(self):
+        """Test two mode gate converts"""
+        prog = Program(4)
+
+        with prog.context as q:
+            ops.BSgate(0.54, -0.324) | (q[3], q[0])
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "BSgate",
+            "modes": [3, 0],
+            "args": [0.54, -0.324],
+            "kwargs": {},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_decomposition_operation_not_compiled(self):
+        """Test decomposition operation"""
+        # create a test program
+        prog = Program(4)
+
+        with prog.context as q:
+            ops.Interferometer(U) | q
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "Interferometer",
+            "modes": [0, 1, 2, 3],
+            "args": [U],
+            "kwargs": {},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_decomposition_operation_compiled(self):
+        """Test decomposition operation gets decomposed if compiled"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.Pgate(0.43) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {"op": "Pgate", "modes": [0], "args": [0.43], "kwargs": {}}
+        assert bb.operations[0] == expected
+
+        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
+        assert bb.operations[0]["op"] == "Sgate"
+        assert bb.operations[1]["op"] == "Rgate"
+
+    def test_measure_noarg(self):
+        """Test measurement with no argument converts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureFock() | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {"op": "MeasureFock", "modes": [0], "args": [], "kwargs": {}}
+
+        assert bb.operations[0] == expected
+
+    def test_measure_postselect(self):
+        """Test measurement with postselection"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureFock(select=2) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureFock",
+            "modes": [0],
+            "args": [],
+            "kwargs": {"select": [2]},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_measure_darkcounts(self):
+        """Test measurement with dark counts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureFock(dark_counts=2) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureFock",
+            "modes": [0],
+            "args": [],
+            "kwargs": {"dark_counts": [2]},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_measure_arg(self):
+        """Test measurement with argument converts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureHomodyne(0.43) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureHomodyne",
+            "modes": [0],
+            "args": [0.43],
+            "kwargs": {},
+        }
+
+        assert bb.operations[0] == expected
+
+    def test_measure_arg_postselect(self):
+        """Test measurement with argument and postselection converts"""
+        # create a test program
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureHomodyne(0.43, select=0.543) | q[0]
+
+        bb = io.to_blackbird(prog)
+        expected = {
+            "op": "MeasureHomodyne",
+            "modes": [0],
+            "args": [0.43],
+            "kwargs": {"select": 0.543},
+        }
+
+        assert bb.operations[0] == expected
+
+        # repeat with kwargs only
+        prog = Program(1)
+
+        with prog.context as q:
+            ops.MeasureHomodyne(phi=0.43, select=0.543) | q[0]
+
+        bb = io.to_blackbird(prog)
+        assert bb.operations[0] == expected
+
+    def test_measured_par_str(self):
+        """Test a MeasuredParameter with some transformations converts properly"""
+        prog = Program(2)
+        with prog.context as q:
+            ops.Sgate(0.43) | q[0]
+            ops.MeasureX | q[0]
+            ops.Zgate(2 * pf.sin(q[0].par)) | q[1]
+
+        bb = io.to_blackbird(prog)
+        assert bb.operations[-1]["op"] == "Zgate"
+        assert bb.operations[-1]["modes"] == [1]
+
+        assert isinstance(bb.operations[-1]["args"][0], blackbird.RegRefTransform)
+        assert bb.operations[-1]["args"][0].func_str == "2*sin(q0)"
+        assert bb.operations[-1]["args"][0].regrefs == [0]
+
+        assert bb.operations[-1]["kwargs"] == {}
+
+    def test_free_par_str(self):
+        """Test a FreeParameter with some transformations converts properly"""
+        prog = Program(2)
+        r, alpha = prog.params("r", "alpha")
+        with prog.context as q:
+            ops.Sgate(r) | q[0]
+            ops.Zgate(3 * pf.log(-alpha)) | q[1]
+
+        bb = io.to_blackbird(prog)
+        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ["{r}", 0.0], "kwargs": {}}
+        assert bb.operations[1] == {
+            "op": "Zgate",
+            "modes": [1],
+            "args": ["3*log(-{alpha})"],
+            "kwargs": {},
+        }
+
+    def test_tdm_program(self):
+        prog = TDMProgram(2)
+
+        with prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
+            ops.Sgate(0.7, 0) | q[1]
+            ops.BSgate(p[0]) | (q[0], q[1])
+            ops.Rgate(p[1]) | q[1]
+            ops.MeasureHomodyne(p[2]) | q[0]
+
+        bb = io.to_blackbird(prog)
+
+        assert bb.operations[0] == {"kwargs": {}, "args": [0.7, 0], "op": "Sgate", "modes": [1]}
+        assert bb.operations[1] == {
+            "kwargs": {},
+            "args": ["p0", 0.0],
+            "op": "BSgate",
+            "modes": [0, 1],
+        }
+        assert bb.operations[2] == {"kwargs": {}, "args": ["p1"], "op": "Rgate", "modes": [1]}
+        assert bb.operations[3] == {
+            "kwargs": {},
+            "args": ["p2"],
+            "op": "MeasureHomodyne",
+            "modes": [0],
+        }
+
+        assert bb.programtype == {"name": "tdm", "options": {"temporal_modes": 2}}
+        assert list(bb._var.keys()) == ["p0", "p1", "p2"]
+        assert np.all(bb._var["p0"] == np.array([[1, 2]]))
+        assert np.all(bb._var["p1"] == np.array([[3, 4]]))
+        assert np.all(bb._var["p2"] == np.array([[5, 6]]))
+        assert bb.modes == {0, 1}
+
+
+
+class TestXIRtoSFConversion:
+    """TODO"""
+
+
 prog_txt = textwrap.dedent(
     """\
     import strawberryfields as sf
@@ -941,7 +1240,7 @@ class TestSave:
         with open(filename, "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
     def test_save_filename_string(self, prog, tmpdir):
         """Test saving a program to a file path using a string filename"""
@@ -951,7 +1250,7 @@ class TestSave:
         with open(filename, "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
     def test_save_file_object(self, prog, tmpdir):
         """Test writing a program to a file object"""
@@ -963,7 +1262,7 @@ class TestSave:
         with open(filename, "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
     def test_save_append_extension(self, prog, tmpdir):
         """Test appending the extension if not present"""
@@ -973,7 +1272,7 @@ class TestSave:
         with open(filename + ".xbb", "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
 
 class TestLoad:
@@ -997,7 +1296,7 @@ class TestLoad:
         filename = tmpdir.join("test.xbb")
 
         with open(filename, "w") as f:
-            f.write(test_prog_not_compiled)
+            f.write(test_blackbird_prog_not_compiled)
 
         res = sf.load(filename)
 
@@ -1009,7 +1308,7 @@ class TestLoad:
         filename = str(tmpdir.join("test.xbb"))
 
         with open(filename, "w") as f:
-            f.write(test_prog_not_compiled)
+            f.write(test_blackbird_prog_not_compiled)
 
         res = sf.load(filename)
 
@@ -1031,4 +1330,4 @@ class TestLoad:
 
     def test_loads(self, prog):
         """Test loading a program from a string"""
-        self.assert_programs_equal(io.loads(test_prog_not_compiled), prog)
+        self.assert_programs_equal(io.loads(test_blackbird_prog_not_compiled), prog)

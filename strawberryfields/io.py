@@ -18,11 +18,14 @@ code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 import os
-from numbers import Number
+from decimal import Decimal
+from typing import Iterable
 
 import numpy as np
 
+import xir
 import blackbird
+
 import strawberryfields.program as sfp
 from strawberryfields.tdm.tdmprogram import TDMProgram
 import strawberryfields.parameters as sfpar
@@ -30,7 +33,212 @@ from . import ops
 
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
-__all__ = ["to_blackbird", "to_program", "loads"]
+__all__ = ["to_blackbird", "to_xir", "to_program", "loads"]
+
+
+def to_program(prog):
+    """TODO"""
+    if isinstance(prog, blackbird.BlackbirdProgram):
+        if not prog.modes:
+            # we can't return an empty program, since we don't know how many modes
+            # to initialize the Program object with.
+            raise ValueError("Blackbird program contains no quantum operations!")
+
+        if prog.programtype["name"] == "tdm":
+            return _from_blackbird_to_tdm(prog)
+        return _from_blackbird(prog)
+
+    if isinstance(prog, xir.Program):
+        return _from_xir(prog)
+
+    raise TypeError(f"Cannot convert '{prog.__class__}' to Strawberry Fields Program")
+
+
+def _from_blackbird(bb):
+    """Convert a Blackbird Program to a Strawberry Fields Program.
+
+    Args:
+        bb (blackbird.BlackbirdProgram): the input Blackbird program object
+
+    Returns:
+        Program: corresponding SF program
+    """
+    # create a SF program
+    prog = sfp.Program(max(bb.modes) + 1, name=bb.name)
+
+    # append the quantum operations
+    with prog.context as q:
+        for op in bb.operations:
+            # check if operation name is in the list of
+            # defined StrawberryFields operations.
+            # This is used by checking against the ops.py __all__
+            # module attribute, which contains the names
+            # of all defined quantum operations
+            if op["op"] in ops.__all__:
+                # get the quantum operation from the sf.ops module
+                gate = getattr(ops, op["op"])
+            else:
+                raise NameError("Quantum operation {} not defined!".format(op["op"]))
+
+            # create the list of regrefs
+            regrefs = [q[i] for i in op["modes"]]
+
+            if "args" in op and "kwargs" in op:
+                # the gate has arguments
+                args = op["args"]
+                kwargs = op["kwargs"]
+
+                # Convert symbolic expressions in args/kwargs containing measured and free parameters to
+                # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
+                args = sfpar.par_convert(args, prog)
+                vals = sfpar.par_convert(kwargs.values(), prog)
+                kwargs = dict(zip(kwargs.keys(), vals))
+                gate(*args, **kwargs) | regrefs  # pylint:disable=expression-not-assigned
+            else:
+                # the gate has no arguments
+                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+
+    prog._target = bb.target["name"]
+
+    if "shots" in bb.target["options"]:
+        prog.run_options["shots"] = bb.target["options"]["shots"]
+
+    if "cutoff_dim" in bb.target["options"]:
+        prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
+
+    return prog
+
+
+def _from_xir(xir_prog, **kwargs):
+    """Convert an IR Program to a Strawberry Fields Program.
+
+    Args:
+        xir_prog (xir.Program): the input XIR program object
+
+    Keyword Args:
+        name (str): name of the resulting Strawberry Fields program
+        target (str): Name of the target hardware device. Default is "xir".
+        shots (int): number of times the program measurement evaluation is repeated
+        cutoff_dim (int): the Fock basis truncation size
+
+    Returns:
+        Program: corresponding Strawberry Fields program
+    """
+    num_of_modes = len(set(xir_prog.wires))
+    name = kwargs.get("name", "xir")
+    if num_of_modes == 0:
+        raise ValueError(
+            "The XIR program is empty and cannot be transformed into a Strawberry Fields program"
+        )
+    prog = sfp.Program(num_of_modes, name=name)
+
+    # append the quantum operations
+    with prog.context as q:
+        for op in xir_prog.statements:
+            # check if operation name is in the list of
+            # defined StrawberryFields operations.
+            # This is used by checking against the ops.py __all__
+            # module attribute, which contains the names
+            # of all defined quantum operations
+            if op.name in ops.__all__:
+                # get the quantum operation from the sf.ops module
+                gate = getattr(ops, op.name)
+            else:
+                raise NameError(f"Quantum operation {op.name!r} not defined!")
+
+            # create the list of regrefs
+            regrefs = [q[i] for i in op.wires]
+
+            if op.params != []:
+                # convert symbolic expressions to symbolic expressions containing the corresponding
+                # MeasuredParameter and FreeParameter instances.
+                if isinstance(op.params, dict):
+                    vals = sfpar.par_convert(op.params.values(), prog)
+                    params = dict(zip(op.params.keys(), vals))
+                    gate(**params) | regrefs  # pylint:disable=expression-not-assigned
+                else:
+                    for i, p in enumerate(op.params):
+                        if isinstance(p, Decimal):
+                            op.params[i] = float(p)
+                    params = sfpar.par_convert(op.params, prog)
+                    gate(*params) | regrefs  # pylint:disable=expression-not-assigned
+            else:
+                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+
+    prog._target = kwargs.get("target")  # pylint: disable=protected-access
+
+    if kwargs.get("shots") is not None:
+        prog.run_options["shots"] = kwargs.get("shots")
+
+    if kwargs.get("cutoff_dim") is not None:
+        prog.backend_options["cutoff_dim"] = kwargs.get("cutoff_dim")
+
+    return prog
+
+
+# pylint:disable=too-many-branches
+def _from_blackbird_to_tdm(bb):
+    prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
+
+    def is_free_param(param):
+        return isinstance(param, str) and param[0] == "p" and param[1:].isdigit()
+
+    # retrieve all the free parameters in the Blackbird program (e.g. "p0", "p1"
+    # etc.) and add their corresponding values to args
+    args = []
+    for k in bb._var.keys():
+        if is_free_param(k):
+            v = bb._var[k].flatten()
+            args.append(v)
+
+    # append the quantum operations
+    with prog.context(*args) as (p, q):
+        for op in bb.operations:
+            # check if operation name is in the list of
+            # defined StrawberryFields operations.
+            # This is used by checking against the ops.py __all__
+            # module attribute, which contains the names
+            # of all defined quantum operations
+            if op["op"] in ops.__all__:
+                # get the quantum operation from the sf.ops module
+                gate = getattr(ops, op["op"])
+            else:
+                raise NameError("Quantum operation {} not defined!".format(op["op"]))
+
+            # create the list of regrefs
+            regrefs = [q[i] for i in op["modes"]]
+
+            if "args" in op:
+                # the gate has arguments
+                args = op["args"]
+                kwargs = op["kwargs"]
+
+                for i, p in enumerate(args):
+                    if is_free_param(p):
+                        args[i] = sfpar.FreeParameter(p)
+                for k, v in kwargs.items():
+                    if is_free_param(v):
+                        kwargs[k] = sfpar.FreeParameter(v)
+
+                # Convert symbolic expressions in args/kwargs containing measured and free parameters to
+                # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
+                args = sfpar.par_convert(args, prog)
+                vals = sfpar.par_convert(kwargs.values(), prog)
+                kwargs = dict(zip(kwargs.keys(), vals))
+                gate(*args, **kwargs) | regrefs  # pylint:disable=expression-not-assigned
+            else:
+                # the gate has no arguments
+                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+
+    prog._target = bb.target["name"]
+
+    if "shots" in bb.target["options"]:
+        prog.run_options["shots"] = bb.target["options"]["shots"]
+
+    if "cutoff_dim" in bb.target["options"]:
+        prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
+
+    return prog
 
 
 # pylint:disable=too-many-branches
@@ -45,7 +253,7 @@ def to_blackbird(prog, version="1.0"):
         blackbird.BlackbirdProgram:
     """
     bb = blackbird.BlackbirdProgram(name=prog.name, version=version)
-    bb._modes = list(prog.reg_refs.keys())
+    bb._modes = set(prog.reg_refs.keys())
 
     isMeasuredParameter = lambda x: isinstance(x, sfpar.MeasuredParameter)
 
@@ -122,132 +330,67 @@ def to_blackbird(prog, version="1.0"):
     return bb
 
 
-def to_program(bb):
-    """Convert a Blackbird Program to a Strawberry Fields Program.
+def to_xir(prog, **kwargs):
+    """Convert a Strawberry Fields Program to an IR Program.
 
     Args:
-        bb (blackbird.BlackbirdProgram): the input Blackbird program object
+        prog (Program): the Strawberry Fields program
+
+    Keyword Args:
+        add_decl (bool): Whether gate and output declarations should be added to
+            the IR program. Default is ``False``.
+        version (str): Version number for the program. Default is ``0.1.0``.
 
     Returns:
-        Program: corresponding SF program
+        xir.Program
     """
-    # create a SF program
-    if not bb.modes:
-        # we can't return an empty program, since we don't know how many modes
-        # to initialize the Program object with.
-        raise ValueError("Blackbird program contains no quantum operations!")
+    version = kwargs.get("version", "0.1.0")
+    xir_prog = xir.Program(version=version)
 
-    if bb.programtype["name"] == "tdm":
-        return _to_tdm_program(bb)
+    # fill in the quantum circuit
+    for cmd in prog.circuit:
 
-    prog = sfp.Program(max(bb.modes) + 1, name=bb.name)
+        name = cmd.op.__class__.__name__
+        wires = tuple(i.ind for i in cmd.reg)
 
-    # append the quantum operations
-    with prog.context as q:
-        for op in bb.operations:
-            # check if operation name is in the list of
-            # defined StrawberryFields operations.
-            # This is used by checking against the ops.py __all__
-            # module attribute, which contains the names
-            # of all defined quantum operations
-            if op["op"] in ops.__all__:
-                # get the quantum operation from the sf.ops module
-                gate = getattr(ops, op["op"])
-            else:
-                raise NameError("Quantum operation {} not defined!".format(op["op"]))
+        if "Measure" in name:
+            if kwargs.get("add_decl", False):
+                output_decl = xir.Declaration(name, type_="out")
+                xir_prog.add_declaration(output_decl)
 
-            # create the list of regrefs
-            regrefs = [q[i] for i in op["modes"]]
+            params = {}
+            # special case to take into account 'select' keyword argument
+            if cmd.op.select is not None:
+                params["select"] = cmd.op.select
 
-            if "args" in op and "kwargs" in op:
-                # the gate has arguments
-                args = op["args"]
-                kwargs = op["kwargs"]
+            if cmd.op.p:
+                # argument is quadrature phase
+                params["phi"] = cmd.op.p[0]
 
-                # Convert symbolic expressions in args/kwargs containing measured and free parameters to
-                # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
-                args = sfpar.par_convert(args, prog)
-                vals = sfpar.par_convert(kwargs.values(), prog)
-                kwargs = dict(zip(kwargs.keys(), vals))
-                gate(*args, **kwargs) | regrefs  # pylint:disable=expression-not-assigned
-            else:
-                # the gate has no arguments
-                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+            if name == "MeasureFock":
+                # special case to take into account 'dark_counts' keyword argument
+                if cmd.op.dark_counts is not None:
+                    params["dark_counts"] = cmd.op.dark_counts
+        else:
+            if kwargs.get("add_decl", False):
+                if name not in [gdecl.name for gdecl in xir_prog.declarations["gate"]]:
+                    params = [f"p{i}" for i, _ in enumerate(cmd.op.p)]
+                    gate_decl = xir.Declaration(name, type_="gate", params=params, wires=wires)
+                    xir_prog.add_declaration(gate_decl)
 
-    prog._target = bb.target["name"]
+            params = []
+            for a in cmd.op.p:
+                if sfpar.par_is_symbolic(a):
+                    # SymPy object, convert to string
+                    a = str(a)
+                if isinstance(a, Iterable):
+                    a = ", ".join(map(str, a))
+                params.append(a)
 
-    if "shots" in bb.target["options"]:
-        prog.run_options["shots"] = bb.target["options"]["shots"]
+        op = xir.Statement(name, params, wires)
+        xir_prog.add_statement(op)
 
-    if "cutoff_dim" in bb.target["options"]:
-        prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
-
-    return prog
-
-
-# pylint:disable=too-many-branches
-def _to_tdm_program(bb):
-    prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
-
-    def is_free_param(param):
-        return isinstance(param, str) and param[0] == "p" and param[1:].isdigit()
-
-    # retrieve all the free parameters in the Blackbird program (e.g. "p0", "p1"
-    # etc.) and add their corresponding values to args
-    args = []
-    for k in bb._var.keys():
-        if is_free_param(k):
-            v = bb._var[k].flatten()
-            args.append(v)
-
-    # append the quantum operations
-    with prog.context(*args) as (p, q):
-        for op in bb.operations:
-            # check if operation name is in the list of
-            # defined StrawberryFields operations.
-            # This is used by checking against the ops.py __all__
-            # module attribute, which contains the names
-            # of all defined quantum operations
-            if op["op"] in ops.__all__:
-                # get the quantum operation from the sf.ops module
-                gate = getattr(ops, op["op"])
-            else:
-                raise NameError("Quantum operation {} not defined!".format(op["op"]))
-
-            # create the list of regrefs
-            regrefs = [q[i] for i in op["modes"]]
-
-            if "args" in op:
-                # the gate has arguments
-                args = op["args"]
-                kwargs = op["kwargs"]
-
-                for i, p in enumerate(args):
-                    if is_free_param(p):
-                        args[i] = sfpar.FreeParameter(p)
-                for k, v in kwargs.items():
-                    if is_free_param(v):
-                        kwargs[k] = sfpar.FreeParameter(v)
-
-                # Convert symbolic expressions in args/kwargs containing measured and free parameters to
-                # symbolic expressions containing the corresponding MeasuredParameter and FreeParameter instances.
-                args = sfpar.par_convert(args, prog)
-                vals = sfpar.par_convert(kwargs.values(), prog)
-                kwargs = dict(zip(kwargs.keys(), vals))
-                gate(*args, **kwargs) | regrefs  # pylint:disable=expression-not-assigned
-            else:
-                # the gate has no arguments
-                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
-
-    prog._target = bb.target["name"]
-
-    if "shots" in bb.target["options"]:
-        prog.run_options["shots"] = bb.target["options"]["shots"]
-
-    if "cutoff_dim" in bb.target["options"]:
-        prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
-
-    return prog
+    return xir_prog
 
 
 def generate_code(prog, eng=None):
@@ -327,7 +470,7 @@ def generate_code(prog, eng=None):
         code_seq.append("\nwith prog.context as q:")
 
     # add the operations, and replace any free parameters with e.g. `p[0]`, `p[1]`
-    for cmd in prog.circuit:
+    for cmd in prog.circuit or []:
         name = cmd.op.__class__.__name__
         if isinstance(prog, TDMProgram):
             format_dict = {k: f"p[{k[1:]}]" for k in prog.parameters.keys()}
@@ -367,7 +510,7 @@ def _factor_out_pi(num_list, denominator=12):
     a = []
     for p in num_list:
         # if list element is not a number then append its string representation
-        if not isinstance(p, Number):
+        if not isinstance(p, (int, float)):
             a.append(str(p))
             continue
 
@@ -377,11 +520,11 @@ def _factor_out_pi(num_list, denominator=12):
                 if int(p / np.pi) == 1:
                     a.append("np.pi")
                 else:
-                    a.append(f"{int(p/np.pi)}*np.pi")
+                    a.append(f"{int(p / np.pi)}*np.pi")
             else:
                 coeff = int(p / factor / gcd)
                 if coeff == 1:
-                    a.append(f"np.pi/{int(denominator/gcd)}")
+                    a.append(f"np.pi/{int(denominator / gcd)}")
                 else:
                     a.append(f"{coeff}*np.pi/{int(denominator / gcd)}")
         else:
@@ -389,8 +532,8 @@ def _factor_out_pi(num_list, denominator=12):
     return ", ".join(a)
 
 
-def save(f, prog):
-    """Saves a quantum program to a Blackbird .xbb file.
+def save(f, prog, ir="blackbird"):
+    """Saves a quantum program to a Blackbird .xbb or an XIR .xir file.
 
     **Example:**
 
@@ -403,7 +546,7 @@ def save(f, prog):
             ops.BSgate(0.6, 0.1) | (q[2], q[0])
             ops.MeasureFock() | q
 
-        sf.save("program1.xbb", prog)
+        sf.save("program1.xbb", prog, ir="blackbird")
 
     This will create the following Blackbird file:
 
@@ -424,9 +567,18 @@ def save(f, prog):
             is unchanged. If file is a string or Path, a .xbb extension will
             be appended to the file name if it does not already have one.
         prog (Program): Strawberry Fields program
+        ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
     """
     own_file = False
-    bb = to_blackbird(prog).serialize()
+
+    if ir == "xir":
+        prog_str = to_xir(prog).serialize()
+    elif ir == "blackbird":
+        prog_str = to_blackbird(prog).serialize()
+    else:
+        raise ValueError(
+            f"'{ir}' not recognized as a valid IR option. Valid options are 'xir' and 'blackbird'."
+        )
 
     if hasattr(f, "read"):
         # argument file is a file-object
@@ -445,27 +597,35 @@ def save(f, prog):
         own_file = True
 
     try:
-        fid.write(bb)
+        fid.write(prog_str)
     finally:
         if own_file:
             # safely close the file
             fid.close()
 
 
-def loads(s):
+def loads(s, ir="blackbird"):
     """Load a quantum program from a string.
 
     Args:
-        s (str): string containing the Blackbird circuit
+        s (str): string containing the Blackbird or XIR circuit
+        ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
     Returns:
         prog (Program): Strawberry Fields program
 
     """
-    bb = blackbird.loads(s)
-    return to_program(bb)
+    if ir == "xir":
+        prog = xir.parse_script(s)
+    elif ir == "blackbird":
+        prog = blackbird.loads(s)
+    else:
+        raise ValueError(
+            f"'{ir}' not recognized as a valid IR option. Valid options are 'xir' and 'blackbird'."
+        )
+    return to_program(prog)
 
 
-def load(f):
+def load(f, ir="blackbird"):
     """Load a quantum program from a Blackbird .xbb file.
 
     **Example:**
@@ -498,6 +658,7 @@ def load(f):
         f (Union[file, str, pathlib.Path]): File or filename from which
             the data is loaded. If file is a string or Path, a value with the
             .xbb extension is expected.
+        ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
 
     Returns:
         prog (Program): Strawberry Fields program
@@ -518,11 +679,11 @@ def load(f):
         raise ValueError("file must be a string, pathlib.Path, or file-like object") from e
 
     try:
-        bb_str = fid.read()
+        prog_str = fid.read()
     finally:
         if own_file:
             # safely close the file
             fid.close()
 
     # load blackbird program
-    return loads(bb_str)
+    return loads(prog_str, ir=ir)
