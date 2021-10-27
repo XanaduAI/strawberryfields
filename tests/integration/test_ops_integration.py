@@ -448,7 +448,7 @@ class TestGaussianGateApplication:
         d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
 
         loss_vals = []
-        for _ in tqdm(range(10)):
+        for _ in range(10):
             prog = sf.Program(num_mode)
             with prog.context as q:
                 ops.Ggate(S, d) | q
