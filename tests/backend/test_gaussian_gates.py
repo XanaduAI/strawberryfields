@@ -28,7 +28,7 @@ from strawberryfields.backends.tfbackend.ops import (
     gaussian_gate_matrix,
 )
 
-
+@pytest.mark.backends("tf", "fock")
 class TestUnitaryFunctionRelated:
     """Basic tests over new functions related to gaussian gates"""
 
@@ -149,7 +149,7 @@ from thewalrus.quantum.fock_tensors import fock_tensor
 from thewalrus.symplectic import sympmat
 
 
-@pytest.mark.backends("tf")
+@pytest.mark.backends("tf", "fock")
 class TestFockRepresentation:
     @pytest.mark.parametrize("cutoff", [4, 5])
     @pytest.mark.parametrize("num_mode", [2, 3])
