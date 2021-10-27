@@ -454,7 +454,7 @@ class TestGaussianGateApplication:
             ops.Ggate(S, d) | q
 
         loss_vals = []
-        for _ in range(10):
+        for _ in range(11):
             with tf.GradientTape() as tape:
                 state_out = eng.run(prog).state.ket()
                 loss_val = tf.abs(state_out[1, 1] - 0.25) ** 2
