@@ -28,6 +28,7 @@ from strawberryfields.backends.tfbackend.ops import (
     gaussian_gate_matrix,
 )
 
+
 @pytest.mark.backends("tf", "fock")
 class TestUnitaryFunctionRelated:
     """Basic tests over new functions related to gaussian gates"""
