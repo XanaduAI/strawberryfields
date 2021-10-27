@@ -49,7 +49,7 @@ __all__ = [
     "active_configs",
     "reset_config",
     "delete_config",
-    "update_symplectic"
+    "update_symplectic",
 ]
 
 
