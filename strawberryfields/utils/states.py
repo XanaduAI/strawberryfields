@@ -277,39 +277,47 @@ def fock_state(n, fock_dim=5):
     return ket
 
 
-def cat_state(a, p=0, fock_dim=5):
+def cat_state(a, phi=0, p=0, fock_dim=5):
     r"""Returns the cat state
 
     .. math::
 
-        |cat\rangle = \frac{1}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\phi))}}
-        \left(|\alpha\rangle +e^{i\phi}|-\alpha\rangle\right)
+        |cat\rangle = \frac{1}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\theta))}}
+        \left(|\alpha\rangle +e^{i\theta}|-\alpha\rangle\right)
 
-    with the even cat state given for :math:`\phi=0`, and the odd
-    cat state given for :math:`\phi=\pi`.
+    with the even cat state given for :math:`\theta=0`, and the odd
+    cat state given for :math:`\theta=\pi`.
 
     Args:
-        a (complex): the displacement
-        p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+        a (float): displacement magnitude :math:`|\alpha|`
+        phi (float): displacement angle :math:`\phi`
+        p (float): parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state
         fock_dim (int): the size of the truncated Fock basis
     Returns:
         array: the cat state
     """
+
+    # check if a parameter is complex when possibly casted to numpy dtype
+    is_complex_obj = any(hasattr(arg, "numpy") and np.iscomplex(arg.numpy()) for arg in [a, phi, p])
+
+    if (np.iscomplex([a, phi])).any() or is_complex_obj:
+        raise ValueError("Arguments of the cat_state (a, r, p) cannot be complex")
+
+    alpha = a * np.exp(1j * phi)
     # p=0 if even, p=pi if odd
-    phi = np.pi * p
+    theta = np.pi * p
 
     # normalisation constant
-    temp = np.exp(-0.5 * np.abs(a) ** 2)
-    N = temp / np.sqrt(2 * (1 + np.cos(phi) * temp ** 4))
+    temp = np.exp(-0.5 * a ** 2)
+    N = temp / np.sqrt(2 * (1 + np.cos(theta) * temp ** 4))
 
     # coherent states
     k = np.arange(fock_dim)
-    # Need to cast a to float before exponentiation to avoid overflow
-    c1 = ((1.0 * a) ** k) / np.sqrt(fac(k))
-    c2 = ((-1.0 * a) ** k) / np.sqrt(fac(k))
+    c1 = (alpha ** k) / np.sqrt(fac(k))
+    c2 = ((-alpha) ** k) / np.sqrt(fac(k))
 
     # add them up with a relative phase
-    ket = (c1 + np.exp(1j * phi) * c2) * N
+    ket = (c1 + np.exp(1j * theta) * c2) * N
 
     return ket

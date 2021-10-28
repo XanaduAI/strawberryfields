@@ -227,6 +227,23 @@ class Operation:
         # call the child class specialized _apply method
         return self._apply(temp, backend, **kwargs)
 
+    @staticmethod
+    def _check_for_complex_args(arguments, gate_info):
+        """Check if any of the input arguments are of complex type for an
+        operation that doesn't support complex inputs.
+
+        Args:
+            arguments (list): list of input arguments to check
+            gate_info (str): information about the gate to be used
+
+        Raises:
+            ValueError: there were complex arguments specified
+        """
+        is_complex = any(np.iscomplex(np.real_if_close(arg)).any() for arg in arguments)
+
+        if is_complex:
+            raise ValueError(f"The arguments of {gate_info} cannot be complex.")
+
 
 # ====================================================================
 # Derived operation classes
@@ -603,11 +620,7 @@ class Coherent(Preparation):
         r = par_evaluate(self.p[0])
         phi = par_evaluate(self.p[1])
 
-        np_args = [arg.numpy() if hasattr(arg, "numpy") else arg for arg in [r, phi]]
-        is_complex = any([np.iscomplexobj(np.real_if_close(arg)) for arg in np_args])
-
-        if is_complex:
-            raise ValueError("The arguments of Coherent(r, phi) cannot be complex")
+        self._check_for_complex_args([r, phi], "Coherent(r, phi)")
 
         backend.prepare_coherent_state(r, phi, *reg)
 
@@ -732,14 +745,9 @@ class DisplacedSqueezed(Preparation):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
 
-        np_args = [arg.numpy() if hasattr(arg, "numpy") else arg for arg in p]
-        is_complex = any([np.iscomplexobj(np.real_if_close(arg)) for arg in np_args])
-
-        if is_complex:
-            raise ValueError(
-                "The arguments of DisplacedSqueezed(r_d, phi_d, r_s, phi_s) cannot be complex"
-            )
-
+        self._check_for_complex_args(
+            [p[0], p[1], p[2], p[3]], "DisplacedSqueezed(r_d, phi_d, r_s, phi_s)"
+        )
         # prepare the displaced squeezed state directly
         backend.prepare_displaced_squeezed_state(p[0], p[1], p[2], p[3], *reg)
 
@@ -814,21 +822,22 @@ class Catstate(Preparation):
     A cat state is the coherent superposition of two coherent states,
 
     .. math::
-       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha}),
+       \ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\theta} \ket{-\alpha}),
 
-    where :math:`N = \sqrt{2 (1+\cos(\phi)e^{-2|\alpha|^2})}` is the normalization factor.
+    where :math:`N = \sqrt{2 (1+\cos(\theta)e^{-2|\alpha|^2})}` is the normalization factor and :math:`\alpha = a e^{i\phi}`.
 
     .. warning::
         Cat states are **non-Gaussian**, and thus can
         only be used in the Fock and Bosonic backends, *not* the Gaussian backend.
 
     Args:
-        alpha (complex): displacement parameter
-        p (float): parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+        a (float): displacement magnitude :math:`|\alpha|`
+        phi (float): displacement angle :math:`\phi`
+        p (float): Parity, where :math:`\theta=p\pi`. ``p=0`` corresponds to an even
             cat state, and ``p=1`` an odd cat state.
         representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             (Bosonic backend only)
-        cutoff (float): if using the ``'real'`` representation, this determines
+        ampl_cutoff (float): if using the ``'real'`` representation, this determines
             how many terms to keep (Bosonic backend only)
         D (float): for ``'real'`` representation, quality parameter of approximation
             (Bosonic backend only)
@@ -841,11 +850,11 @@ class Catstate(Preparation):
             The cat state is a non-Gaussian superposition of coherent states
 
             .. math::
-                |cat\rangle = \frac{e^{-|\alpha|^2/2}}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\phi))}}
-                \left(|\alpha\rangle +e^{i\phi}|-\alpha\rangle\right)
+                |cat\rangle = \frac{e^{-|\alpha|^2/2}}{\sqrt{2(1+e^{-2|\alpha|^2}\cos(\theta))}}
+                \left(|\alpha\rangle +e^{i\theta}|-\alpha\rangle\right)
 
-            with the even cat state given for :math:`\phi=0`, and the odd cat state
-            given for :math:`\phi=\pi`.
+            with the even cat state given for :math:`\theta=0`, and the odd cat state
+            given for :math:`\theta=\pi`.
 
         .. tip::
 
@@ -856,25 +865,22 @@ class Catstate(Preparation):
         the squeezed single photon state :math:`S\ket{1}`.
     """
 
-    def __init__(self, alpha=0, p=0, representation="complex", ampl_cutoff=1e-12, D=2):
-        super().__init__([alpha, p, representation, ampl_cutoff, D])
+    def __init__(self, a=0.0, phi=0.0, p=0, representation="complex", ampl_cutoff=1e-12, D=2):
+        super().__init__([a, phi, p, representation, ampl_cutoff, D])
 
     def _apply(self, reg, backend, **kwargs):
-        alpha = self.p[0]
-        phi = np.pi * self.p[1]
+
+        a = par_evaluate(self.p[0])
+        phi = par_evaluate(self.p[1])
+        p = self.p[2]
+
+        self._check_for_complex_args([a, phi, p], "Catstate(a, phi, p)")
+
+        alpha = a * np.exp(1j * phi)
+        theta = np.pi * p
+
         D = backend.get_cutoff_dim()
-        l = np.arange(D)[:, np.newaxis]
-
-        # normalization constant
-        temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
-        N = temp / pf.sqrt(2 * (1 + pf.cos(phi) * temp ** 4))
-
-        # coherent states
-        # Need to cast  alpha to float before exponentiation to avoid overflow
-        c1 = ((1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
-        c2 = ((-1.0 * alpha) ** l) / np.sqrt(ssp.factorial(l))
-        # add them up with a relative phase
-        ket = (c1 + pf.exp(1j * phi) * c2) * N
+        ket = self._create_ket(alpha, theta, D)
 
         # in order to support broadcasting, the batch axis has been located at last axis, but backend expects it up as first axis
         ket = np.transpose(ket)
@@ -886,6 +892,37 @@ class Catstate(Preparation):
         ket = par_evaluate(ket)
 
         backend.prepare_ket_state(ket, *reg)
+
+    @staticmethod
+    def _create_ket(alpha, theta, cutoff_dim):
+        """Creates the statevector of the cat state determined by input
+        arguments and a cutoff dimension.
+
+        alpha (complex): the displacement
+        theta (float): argument of the cat state based on parity
+        cutoff_dim (int): the truncation cutoff dimension to be used
+
+        Returns:
+            array (complex): the state vector of the cat state
+        """
+
+        l = np.arange(cutoff_dim)[:, np.newaxis]
+
+        # turn alpha into numpy array if it's a tf.Tensor
+        if hasattr(alpha, "numpy"):
+            alpha = alpha.numpy()
+
+        # normalization constant
+        temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
+        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
+
+        # coherent states
+        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
+        c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
+
+        # add them up with a relative phase
+        ket = (c1 + pf.exp(1j * theta) * c2) * N
+        return ket
 
 
 class GKP(Preparation):
@@ -1489,11 +1526,7 @@ class Dgate(Gate):
     def _apply(self, reg, backend, **kwargs):
         r, phi = par_evaluate(self.p)
 
-        np_args = [arg.numpy() if hasattr(arg, "numpy") else arg for arg in [r, phi]]
-        is_complex = any([np.iscomplexobj(np.real_if_close(arg)) for arg in np_args])
-
-        if is_complex:
-            raise ValueError("The arguments of Dgate(r, phi) cannot be complex")
+        self._check_for_complex_args([r, phi], "Dgate(r, phi)")
 
         backend.displacement(r, phi, *reg)
 
