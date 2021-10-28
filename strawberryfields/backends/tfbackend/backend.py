@@ -354,5 +354,5 @@ class TFBackend(BaseFock):
     def thermal_loss(self, T, nbar, mode):
         raise NotImplementedError
 
-    def measure_threshold(modes, shots=1, select=None, **kwargs):
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
         raise NotImplementedError
