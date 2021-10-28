@@ -67,7 +67,7 @@ class GaussianBackend(BaseGaussian):
         self._init_modes = num_subsystems
         self.circuit = GaussianModes(num_subsystems)
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         self.circuit.add_mode(n)
 
     def del_mode(self, modes):
@@ -287,3 +287,6 @@ class GaussianBackend(BaseGaussian):
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
         return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)
+
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        raise NotImplementedError
