@@ -127,7 +127,7 @@ class FockBackend(BaseFock):
         self.circuit = Circuit(num_subsystems, cutoff_dim, pure)
         self._modemap = ModeMap(num_subsystems)
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         self.circuit.alloc(n)
         self._modemap.add(n)
 

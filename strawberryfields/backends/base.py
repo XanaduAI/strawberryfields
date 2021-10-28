@@ -599,6 +599,17 @@ class BaseFock(BaseBackend):
         """
         raise NotImplementedError
 
+    def two_mode_squeeze(self, r, phi, mode1, mode2):
+        r"""Apply a two-mode squeezing operator to the two specified modes.
+
+        Args:
+            r (float): squeezing magnitude
+            phi (float): squeezing angle
+            mode1 (int): first mode that two-mode squeezing gate acts on
+            mode2 (int): second mode that two-mode squeezing gate acts on
+        """
+        raise NotImplementedError
+
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation.
 

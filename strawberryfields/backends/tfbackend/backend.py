@@ -352,7 +352,13 @@ class TFBackend(BaseFock):
             self.circuit.del_mode(remapped_modes)
             self._modemap.delete(modes)
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         with tf.name_scope("Add_mode"):
             self.circuit.add_mode(n)
             self._modemap.add(n)
+
+    def thermal_loss(self, T, nbar, mode):
+        raise NotImplementedError
+
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
+        raise NotImplementedError
