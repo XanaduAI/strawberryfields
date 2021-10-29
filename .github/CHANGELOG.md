@@ -48,11 +48,11 @@ num_mode = 1
 cutoff = 10
 
 S = tf.Variable(random_symplectic(num_mode))
-d = tf.Variable(np.random.random(num_mode))
+d = tf.Variable(np.random.random(2*num_mode))
 kappa = tf.Variable(0.3)
-objective = tf.Variable(np.eye(cutoff)[1], dtype=tf.complex128)
+objective = tf.Variable(np.eye(cutoff)[1], dtype=tf.complex64)
 
-adam = tf.keras.optimizers.Adam(learning_rate=0.003)
+adam = tf.keras.optimizers.Adam(learning_rate=0.01)
 eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
 prog = sf.Program(1)
 
@@ -60,14 +60,16 @@ with prog.context as q:
     sf.ops.Ggate(S, d) | q
     sf.ops.Kgate(kappa) | q
 
+loss_vals = []
 for _ in range(200):
     with tf.GradientTape() as tape:
         state_out = eng.run(prog).state.ket()
         loss_val = loss(state_out, objective)
-    
+    eng.reset()
     grad_S, gradients_d, gradients_kappa = tape.gradient(loss_val, [S, d, kappa])
     adam.apply_gradients(zip([gradients_d, gradients_kappa], [d, kappa]))
-    S.assign(update_symplectic(S, grad_S, lr = 0.01)). # update S here
+    S.assign(update_symplectic(S, grad_S, lr = 0.1)) # update S here
+    loss_vals.append(loss_val)
 ```
 
 <h3>Breaking Changes</h3>
