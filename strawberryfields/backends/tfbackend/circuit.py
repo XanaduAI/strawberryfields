@@ -588,6 +588,7 @@ class Circuit:
             cutoff=self._cutoff_dim,
             pure=self._state_is_pure,
             batched=self._batched,
+            dtype=self._dtype,
         )
         self._update_state(new_state)
 
