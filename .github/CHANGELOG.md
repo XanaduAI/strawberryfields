@@ -5,6 +5,7 @@
 * The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops`` module with the backend choice of ``tf``. N mode ``Ggate`` can be parametrized by a real symplectic matrix S (size 2N * 2N) and a diplacement vector d (size N). You can also obtain the gradients of the Ggate gate via ``tape.gradient`` [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
 
 Example:
+
 ```python
 import numpy as np
 import tensorflow as tf
@@ -25,10 +26,12 @@ with prog.context as q:
 state_out = eng.run(prog).state.ket()
 print(state_out)
 ```
+
  Note that in order to update the parameter S by using its gradient, you cannot use gradient descent directly (because it would not be symplectic after the update). Please use the function `sf.update_symplectic` which is specifically for this purpose.
 [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
 Example:
+
 ```python
 import numpy as np
 import tensorflow as tf
