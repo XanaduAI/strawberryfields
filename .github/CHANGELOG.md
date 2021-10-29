@@ -79,7 +79,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Filippo Miatto, Yuan Yao
+Filippo Miatto, Nicolás Quesada, Yuan Yao.
 
 # Release 0.19.0 (current release)
 
