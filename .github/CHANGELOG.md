@@ -2,78 +2,72 @@
 
 <h3>New features since last release</h3>
 
-* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops`` module with the backend choice of ``tf``. N mode ``Ggate`` can be parametrized by a real symplectic matrix S (size 2N * 2N) and a diplacement vector d (size N). You can also obtain the gradients of the Ggate gate via ``tape.gradient`` [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
+* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
+  module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
+  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
+  obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
+  [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
+  [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
-Example:
+  ```python
+  from thewalrus.random import random_symplectic
 
-```python
-import numpy as np
-import tensorflow as tf
-import strawberryfields as sf
-from thewalrus.random import random_symplectic
+  num_mode = 2
+  cutoff = 10
+  S = tf.Variable(random_symplectic(num_mode))
+  d = tf.Variable(np.random.random(2 * num_mode))
 
-num_mode = 2
-cutoff = 10
-S = tf.Variable(random_symplectic(num_mode))
-d = tf.Variable(np.random.random(2*num_mode))
+  eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+  prog = sf.Program(2)
 
-eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
-prog = sf.Program(2)
+  with prog.context as q:
+      sf.ops.Ggate(S, d) | (q[0], q[1])
 
-with prog.context as q:
-    sf.ops.Ggate(S,d) | (q[0],q[1])
+  state_out = eng.run(prog).state.ket()
+  ```
 
-state_out = eng.run(prog).state.ket()
-print(state_out)
-```
+  Note that in order to update the parameter S by using its gradient, you cannot use gradient 
+  descent directly (as the unitary would not be symplectic after the update).
+  Please use the function `sf.update_symplectic` which is designed specifically for this purpose.
 
- Note that in order to update the parameter S by using its gradient, you cannot use gradient descent directly (because it would not be symplectic after the update). Please use the function `sf.update_symplectic` which is specifically for this purpose.
-[(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
+  ```python
+  def overlap_loss(state, objective):
+      return -tf.abs(tf.reduce_sum(tf.math.conj(state) * objective)) ** 2
 
-Example:
+  def norm_loss(state):
+      return -tf.abs(tf.linalg.norm(state)) ** 2
 
-```python
-import numpy as np
-import tensorflow as tf
-import strawberryfields as sf
-from thewalrus.random import random_symplectic
+  def loss(state, objective):
+      return overlap_loss(state, objective) + norm_loss(state)
 
-def overlap_loss(state, objective):
-    return -tf.abs(tf.reduce_sum(tf.math.conj(state) * objective))**2
+  num_mode = 1
+  cutoff = 10
 
-def norm_loss(state):
-    return -tf.abs(tf.linalg.norm(state))**2
+  S = tf.Variable(random_symplectic(num_mode))
+  d = tf.Variable(np.random.random(2 * num_mode))
+  kappa = tf.Variable(0.3)
+  objective = tf.Variable(np.eye(cutoff)[1], dtype=tf.complex64)
 
-def loss(state, objective):
-    return overlap_loss(state, objective) + norm_loss(state)
+  adam = tf.keras.optimizers.Adam(learning_rate=0.01)
+  eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+  prog = sf.Program(1)
 
-num_mode = 1
-cutoff = 10
+  with prog.context as q:
+      sf.ops.Ggate(S, d) | q
+      sf.ops.Kgate(kappa) | q
 
-S = tf.Variable(random_symplectic(num_mode))
-d = tf.Variable(np.random.random(2*num_mode))
-kappa = tf.Variable(0.3)
-objective = tf.Variable(np.eye(cutoff)[1], dtype=tf.complex64)
+  loss_vals = []
+  for _ in range(200):
+      with tf.GradientTape() as tape:
+          state_out = eng.run(prog).state.ket()
+          loss_val = loss(state_out, objective)
 
-adam = tf.keras.optimizers.Adam(learning_rate=0.01)
-eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
-prog = sf.Program(1)
-
-with prog.context as q:
-    sf.ops.Ggate(S, d) | q
-    sf.ops.Kgate(kappa) | q
-
-loss_vals = []
-for _ in range(200):
-    with tf.GradientTape() as tape:
-        state_out = eng.run(prog).state.ket()
-        loss_val = loss(state_out, objective)
-    eng.reset()
-    grad_S, gradients_d, gradients_kappa = tape.gradient(loss_val, [S, d, kappa])
-    adam.apply_gradients(zip([gradients_d, gradients_kappa], [d, kappa]))
-    S.assign(update_symplectic(S, grad_S, lr = 0.1)) # update S here
-    loss_vals.append(loss_val)
-```
+      eng.reset()
+      grad_S, gradients_d, gradients_kappa = tape.gradient(loss_val, [S, d, kappa])
+      adam.apply_gradients(zip([gradients_d, gradients_kappa], [d, kappa]))
+      S.assign(update_symplectic(S, grad_S, lr=0.1))  # update S here
+      loss_vals.append(loss_val)
+  ```
 
 <h3>Breaking Changes</h3>
 
@@ -84,6 +78,8 @@ for _ in range(200):
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Filippo Miatto, Yuan Yao
 
 # Release 0.19.0 (current release)
 
