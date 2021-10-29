@@ -1108,7 +1108,7 @@ def two_mode_squeeze(
     return output
 
 
-def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex128):
+def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
