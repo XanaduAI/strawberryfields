@@ -647,7 +647,7 @@ class BaseFockState(BaseState):
         if self._pure:
             return np.abs(self.ket()[tuple(n)]) ** 2
 
-        return self.dm()[tuple([n[i // 2] for i in range(len(n) * 2)])].real
+        return self.dm()[tuple(n[i // 2] for i in range(len(n) * 2))].real
 
     def mean_photon(self, mode, **kwargs):
         # pylint: disable=unused-argument

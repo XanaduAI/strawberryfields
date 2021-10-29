@@ -230,7 +230,7 @@ class TestInitialStates:
         """test correct even cat state returned"""
         p = 0
 
-        state = utils.cat_state(a, p, fock_dim=cutoff)
+        state = utils.cat_state(a, 0, p, fock_dim=cutoff)
 
         # For the analytic expression, cast the integer parameter to float so
         # that there's no overflow
@@ -248,7 +248,7 @@ class TestInitialStates:
         """test correct odd cat state returned"""
         p = 1
 
-        state = utils.cat_state(a, p, fock_dim=cutoff)
+        state = utils.cat_state(a, 0, p, fock_dim=cutoff)
 
         # For the analytic expression, cast the integer parameter to float so
         # that there's no overflow

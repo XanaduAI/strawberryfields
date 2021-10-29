@@ -1108,7 +1108,7 @@ def two_mode_squeeze(
     return output
 
 
-def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex128):
+def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns gaussian gate unitary matrix on specified input modes"""
     S = tf.cast(S, dtype)
     d = tf.cast(d, dtype)
@@ -1116,12 +1116,12 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
         for S_, d_ in zip(S, d):
             if (S_.shape[0]) != d_.shape[0]:
                 raise ValueError("The matrix S and the vector d do not have compatible dimensions")
-            if not is_symplectic(S_.numpy()):
+            if not is_symplectic(S_.numpy(), rtol=1e-05, atol=1e-06):
                 raise ValueError("The matrix S is not symplectic")
     else:
         if (S.shape[0]) != d.shape[0]:
             raise ValueError("The matrix S and the vector d do not have compatible dimensions")
-        if not is_symplectic(S.numpy()):
+        if not is_symplectic(S.numpy(), rtol=1e-05, atol=1e-06):
             raise ValueError("The matrix S is not symplectic")
     matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
     output = n_mode_gate(matrix, modes, in_modes=in_modes, pure=pure, batched=batched)

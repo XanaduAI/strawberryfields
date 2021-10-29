@@ -694,12 +694,12 @@ def triangular_compact(U, rtol=1e-12, atol=1e-12):
     V = U.conj()
     m = U.shape[0]
 
-    phases = dict()
+    phases = {}
     phases["m"] = m
-    phases["phi_ins"] = dict()  # mode : phi
-    phases["deltas"] = dict()  # (mode, layer) : delta
-    phases["sigmas"] = dict()  # (mode, layer) : sigma
-    phases["zetas"] = dict()  # mode : zeta
+    phases["phi_ins"] = {}  # mode : phi
+    phases["deltas"] = {}  # (mode, layer) : delta
+    phases["sigmas"] = {}  # (mode, layer) : sigma
+    phases["zetas"] = {}  # mode : zeta
 
     for j in range(m - 1):
         x = m - 1
@@ -760,13 +760,13 @@ def _rectangular_compact_init(
     V = U.conj()
     m = U.shape[0]
 
-    phases = dict()
+    phases = {}
     phases["m"] = m
-    phases["phi_ins"] = dict()  # mode : phi
-    phases["deltas"] = dict()  # (mode, layer) : delta
-    phases["sigmas"] = dict()  # (mode, layer) : sigma
-    phases["zetas"] = dict()  # mode : zeta
-    phases["phi_outs"] = dict()  # mode : phi
+    phases["phi_ins"] = {}  # mode : phi
+    phases["deltas"] = {}  # (mode, layer) : delta
+    phases["sigmas"] = {}  # (mode, layer) : sigma
+    phases["zetas"] = {}  # mode : zeta
+    phases["phi_outs"] = {}  # mode : phi
 
     for j in range(m - 1):
         if j % 2 == 0:

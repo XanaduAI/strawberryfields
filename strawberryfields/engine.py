@@ -355,14 +355,14 @@ class LocalEngine(BaseEngine):
 
                             # Internally also store all the measurement outcomes
                             if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
+                                all_samples[r.ind] = []
                             all_samples[r.ind].append(val[:, :, i])
                         else:
                             samples_dict[r.ind] = val[:, i]
 
                             # Internally also store all the measurement outcomes
                             if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
+                                all_samples[r.ind] = []
                             all_samples[r.ind].append(val[:, i])
 
                 applied.append(cmd)
