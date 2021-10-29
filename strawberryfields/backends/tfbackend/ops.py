@@ -1129,7 +1129,7 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
 
 
 def update_symplectic(S, dS, lr):
-    """returns the updated syplectic matrix S according to its geodesic.
+    """returns the updated syplectic matrix S using its Riemannian gradient dS.
     S (Tensor): symplectic matrix to be updated.
     dS (Tensor): euclidean gradient of S.
     lr (float): learning rate.
