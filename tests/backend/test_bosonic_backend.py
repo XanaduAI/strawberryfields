@@ -24,8 +24,8 @@ import sympy
 
 pytestmark = pytest.mark.bosonic
 
-ALPHA_VALS = np.linspace(-1, 1, 5)
-PHI_VALS = np.linspace(0, 1, 3)
+ALPHA_VALS = np.linspace(0, 1, 5)
+PHI_VALS = np.linspace(0, np.pi, 3)
 FOCK_VALS = np.arange(5, dtype=int)
 r_fock = 0.05
 EPS_VALS = np.array([0.01, 0.05, 0.1, 0.5])
@@ -88,12 +88,12 @@ class TestBosonicCatStates:
 
             # Weights should be real if phi is an integer
             if phi % 1 == 0:
-                assert np.allclose(state.weights().real, state.weights())
+                assert np.isreal(state.weights()).all()
             else:
-                assert not np.allclose(state.weights().real, state.weights())
+                assert np.iscomplexobj(state.weights())
             # Covs should be real, means complex
-            assert not np.allclose(state.means().real, state.means())
-            assert np.allclose(state.covs().real, state.covs())
+            assert np.isreal(state.covs()).all()
+            assert np.iscomplexobj(state.means())
         else:
             assert state.num_weights == 1
             assert state.weights().shape == (1,)
@@ -160,7 +160,8 @@ class TestBosonicCatStates:
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
-    def test_cat_state_wigners(self, alpha, phi):
+    @pytest.mark.parametrize("representation", ["complex", "real"])
+    def test_cat_state_wigners(self, alpha, phi, representation):
         r"""Checks that the real and complex cat state representations
         have the same Wigner functions as the cat state from the Fock
         backend."""
@@ -168,20 +169,12 @@ class TestBosonicCatStates:
         p = np.linspace(-2 * alpha, 2 * alpha, 100)
 
         prog_complex_cat = sf.Program(1)
-        with prog_complex_cat.context as qc:
-            sf.ops.Catstate(alpha, phi) | qc[0]
+        with prog_complex_cat.context as qb:
+            sf.ops.Catstate(alpha, phi, representation=representation) | qb[0]
 
-        prog_real_cat = sf.Program(1)
-        with prog_real_cat.context as qr:
-            sf.ops.Catstate(alpha, phi, representation="real", D=10) | qr[0]
-
-        backend_complex = bosonic.BosonicBackend()
-        backend_complex.run_prog(prog_complex_cat)
-        wigner_complex = backend_complex.state().wigner(0, x, p)
-
-        backend_real = bosonic.BosonicBackend()
-        backend_real.run_prog(prog_real_cat)
-        wigner_real = backend_real.state().wigner(0, x, p)
+        backend_bosonic = bosonic.BosonicBackend()
+        backend_bosonic.run_prog(prog_complex_cat)
+        wigner_bosonic = backend_bosonic.state().wigner(0, x, p)
 
         prog_cat_fock = sf.Program(1)
         with prog_cat_fock.context as qf:
@@ -193,65 +186,36 @@ class TestBosonicCatStates:
         results = eng.run(prog_cat_fock)
         wigner_fock = results.state.wigner(0, x, p)
 
-        assert np.allclose(wigner_complex, wigner_real, rtol=1e-3, atol=1e-6)
-        assert np.allclose(wigner_complex, wigner_fock, rtol=1e-3, atol=1e-6)
-        assert np.allclose(wigner_fock, wigner_real, rtol=1e-3, atol=1e-6)
+        assert np.allclose(wigner_bosonic, wigner_fock, rtol=1e-3, atol=1e-6)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_cat_state_parity(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("representation", ["complex", "real"])
+    @pytest.mark.parametrize("p,expected_parity", [(0, 1), (1, -1)])
+    def test_cat_state_parity(self, alpha, phi, representation, p, expected_parity):
         r"""Checks that the real and complex cat state representations
         yield the correct parity."""
-        # for phi = 0, should yield parity of 1
-        prog_complex_cat = sf.Program(1)
-        with prog_complex_cat.context as qc:
-            sf.ops.Catstate(alpha) | qc[0]
+        prog_cat = sf.Program(1)
+        with prog_cat.context as q:
+            sf.ops.Catstate(alpha, phi, p, representation) | q[0]
 
-        prog_real_cat = sf.Program(1)
-        with prog_real_cat.context as qr:
-            sf.ops.Catstate(alpha, representation="real") | qr[0]
+        backend = bosonic.BosonicBackend()
+        backend.run_prog(prog_cat)
+        state = backend.state()
+        parity = state.parity_expectation([0])
 
-        backend_complex = bosonic.BosonicBackend()
-        backend_complex.run_prog(prog_complex_cat)
-        state_complex = backend_complex.state()
-        parity_complex = state_complex.parity_expectation([0])
-
-        backend_real = bosonic.BosonicBackend()
-        backend_real.run_prog(prog_real_cat)
-        state_real = backend_real.state()
-        parity_real = state_real.parity_expectation([0])
-
-        assert np.allclose(parity_complex, 1)
-        assert np.allclose(parity_real, 1)
-
-        # for phi = 1, should yield parity of -1 unless alpha == 0
-        if alpha != 0:
-            prog_complex_cat = sf.Program(1)
-            with prog_complex_cat.context as qc:
-                sf.ops.Catstate(alpha, 1) | qc[0]
-
-            prog_real_cat = sf.Program(1)
-            with prog_real_cat.context as qr:
-                sf.ops.Catstate(alpha, 1, representation="real") | qr[0]
-
-            backend_complex = bosonic.BosonicBackend()
-            backend_complex.run_prog(prog_complex_cat)
-            state_complex = backend_complex.state()
-            parity_complex = state_complex.parity_expectation([0])
-
-            backend_real = bosonic.BosonicBackend()
-            backend_real.run_prog(prog_real_cat)
-            state_real = backend_real.state()
-            parity_real = state_real.parity_expectation([0])
-
-            assert np.allclose(parity_complex, -1)
-            assert np.allclose(parity_real, -1)
+        # for p = 0, should yield parity of 1
+        # for p = 1, should yield parity of -1 unless alpha == 0
+        if not (p == 1 and alpha == 0):
+            assert np.allclose(parity, expected_parity)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_cat_marginal(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    def test_cat_marginal(self, alpha, phi):
         """Tests marginal method in BaseBosonicState."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q
+            sf.ops.Catstate(alpha, phi) | q
 
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
@@ -263,11 +227,12 @@ class TestBosonicCatStates:
         marginal = state.marginal(0, x)
 
         # Calculate the wavefunction directly
-        disp = np.sqrt(2 * sf.hbar) * alpha
-        norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha) ** 2))
+        alpha_complex = alpha * np.exp(1j * phi)
+        disp = np.sqrt(2 * sf.hbar) * alpha_complex
+        norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha_complex) ** 2))
         psi = np.exp(-((x - disp) ** 2) / (2 * sf.hbar))
         psi += np.exp(-((x + disp) ** 2) / (2 * sf.hbar))
-        psi *= norm / (np.pi * sf.hbar) ** 0.25
+        psi *= norm * np.exp(-alpha_complex.imag ** 2) / (np.pi * sf.hbar) ** 0.25
 
         assert np.allclose(marginal, abs(psi) ** 2)
 
@@ -541,13 +506,15 @@ class TestBosonicUserSpecifiedState:
     """Checks the Bosonic preparation method."""
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_complex_weight(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    @pytest.mark.parametrize("p", [0, 1])
+    def test_complex_weight(self, alpha, phi, p):
         r"""Checks that Bosonic creates a state with user-specifed weights, means
         and covariances."""
         dummy_backend = bosonic.BosonicBackend()
         dummy_backend.begin_circuit(1)
         # Get weights, means and covs for a cat state
-        weights, means, covs = dummy_backend.prepare_cat(alpha, 0, "complex", 0, 0)
+        weights, means, covs = dummy_backend.prepare_cat(alpha, phi, p, "complex", 0, 2)
 
         # Initiate the state, but use Bosonic method
         backend = bosonic.BosonicBackend()
@@ -561,7 +528,7 @@ class TestBosonicUserSpecifiedState:
         backend2 = bosonic.BosonicBackend()
         prog2 = sf.Program(1)
         with prog2.context as q2:
-            sf.ops.Catstate(alpha) | q2[0]
+            sf.ops.Catstate(alpha, phi, p, D=2) | q2[0]
         backend2.run_prog(prog2)
         state2 = backend2.state()
 
@@ -573,12 +540,13 @@ class TestBosonicPrograms:
     """Tests that small programs run and return the correct output."""
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_init_circuit(self, alpha, r):
+    def test_init_circuit(self, alpha, phi, r):
         """Checks init_circuit only prepares non-Gaussian states and vacuum."""
         prog = sf.Program(3)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             # this line should have no effect since it is a Gaussian prep
             # that would be picked up in run_prog, but not init_circuit
             sf.ops.Squeezed(r) | q[1]
@@ -599,13 +567,14 @@ class TestBosonicPrograms:
         assert np.allclose(covs, covs_compare)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_different_preparations(self, alpha, r):
+    def test_different_preparations(self, alpha, phi, r):
         """Runs a program with non-Gaussian and Gaussian preparations."""
         prog = sf.Program(3)
 
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             sf.ops.Squeezed(r) | q[1]
 
         backend = bosonic.BosonicBackend()
@@ -631,12 +600,13 @@ class TestBosonicPrograms:
         assert np.allclose(state.covs(), covs_compare)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
-    def test_measurement(self, alpha, r):
+    def test_measurement(self, alpha, phi, r):
         """Runs a program with measurements."""
         prog = sf.Program(2)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             sf.ops.Squeezed(r) | q[1]
             sf.ops.MeasureX | q[0]
             sf.ops.MeasureHD | q[1]
@@ -653,12 +623,13 @@ class TestBosonicPrograms:
             assert samples[i].shape == (1,)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
+    @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("shots", SHOTS_VALS)
-    def test_measurement_many_shots(self, alpha, shots):
+    def test_measurement_many_shots(self, alpha, phi, shots):
         """Runs a program with measurements."""
         prog = sf.Program(1)
         with prog.context as q:
-            sf.ops.Catstate(alpha) | q[0]
+            sf.ops.Catstate(alpha, phi) | q[0]
             sf.ops.MeasureHomodyne(0) | q[0]
 
         backend = bosonic.BosonicBackend()
@@ -696,13 +667,14 @@ class TestBosonicPrograms:
         assert len(ancilla_samples[1]) == 2
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
-    def test_add_new_mode(self, alpha):
+    @pytest.mark.parametrize("phi", PHI_VALS)
+    def test_add_new_mode(self, alpha, phi):
         """Tests adding a new mode in a program context."""
         prog = sf.Program(1)
         with prog.context as q:
             sf.ops.Vacuum() | q[0]
             q = q + (sf.ops.New(n=1),)
-            sf.ops.Catstate(alpha) | q[1]
+            sf.ops.Catstate(alpha, phi) | q[1]
         backend = bosonic.BosonicBackend()
         backend.run_prog(prog)
         state = backend.state()
