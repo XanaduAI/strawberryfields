@@ -2308,7 +2308,6 @@ class Ggate(Gate):
             & mean = mean + d.
 
     """
-    ns = None
 
     def __init__(self, S, d):
         super().__init__([S, d])
