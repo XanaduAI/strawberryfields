@@ -21,6 +21,7 @@ try:
     import tensorflow as tf
 except ImportError:
     import unittest.mock as mock
+
     tf = mock.Mock()
 
 

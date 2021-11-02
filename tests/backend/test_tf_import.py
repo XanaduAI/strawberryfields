@@ -26,6 +26,7 @@ except ImportError:
     tf_available = False
 
     import unittest.mock as mock
+
     tensorflow = mock.Mock(__version__="1.12.2")
 
 else:
