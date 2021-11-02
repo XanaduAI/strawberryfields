@@ -20,11 +20,9 @@ import numpy as np
 
 try:
     import tensorflow as tf
-except (ImportError, ModuleNotFoundError) as e:
+except ImportError:
     import unittest.mock as mock
-
-    tf = mock.MagicMock()
-    tf.Tensor = int
+    tf = mock.MagicMock(Tensor=int)
 
 import strawberryfields as sf
 import strawberryfields.ops as ops

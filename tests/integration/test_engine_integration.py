@@ -27,7 +27,7 @@ from strawberryfields.backends.states import BaseState
 try:
     from strawberryfields.backends.tfbackend import TFBackend
     import tensorflow as tf
-except (ImportError, ModuleNotFoundError, ValueError) as e:
+except (ImportError, ValueError):
     eng_backend_params = [("gaussian", GaussianBackend), ("fock", FockBackend)]
 else:
     eng_backend_params = [
