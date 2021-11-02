@@ -6,11 +6,16 @@
 
 <h3>Bug fixes</h3>
 
+* The `frontend` tests can now be run without having TensorFlow installed.
+  [(#639)](https://github.com/XanaduAI/strawberryfields/pull/639)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Mikhail Andrenkov
 
 # Release 0.19.0 (current release)
 
