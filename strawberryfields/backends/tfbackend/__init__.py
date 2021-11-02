@@ -139,6 +139,7 @@ Code details
 
 """
 import sys
+from .backend import TFBackend
 
 try:
     import tensorflow

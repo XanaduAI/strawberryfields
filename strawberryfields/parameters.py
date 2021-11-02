@@ -91,7 +91,7 @@ What we cannot do at the moment:
   for the :meth:`~ops.Operation.__or__` method.
   Technically we could allow any parameters that evaluate into an integer.
 """
-# pylint: disable=too-many-ancestors,unused-argument,protected-access
+# pylint: disable=too-many-ancestors,unused-argument,protected-access,import-outside-toplevel
 
 import collections.abc
 import functools

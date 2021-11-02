@@ -259,14 +259,15 @@ class TestInitialStatesAgreeFock:
     def test_cat_state(self, setup_eng, cutoff, bsize, pure, tol):
         """Test cat state function matches Fock backends"""
         eng, prog = setup_eng(1)
-        a = 0.32 + 0.1j
+        a = 0.32
+        r = 0.45
         p = 0.43
 
         with prog.context as q:
-            ops.Catstate(a, p) | q[0]
+            ops.Catstate(a, r, p) | q[0]
 
         state = eng.run(prog).state
-        ket = utils.cat_state(a, p, fock_dim=cutoff)
+        ket = utils.cat_state(a, r, p, fock_dim=cutoff)
 
         if not pure:
             expected = state.dm()
@@ -276,6 +277,14 @@ class TestInitialStatesAgreeFock:
             ket = np.tile(ket, (bsize, 1))
 
         assert np.allclose(expected, ket, atol=tol, rtol=0)
+
+    def test_cat_state_error(self, setup_eng, cutoff, bsize, pure, tol):
+        """Test that the cat_state function raises an error for a complex
+        argument"""
+        alpha = 0.3j + 0.4
+        p = 1
+        with pytest.raises(ValueError, match="cannot be complex"):
+            ket = utils.cat_state(alpha, p, fock_dim=cutoff)
 
 
 @pytest.mark.backends("fock", "bosonic")
