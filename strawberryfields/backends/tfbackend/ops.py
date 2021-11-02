@@ -1128,19 +1128,6 @@ def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype
     return output
 
 
-def update_symplectic(S, dS, lr):
-    """returns the updated syplectic matrix S using its Riemannian gradient dS.
-    S (Tensor): symplectic matrix to be updated.
-    dS (Tensor): euclidean gradient of S.
-    lr (float): learning rate.
-    """
-    Jmat = sympmat(S.shape[1] // 2)
-    Z = np.matmul(np.transpose(S), dS)
-    Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
-    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
-    return S
-
-
 def loss_channel(T, mode, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
     """returns loss channel matrix on specified input modes"""
     superop = loss_superop(T, cutoff, batched, dtype)
