@@ -17,17 +17,16 @@ import numbers
 import pytest
 
 import numpy as np
-import tensorflow as tf
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.backends import BaseGaussian, BaseFock
-from strawberryfields.backends import GaussianBackend, FockBackend
+from strawberryfields.backends import BaseFock, FockBackend, GaussianBackend
 from strawberryfields.backends.states import BaseState
 
 
 try:
     from strawberryfields.backends.tfbackend import TFBackend
+    import tensorflow as tf
 except (ImportError, ModuleNotFoundError, ValueError) as e:
     eng_backend_params = [("gaussian", GaussianBackend), ("fock", FockBackend)]
 else:

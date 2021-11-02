@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for TensorFlow 2.x version checking"""
-from importlib import reload
 import sys
 
 import pytest
 
-import strawberryfields as sf
+from strawberryfields.backends import load_backend
 
 
 try:
     import tensorflow
-except (ImportError, ModuleNotFoundError):
-    tf_available = False
-    import mock
 
+except ImportError:
+    tf_available = False
+
+    import unittest.mock as mock
     tensorflow = mock.Mock(__version__="1.12.2")
+
 else:
     tf_available = True
 
@@ -43,7 +44,7 @@ class TestBackendImport:
             m.setattr(tensorflow, "__version__", "1.12.2")
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                reload(sf.backends.tfbackend)
+                load_backend("tf")
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
     def test_tensorflow_not_installed(self, monkeypatch):
@@ -53,7 +54,7 @@ class TestBackendImport:
             m.setattr("sys.version_info", (3, 6, 3))
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                reload(sf.backends.tfbackend)
+                load_backend("tf")
 
 
 @pytest.mark.frontend
@@ -69,8 +70,7 @@ class TestFrontendImport:
             m.setattr(tensorflow, "__version__", "1.12.2")
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                reload(sf.backends.tfbackend)
-                sf.LocalEngine("tf")
+                load_backend("tf")
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
     def test_tensorflow_not_installed(self, monkeypatch):
@@ -80,5 +80,4 @@ class TestFrontendImport:
             m.setattr("sys.version_info", (3, 6, 3))
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                reload(sf.backends.tfbackend)
-                sf.LocalEngine("tf")
+                load_backend("tf")

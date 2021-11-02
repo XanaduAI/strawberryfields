@@ -21,7 +21,7 @@ import numpy as np
 try:
     import tensorflow as tf
 except (ImportError, ModuleNotFoundError) as e:
-    import mock
+    import unittest.mock as mock
 
     tf = mock.MagicMock()
     tf.Tensor = int
