@@ -17,32 +17,31 @@ import sys
 import pytest
 
 from strawberryfields.backends import load_backend
+import strawberryfields as sf
 
 
 try:
-    import tensorflow
+    import tensorflow as tf
 
 except ImportError:
     tf_available = False
-
-    import unittest.mock as mock
-
-    tensorflow = mock.Mock(__version__="1.12.2")
+    tf_correct_version = False
 
 else:
     tf_available = True
+    tf_correct_version = tf.__version__[:2] == "2."
 
 
 class TestBackendImport:
     """Test importing the backend directly"""
 
+    @pytest.mark.skipif(tf_correct_version, reason="Test only works if TF version is incorrect")
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
         of TensorFlow installed is not version 2.x"""
         with monkeypatch.context() as m:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
-            m.setattr(tensorflow, "__version__", "1.12.2")
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 load_backend("tf")
@@ -62,16 +61,16 @@ class TestBackendImport:
 class TestFrontendImport:
     """Test importing via the frontend"""
 
+    @pytest.mark.skipif(tf_correct_version, reason="Test only works if TF version is incorrect")
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
         of TensorFlow installed is not version 2.x"""
         with monkeypatch.context() as m:
             # force Python check to pass
             m.setattr("sys.version_info", (3, 6, 3))
-            m.setattr(tensorflow, "__version__", "1.12.2")
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                load_backend("tf")
+                sf.LocalEngine("tf")
 
     @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
     def test_tensorflow_not_installed(self, monkeypatch):
@@ -81,4 +80,4 @@ class TestFrontendImport:
             m.setattr("sys.version_info", (3, 6, 3))
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                load_backend("tf")
+                sf.LocalEngine("tf")
