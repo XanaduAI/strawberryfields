@@ -151,6 +151,7 @@ else:
     tf_version = tensorflow.__version__
 
 if tf_available:
+
     def update_symplectic(S, dS, lr):
         """returns the updated syplectic matrix S according to its geodesic.
         S (Tensor): symplectic matrix to be updated.
@@ -160,7 +161,10 @@ if tf_available:
         Jmat = sympmat(S.shape[1] // 2)
         Z = np.matmul(np.transpose(S), dS)
         Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
-        S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
+        S.assign(
+            S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False
+        )
+
 
 tf_info = """\
 To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
