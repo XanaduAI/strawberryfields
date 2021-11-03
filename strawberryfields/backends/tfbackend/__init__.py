@@ -161,7 +161,6 @@ if tf_available:
         Z = np.matmul(np.transpose(S), dS)
         Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
         S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
-        return S
 
 tf_info = """\
 To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
