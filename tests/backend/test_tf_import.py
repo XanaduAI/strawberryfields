@@ -13,61 +13,37 @@
 # limitations under the License.
 r"""Unit tests for TensorFlow 2.x version checking"""
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 
-from strawberryfields.backends import load_backend
 import strawberryfields as sf
 
-
 try:
-    import tensorflow as tf
+    import tensorflow
 
 except ImportError:
     tf_available = False
-    tf_correct_version = False
 
 else:
     tf_available = True
-    tf_correct_version = tf.__version__[:2] == "2."
-
-
-class TestBackendImport:
-    """Test importing the backend directly"""
-
-    @pytest.mark.skipif(tf_correct_version, reason="Test only works if TF version is incorrect")
-    def test_incorrect_tf_version(self, monkeypatch):
-        """Test that an exception is raised if the version
-        of TensorFlow installed is not version 2.x"""
-        with monkeypatch.context() as m:
-            # force Python check to pass
-            m.setattr("sys.version_info", (3, 6, 3))
-
-            with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                load_backend("tf")
-
-    @pytest.mark.skipif(tf_available, reason="Test only works if TF not installed")
-    def test_tensorflow_not_installed(self, monkeypatch):
-        """Test that an exception is raised if TensorFlow is not installed"""
-        with monkeypatch.context() as m:
-            # force Python check to pass
-            m.setattr("sys.version_info", (3, 6, 3))
-
-            with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
-                load_backend("tf")
 
 
 @pytest.mark.frontend
 class TestFrontendImport:
     """Test importing via the frontend"""
 
-    @pytest.mark.skipif(tf_correct_version, reason="Test only works if TF version is incorrect")
     def test_incorrect_tf_version(self, monkeypatch):
         """Test that an exception is raised if the version
         of TensorFlow installed is not version 2.x"""
         with monkeypatch.context() as m:
-            # force Python check to pass
-            m.setattr("sys.version_info", (3, 6, 3))
+            # Force the Python check to pass.
+            m.setattr(sys, "version_info", (3, 6, 3))
+
+            # Unload the TF backend to ensure sf.LocalEngine() will run __init__.py.
+            m.delitem(sys.modules, "strawberryfields.backends.tfbackend", raising=False)
+            # Set the TF version in case the existing version is valid.
+            m.setitem(sys.modules, "tensorflow", MagicMock(__version__="1.2.3"))
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 sf.LocalEngine("tf")
@@ -76,8 +52,8 @@ class TestFrontendImport:
     def test_tensorflow_not_installed(self, monkeypatch):
         """Test that an exception is raised if TensorFlow is not installed"""
         with monkeypatch.context() as m:
-            # force Python check to pass
-            m.setattr("sys.version_info", (3, 6, 3))
+            # Force the Python check to pass.
+            m.setattr(sys, "version_info", (3, 6, 3))
 
             with pytest.raises(ImportError, match="version 2.x of TensorFlow is required"):
                 sf.LocalEngine("tf")
