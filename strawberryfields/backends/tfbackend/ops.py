@@ -549,6 +549,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
 
     return tf.cast(tf.transpose(gate, transpose_list), dtype), grad
 
+
 def update_symplectic(S, dS, lr):
     """returns the updated syplectic matrix S according to its geodesic.
     S (Tensor): symplectic matrix to be updated.
@@ -558,9 +559,8 @@ def update_symplectic(S, dS, lr):
     Jmat = sympmat(S.shape[1] // 2)
     Z = np.matmul(np.transpose(S), dS)
     Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
-    S.assign(
-        S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False
-    )
+    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
+
 
 def gaussian_gate_matrix(S, d, cutoff: int, batched=False, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix accounting for batching"""
