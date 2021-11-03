@@ -27,13 +27,15 @@ Contents
 
 """
 # pylint: disable=too-many-arguments
+import warnings
 
 from string import ascii_lowercase as indices
+from string import ascii_letters as indices_full
 
 import tensorflow as tf
 import numpy as np
 from scipy.special import factorial
-
+from scipy.linalg import expm
 
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
@@ -45,6 +47,11 @@ from thewalrus.fock_gradients import mzgate as mzgate_tw
 from thewalrus.fock_gradients import grad_mzgate as grad_mzgate_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
+from thewalrus._hermite_multidimensional import hermite_multidimensional_numba as gaussian_gate_tw
+from thewalrus._hermite_multidimensional import (
+    grad_hermite_multidimensional_numba as grad_gaussian_gate_tw,
+)
+from thewalrus.symplectic import is_symplectic, sympmat
 
 # With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
 # the replacement tf.einsum introduced the bug. This try-except block
@@ -60,6 +67,34 @@ except ImportError:
     pass
 
 max_num_indices = len(indices)
+
+###################################################################
+
+# Warning message format
+
+
+def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+    """User warning formatter"""
+    # pylint: disable=unused-argument
+    return "{}:{}: {}: {}\n".format(filename, lineno, category.__name__, message)
+
+
+warnings.formatwarning = warning_on_one_line
+
+
+class WarnOnlyOnce:
+    """Warning class to only warn the user once per program"""
+
+    warnings = set()
+
+    @classmethod
+    def warn(cls, message):
+        """Redefine the warn function to check if the warning message has already displayed"""
+        h = hash(message)
+        if h not in cls.warnings:
+            warnings.warn(message)
+            cls.warnings.add(h)
+
 
 ###################################################################
 
@@ -427,6 +462,124 @@ def two_mode_squeezer_matrix(theta, phi, cutoff, batched=False, dtype=tf.complex
     )
 
 
+def choi_trick(S, d, dtype=tf.complex128):
+    """Transforms the parameter from S,d to R, y, C corresponding to the parameters of the multidimensional hermite polynomials"""
+    S = tf.cast(S, dtype=dtype)
+    d = tf.cast(d, dtype=dtype)
+    m = S.shape[0] // 2
+    alpha = (d[:m] + 1j * d[m:]) / 2
+    choi_r = np.arcsinh(1.0)
+    ch = np.diag([np.cosh(choi_r)] * m)
+    sh = np.diag([np.sinh(choi_r)] * m)
+    zh = np.zeros([m, m])
+    Schoi = np.block([[ch, sh, zh, zh], [sh, ch, zh, zh], [zh, zh, ch, -sh], [zh, zh, -sh, ch]])
+    Schoi = tf.convert_to_tensor(Schoi, dtype=dtype)
+    zh = tf.zeros([m, m], dtype=dtype)
+    Sxx = S[:m, :m]
+    Sxp = S[:m, m:]
+    Spx = S[m:, :m]
+    Spp = S[m:, m:]
+    idl = tf.eye(m, dtype=dtype)
+    S_exp = (
+        tf.concat(
+            [
+                tf.concat([Sxx, zh, Sxp, zh], 1),
+                tf.concat([zh, idl, zh, zh], 1),
+                tf.concat([Spx, zh, Spp, zh], 1),
+                tf.concat([zh, zh, zh, idl], 1),
+            ],
+            0,
+        )
+        @ Schoi
+    )
+    choi_cov = 0.5 * S_exp @ tf.transpose(S_exp)
+    idl = tf.eye(2 * m, dtype=dtype)
+    Rot = tf.cast(tf.math.sqrt(0.5), dtype=dtype) * tf.concat(
+        [tf.concat([idl, 1j * idl], 1), tf.concat([idl, -1j * idl], 1)], 0
+    )
+    sigma = Rot @ choi_cov @ tf.transpose(tf.math.conj(Rot))
+    zh = tf.zeros([2 * m, 2 * m], dtype=dtype)
+    X = tf.concat([tf.concat([zh, idl], 1), tf.concat([idl, zh], 1)], 0)
+    sigma_Q = sigma + 0.5 * tf.eye(4 * m, dtype=dtype)
+    A_mat = X @ (tf.eye(4 * m, dtype=dtype) - tf.linalg.inv(sigma_Q))
+    choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
+    E = tf.linalg.diag(
+        tf.concat([tf.ones([m], dtype=dtype), tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r)], 0)
+    )
+    R = -tf.math.conj(E @ A_mat[: 2 * m, : 2 * m] @ E)
+    y = tf.concat(
+        [
+            tf.linalg.matvec(R[:m, :m], tf.math.conj(alpha)) + tf.transpose(alpha),
+            tf.linalg.matvec(R[m:, :m], tf.math.conj(alpha)),
+        ],
+        0,
+    )
+    alpha_tilt = tf.concat([tf.cast(alpha, dtype=dtype), tf.zeros(m, dtype=dtype)], 0)
+    zeta = alpha_tilt + tf.linalg.matvec(tf.cast(R, dtype=dtype), tf.math.conj(alpha_tilt))
+    C = tf.math.sqrt(
+        tf.math.sqrt(tf.linalg.det(tf.eye(m, dtype=dtype) - R[:m, :m] @ tf.math.conj(R[:m, :m])))
+    ) * tf.exp(-0.5 * tf.reduce_sum(tf.math.conj(alpha_tilt) * zeta))
+    return R, y, C
+
+
+@tf.custom_gradient
+def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
+    """creates a N-mode gaussian gate matrix"""
+    gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C], tf.complex128)
+    N = y.shape[-1] // 2
+    transpose_list = [x for pair in zip(range(N), range(N, 2 * N)) for x in pair]
+
+    def grad(dL_dG_conj):
+        WarnOnlyOnce.warn(
+            "Warning: gradients of a symplectic matrix cannot be used for gradient descent directly. Use sf.backends.tfbackend.update_symplectic(S, gradS) for the optimization step."
+        )
+        dL_dG_conj = tf.transpose(dL_dG_conj, [transpose_list.index(i) for i in range(2 * N)])
+        dG_dC, dG_dR, dG_dy = tf.numpy_function(
+            grad_gaussian_gate_tw, [gate, R, y, C], [tf.complex128] * 3
+        )
+        dL_dC_conj = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
+        dL_dy_conj = tf.reduce_sum(
+            dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
+        )
+        dL_dR_conj = tf.reduce_sum(
+            dL_dG_conj[..., None, None] * tf.math.conj(dG_dR),
+            axis=list(range(len(dL_dG_conj.shape))),
+        )
+        return dL_dR_conj, dL_dy_conj, dL_dC_conj, None
+
+    return tf.cast(tf.transpose(gate, transpose_list), dtype), grad
+
+
+def update_symplectic(S, dS, lr):
+    """returns the updated syplectic matrix S according to its geodesic.
+    S (Tensor): symplectic matrix to be updated.
+    dS (Tensor): euclidean gradient of S.
+    lr (float): learning rate.
+    """
+    Jmat = sympmat(S.shape[1] // 2)
+    Z = np.matmul(np.transpose(S), dS)
+    Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
+    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
+
+
+def gaussian_gate_matrix(S, d, cutoff: int, batched=False, dtype=tf.complex128):
+    """creates a N-mode gaussian gate matrix accounting for batching"""
+    S = tf.cast(S, dtype)
+    d = tf.cast(d, dtype)
+    if batched:
+        return tf.stack(
+            [
+                single_gaussian_gate_matrix(*choi_trick(S_, d_), cutoff, dtype=dtype.as_numpy_dtype)
+                for S_, d_ in zip(S, d)
+            ]
+        )
+    return tf.convert_to_tensor(
+        single_gaussian_gate_matrix(
+            *choi_trick(S, d, dtype=dtype), cutoff, dtype=dtype.as_numpy_dtype
+        )
+    )
+
+
 ###################################################################
 
 # Input states:
@@ -709,6 +862,120 @@ def two_mode_gate(matrix, mode1, mode2, in_modes, pure=True, batched=False):
     return output
 
 
+def n_mode_gate(matrix, modes, in_modes, pure=True, batched=False):
+    """basic form:
+    'abcd,efg...b...d...xyz->efg...a...c...xyz' (pure state)
+    'abcd,ij...be...dg...xyz,efgh->ij...af...ch...xyz' (mixed state)
+    """
+    # pylint: disable=too-many-branches,too-many-statements
+    # "a": reserved for batching
+    # "bcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": 51 letters left
+    # matrix : out_1 in_1 ... out_n in_n ...
+    # modes : Tuple(0,1,2,3,...)
+    # in_modes : input state
+    in_modes = tf.cast(in_modes, dtype=matrix.dtype)
+    if pure:
+        num_modes = len(in_modes.shape) - batched
+    else:
+        num_modes = (len(in_modes.shape) - batched) // 2
+    if num_modes == 0:
+        raise ValueError("'in_modes' must have at least one mode")
+    if len(indices_full) - 2 * num_modes - batched < 0:
+        raise NotImplementedError("Exceed the max number of supported modes for this operation")
+    if min(modes) < 0 or max(modes) >= num_modes:
+        raise ValueError("'mode' argument is not compatible with number of in_modes")
+    if pure:
+        index_in_modes = indices_full[1 : 1 + num_modes]
+        index_in_state = ""
+        index_in_state_rest = ""
+        for i in range(num_modes):
+            if i in modes:
+                index_in_state += indices_full[i + 1]
+            else:
+                index_in_state_rest += indices_full[i + 1]
+        num_mode_op = len(modes)
+        index_output_op = indices_full[1 + num_modes : 1 + num_modes + num_mode_op]
+        index_op = index_output_op + index_in_state
+        index_op_new = ""
+        for i in range(num_mode_op):
+            index_op_new += index_op[i] + index_op[i + num_mode_op]
+        index_output = ""
+        j = 0
+        for i in range(num_modes):
+            if i in modes:
+                index_output += index_output_op[j]
+                j += 1
+            else:
+                index_output += indices_full[i + 1]
+        if batched:
+            eqn = "a" + index_op_new + "," + "a" + index_in_modes + "->" + "a" + index_output
+        else:
+            eqn = index_op_new + "," + index_in_modes + "->" + index_output
+    else:
+        index_in_modes = indices_full[1 : 1 + 2 * num_modes]
+        index_in_state = ""
+        index_in_state_rest = ""
+        for i in range(num_modes):
+            if i in modes:
+                index_in_state += indices_full[2 * i + 1] + indices_full[2 * i + 2]
+            else:
+                index_in_state_rest += indices_full[2 * i + 1] + indices_full[2 * i + 2]
+        index_in_state = index_in_state[::2] + index_in_state[1::2]
+        num_mode_op = len(modes)
+        index_output_op = indices_full[1 + 2 * num_modes : 1 + 2 * num_modes + num_mode_op]
+        index_output_op_conj = indices_full[
+            1 + 2 * num_modes + num_mode_op : 1 + 2 * num_modes + 2 * num_mode_op
+        ]
+        index_op = index_output_op + index_in_state[:num_mode_op]
+        index_op_conj = index_in_state[num_mode_op:] + index_output_op_conj
+        index_op_new = ""
+        index_op_conj_new = ""
+        for i in range(num_mode_op):
+            index_op_new += index_op[i] + index_op[i + num_mode_op]
+            index_op_conj_new += index_op_conj[i] + index_op_conj[i + num_mode_op]
+        index_output = ""
+        j = 0
+        for i in range(num_modes):
+            if i in modes:
+                index_output += index_output_op[j] + index_output_op_conj[j]
+                j += 1
+            else:
+                index_output += indices_full[2 * i + 1] + indices_full[2 * i + 2]
+        if batched:
+            eqn = (
+                "a"
+                + index_op_new
+                + ","
+                + "a"
+                + index_in_modes
+                + ","
+                + "a"
+                + index_op_conj_new
+                + "->"
+                + "a"
+                + index_output
+            )
+        else:
+            eqn = (
+                index_op_new + "," + index_in_modes + "," + index_op_conj_new + "->" + index_output
+            )
+
+    if batched:
+        transpose_list = [0]
+        N = np.arange(1, len(matrix.shape))
+    else:
+        transpose_list = []
+        N = np.arange(len(matrix.shape))
+    for x, y in zip(N[1::2], N[::2]):
+        transpose_list.append(x)
+        transpose_list.append(y)
+    einsum_inputs = [matrix, in_modes]
+    if not pure:
+        einsum_inputs.append(tf.math.conj(tf.transpose(matrix, transpose_list)))
+    output = tf.einsum(eqn, *einsum_inputs)
+    return output
+
+
 def single_mode_superop(superop, mode, in_modes, pure=True, batched=False):
     """rho_out = S[rho_in]
     (state is always converted to mixed to apply superop)
@@ -850,6 +1117,26 @@ def two_mode_squeeze(
     """returns two mode squeeze unitary matrix on specified input modes"""
     matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)
     output = two_mode_gate(matrix, mode1, mode2, in_modes, pure, batched)
+    return output
+
+
+def gaussian_gate(S, d, modes, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64):
+    """returns gaussian gate unitary matrix on specified input modes"""
+    S = tf.cast(S, dtype)
+    d = tf.cast(d, dtype)
+    if batched:
+        for S_, d_ in zip(S, d):
+            if (S_.shape[0]) != d_.shape[0]:
+                raise ValueError("The matrix S and the vector d do not have compatible dimensions")
+            if not is_symplectic(S_.numpy(), rtol=1e-05, atol=1e-06):
+                raise ValueError("The matrix S is not symplectic")
+    else:
+        if (S.shape[0]) != d.shape[0]:
+            raise ValueError("The matrix S and the vector d do not have compatible dimensions")
+        if not is_symplectic(S.numpy(), rtol=1e-05, atol=1e-06):
+            raise ValueError("The matrix S is not symplectic")
+    matrix = gaussian_gate_matrix(S, d, cutoff, batched, dtype)
+    output = n_mode_gate(matrix, modes, in_modes=in_modes, pure=pure, batched=batched)
     return output
 
 

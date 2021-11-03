@@ -15,7 +15,7 @@ r"""Integration tests for frontend operations applied to the backend"""
 import pytest
 
 import numpy as np
-
+import tensorflow as tf
 import strawberryfields as sf
 from strawberryfields import ops
 
@@ -23,6 +23,7 @@ from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
 from thewalrus.quantum import is_valid_cov
+from thewalrus.random import random_symplectic
 
 from scipy.stats import unitary_group
 
@@ -404,3 +405,63 @@ class TestKetDensityMatrixIntegration:
             ops.DensityMatrix(state1) | q
         state2 = eng.run(prog).state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
+
+
+@pytest.mark.backends("tf", "fock")
+class TestGaussianGateApplication:
+    def test_multimode_gaussian_gate(self, setup_backend, pure):
+        """Test applying gaussian gate on multiple modes"""
+        num_mode = 1
+        eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
+        prog = sf.Program(num_mode)
+        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
+        with prog.context as q:
+            ops.Ggate(S, d) | q
+        # tests that no exceptions are raised
+        eng.run(prog).state.ket()
+
+    def test_gradient_gaussian_gate(self, setup_backend, pure):
+        if not pure:
+            pytest.skip("Test only runs on pure states")
+        num_mode = 2
+        eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
+        prog = sf.Program(num_mode)
+        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
+        with prog.context as q:
+            sf.ops.Ggate(S, d) | q
+        with tf.GradientTape() as tape:
+            if pure:
+                state = eng.run(prog).state.ket()
+            else:
+                state = eng.run(prog).state.dm()
+        # tests that no exceptions are raised
+        tape.gradient(state, [S, d])
+
+    def test_Ggate_optimization(self, setup_backend, pure):
+        if not pure:
+            pytest.skip("Test only runs on pure states")
+        num_mode = 2
+        eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
+        prog = sf.Program(num_mode)
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.001)
+        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
+
+        prog = sf.Program(num_mode)
+        with prog.context as q:
+            ops.Ggate(S, d) | q
+
+        loss_vals = []
+        for _ in range(11):
+            with tf.GradientTape() as tape:
+                state_out = eng.run(prog).state.ket()
+                loss_val = tf.abs(state_out[1, 1] - 0.25) ** 2
+            eng.reset()
+            grad_S, gradients_d = tape.gradient(loss_val, [S, d])
+            optimizer.apply_gradients([(gradients_d, d)])
+            sf.backends.tfbackend.ops.update_symplectic(S, grad_S, lr=0.05)
+            loss_vals.append(loss_val)
+            print(loss_val)
+        assert all([bool(l1 > l2) for l1, l2 in zip(loss_vals, loss_vals[1:])])
