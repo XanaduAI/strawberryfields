@@ -71,8 +71,8 @@
 
 <h3>Breaking Changes</h3>
 
-* Complex parameters when using `Catstate` are expected in polar form as two
-  separate real parameters.
+* Complex parameters of the `Catstate` operation are expected in polar form as
+  two separate real parameters.
   [(#441)](https://github.com/XanaduAI/strawberryfields/pull/441)
 
 <h3>Bug fixes</h3>
