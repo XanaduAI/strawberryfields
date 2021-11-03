@@ -83,7 +83,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Antal Száva, Yuan Yao.
+Mikhail Andrenkov, Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Antal Száva, Yuan Yao.
 
 # Release 0.19.0 (current release)
 

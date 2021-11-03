@@ -139,7 +139,6 @@ Code details
 
 """
 import sys
-from .backend import TFBackend
 
 try:
     import tensorflow
@@ -170,4 +169,6 @@ if not (tf_available and tf_version[:2] == "2."):
     raise ImportError(tf_info)
 
 
+# The modules inside the tfbackend package assume TensorFlow is importable.
+from .backend import TFBackend
 from .ops import update_symplectic

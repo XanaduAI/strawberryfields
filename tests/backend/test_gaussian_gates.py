@@ -16,11 +16,12 @@ r"""Unit tests for Gaussian gate"""
 
 import pytest
 import numpy as np
-import tensorflow as tf
-from scipy.linalg import expm
 from scipy.stats import unitary_group
 from thewalrus.quantum.fock_tensors import fock_tensor
 from thewalrus.symplectic import sympmat
+
+tf = pytest.importorskip("tensorflow")
+
 from strawberryfields.backends.tfbackend.ops import (
     choi_trick,
     n_mode_gate,

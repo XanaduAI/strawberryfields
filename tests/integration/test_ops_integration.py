@@ -13,19 +13,21 @@
 # limitations under the License.
 r"""Integration tests for frontend operations applied to the backend"""
 import pytest
-
 import numpy as np
-import tensorflow as tf
+from thewalrus.random import random_symplectic
+from scipy.stats import unitary_group
+
 import strawberryfields as sf
 from strawberryfields import ops
-
 from strawberryfields.backends import BaseGaussian
 from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 
-from thewalrus.quantum import is_valid_cov
-from thewalrus.random import random_symplectic
-
-from scipy.stats import unitary_group
+try:
+    import tensorflow as tf
+except:
+    backends = ["fock", "tf"]
+else:
+    backends = ["fock"]
 
 # make test deterministic
 np.random.seed(42)
@@ -193,7 +195,7 @@ class TestChannelApplication:
 class TestPreparationApplication:
     """Tests that involve state preparation application"""
 
-    @pytest.mark.backends("tf", "fock")
+    @pytest.mark.backends(*backends)
     def test_ket_state_object(self, setup_eng, pure):
         """Test loading a ket from a prior state object"""
         if not pure:
@@ -217,7 +219,7 @@ class TestPreparationApplication:
         # verify it is the same state
         assert state1 == state2
 
-    @pytest.mark.backends("tf", "fock")
+    @pytest.mark.backends(*backends)
     def test_ket_gaussian_state_object(self, setup_eng):
         """Test exception if loading a ket from a Gaussian state object"""
         eng = sf.Engine("gaussian")
@@ -231,7 +233,7 @@ class TestPreparationApplication:
             with pytest.raises(ValueError, match="Gaussian states are not supported"):
                 ops.Ket(state) | q[0]
 
-    @pytest.mark.backends("tf", "fock")
+    @pytest.mark.backends(*backends)
     def test_ket_mixed_state_object(self, setup_eng, pure):
         """Test exception if loading a ket from a prior mixed state object"""
         if pure:
@@ -251,7 +253,7 @@ class TestPreparationApplication:
             with pytest.raises(ValueError, match="Fock state is not pure"):
                 ops.Ket(state1) | q[0]
 
-    @pytest.mark.backends("tf", "fock")
+    @pytest.mark.backends(*backends)
     def test_dm_state_object(self, setup_eng, tol):
         """Test loading a density matrix from a prior state object"""
         eng, prog = setup_eng(1)
@@ -272,7 +274,7 @@ class TestPreparationApplication:
         # verify it is the same state
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
-    @pytest.mark.backends("tf", "fock")
+    @pytest.mark.backends(*backends)
     def test_dm_gaussian_state_object(self, setup_eng):
         """Test exception if loading a ket from a Gaussian state object"""
         eng = sf.Engine("gaussian")
@@ -287,7 +289,7 @@ class TestPreparationApplication:
                 ops.DensityMatrix(state) | q[0]
 
 
-@pytest.mark.backends("fock", "tf")
+@pytest.mark.backends(*backends)
 class TestKetDensityMatrixIntegration:
     """Tests for the frontend Fock multi-mode state preparations"""
 
@@ -407,7 +409,8 @@ class TestKetDensityMatrixIntegration:
         assert np.allclose(state1.dm(), state2.dm(), atol=tol, rtol=0)
 
 
-@pytest.mark.backends("tf", "fock")
+@pytest.mark.skipif("tf" not in backends, reason="Tests require TF")
+@pytest.mark.backends(*backends)
 class TestGaussianGateApplication:
     def test_multimode_gaussian_gate(self, setup_backend, pure):
         """Test applying gaussian gate on multiple modes"""
