@@ -75,6 +75,10 @@
   two separate real parameters.
   [(#441)](https://github.com/XanaduAI/strawberryfields/pull/441)
 
+* The `sf` CLI has been removed in favour of the
+  [`xcc`](https://github.com/XanaduAI/xanadu-cloud-client) CLI.
+  [(#642)](https://github.com/XanaduAI/strawberryfields/pull/642)
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
