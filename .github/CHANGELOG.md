@@ -2,7 +2,78 @@
 
 <h3>New features since last release</h3>
 
+* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
+  module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
+  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
+  obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
+  [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
+  [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
+
+  ```python
+  from thewalrus.random import random_symplectic
+
+  num_mode = 2
+  cutoff = 10
+  S = tf.Variable(random_symplectic(num_mode))
+  d = tf.Variable(np.random.random(2 * num_mode))
+
+  eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+  prog = sf.Program(2)
+
+  with prog.context as q:
+      sf.ops.Ggate(S, d) | (q[0], q[1])
+
+  state_out = eng.run(prog).state.ket()
+  ```
+
+  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient 
+  descent directly (as the unitary would not be symplectic after the update). Please use the
+  function `sf.backends.tfbackend.update_symplectic` which is designed specifically for this purpose.
+
+  ```python
+  def overlap_loss(state, objective):
+      return -tf.abs(tf.reduce_sum(tf.math.conj(state) * objective)) ** 2
+
+  def norm_loss(state):
+      return -tf.abs(tf.linalg.norm(state)) ** 2
+
+  def loss(state, objective):
+      return overlap_loss(state, objective) + norm_loss(state)
+
+  num_mode = 1
+  cutoff = 10
+
+  S = tf.Variable(random_symplectic(num_mode))
+  d = tf.Variable(np.random.random(2 * num_mode))
+  kappa = tf.Variable(0.3)
+  objective = tf.Variable(np.eye(cutoff)[1], dtype=tf.complex64)
+
+  adam = tf.keras.optimizers.Adam(learning_rate=0.01)
+  eng = sf.Engine("tf", backend_options={"cutoff_dim": cutoff})
+  prog = sf.Program(1)
+
+  with prog.context as q:
+      sf.ops.Ggate(S, d) | q
+      sf.ops.Kgate(kappa) | q
+
+  loss_vals = []
+  for _ in range(200):
+      with tf.GradientTape() as tape:
+          state_out = eng.run(prog).state.ket()
+          loss_val = loss(state_out, objective)
+
+      eng.reset()
+      grad_S, gradients_d, gradients_kappa = tape.gradient(loss_val, [S, d, kappa])
+      adam.apply_gradients(zip([gradients_d, gradients_kappa], [d, kappa]))
+      update_symplectic(S, grad_S, lr=0.1)  # update S here
+      loss_vals.append(loss_val)
+  ```
+
 <h3>Breaking Changes</h3>
+
+* Complex parameters of the `Catstate` operation are expected in polar form as
+  two separate real parameters.
+  [(#441)](https://github.com/XanaduAI/strawberryfields/pull/441)
 
 <h3>Bug fixes</h3>
 
@@ -15,7 +86,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov
+Mikhail Andrenkov, Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Antal Száva, Yuan Yao.
 
 # Release 0.19.0 (current release)
 

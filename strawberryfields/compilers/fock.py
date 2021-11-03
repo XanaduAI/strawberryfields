@@ -53,6 +53,8 @@ class Fock(Compiler):
         "MZgate",
         "CKgate",
         "S2gate",
+        # Multimode gate
+        "Ggate",
     }
 
     decompositions = {
