@@ -32,7 +32,6 @@ from .program import Program
 from .tdm import TDMProgram
 from .plot import plot_wigner, plot_fock, plot_quad
 from . import tdm
-from .backends.tfbackend import update_symplectic
 
 __all__ = [
     "Engine",
@@ -49,7 +48,6 @@ __all__ = [
     "active_configs",
     "reset_config",
     "delete_config",
-    "update_symplectic",
 ]
 
 

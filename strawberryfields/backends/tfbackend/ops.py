@@ -531,7 +531,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
 
     def grad(dL_dG_conj):
         WarnOnlyOnce.warn(
-            "Warning: gradients of a symplectic matrix cannot be used for gradient descent directly. Use sf.update_symplectic(S, gradS) for the optimization step."
+            "Warning: gradients of a symplectic matrix cannot be used for gradient descent directly. Use sf.backends.tfbackend.update_symplectic(S, gradS) for the optimization step."
         )
         dL_dG_conj = tf.transpose(dL_dG_conj, [transpose_list.index(i) for i in range(2 * N)])
         dG_dC, dG_dR, dG_dy = tf.numpy_function(
@@ -549,6 +549,18 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
 
     return tf.cast(tf.transpose(gate, transpose_list), dtype), grad
 
+def update_symplectic(S, dS, lr):
+    """returns the updated syplectic matrix S according to its geodesic.
+    S (Tensor): symplectic matrix to be updated.
+    dS (Tensor): euclidean gradient of S.
+    lr (float): learning rate.
+    """
+    Jmat = sympmat(S.shape[1] // 2)
+    Z = np.matmul(np.transpose(S), dS)
+    Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
+    S.assign(
+        S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False
+    )
 
 def gaussian_gate_matrix(S, d, cutoff: int, batched=False, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix accounting for batching"""

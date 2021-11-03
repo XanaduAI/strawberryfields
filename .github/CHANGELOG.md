@@ -28,7 +28,7 @@
 
   Note that in order to update the parameter `S` by using its gradient, you cannot use gradient 
   descent directly (as the unitary would not be symplectic after the update). Please use the
-  function `sf.update_symplectic` which is designed specifically for this purpose.
+  function `sf.backends.tfbackend.update_symplectic` which is designed specifically for this purpose.
 
   ```python
   def overlap_loss(state, objective):
