@@ -65,7 +65,7 @@
       eng.reset()
       grad_S, gradients_d, gradients_kappa = tape.gradient(loss_val, [S, d, kappa])
       adam.apply_gradients(zip([gradients_d, gradients_kappa], [d, kappa]))
-      S.assign(update_symplectic(S, grad_S, lr=0.1))  # update S here
+      update_symplectic(S, grad_S, lr=0.1)  # update S here
       loss_vals.append(loss_val)
   ```
 
