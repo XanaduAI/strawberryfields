@@ -71,6 +71,10 @@
 
 <h3>Breaking Changes</h3>
 
+* Complex parameters of the `Catstate` operation are expected in polar form as
+  two separate real parameters.
+  [(#441)](https://github.com/XanaduAI/strawberryfields/pull/441)
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
@@ -79,7 +83,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Yuan Yao.
+Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Antal Száva, Yuan Yao.
 
 # Release 0.19.0 (current release)
 
