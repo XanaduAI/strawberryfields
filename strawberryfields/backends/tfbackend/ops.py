@@ -531,7 +531,7 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
 
     def grad(dL_dG_conj):
         WarnOnlyOnce.warn(
-            "Warning: gradients of a symplectic matrix cannot be used for gradient descent. Use sf.update_symplectic() for the optimization step."
+            "Warning: gradients of a symplectic matrix cannot be used for gradient descent directly. Use sf.update_symplectic(S, gradS) for the optimization step."
         )
         dL_dG_conj = tf.transpose(dL_dG_conj, [transpose_list.index(i) for i in range(2 * N)])
         dG_dC, dG_dR, dG_dy = tf.numpy_function(
