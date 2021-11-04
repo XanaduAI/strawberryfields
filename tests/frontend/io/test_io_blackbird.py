@@ -21,7 +21,7 @@ import blackbird
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
-from strawberryfields.program import Program, CircuitError
+from strawberryfields.program import Program
 from strawberryfields.tdm.tdmprogram import TDMProgram
 from strawberryfields.parameters import (
     MeasuredParameter,
@@ -97,27 +97,6 @@ MeasureHomodyne(0.43, select=0.32) | 2
 MeasureHomodyne(0.43, select=0.32) | 2
 """
 
-test_xir_prog_not_compiled = """\
-gate Vacuum[0];
-gate Squeezed(x, y)[0];
-gate Sgate(x, y)[0];
-gate Dgate(x, y)[0];
-gate S2gate(x, y)[0, 1];
-gate Interferometer(x)[0, 1, 2, 3];
-gate MeasureHomodyne(x)[0];
-
-Vacuum | [1];
-Squeezed(0.12, 0.0) | [2];
-Sgate(1, 0.0) | [0];
-Dgate(0.735934779718964, 0.7469555733762603) | [1];
-S2gate(0.543, -0.12) | [0, 3];
-Interferometer(0.219546940711-0.256534554457j) | [0, 1, 2, 3];
-// , 0.611076853957+0.524178937791j, -0.102700187435+0.474478834685j, -0.027250232925+0.03729094623j, 0.451281863394+0.602582912475j, 0.456952590016+0.01230749109j, 0.131625867435-0.450417744715j, 0.035283194078-0.053244267184j, 0.038710094355+0.492715562066j, -0.019212744068-0.321842852355j, -0.240776471286+0.524432833034j, -0.458388143039+0.329633367819j, -0.156619083736+0.224568570065j, 0.109992223305-0.163750223027j, -0.421179844245+0.183644837982j, 0.818769184612+0.068015658737j])[0, 1, 2, 3];
-MeasureHomodyne(0) | [0];
-MeasureHomodyne(phi: 0.43, select:0.32) | [2];
-MeasureHomodyne(phi: 0.43, select:0.32) | [2];
-"""
-
 
 class TestSFToBlackbirdConversion:
     """Tests for the io.to_blackbird utility function"""
@@ -180,7 +159,7 @@ class TestSFToBlackbirdConversion:
         prog = Program(2)
 
         with prog.context as q:
-            ops.Dgate(np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)) | q[1]
+            ops.Dgate(r=np.abs(0.54 + 0.324j), phi=np.angle(0.54 + 0.324j)) | q[1]
 
         bb = io.to_blackbird(prog)
         # Note: due to how SF stores quantum commands with the Parameter class,
@@ -409,7 +388,7 @@ class TestSFToBlackbirdConversion:
 
 
 class TestBlackbirdToSFConversion:
-    """Tests for the io.to_program utility function"""
+    """Tests for the io.to_program utility function for Blackbird programs"""
 
     def test_empty_program(self):
         """Test empty program raises error"""
@@ -495,7 +474,7 @@ class TestBlackbirdToSFConversion:
         name test_program
         version 1.0
 
-        Dgate(0.54, 0) | 0
+        Dgate(r=0.54, phi=0) | 0
         """
 
         bb = blackbird.loads(bb_script)
@@ -693,284 +672,6 @@ class TestBlackbirdToSFConversion:
             io.to_program(bb)
 
 
-class TestSFtoXIRConversion:
-    """TODO"""
-
-    def test_empty_program(self):
-        """Test that an empty program is correctly converted"""
-        # create a test program
-        sf_prog = Program(4, name="test_program")
-        xir_prog = io.to_xir(sf_prog)
-
-        assert xir_prog.serialize() == ""
-        assert xir_prog.version == "0.1.0"
-
-    def test_gate_noarg(self):
-        """Test gate with no argument converts"""
-        # create a test program
-        sf_prog = Program(1)
-
-        with prog.context as q:
-            ops.Vac | q[0]
-
-        xir_prog = io.to_xir(sf_prog)
-        statements = ["Vac"]
-
-        assert xir_prog.statements[0].name == "Vacuum"
-        assert xir_prog.statements[0].name == "Vacuum"
-
-    def test_gate_arg(self):
-        """Test gate with argument converts"""
-        # create a test program
-        prog = Program(2)
-
-        with prog.context as q:
-            ops.Sgate(0.54, 0.324) | q[1]
-
-        bb = io.to_blackbird(prog)
-        expected = {"op": "Sgate", "modes": [1], "args": [0.54, 0.324], "kwargs": {}}
-
-        assert bb.operations[0] == expected
-
-    def test_gate_kwarg(self):
-        """Test gate with keyword argument converts"""
-        # create a test program
-        prog = Program(2)
-
-        with prog.context as q:
-            ops.Dgate(np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)) | q[1]
-
-        bb = io.to_blackbird(prog)
-        # Note: due to how SF stores quantum commands with the Parameter class,
-        # all kwargs get converted to positional args internally.
-        expected = {
-            "op": "Dgate",
-            "modes": [1],
-            "args": [np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)],
-            "kwargs": {},
-        }
-
-        assert bb.operations[0] == expected
-
-    def test_two_mode_gate(self):
-        """Test two mode gate converts"""
-        prog = Program(4)
-
-        with prog.context as q:
-            ops.BSgate(0.54, -0.324) | (q[3], q[0])
-
-        bb = io.to_blackbird(prog)
-        expected = {
-            "op": "BSgate",
-            "modes": [3, 0],
-            "args": [0.54, -0.324],
-            "kwargs": {},
-        }
-
-        assert bb.operations[0] == expected
-
-    def test_decomposition_operation_not_compiled(self):
-        """Test decomposition operation"""
-        # create a test program
-        prog = Program(4)
-
-        with prog.context as q:
-            ops.Interferometer(U) | q
-
-        bb = io.to_blackbird(prog)
-        expected = {
-            "op": "Interferometer",
-            "modes": [0, 1, 2, 3],
-            "args": [U],
-            "kwargs": {},
-        }
-
-        assert bb.operations[0] == expected
-
-    def test_decomposition_operation_compiled(self):
-        """Test decomposition operation gets decomposed if compiled"""
-        # create a test program
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.Pgate(0.43) | q[0]
-
-        bb = io.to_blackbird(prog)
-        expected = {"op": "Pgate", "modes": [0], "args": [0.43], "kwargs": {}}
-        assert bb.operations[0] == expected
-
-        bb = io.to_blackbird(prog.compile(compiler="gaussian"))
-        assert bb.operations[0]["op"] == "Sgate"
-        assert bb.operations[1]["op"] == "Rgate"
-
-    def test_measure_noarg(self):
-        """Test measurement with no argument converts"""
-        # create a test program
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.MeasureFock() | q[0]
-
-        bb = io.to_blackbird(prog)
-        expected = {"op": "MeasureFock", "modes": [0], "args": [], "kwargs": {}}
-
-        assert bb.operations[0] == expected
-
-    def test_measure_postselect(self):
-        """Test measurement with postselection"""
-        # create a test program
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.MeasureFock(select=2) | q[0]
-
-        bb = io.to_blackbird(prog)
-        expected = {
-            "op": "MeasureFock",
-            "modes": [0],
-            "args": [],
-            "kwargs": {"select": [2]},
-        }
-
-        assert bb.operations[0] == expected
-
-    def test_measure_darkcounts(self):
-        """Test measurement with dark counts"""
-        # create a test program
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.MeasureFock(dark_counts=2) | q[0]
-
-        bb = io.to_blackbird(prog)
-        expected = {
-            "op": "MeasureFock",
-            "modes": [0],
-            "args": [],
-            "kwargs": {"dark_counts": [2]},
-        }
-
-        assert bb.operations[0] == expected
-
-    def test_measure_arg(self):
-        """Test measurement with argument converts"""
-        # create a test program
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.MeasureHomodyne(0.43) | q[0]
-
-        bb = io.to_blackbird(prog)
-        expected = {
-            "op": "MeasureHomodyne",
-            "modes": [0],
-            "args": [0.43],
-            "kwargs": {},
-        }
-
-        assert bb.operations[0] == expected
-
-    def test_measure_arg_postselect(self):
-        """Test measurement with argument and postselection converts"""
-        # create a test program
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.MeasureHomodyne(0.43, select=0.543) | q[0]
-
-        bb = io.to_blackbird(prog)
-        expected = {
-            "op": "MeasureHomodyne",
-            "modes": [0],
-            "args": [0.43],
-            "kwargs": {"select": 0.543},
-        }
-
-        assert bb.operations[0] == expected
-
-        # repeat with kwargs only
-        prog = Program(1)
-
-        with prog.context as q:
-            ops.MeasureHomodyne(phi=0.43, select=0.543) | q[0]
-
-        bb = io.to_blackbird(prog)
-        assert bb.operations[0] == expected
-
-    def test_measured_par_str(self):
-        """Test a MeasuredParameter with some transformations converts properly"""
-        prog = Program(2)
-        with prog.context as q:
-            ops.Sgate(0.43) | q[0]
-            ops.MeasureX | q[0]
-            ops.Zgate(2 * pf.sin(q[0].par)) | q[1]
-
-        bb = io.to_blackbird(prog)
-        assert bb.operations[-1]["op"] == "Zgate"
-        assert bb.operations[-1]["modes"] == [1]
-
-        assert isinstance(bb.operations[-1]["args"][0], blackbird.RegRefTransform)
-        assert bb.operations[-1]["args"][0].func_str == "2*sin(q0)"
-        assert bb.operations[-1]["args"][0].regrefs == [0]
-
-        assert bb.operations[-1]["kwargs"] == {}
-
-    def test_free_par_str(self):
-        """Test a FreeParameter with some transformations converts properly"""
-        prog = Program(2)
-        r, alpha = prog.params("r", "alpha")
-        with prog.context as q:
-            ops.Sgate(r) | q[0]
-            ops.Zgate(3 * pf.log(-alpha)) | q[1]
-
-        bb = io.to_blackbird(prog)
-        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ["{r}", 0.0], "kwargs": {}}
-        assert bb.operations[1] == {
-            "op": "Zgate",
-            "modes": [1],
-            "args": ["3*log(-{alpha})"],
-            "kwargs": {},
-        }
-
-    def test_tdm_program(self):
-        prog = TDMProgram(2)
-
-        with prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
-            ops.Sgate(0.7, 0) | q[1]
-            ops.BSgate(p[0]) | (q[0], q[1])
-            ops.Rgate(p[1]) | q[1]
-            ops.MeasureHomodyne(p[2]) | q[0]
-
-        bb = io.to_blackbird(prog)
-
-        assert bb.operations[0] == {"kwargs": {}, "args": [0.7, 0], "op": "Sgate", "modes": [1]}
-        assert bb.operations[1] == {
-            "kwargs": {},
-            "args": ["p0", 0.0],
-            "op": "BSgate",
-            "modes": [0, 1],
-        }
-        assert bb.operations[2] == {"kwargs": {}, "args": ["p1"], "op": "Rgate", "modes": [1]}
-        assert bb.operations[3] == {
-            "kwargs": {},
-            "args": ["p2"],
-            "op": "MeasureHomodyne",
-            "modes": [0],
-        }
-
-        assert bb.programtype == {"name": "tdm", "options": {"temporal_modes": 2}}
-        assert list(bb._var.keys()) == ["p0", "p1", "p2"]
-        assert np.all(bb._var["p0"] == np.array([[1, 2]]))
-        assert np.all(bb._var["p1"] == np.array([[3, 4]]))
-        assert np.all(bb._var["p2"] == np.array([[5, 6]]))
-        assert bb.modes == {0, 1}
-
-
-
-class TestXIRtoSFConversion:
-    """TODO"""
-
-
 prog_txt = textwrap.dedent(
     """\
     import strawberryfields as sf
@@ -1025,211 +726,7 @@ prog_txt_tdm = textwrap.dedent(
 """
 )
 
-
-class TestGenerateCode:
-    """Tests for the generate_code function"""
-
-    def test_generate_code_no_engine(self):
-        """Test generating code for a regular program with no engine"""
-        prog = sf.Program(3)
-
-        with prog.context as q:
-            ops.Sgate(0.54, 0) | q[0]
-            ops.BSgate(0.45, np.pi / 2) | (q[0], q[2])
-            ops.Sgate(3 * np.pi / 2, 0) | q[1]
-            ops.BSgate(2 * np.pi, 0.62) | (q[0], q[1])
-            ops.MeasureFock() | q[0]
-
-        code = io.generate_code(prog)
-
-        code_list = code.split("\n")
-        expected = prog_txt_no_engine.split("\n")
-
-        for i, row in enumerate(code_list):
-            assert row == expected[i]
-
-    @pytest.mark.parametrize(
-        "engine_kwargs",
-        [
-            {"backend": "fock", "backend_options": {"cutoff_dim": 5}},
-            {"backend": "gaussian"},
-        ],
-    )
-    def test_generate_code_with_engine(self, engine_kwargs):
-        """Test generating code for a regular program with an engine"""
-        prog = sf.Program(3)
-        eng = sf.Engine(**engine_kwargs)
-
-        with prog.context as q:
-            ops.Sgate(0.54, 0) | q[0]
-            ops.BSgate(0.45, np.pi / 2) | (q[0], q[2])
-            ops.Sgate(3 * np.pi / 2, 0) | q[1]
-            ops.BSgate(2 * np.pi, 0.62) | (q[0], q[1])
-            ops.MeasureFock() | q[0]
-
-        results = eng.run(prog)
-
-        code = io.generate_code(prog, eng)
-
-        code_list = code.split("\n")
-        formatting_str = f"\"{engine_kwargs['backend']}\""
-        if "backend_options" in engine_kwargs:
-            formatting_str += (
-                ", backend_options="
-                f'{{"cutoff_dim": {engine_kwargs["backend_options"]["cutoff_dim"]}}}'
-            )
-        expected = prog_txt.format(engine_args=formatting_str).split("\n")
-
-        for i, row in enumerate(code_list):
-            assert row == expected[i]
-
-    def test_generate_code_tdm(self):
-        """Test generating code for a TDM program with an engine"""
-        prog = sf.TDMProgram(N=[2, 3])
-        eng = sf.Engine("gaussian")
-
-        with prog.context([np.pi, 3 * np.pi / 2, 0], [1, 0.5, np.pi], [0, 0, 0]) as (p, q):
-            ops.Sgate(0.123, np.pi / 4) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[0]) | q[0]
-            ops.MeasureHomodyne(p[2]) | q[2]
-
-        results = eng.run(prog)
-
-        code = io.generate_code(prog, eng)
-
-        code_list = code.split("\n")
-        expected = prog_txt_tdm.split("\n")
-
-        for i, row in enumerate(code_list):
-            assert row == expected[i]
-
-    @pytest.mark.parametrize(
-        "value",
-        [
-            "np.pi",
-            "np.pi/2",
-            "np.pi/12",
-            "2*np.pi",
-            "2*np.pi/3",
-            "0",
-            "42",
-            "9.87",
-            "-0.2",
-            "no_number",
-            "{p3}",
-        ],
-    )
-    def test_factor_out_pi(self, value):
-        """Test that the factor_out_pi function is able to convert floats
-        that are equal to a pi expression, to strings containing a pi
-        expression.
-
-        For example, the float 6.28318530718 should be converted to the string "2*np.pi"
-        """
-        try:
-            val = eval(value)
-        except NameError:
-            val = value
-        res = sf.io._factor_out_pi([val])
-        expected = value
-
-        assert res == expected
-
-
-class DummyResults:
-    """Dummy results object"""
-
-
-def dummy_run(self, program, args, compile_options=None, **eng_run_options):
-    """A dummy run function, that when called returns a dummy
-    results object, with run options available as an attribute.
-    This allows run_options to be returned and inspected after calling eng.run
-    """
-    results = DummyResults()
-    results.run_options = eng_run_options
-    return results
-
-
-class TestEngineIntegration:
-    """Test that target options interface correctly with eng.run"""
-
-    def test_shots(self, eng, monkeypatch):
-        """Test that passing shots correctly propagates to an engine run"""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=100)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
-
-        assert prog.run_options == {"shots": 100}
-
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog)
-
-        assert results.run_options == {"shots": 100}
-
-    def test_shots_overwritten(self, eng, monkeypatch):
-        """Test if run_options are passed to eng.run, they
-        overwrite those stored in the compiled program"""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=100)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
-
-        assert prog.run_options == {"shots": 100}
-
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog, shots=1000)
-
-        assert results.run_options == {"shots": 1000}
-
-    def test_program_sequence(self, eng, monkeypatch):
-        """Test that program run_options are successively
-        updated if a sequence of programs is executed."""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=100)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog1 = io.to_program(bb)
-
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=1024)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog2 = io.to_program(bb)
-
-        assert prog1.run_options == {"shots": 100}
-        assert prog2.run_options == {"shots": 1024}
-
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run([prog1, prog2])
-
-        assert results.run_options == prog2.run_options
-
-
-class TestSave:
+class TestSaveBlackbird:
     """Test sf.save functionality"""
 
     def test_save_filename_path_object(self, prog, tmpdir):
@@ -1275,7 +772,7 @@ class TestSave:
         assert res == test_blackbird_prog_not_compiled
 
 
-class TestLoad:
+class TestLoadBlackbird:
     """Test sf.load functionality"""
 
     def test_invalid_file(self, prog, tmpdir):
