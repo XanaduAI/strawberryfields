@@ -25,3 +25,7 @@ each ``sf`` (v0.19.0) command:
      - ``xcc ping``
    * - ``sf run "foo.xbb"``
      - ``xcc job submit --name "bar" --target "X8_01" --circuit "$(cat foo.xbb)"``
+
+.. note::
+
+  To submit a job using Windows PowerShell, simply replace ``cat foo.xbb`` with  ``Get-Content foo.xbb -Raw``.
