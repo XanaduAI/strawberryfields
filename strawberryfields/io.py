@@ -110,7 +110,7 @@ def _from_blackbird(bb):
 
 
 def _from_xir(xir_prog, **kwargs):
-    """Convert an IR Program to a Strawberry Fields Program.
+    """Convert an XIR Program to a Strawberry Fields Program.
 
     Args:
         xir_prog (xir.Program): the input XIR program object
@@ -124,7 +124,9 @@ def _from_xir(xir_prog, **kwargs):
     Returns:
         Program: corresponding Strawberry Fields program
     """
-    num_of_modes = len(set(xir_prog.wires))
+    # only script-level statements are part of `xir_prog.statements`, which can only have integer
+    # wires, leading to `xir_prog.wires` only containing integer wire labels
+    num_of_modes = int(max(xir_prog.wires or [-1])) + 1
     name = kwargs.get("name", "xir")
     if num_of_modes == 0:
         raise ValueError(
@@ -149,7 +151,7 @@ def _from_xir(xir_prog, **kwargs):
             # create the list of regrefs
             regrefs = [q[i] for i in op.wires]
 
-            if op.params != []:
+            if op.params:
                 # convert symbolic expressions to symbolic expressions containing the corresponding
                 # MeasuredParameter and FreeParameter instances.
                 if isinstance(op.params, dict):
@@ -157,13 +159,22 @@ def _from_xir(xir_prog, **kwargs):
                     params = dict(zip(op.params.keys(), vals))
                     gate(**params) | regrefs  # pylint:disable=expression-not-assigned
                 else:
-                    for i, p in enumerate(op.params):
+                    params = []
+                    for p in op.params:
                         if isinstance(p, Decimal):
-                            op.params[i] = float(p)
-                    params = sfpar.par_convert(op.params, prog)
+                            params.append(float(p))
+                        elif isinstance(p, Iterable):
+                            params.append(np.array(_listr(p)))
+                        else:
+                            params.append(p)
+                    params = sfpar.par_convert(params, prog)
                     gate(*params) | regrefs  # pylint:disable=expression-not-assigned
             else:
-                gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+                if callable(gate):
+                    gate() | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+                else:
+                    gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+
 
     prog._target = kwargs.get("target")  # pylint: disable=protected-access
 
@@ -331,14 +342,14 @@ def to_blackbird(prog, version="1.0"):
 
 
 def to_xir(prog, **kwargs):
-    """Convert a Strawberry Fields Program to an IR Program.
+    """Convert a Strawberry Fields Program to an XIR Program.
 
     Args:
         prog (Program): the Strawberry Fields program
 
     Keyword Args:
         add_decl (bool): Whether gate and output declarations should be added to
-            the IR program. Default is ``False``.
+            the XIR program. Default is ``False``.
         version (str): Version number for the program. Default is ``0.1.0``.
 
     Returns:
@@ -359,13 +370,13 @@ def to_xir(prog, **kwargs):
                 xir_prog.add_declaration(output_decl)
 
             params = {}
-            # special case to take into account 'select' keyword argument
-            if cmd.op.select is not None:
-                params["select"] = cmd.op.select
-
             if cmd.op.p:
                 # argument is quadrature phase
                 params["phi"] = cmd.op.p[0]
+
+            # special case to take into account 'select' keyword argument
+            if cmd.op.select is not None:
+                params["select"] = cmd.op.select
 
             if name == "MeasureFock":
                 # special case to take into account 'dark_counts' keyword argument
@@ -375,22 +386,57 @@ def to_xir(prog, **kwargs):
             if kwargs.get("add_decl", False):
                 if name not in [gdecl.name for gdecl in xir_prog.declarations["gate"]]:
                     params = [f"p{i}" for i, _ in enumerate(cmd.op.p)]
-                    gate_decl = xir.Declaration(name, type_="gate", params=params, wires=wires)
+                    gate_decl = xir.Declaration(
+                        name, type_="gate", params=params, wires=tuple(range(len(wires)))
+                    )
                     xir_prog.add_declaration(gate_decl)
 
             params = []
             for a in cmd.op.p:
                 if sfpar.par_is_symbolic(a):
-                    # SymPy object, convert to string
-                    a = str(a)
-                if isinstance(a, Iterable):
-                    a = ", ".join(map(str, a))
+                    # try to evaluate symbolic parameter
+                    try:
+                        a = sfpar.par_evaluate(a)
+                    except sfpar.ParameterError:
+                        # if a pure symbol (free parameter), convert to string
+                        if a.is_symbol:
+                            a = a.name
+                        # else, assume it's a symbolic function and replace all free parameters
+                        # with string representations
+                        else:
+                            symbolic_func = a.copy()
+                            for s in symbolic_func.free_symbols:
+                                symbolic_func = symbolic_func.subs(s, s.name)
+                            a = str(symbolic_func)
+                elif isinstance(a, Iterable):
+                    # if an iterable, make sure it only consists of lists and Python types
+                    a = _listr(a)
                 params.append(a)
 
         op = xir.Statement(name, params, wires)
         xir_prog.add_statement(op)
 
     return xir_prog
+
+def _listr(mixed_list):
+    """Casts a nested iterable to a list recursively"""
+    list_ = []
+
+    for l in mixed_list:
+        if isinstance(l, Iterable):
+            list_.append(_listr(l))
+        else:
+            if isinstance(l, Decimal):
+                list_.append(float(l))
+            elif isinstance(l, xir.DecimalComplex):
+                list_.append(complex(l))
+            else:
+                try:
+                    list_.append(l.item())
+                except AttributeError:
+                    list_.append(l)
+
+    return list_
 
 
 def generate_code(prog, eng=None):
@@ -532,7 +578,7 @@ def _factor_out_pi(num_list, denominator=12):
     return ", ".join(a)
 
 
-def save(f, prog, ir="blackbird"):
+def save(f, prog, ir="blackbird", **kwargs):
     """Saves a quantum program to a Blackbird .xbb or an XIR .xir file.
 
     **Example:**
@@ -568,16 +614,21 @@ def save(f, prog, ir="blackbird"):
             be appended to the file name if it does not already have one.
         prog (Program): Strawberry Fields program
         ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
+
+    Keyword Args:
+        add_decl (bool): Whether gate and output declarations should be added to
+            the XIR program. Default is ``False``.
+        version (str): Version number for the program. Default is ``0.1.0``.
     """
     own_file = False
 
     if ir == "xir":
-        prog_str = to_xir(prog).serialize()
+        prog_str = to_xir(prog, **kwargs).serialize()
     elif ir == "blackbird":
         prog_str = to_blackbird(prog).serialize()
     else:
         raise ValueError(
-            f"'{ir}' not recognized as a valid IR option. Valid options are 'xir' and 'blackbird'."
+            f"'{ir}' not recognized as a valid XIR option. Valid options are 'xir' and 'blackbird'."
         )
 
     if hasattr(f, "read"):
@@ -620,7 +671,7 @@ def loads(s, ir="blackbird"):
         prog = blackbird.loads(s)
     else:
         raise ValueError(
-            f"'{ir}' not recognized as a valid IR option. Valid options are 'xir' and 'blackbird'."
+            f"'{ir}' not recognized as a valid XIR option. Valid options are 'xir' and 'blackbird'."
         )
     return to_program(prog)
 
