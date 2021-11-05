@@ -72,6 +72,7 @@ def prog():
 
     return prog
 
+
 test_xir_prog_not_compiled = """\
 Vacuum | [1];
 Squeezed(0.12, 0.0) | [2];
@@ -147,7 +148,7 @@ class TestSFtoXIRConversion:
 
         xir_prog = io.to_xir(sf_prog)
 
-        expected = [("BSgate", [.54, -0.324], (3, 0))]
+        expected = [("BSgate", [0.54, -0.324], (3, 0))]
         assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
     def test_decomposition_operation_not_compiled(self):

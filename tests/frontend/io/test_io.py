@@ -25,6 +25,7 @@ from strawberryfields.program import Program
 
 pytestmark = pytest.mark.frontend
 
+
 @pytest.fixture
 def eng(backend):
     """Engine fixture."""

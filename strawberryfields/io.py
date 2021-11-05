@@ -175,7 +175,6 @@ def _from_xir(xir_prog, **kwargs):
                 else:
                     gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
-
     prog._target = kwargs.get("target")  # pylint: disable=protected-access
 
     if kwargs.get("shots") is not None:
@@ -417,6 +416,7 @@ def to_xir(prog, **kwargs):
         xir_prog.add_statement(op)
 
     return xir_prog
+
 
 def _listr(mixed_list):
     """Casts a nested iterable to a list recursively"""
