@@ -76,8 +76,81 @@
   [(#441)](https://github.com/XanaduAI/strawberryfields/pull/441)
 
 * The `sf` CLI has been removed in favour of the
-  [`xcc`](https://github.com/XanaduAI/xanadu-cloud-client) CLI.
+  [Xanadu Cloud Client](https://github.com/XanaduAI/xanadu-cloud-client).
   [(#642)](https://github.com/XanaduAI/strawberryfields/pull/642)
+
+  1. Configuring account credentials using:
+
+    * Strawberry Fields v0.19.0
+
+      ```console
+      $ sf configure --token "foo"
+      ```
+
+    * Strawberry Fields v0.20.0
+
+      ```console
+      $ xcc config set REFRESH_TOKEN "foo"
+      Successfully updated REFRESH_TOKEN setting to 'foo'.
+      ```
+
+  2. Verifying your connection to the Xanadu Cloud using:
+
+    * Strawberry Fields v0.19.0
+
+      ```console
+      $ sf --ping
+      You have successfully authenticated to the platform!
+      ```
+
+    * Strawberry Fields v0.20.0
+
+      ```console
+      $ xcc ping
+      Successfully connected to the Xanadu Cloud.
+
+      ```
+
+  3. Submitting a Blackbird circuit to the Xanadu Cloud using:
+
+    * Strawberry Fields v0.19.0
+
+      ```console
+      $ # Version 0.19.0
+      $ sf run "foo.xbb"
+      Executing program on remote hardware...
+      2021-11-02 03:04:05,06 - INFO - The device spec X8_01 has been successfully retrieved.
+      2021-11-02 03:04:05,07 - INFO - Compiling program for device X8_01 using compiler Xunitary.
+      2021-11-02 03:04:05,08 - INFO - Job b185a63c-f302-4adb-acf8-b6e4e413c11d was successfully submitted.
+      2021-11-02 03:04:05,09 - INFO - The remote job b185a63c-f302-4adb-acf8-b6e4e413c11d has been completed.
+      [[0 0 0 0]
+      [0 0 0 0]
+      [0 0 0 0]
+      [0 0 0 0]]
+      ```
+
+    * Strawberry Fields v0.20.0
+
+      ```console
+      $ xcc job submit --name "bar" --target "X8_01" --circuit "$(cat foo.xbb)"
+      {
+          "id": "0b0f5a46-46d8-4157-8005-45a4764361ba",  # Use this ID below.
+          "name": "bar",
+          "status": "open",
+          "target": "X8_01",
+          "language": "blackbird:1.0",
+          "created_at": "2021-11-02 03:04:05,10",
+          "finished_at": null,
+          "running_time": null
+      }
+      $ xcc job get 0b0f5a46-46d8-4157-8005-45a4764361ba --result
+      {
+          "output": [
+              "[[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]]"
+          ]
+      }
+      ```
+
 
 <h3>Bug fixes</h3>
 
