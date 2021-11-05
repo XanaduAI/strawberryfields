@@ -34,7 +34,7 @@ requirements = [
     "appdirs",
     "requests>=2.22.0",
     "urllib3>=1.25.3",
-    "xir>=0.1.0",
+    "quantum-xir>=0.1.0",
 ]
 
 info = {

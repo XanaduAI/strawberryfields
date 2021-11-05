@@ -14,4 +14,4 @@ numba==0.53.1
 requests==2.22.0
 urllib3==1.25.8
 plotly==4.4.1
-xir==0.1.0
+quantum-xir==0.1.0
