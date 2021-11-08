@@ -87,7 +87,7 @@ MeasureHomodyne(phi: 0.43, select: 0.32) | [2];\
 
 
 class TestSFtoXIRConversion:
-    """TODO"""
+    """Tests for the io.to_xir utility function"""
 
     def test_empty_program(self):
         """Test that an empty program is correctly converted"""

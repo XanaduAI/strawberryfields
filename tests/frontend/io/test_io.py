@@ -21,7 +21,6 @@ import blackbird
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
-from strawberryfields.program import Program
 
 pytestmark = pytest.mark.frontend
 
