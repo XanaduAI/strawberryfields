@@ -1,73 +1,34 @@
 Hardware and cloud
 ==================
 
-Using Strawberry Fields, you can submit quantum programs to be executed on photonic
-hardware or to be run on a cloud simulator via the Xanadu Quantum Cloud.
+Using Strawberry Fields, you can submit quantum programs to be executed on
+photonic hardware or to be run on a cloud simulator via the Xanadu Cloud.
 
 .. warning::
 
-    An authentication token is required to access the Xanadu cloud platform. In the
-    following, replace ``AUTHENTICATION_TOKEN`` with your personal API token.
-
-    If you do not have an authentication token, you can request hardware access `via the sign up
-    form on the Xanadu website <https://xanadu.ai/access>`__.
+    An API key is required to access the Xanadu Cloud platform. If you do not
+    have a Xanadu Cloud API key, you can request hardware access `via the sign
+    up form on the Xanadu website <https://xanadu.ai/access>`__.
 
 Configuring your account
 ------------------------
 
-Before using the Xanadu cloud platform, you will need to configure your credentials. This
-can be done using several methods:
+Before using the Xanadu Cloud platform, you will need to configure your
+credentials using the `Xanadu Cloud Client
+<https://github.com/XanaduAI/xanadu-cloud-client#setup>`__. The simplest way
+to do this is through the ``xcc config`` command line interface:
 
-* **Configuration file (recommended)**. Use the Strawberry Fields :func:`~.store_account` function from within Python or a Jupyter notebook,
+.. code-block:: console
 
-  >>> sf.store_account("AUTHENTICATION_TOKEN")
+    $ xcc config set REFRESH_TOKEN "Xanadu Cloud API key goes here"
 
-  or the ``sf configure`` :doc:`command line interface </code/sf_cli>`,
+You can verify that your account credentials successfully authenticate against
+the Xanadu Cloud platform by running
 
-  .. code-block:: bash
+.. code-block:: console
 
-      $ sf configure --token AUTHENTICATION_TOKEN
-
-  to store a configuration file containing your credentials. Replace
-  ``AUTHENTICATION_TOKEN`` above with your Xanadu cloud access token.
-
-  .. note::
-
-      The above configuration file need only be created once. Once created,
-      Strawberry Fields will automatically load the stored authentication
-      credentials.
-
-* **Environment variables**. Set the ``SF_API_AUTHENTICATION_TOKEN`` environment variable
-  with your API token.
-
-* **Keyword argument**. Pass the keyword argument ``token`` when initializing the
-  :class:`~.RemoteEngine`.
-
-.. seealso::
-
-    For more details on configuring Strawberry Fields for cloud access, including
-    creating local per-project configuration files, see the :doc:`configuration </code/sf_configuration>` module and :func:`~.store_account` function.
-
-
-Verifying your connection
--------------------------
-
-To verify that your account credentials correctly authenticate against the cloud
-platform, the :func:`~.ping` function can be used from within Python,
-
->>> sf.ping()
-You have successfully authenticated to the platform!
-
-or the ``ping`` flag can be used on the command line:
-
-.. code-block:: bash
-
-    $ sf --ping
-    You have successfully authenticated to the platform!
-
-.. seealso::
-
-   :doc:`command line interface </code/sf_cli>`
+    $ xcc ping
+    Successfully connected to the Xanadu Cloud.
 
 Submitting jobs on hardware
 ---------------------------

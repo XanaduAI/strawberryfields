@@ -47,11 +47,6 @@ info = {
     "package_data": {"strawberryfields": ["backends/data/*", "apps/data/feature_data/*",
                                           "apps/data/sample_data/*"]},
     "include_package_data": True,
-    "entry_points" : {
-        'console_scripts': [
-            'sf=strawberryfields.cli:main'
-        ]
-    },
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.rst", encoding="utf-8").read(),
     "long_description_content_type": "text/x-rst",
