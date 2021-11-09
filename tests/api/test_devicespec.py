@@ -147,10 +147,6 @@ class TestDeviceSpec:
             "modes": 2,
             "compiler": ["Xcov"],
         }
-        match = str(re.escape(
-            r"Device specification is missing the following keys: "
-            r"['gate_parameters', 'layout', 'target']"
-        ))
         with pytest.raises(
             ValueError, match=r"missing the following keys: \['gate_parameters', 'layout'\]"
         ):

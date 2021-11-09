@@ -23,6 +23,7 @@ from strawberryfields.program_utils import list_to_DAG
 
 
 test_spec = {
+    "target": "X8_01"
     "layout": textwrap.dedent(
         """\
         name template_4x2_X8
@@ -99,7 +100,7 @@ test_spec = {
 }
 
 
-X8_spec = DeviceSpec(target="X8_01", connection=None, spec=test_spec)
+X8_spec = DeviceSpec(spec=test_spec)
 
 
 def generate_X8_params(r, p):

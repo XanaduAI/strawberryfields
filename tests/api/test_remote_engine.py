@@ -234,7 +234,14 @@ class TestRemoteEngineIntegration:
         monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
 
         # Setting compile_info with a dummy devicespec and compiler name
-        X8_spec = DeviceSpec(target="DummyDevice", connection=None, spec=None)
+        dummy_spec = {
+            "target": "DummyDevice",
+            "modes": 2,
+            "layout": None,
+            "gate_parameters": None,
+            "compiler": [None],
+        }
+        X8_spec = DeviceSpec(spec=dummy_spec)
         prog._compile_info = (X8_spec, "dummy_compiler")
 
         engine = sf.RemoteEngine("X8")
@@ -320,7 +327,14 @@ class TestRemoteEngineIntegration:
         prog._compile_info = (None, "dummy_compiler")
 
         # Setting compile_info with a dummy devicespec and compiler name
-        X8_spec = DeviceSpec(target="DummyDevice", connection=None, spec=None)
+        dummy_spec = {
+            "target": "DummyDevice",
+            "modes": 2,
+            "layout": None,
+            "gate_parameters": None,
+            "compiler": [None],
+        }
+        X8_spec = DeviceSpec(spec=dummy_spec)
         prog._compile_info = (X8_spec, "dummy_compiler")
 
         engine = sf.RemoteEngine("X8")

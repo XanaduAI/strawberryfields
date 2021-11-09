@@ -39,7 +39,13 @@ class DeviceSpec:
 
     def __init__(self, spec: Mapping[str, Any]) -> None:
         if not {"layout", "modes", "compiler", "gate_parameters"} <= spec.keys():
-            missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
+            missing_keys = {
+                "target",
+                "layout",
+                "modes",
+                "compiler",
+                "gate_parameters",
+            } - spec.keys()
             raise ValueError(
                 f"Device specification is missing the following keys: {sorted(missing_keys)}"
             )
