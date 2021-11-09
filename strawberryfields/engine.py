@@ -20,18 +20,21 @@ One can think of each BaseEngine instance as a separate quantum computation.
 import abc
 import collections.abc
 import time
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
+import xcc
 
-from strawberryfields.api import Connection, Job, Result
+from strawberryfields.api import DeviceSpec, Job, JobStatus, Result
 from strawberryfields.api.job import FailedJobError
+from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
 from strawberryfields.tdm.tdmprogram import TDMProgram
 
 from .backends import load_backend
 from .backends.base import BaseBackend, NotApplicableError
+from ._version import __version__
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]
@@ -550,18 +553,22 @@ class RemoteEngine:
 
     Args:
         target (str): the target device
-        connection (strawberryfields.api.Connection): a connection to the remote job
-            execution platform
+        connection (xcc.Connection): a connection to the Xanadu Cloud
         backend_options (Dict[str, Any]): keyword arguments for the backend
     """
 
     POLLING_INTERVAL_SECONDS = 1
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
-    def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
+    def __init__(
+        self,
+        target: str,
+        connection: Optional[xcc.Connection] = None,
+        backend_options: Optional[Dict[str, Any]] = None
+    ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
         self._spec = None
-        self._connection = connection or Connection()
+        self._connection = connection
         self._backend_options = backend_options or {}
         self.log = create_logger(__name__)
 
@@ -575,19 +582,36 @@ class RemoteEngine:
         return self._target
 
     @property
-    def connection(self) -> Connection:
-        """The connection object used by the engine.
+    def connection(self) -> xcc.Connection:
+        """The connection used by the engine. A new :class:`xcc.Connection` will
+        be created and returned each time this property is accessed if the
+        connection supplied to :meth:`~.RemoteEngine.__init__` was ``None``.
 
         Returns:
-            strawberryfields.api.Connection
+            xcc.Connection
         """
-        return self._connection
+        if self._connection is not None:
+            return self._connection
+
+        settings = xcc.Settings()
+
+        return xcc.Connection(
+            refresh_token=settings.REFRESH_TOKEN,
+            access_token=settings.ACCESS_TOKEN,
+            host=settings.HOST,
+            port=settings.PORT,
+            tls=settings.TLS,
+            headers={"User-Agent": f"StrawberryFields/{__version__}"}
+        )
 
     @property
     def device_spec(self):
         """The device specifications for target device"""
         if self._spec is None:
-            self._spec = self._connection.get_device_spec(self.target)
+            target = self.target
+            connection = self.connection
+            device = xcc.Device(target=target, connection=connection)
+            self._spec = DeviceSpec(target=target, connection=connection, spec=device.specification)
         return self._spec
 
     def run(
@@ -635,7 +659,7 @@ class RemoteEngine:
 
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
         except KeyboardInterrupt as e:
-            self._connection.cancel_job(job.id)
+            xcc.Job(id_=job.id, connection=self.connection).cancel()
             raise KeyboardInterrupt("The job has been cancelled.") from e
 
     def run_async(
@@ -721,11 +745,27 @@ class RemoteEngine:
         if "shots" not in run_options:
             raise ValueError("Number of shots must be specified.")
 
-        return self._connection.create_job(self.target, program, run_options)
+        # Serialize a Blackbird circuit for network transmission
+        bb = to_blackbird(program)
+        bb._target["name"] = program.target
+        bb._target["options"] = run_options
+        circuit = bb.serialize()
+
+        connection = self.connection
+
+        job = xcc.Job.submit(
+            connection=connection,
+            name=program.name,
+            target=self.target,
+            circuit=circuit,
+            language=f"blackbird:{bb.version}"
+        )
+
+        return Job(job.id, JobStatus(job.status), connection=connection)
 
     def __repr__(self):
         return "<{}: target={}, connection={}>".format(
-            self.__class__.__name__, self.target, self.connection
+            self.__class__.__name__, self.target, self._connection
         )
 
     def __str__(self):
