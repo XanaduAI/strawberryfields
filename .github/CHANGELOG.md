@@ -154,7 +154,7 @@
 * The `sf.api.Connection` class has been replaced with the
   [xcc.Connection](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html)
   class.
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#645)](https://github.com/XanaduAI/strawberryfields/pull/645)
 
   Previously, in Strawberry Fields v0.19.0, an `sf.RemoteEngine` can be
   instantiated with a custom Xanadu Cloud connection as follows:
