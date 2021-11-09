@@ -127,7 +127,7 @@ class DeviceSpec:
         **Example**
 
         Device specifications can be retrieved from the API by using the
-        :class:`~.Connection` class:
+        :class:`xcc.Device` and :class:`xcc.Connection` classes:
 
         >>> spec.create_program(squeezing_amplitude_0=0.43)
         <strawberryfields.program.Program at 0x7fd37e27ff50>

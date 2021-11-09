@@ -21,7 +21,6 @@ import pytest
 
 from strawberryfields.api import DeviceSpec
 from strawberryfields.compilers import Ranges
-import strawberryfields as sf
 
 # pylints: disable=bad-continuation,no-self-use,pointless-statement
 
