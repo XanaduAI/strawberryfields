@@ -553,8 +553,8 @@ class RemoteEngine:
 
     Args:
         target (str): the target device
-        connection (xcc.Connection): a connection to the Xanadu Cloud
-        backend_options (Dict[str, Any]): keyword arguments for the backend
+        connection (xcc.Connection, optional): a connection to the Xanadu Cloud
+        backend_options (Dict[str, Any], optional): keyword arguments for the backend
     """
 
     POLLING_INTERVAL_SECONDS = 1
