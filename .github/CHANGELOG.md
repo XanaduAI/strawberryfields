@@ -151,6 +151,40 @@
       }
       ```
 
+* The `sf.api.Connection` class has been replaced with the
+  [xcc.Connection](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html)
+  class.
+  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+
+  Previously, in Strawberry Fields v0.19.0, an `sf.RemoteEngine` can be
+  instantiated with a custom Xanadu Cloud connection as follows:
+
+  ```python
+  import strawberryfields as sf
+  import strawberryfields.api
+
+  connection = strawberryfields.api.Connection(
+    token="Xanadu Cloud API key goes here",
+    host="platform.strawberryfields.ai",
+    port=443,
+    use_ssl=True,
+  )
+  engine = sf.RemoteEngine("X8", connection=connection)
+  ```
+
+  In Strawberry Fields v0.20.0, the same result can be achieved using
+  ```python
+  import strawberryfields as sf
+  import xcc
+
+  connection = xcc.Connection(
+    refresh_token="Xanadu Cloud API key goes here",  # See "token" argument above.
+    host="platform.strawberryfields.ai",
+    port=443,
+    tls=True,                                        # See "use_ssl" argument above.
+  )
+  engine = sf.RemoteEngine("X8", connection=connection)
+  ```
 
 <h3>Bug fixes</h3>
 
