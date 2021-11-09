@@ -30,7 +30,7 @@ from .conftest import mock_return
 
 # pylint: disable=bad-continuation,unused-argument,no-self-use,redefined-outer-name,pointless-statement
 
-pytestmark = pytest.mark.frontend
+pytestmark = pytest.mark.api
 
 
 REQUESTS_BEFORE_COMPLETED = 3

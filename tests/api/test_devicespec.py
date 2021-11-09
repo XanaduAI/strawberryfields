@@ -16,12 +16,11 @@ Unit tests for strawberryfields.api.devicespec
 """
 import pytest
 import textwrap
+from unittest.mock import MagicMock
 
 from strawberryfields.api import DeviceSpec
 from strawberryfields.compilers import Ranges
 import strawberryfields as sf
-
-import blackbird
 
 # pylint: disable=bad-continuation,no-self-use,pointless-statement
 
@@ -145,7 +144,9 @@ class TestDeviceSpec:
 
         new_spec_dict = device_dict.copy()
         new_spec_dict["modes"] = 42
-        monkeypatch.setattr(connection, "_get_device_dict", lambda target: new_spec_dict)
+
+        device = MagicMock(specification=new_spec_dict)
+        monkeypatch.setattr(sf.api.devicespec.xcc, "Device", lambda **kwargs: device)
 
         spec.refresh()
         assert spec.modes != device_dict["modes"]
