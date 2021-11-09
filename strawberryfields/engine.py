@@ -564,7 +564,7 @@ class RemoteEngine:
         self,
         target: str,
         connection: Optional[xcc.Connection] = None,
-        backend_options: Optional[Dict[str, Any]] = None
+        backend_options: Optional[Dict[str, Any]] = None,
     ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
         self._spec = None
@@ -601,7 +601,7 @@ class RemoteEngine:
             host=settings.HOST,
             port=settings.PORT,
             tls=settings.TLS,
-            headers={"User-Agent": f"StrawberryFields/{__version__}"}
+            headers={"User-Agent": f"StrawberryFields/{__version__}"},
         )
 
     @property
@@ -758,7 +758,7 @@ class RemoteEngine:
             name=program.name,
             target=self.target,
             circuit=circuit,
-            language=f"blackbird:{bb.version}"
+            language=f"blackbird:{bb.version}",
         )
 
         return Job(job.id, JobStatus(job.status), connection=connection)

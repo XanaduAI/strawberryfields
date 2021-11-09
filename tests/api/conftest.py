@@ -39,6 +39,7 @@ def connection() -> xcc.Connection:
     """A mock connection."""
     return xcc.Connection(refresh_token="j.w.t", host="cloud.xanadu.ai", port=443, tls=True)
 
+
 def mock_return(return_value):
     """A helper function for defining a mock function that returns the given value for
     any arguments.
