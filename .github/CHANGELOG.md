@@ -257,7 +257,6 @@
   xcc.Settings(REFRESH_TOKEN="Xanadu Cloud API key goes here").save()
   ```
 
-
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
