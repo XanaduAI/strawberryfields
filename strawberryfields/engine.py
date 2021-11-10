@@ -750,7 +750,7 @@ class RemoteEngine:
             program = program.compile(device=device, compiler="Xstrict")
 
         # update the run options if provided
-        run_options = program.run_options | kwargs
+        run_options = {**program.run_options, **kwargs}
 
         if "shots" not in run_options:
             raise ValueError("Number of shots must be specified.")
