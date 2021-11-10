@@ -798,3 +798,92 @@ class TestBlochMessiahDecomposition:
         assert np.allclose(O1.T @ O @ O1, O, atol=tol, rtol=0)
         assert np.allclose(O2.T @ O @ O2, O, atol=tol, rtol=0)
         assert np.allclose(S @ O @ S.T, O, atol=tol, rtol=0)
+
+
+class TestCompactSUnFactorization:
+    """tests for the SU(n) factorization"""
+
+    def embed_su2(self, n, i, j, params):
+        """Embed the SU(2) transformation given by params into modes i and j
+        of an SU(n) matrix
+            SU_ij(3) = [ e^(i(a+g)/2) cos(b/2)   -e^(i(a-g)/2) sin(b/2)
+                        e^(-i(a-g)/2) sin(b/2)   e^(-i(a-g)/2) cos(b/2) ]
+        Returns the full n-dimensional matrix.
+        """
+        a, b, g = params[0], params[1], params[2]
+
+        # Create SU(2) element and scaled by loss if desired.
+        Rij = np.array(
+            [
+                [
+                    np.exp(1j * (a + g) / 2) * np.cos(b / 2),
+                    -np.exp(1j * (a - g) / 2) * np.sin(b / 2),
+                ],
+                [
+                    np.exp(-1j * (a - g) / 2) * np.sin(b / 2),
+                    np.exp(-1j * (a + g) / 2) * np.cos(b / 2),
+                ],
+            ]
+        )
+
+        # Stuff it into modes i and j of SU(n)
+        full_Rij = np.asmatrix(np.identity(n)) + 0j
+        full_Rij[i : j + 1, i : j + 1] = Rij
+
+        return full_Rij
+
+    def sun_reconstruction(self, n, parameters):
+        """Reconstruct an SU(n) matrix using a list of transformations given as
+        tuples ("i,j", [a, b, g])
+
+        Args:
+            n (int): dimension of the unitary special matrix
+            parameters (list(tuple)): sequence of tranformation parameters with the
+                form ("i,j", [a, b, g]) where i,j are the indices of the modes and
+                a,b,g the SU(2) transformation parameters.
+
+        Returns:
+            U (array[complex]): the reconstructed SU(n) matrix
+        """
+        U = np.asmatrix(np.identity(n)) + 0j
+
+        for param in parameters:
+            # Get the indices of the modes
+            modes = param[0].split(",")
+            md1, md2 = int(modes[0]) - 1, int(modes[1]) - 1
+
+            if md1 not in range(n) or md2 not in range(n):
+                raise ValueError(
+                    f"Mode combination {md1 + 1},{md2 + 1}  is invalid for a system of dimension {n}."
+                )
+
+            if md2 != md1 + 1:
+                raise ValueError(
+                    f"Mode combination {md1 + 1},{md2 + 1} is invalid.\n"
+                    + "Currently only transformations on adjacent modes are implemented."
+                )
+
+            # Compute the next transformation and multiply
+            next_trans = self.embed_su2(n, md1, md2, param[1])
+            U = U * next_trans
+
+        return U
+
+    @pytest.mark.parametrize("n", range(3, 8))
+    def test_sun_reconstruction(self, n, tol):
+        """test SU(n) reconstruction from factorization equals the original matrix"""
+
+        # Generate a random SU(n) matrix.
+        real_half = np.random.randn(n, n)
+        comp_half = np.random.randn(n, n)
+        U = real_half + 1j * comp_half
+        Q, _ = np.linalg.qr(U)
+        SUn = Q
+        SUn[0, :] = SUn[0, :] / np.linalg.det(SUn)
+
+        # get result from factorization
+        factorization_params = dec.compact_sun(SUn, tol)
+
+        SUn_reconstructed = self.sun_reconstruction(n, factorization_params)
+
+        assert np.allclose(SUn, SUn_reconstructed, atol=tol, rtol=0)
