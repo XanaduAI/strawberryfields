@@ -193,7 +193,7 @@
   This means that Xanadu Cloud credentials are now stored in exactly one
   location, the path to which depends on your operating system:
 
-  1. Windows: `C:\Users\%USERNAME%\AppData\Local\xanadu-cloud\xanadu-cloud/.env`
+  1. Windows: `C:\Users\%USERNAME%\AppData\Local\xanadu-cloud\xanadu-cloud\.env`
 
   2. MacOS: `/home/$USER/Library/Application\ Support/xanadu-cloud/.env`
 

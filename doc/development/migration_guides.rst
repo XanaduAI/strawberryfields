@@ -16,7 +16,7 @@ class has several consequences. Specifically, Xanadu Cloud credentials are now
 stored in exactly one location, the path to which depends on your operating
 system:
 
-#. Windows: ``C:\Users\%USERNAME%\AppData\Local\xanadu-cloud\xanadu-cloud/.env``
+#. Windows: ``C:\Users\%USERNAME%\AppData\Local\xanadu-cloud\xanadu-cloud\.env``
 
 #. MacOS: ``/home/$USER/Library/Application\ Support/xanadu-cloud/.env``
 
