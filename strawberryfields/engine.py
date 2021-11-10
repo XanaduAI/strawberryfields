@@ -605,8 +605,16 @@ class RemoteEngine:
         )
 
     @property
-    def device_spec(self):
-        """The device specifications for target device"""
+    def device_spec(self) -> DeviceSpec:
+        """The specification of the target device.
+
+        Returns:
+            DeviceSpec: the device specification
+
+        Raises:
+            requests.exceptions.RequestException: if there was an issue fetching
+                the device specifications from the Xanadu Cloud
+        """
         if self._spec is None:
             target = self.target
             connection = self.connection
