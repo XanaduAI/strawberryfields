@@ -528,7 +528,7 @@ class RemoteEngine:
 
     **Example:**
 
-    The following examples instantiate an engine with the default configuration, and
+    The following examples instantiate an engine with the default settings, and
     run both blocking and non-blocking jobs.
 
     Run a blocking job:
