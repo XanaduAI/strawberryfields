@@ -23,7 +23,7 @@ import pytest
 import xcc
 
 import strawberryfields as sf
-from strawberryfields.api import DeviceSpec, JobStatus, Result
+from strawberryfields.api import DeviceSpec, Result
 from strawberryfields.engine import RemoteEngine
 
 from .conftest import mock_return
@@ -41,21 +41,25 @@ def job(connection, monkeypatch):
     """Mocks a job which completes after a certain number of requests."""
     refresh_counter = 0
 
-    def refresh(self):
+    @property
+    def finished(self):
         nonlocal refresh_counter
         refresh_counter += 1
         if refresh_counter >= REQUESTS_BEFORE_COMPLETED:
-            self._status = JobStatus.COMPLETED
+            self._details = {"status": "complete"}
+            return True
+        return False
+
+    _details = {"status": "open"}
 
     job = xcc.Job(id_="123", connection=connection)
-    job._details = {"status": "open"}
 
-    result = Result(np.array([[1, 2], [3, 4]]), is_stateful=False)
+    result = {"samples": np.array([[1, 2], [3, 4]]), "foo": [np.array([5, 6])]}
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
-    monkeypatch.setattr(sf.engine.Job, "refresh", refresh)
-    monkeypatch.setattr(sf.engine.Job, "result", result)
-    monkeypatch.setattr(sf.engine.Job, "meta", {"foo": "bar"})
+    monkeypatch.setattr(xcc.Job, "result", result)
+    monkeypatch.setattr(xcc.Job, "_details", _details)
+    monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
 
 
@@ -120,18 +124,21 @@ class TestRemoteEngine:
         engine = RemoteEngine("X8_01")
         job = engine.run_async(prog, shots=10)
 
-        assert job.status == JobStatus.OPEN.value
+        # job.status calls job.finished, incrementing the request counter
+        assert job.status == "open"
 
-        for _ in range(REQUESTS_BEFORE_COMPLETED):
-            job.refresh()
+        for _ in range(REQUESTS_BEFORE_COMPLETED - 1):
+            assert job.finished == False
+        assert job.finished == True
 
-        assert job.status == JobStatus.COMPLETED.value
-        assert job.meta == {"foo": "bar"}
-        assert np.array_equal(job.result.samples, [[1, 2], [3, 4]])
+        assert job.status == "complete"
+        assert np.array_equal(job.result["foo"], [np.array([5, 6])])
+        assert np.array_equal(job.result["samples"], [[1, 2], [3, 4]])
 
+        result = Result(job.result, is_stateful=False)
         match = r"The state is undefined for a stateless computation."
         with pytest.raises(AttributeError, match=match):
-            _ = job.result.state
+            _ = result.state
 
     def test_run_async_options_from_kwargs(self, prog, blackbird):
         """Tests that :meth:`RemoteEngine.run_async` passes all keyword
@@ -141,7 +148,7 @@ class TestRemoteEngine:
         engine.run_async(prog, shots=1234)
         assert blackbird._target["options"] == {"cutoff_dim": 12, "shots": 1234}
 
-    def test_run_asnyc_options_from_program(self, prog, blackbird):
+    def test_run_async_options_from_program(self, prog, blackbird):
         """Test that :meth:`RemoteEngine.run_async` correctly parses runtime
         options compiled into the program.
         """
