@@ -82,14 +82,15 @@ Job objects have the following properties and methods:
 
 Alternatively, if you have your quantum program available as a Blackbird script,
 you can submit the Blackbird script file to be executed remotely using
-the Strawberry Fields command line interface:
+the Xanadu Cloud Client command line interface:
 
 .. code-block:: console
 
-    $ sf run blackbird_script.xbb --output out.txt
-
-After executing the above command, the result will be stored in ``out.txt`` in the current working directory.
-You can also omit the ``--output`` parameter to print the result to the screen.
+    $ xcc job submit \
+        --name "example" \
+        --target "X8_01" \
+        --language "blackbird:1.0" \
+        --circuit "name example\nversion 1.0\ntarget X8_01 (shots=3)\n ..."
 
 Cloud simulator
 ---------------
