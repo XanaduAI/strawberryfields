@@ -542,8 +542,6 @@ class RemoteEngine:
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
     "queued"
-    >>> job.result
-    InvalidJobOperationError
     >>> job.clear()
     >>> job.status
     "complete"
