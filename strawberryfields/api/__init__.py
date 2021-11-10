@@ -13,13 +13,16 @@
 # limitations under the License.
 """
 This package contains the modules for the low-level Strawberry Fields program
-execution API. Specifically, the :class:`~strawberryfields.api.Job` and
-:class:`~strawberryfields.api.Result` classes provide interfaces for managing
-program execution jobs and job results respectively.
+execution API. Specifically, the :class:`~strawberryfields.api.Result` and
+:class:`~strawberryfields.api.DeviceSpec` classes are provided to represent
+hardware results and device specifications.
 """
 
 from .devicespec import DeviceSpec
-from .job import InvalidJobOperationError, Job, JobStatus
 from .result import Result
 
-__all__ = ["DeviceSpec", "Job", "Result"]
+__all__ = ["DeviceSpec", "Result"]
+
+
+class FailedJobError(Exception):
+    """Raised when a job had a failure on the server side."""

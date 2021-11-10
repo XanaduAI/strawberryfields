@@ -46,39 +46,23 @@ will execute.
 
 Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
 method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
-complete, this method instead returns a :class:`~.Job` object directly that can be queried
+complete, this method instead returns a `xcc.Job` object directly that can be queried
 to get the job's status.
 
 >>> job = engine.run_async(prog, shots=3)
 >>> job.status
 "queued"
->>> job.refresh()
+>>> job.clear()
 >>> job.status
 "complete"
->>> result = job.result
+>>> result = sf.api.Result(job.result)
 >>> result.samples
 array([[0, 0, 1, 0, 1, 0, 1, 0],
        [0, 0, 0, 0, 0, 0, 0, 0],
        [0, 0, 0, 0, 0, 0, 0, 2]])
 
-Job objects have the following properties and methods:
-
-.. raw:: html
-
-    <div class="summary-table">
-
-.. currentmodule:: strawberryfields.api.job.Job
-
-.. autosummary::
-    id
-    status
-    result
-    refresh
-    cancel
-
-.. raw:: html
-
-    </div>
+Further details on the `xcc.Job` class can be found in the
+`Xanadu Cloud Client documentation <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_.
 
 Alternatively, if you have your quantum program available as a Blackbird script,
 you can submit the Blackbird script file to be executed remotely using
