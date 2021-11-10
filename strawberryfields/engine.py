@@ -605,8 +605,16 @@ class RemoteEngine:
         )
 
     @property
-    def device_spec(self):
-        """The device specifications for target device"""
+    def device_spec(self) -> DeviceSpec:
+        """The specification of the target device.
+
+        Returns:
+            DeviceSpec: the device specification
+
+        Raises:
+            requests.exceptions.RequestException: if there was an issue fetching
+                the device specifications from the Xanadu Cloud
+        """
         if self._spec is None:
             target = self.target
             connection = self.connection
@@ -745,16 +753,13 @@ class RemoteEngine:
             program = program.compile(device=device, compiler="Xstrict")
 
         # update the run options if provided
-        run_options = {}
-        run_options.update(program.run_options)
-        run_options.update(kwargs or {})
+        run_options = {**program.run_options, **kwargs}
 
         if "shots" not in run_options:
             raise ValueError("Number of shots must be specified.")
 
         # Serialize a Blackbird circuit for network transmission
         bb = to_blackbird(program)
-        bb._target["name"] = program.target
         bb._target["options"] = run_options
         circuit = bb.serialize()
 
