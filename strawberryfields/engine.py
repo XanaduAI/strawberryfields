@@ -645,7 +645,9 @@ class RemoteEngine:
             strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
 
         Raises:
-            FailedJobError: if the remote job fails on the server side
+            requests.exceptions.RequestException: if there was an issue fetching
+                the device specifications from the Xanadu Cloud
+            FailedJobError: if the remote job fails on the server side ("cancelled" or "failed")
         """
         job = self.run_async(
             program, compile_options=compile_options, recompile=recompile, **kwargs
