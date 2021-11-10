@@ -645,6 +645,10 @@ class RemoteEngine:
 
         Returns:
             strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
+
+        Raises:
+            requests.exceptions.RequestException: if there was an issue sending
+                a request to the Xanadu Cloud
         """
         job = self.run_async(
             program, compile_options=compile_options, recompile=recompile, **kwargs
