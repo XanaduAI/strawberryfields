@@ -12,17 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for strawberryfields.engine.RemoteEngine
+Unit and integration tests for :mod:`strawberryfields.engine.RemoteEngine`.
 """
+
 import logging
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+import xcc
 
 import strawberryfields as sf
-from strawberryfields.api import Connection, DeviceSpec, Job, JobStatus, Result
+from strawberryfields.api import DeviceSpec, JobStatus, Result
 from strawberryfields.engine import RemoteEngine
-from strawberryfields.program import Program
 
 from .conftest import mock_return
 
@@ -31,381 +33,284 @@ from .conftest import mock_return
 pytestmark = pytest.mark.api
 
 
-class MockServer:
-    """A mock platform server that fakes a processing delay by counting requests."""
-
-    REQUESTS_BEFORE_COMPLETED = 3
-
-    def __init__(self):
-        self.request_count = 0
-
-    def get_job(self, _id):
-        """Returns a 'queued' job status until the number of requests exceeds a defined
-        threshold, beyond which a 'complete' job status is returned.
-        """
-        self.request_count += 1
-        status = (
-            JobStatus.COMPLETED
-            if self.request_count >= self.REQUESTS_BEFORE_COMPLETED
-            else JobStatus.QUEUED
-        )
-        return Job(id_="123", status=status, connection=None, meta={"foo": "bar"})
-
-
-mock_device_dict = {
-    "layout": "",
-    "modes": 8,
-    "compiler": ["fock"],
-    "gate_parameters": {},
-}
+REQUESTS_BEFORE_COMPLETED = 3
 
 
 @pytest.fixture
-def job_to_complete(connection, monkeypatch):
-    """Mocks a remote job that is completed after a certain number of requests."""
-    monkeypatch.setattr(
-        Connection,
-        "create_job",
-        mock_return(Job(id_="123", status=JobStatus.OPEN, connection=connection)),
-    )
-    server = MockServer()
-    monkeypatch.setattr(Connection, "get_job", server.get_job)
-    monkeypatch.setattr(
-        Connection,
-        "get_job_result",
-        mock_return(Result(np.array([[1, 2], [3, 4]]), is_stateful=False)),
-    )
+def job(connection, monkeypatch):
+    """Mocks a job which completes after a certain number of requests."""
+    refresh_counter = 0
 
-    monkeypatch.setattr(
-        Connection,
-        "_get_device_dict",
-        mock_return(mock_device_dict),
-    )
+    def refresh(self):
+        nonlocal refresh_counter
+        refresh_counter += 1
+        if refresh_counter >= REQUESTS_BEFORE_COMPLETED:
+            self._status = JobStatus.COMPLETED
+
+    job = xcc.Job(id_="123", connection=connection)
+    job._details = {"status": "open"}
+
+    result = Result(np.array([[1, 2], [3, 4]]), is_stateful=False)
+
+    monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
+    monkeypatch.setattr(sf.engine.Job, "refresh", refresh)
+    monkeypatch.setattr(sf.engine.Job, "result", result)
+    monkeypatch.setattr(sf.engine.Job, "meta", {"foo": "bar"})
+    return job
 
 
+@pytest.fixture
+def device(connection, monkeypatch):
+    """Mocks an X8 device with the "fock" compiler."""
+    device = xcc.Device(target="X8_01", connection=connection)
+    device.specification = {
+        "layout": "",
+        "modes": 8,
+        "compiler": ["fock"],
+        "gate_parameters": {},
+    }
+
+    monkeypatch.setattr(sf.engine.xcc, "Connection", MagicMock())
+    monkeypatch.setattr(sf.engine.xcc, "Device", mock_return(device))
+    return device
+
+
+@pytest.fixture
+def blackbird(monkeypatch):
+    """Mocks a Blackbird program."""
+    blackbird = MagicMock()
+    blackbird.return_value = blackbird
+    blackbird._target = {}
+    monkeypatch.setattr(sf.engine, "to_blackbird", blackbird)
+    return blackbird
+
+
+@pytest.fixture
+def infolog(caplog):
+    """Sets the log capture level to ``logging.INFO``."""
+    caplog.set_level(logging.INFO)
+    return caplog
+
+
+@pytest.mark.usefixtures("job", "device")
 class TestRemoteEngine:
     """Tests for the ``RemoteEngine`` class."""
 
-    def test_run_complete(self, connection, prog, job_to_complete):
-        """Tests a successful blocking job execution."""
-        engine = RemoteEngine("X8_01", connection=connection)
+    def test_generic_target(self):
+        """Test that :meth:`RemoteEngine.__init__` resolves the correct target
+        when instantiated with a non-specific target.
+        """
+        engine = RemoteEngine("X8")
+        assert engine.target == engine.DEFAULT_TARGETS["X8"]
+
+    def test_run(self, prog):
+        """Tests that a blocking job execution can succeed."""
+        engine = RemoteEngine("X8_01")
         result = engine.run(prog, shots=10)
 
-        assert np.array_equal(result.samples, np.array([[1, 2], [3, 4]]))
+        assert result is not None
+        assert np.array_equal(result.samples, [[1, 2], [3, 4]])
 
-        with pytest.raises(
-            AttributeError, match="The state is undefined for a stateless computation."
-        ):
-            result.state
+        match = r"The state is undefined for a stateless computation."
+        with pytest.raises(AttributeError, match=match):
+            _ = result.state
 
-    def test_run_async(self, connection, prog, job_to_complete):
-        """Tests a successful non-blocking job execution."""
-
-        engine = RemoteEngine("X8_01", connection=connection)
+    def test_run_async(self, prog):
+        """Tests that a non-blocking job execution can succeed."""
+        engine = RemoteEngine("X8_01")
         job = engine.run_async(prog, shots=10)
+
         assert job.status == JobStatus.OPEN.value
 
-        for _ in range(MockServer.REQUESTS_BEFORE_COMPLETED):
+        for _ in range(REQUESTS_BEFORE_COMPLETED):
             job.refresh()
 
         assert job.status == JobStatus.COMPLETED.value
         assert job.meta == {"foo": "bar"}
-        assert np.array_equal(job.result.samples, np.array([[1, 2], [3, 4]]))
+        assert np.array_equal(job.result.samples, [[1, 2], [3, 4]])
 
-        with pytest.raises(
-            AttributeError, match="The state is undefined for a stateless computation."
-        ):
-            job.result.state
+        match = r"The state is undefined for a stateless computation."
+        with pytest.raises(AttributeError, match=match):
+            _ = job.result.state
 
-    def test_device_class_target(self):
-        """Test that the remote engine correctly instantiates itself
-        when provided with a non-specific target"""
-        target = "X8"
-        engine = RemoteEngine(target)
-        assert engine.target == engine.DEFAULT_TARGETS[target]
-
-    def test_run_options_from_kwargs(self, prog, monkeypatch):
-        """Test that the remote engine run_async method correctly
-        passes all keyword argument backend and runtime options to the create_job
-        method."""
-        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
+    def test_run_async_options_from_kwargs(self, prog, blackbird):
+        """Tests that :meth:`RemoteEngine.run_async` passes all keyword
+        argument backend and runtime options to the Blackbird program.
+        """
         engine = RemoteEngine("X8", backend_options={"cutoff_dim": 12})
-        _, _, _, run_options = engine.run_async(prog, shots=1234)
-        assert run_options == {"shots": 1234, "cutoff_dim": 12}
+        engine.run_async(prog, shots=1234)
+        assert blackbird._target["options"] == {"cutoff_dim": 12, "shots": 1234}
 
-        # run options from keyword arguments overwrite
-        # run options provided by the program object
-        prog = prog.compile(device=engine.device_spec, shots=15)
-        _, _, _, run_options = engine.run_async(prog, shots=1234)
-        assert run_options == {"shots": 1234, "cutoff_dim": 12}
-
-    def test_run_options_from_program(self, prog, monkeypatch):
-        """Test that the remote engine run_async method correctly
-        parses runtime options compiled into the program"""
-        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
+    def test_run_asnyc_options_from_program(self, prog, blackbird):
+        """Test that :meth:`RemoteEngine.run_async` correctly parses runtime
+        options compiled into the program.
+        """
         engine = RemoteEngine("X8")
 
         prog = prog.compile(device=engine.device_spec, shots=15)
         assert prog.run_options == {"shots": 15}
 
-        _, _, _, run_options = engine.run_async(prog)
-        assert run_options == {"shots": 15}
+        engine.run_async(prog)
+        assert blackbird._target["options"] == {"shots": 15}
 
-    def test_no_shots(self, prog, connection, monkeypatch):
-        """Test that if the number of shots is not provided, an
-        exception is raised"""
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
-        engine = RemoteEngine("X8", connection=connection)
-
-        with pytest.raises(ValueError, match="Number of shots must be specified"):
+    def test_run_async_without_shots(self, prog):
+        """Tests that a ValueError is raised if no shots are specified when a
+        remote engine is instantiated.
+        """
+        engine = RemoteEngine("X8")
+        with pytest.raises(ValueError, match=r"Number of shots must be specified"):
             engine.run_async(prog)
 
 
+@pytest.mark.usefixtures("job", "device")
 class TestRemoteEngineIntegration:
-    """Integration tests for the remote engine"""
+    """Integration tests for the ``RemoteEngine`` class."""
 
-    def test_compilation(self, prog, monkeypatch, caplog):
-        """Test that the remote engine correctly compiles a program
-        for the intended backend"""
-        caplog.set_level(logging.INFO)
-        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: mock_device_dict)
-
+    def test_compilation(self, prog, blackbird, infolog):
+        """Test that :class:`RemoteEngine` can compile a program for the
+        intended backend.
+        """
         engine = RemoteEngine("X8")
-        _, target, res_prog, _ = engine.run_async(prog, shots=10)
+        engine.run_async(prog, shots=10)
 
-        assert (
-            caplog.records[-1].message == "Compiling program for device X8_01 using compiler fock."
-        )
-        assert target == RemoteEngine.DEFAULT_TARGETS["X8"]
+        program = blackbird.mock_calls[0].args[0]
 
-        # check program is compiled to match the chip template
+        want_message = "Compiling program for device X8_01 using compiler fock."
+        assert infolog.records[-1].message == want_message
+
+        # Check that the program is compiled to match the chip template.
         expected = prog.compile(device=engine.device_spec).circuit
-        res = res_prog.circuit
+        res = program.circuit
 
         for cmd1, cmd2 in zip(res, expected):
-            # loop through all commands in res and expected
-
-            # check gates are the same
+            # Check that the gates are the same.
             assert type(cmd1.op) is type(cmd2.op)
-            # check modes are the same
+            # Check that the modes are the same.
             assert all(i.ind == j.ind for i, j in zip(cmd1.reg, cmd2.reg))
-            # check parameters are the same
+            # Check that the parameters are the same.
             assert all(p1 == p2 for p1, p2 in zip(cmd1.op.p, cmd2.op.p))
 
-    def test_default_compiler(self, prog, monkeypatch, caplog):
-        """Test that if the device does not provide a default compiler,
-        that Xunitary is used by default."""
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = []
-
-        monkeypatch.setattr(Connection, "create_job", lambda *args: args)
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+    def test_default_compiler(self, prog, infolog, device):
+        """Test that the Xunitary compiler is used by default if a device does
+        not explicitly provide a default compiler.
+        """
+        device.specification["compiler"] = []
 
         engine = RemoteEngine("X8")
-        _, target, res_prog, _ = engine.run_async(prog, shots=10)
+        engine.run_async(prog, shots=10)
 
         assert engine.device_spec.default_compiler == "Xunitary"
-        assert (
-            caplog.records[-1].message
-            == "Compiling program for device X8_01 using compiler Xunitary."
-        )
 
-    class MockProgram:
-        """A mock program for testing"""
+        want_message = "Compiling program for device X8_01 using compiler Xunitary."
+        assert infolog.records[-1].message == want_message
 
-        def __init__(self):
-            self.run_options = {}
+    def test_compile_device_invalid_device_error(self, prog, device):
+        """Tests that a ValueError is raised if a program is compiled for one
+        device but run on a different device without recompilation.
+        """
+        device.specification["compiler"] = []
 
-    def test_compile_device_invalid_device_error(self, prog, monkeypatch, caplog):
-        """Tests that an error is raised if the program was compiled for
-        another device and recompilation was not requested."""
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = []
-
-        monkeypatch.setattr(
-            Connection, "create_job", lambda self, target, program, run_options: program
-        )
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
-        monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
-
-        # Setting compile_info with a dummy devicespec and compiler name
-        X8_spec = DeviceSpec(target="DummyDevice", connection=None, spec=None)
-        prog._compile_info = (X8_spec, "dummy_compiler")
+        # Set compile_info to a fake device specification and compiler name.
+        X8_spec = DeviceSpec(target="FakeDevice", connection=None, spec=None)
+        prog._compile_info = (X8_spec, "fake_compiler")
 
         engine = sf.RemoteEngine("X8")
         with pytest.raises(ValueError, match="Cannot use program compiled"):
-            program = engine.run_async(prog, shots=10)
+            engine.run_async(prog, shots=10)
 
-    def test_compile(self, prog, monkeypatch, caplog):
-        """Tests that compilation happens by default if no compile_info was
-        specified when call run_async."""
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = []
+    def test_compile(self, prog, infolog, device):
+        """Tests that compilation happens by default if no compile_info is
+        specified when :meth:`RemoteEngine.run_async` is invoked.
+        """
+        device.specification["compiler"] = []
 
-        monkeypatch.setattr(
-            Connection, "create_job", lambda self, target, program, run_options: program
-        )
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
-        monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
-
-        # Leaving compile_info as None
+        # Leaving compile_info as None.
         assert prog.compile_info == None
 
         engine = RemoteEngine("X8")
-        program = engine.run_async(prog, shots=10)
+        engine.run_async(prog, shots=10)
 
-        assert isinstance(program, self.MockProgram)
-        assert (
-            caplog.records[-1].message
-            == "Compiling program for device X8_01 using compiler Xunitary."
-        )
+        want_message = "Compiling program for device X8_01 using compiler Xunitary."
+        assert infolog.records[-1].message == want_message
 
-    def test_recompilation_run_async(self, prog, monkeypatch, caplog):
-        """Test that recompilation happens when the recompile keyword argument
-        was set to True."""
-        compiler = "Xunitary"
-
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = compiler
-
-        monkeypatch.setattr(
-            Connection, "create_job", lambda self, target, program, run_options: program
-        )
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
-
-        compile_options = {"compiler": compiler}
-
-        engine = sf.RemoteEngine("X8")
-
-        device = engine.device_spec
-
-        # Setting compile_info
-        prog._compile_info = (device, device.compiler)
-
-        program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
-
-        # No recompilation, original Program
-        assert caplog.records[-1].message == (
-            f"Recompiling program for device "
-            f"{device.target} using the specified compiler options: "
-            f"{compile_options}."
-        )
-
-    def test_recompilation_precompiled(self, prog, monkeypatch, caplog):
+    def test_recompilation_precompiled(self, prog, infolog, device):
         """Test that recompilation happens when:
-        1. the program was precompiled
-        2. but the recompile keyword argument was set to True.
 
-        The program is considered to be precompiled if program.compile_info was
-        set (setting it in the test case).
+            1. the program was precompiled, but
+            2. the recompile keyword argument was set to ``True``.
+
+        The program is considered to be precompiled if ``program.compile_info``
+        is set.
         """
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = []
+        device.specification["compiler"] = []
 
-        monkeypatch.setattr(
-            Connection, "create_job", lambda self, target, program, run_options: program
-        )
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
-        monkeypatch.setattr(Program, "compile", lambda *args, **kwargs: self.MockProgram())
-
-        # Setting compile_info
-        prog._compile_info = (None, "dummy_compiler")
-
-        # Setting compile_info with a dummy devicespec and compiler name
-        X8_spec = DeviceSpec(target="DummyDevice", connection=None, spec=None)
-        prog._compile_info = (X8_spec, "dummy_compiler")
+        # Set compile_info to a fake device specification and compiler name.
+        X8_spec = DeviceSpec(target="FakeDevice", connection=None, spec=None)
+        prog._compile_info = (X8_spec, "fake_compiler")
 
         engine = sf.RemoteEngine("X8")
+        engine.run_async(prog, shots=10, compile_options=None, recompile=True)
 
-        compile_options = None
+        want_message = "Recompiling program for device X8_01 using compiler Xunitary."
+        assert infolog.records[-1].message == want_message
 
-        # Setting recompile in keyword arguments
-        program = engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
-        assert isinstance(program, self.MockProgram)
-        assert (
-            caplog.records[-1].message
-            == "Recompiling program for device X8_01 using compiler Xunitary."
-        )
-
-    def test_recompilation_run(self, prog, monkeypatch, caplog):
+    def test_recompilation_run_async(self, prog, infolog, device):
         """Test that recompilation happens when the recompile keyword argument
-        was set to True and engine.run was called."""
-        compiler = "Xunitary"
-
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = compiler
-
-        monkeypatch.setattr(
-            Connection, "create_job", lambda self, target, program, run_options: MockJob(program)
-        )
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
-
-        class MockJob:
-            """Mock job that acts like a job, but also stores a program."""
-
-            def __init__(self, prog):
-
-                # Store the program as result
-                self.result = prog
-                self.status = "complete"
-                self.id = 0
-
-            def refresh(self):
-                pass
-
-        compile_options = {"compiler": compiler}
+        is set to ``True``.
+        """
+        device.specification["compiler"] = "Xunitary"
 
         engine = sf.RemoteEngine("X8")
-
         device = engine.device_spec
 
-        # Setting compile_info
         prog._compile_info = (device, device.compiler)
 
-        program = engine.run(prog, shots=10, compile_options=compile_options, recompile=True)
+        compile_options = {"compiler": "Xunitary"}
+        engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
 
-        # No recompilation, original Program
-        assert caplog.records[-1].message == ("The remote job 0 has been completed.")
-        assert caplog.records[-2].message == (
-            f"Recompiling program for device "
-            f"{device.target} using the specified compiler options: "
-            f"{compile_options}."
+        want_message = (
+            f"Recompiling program for device {device.target} using the "
+            f"specified compiler options: {compile_options}."
         )
+        assert infolog.records[-1].message == want_message
 
-    def test_validation(self, prog, monkeypatch, caplog):
-        """Test that validation happens (no recompilation) when the target
-        device and device spec match."""
-        compiler = "Xunitary"
+    def test_recompilation_run(self, prog, infolog, device):
+        """Test that recompilation happens when the recompile keyword argument
+        was set to ``True`` and :meth:`RemoteEngin.run` is called."""
+        device.specification["compiler"] = "Xunitary"
 
-        caplog.set_level(logging.INFO)
-        test_device_dict = mock_device_dict.copy()
-        test_device_dict["compiler"] = compiler
+        engine = sf.RemoteEngine("X8")
+        device = engine.device_spec
 
-        monkeypatch.setattr(
-            Connection, "create_job", lambda self, target, program, run_options: program
+        prog._compile_info = (device, device.compiler)
+
+        compile_options = {"compiler": "Xunitary"}
+        engine.run(prog, shots=10, compile_options=compile_options, recompile=True)
+
+        want_message_1 = "The remote job 123 has been completed."
+        assert infolog.records[-1].message == want_message_1
+
+        want_message_2 = (
+            f"Recompiling program for device {device.target} using the "
+            f"specified compiler options: {compile_options}."
         )
-        monkeypatch.setattr(Connection, "_get_device_dict", lambda *args: test_device_dict)
+        assert infolog.records[-2].message == want_message_2
+
+    def test_validation(self, prog, infolog, device):
+        """Test that validation happens (i.e., no recompilation) when the target
+        device and device specification match.
+        """
+        device.specification["compiler"] = "Xunitary"
 
         engine = sf.RemoteEngine("X8_01")
-
         device = engine.device_spec
 
-        # Setting compile_info
         prog._compile_info = (device, device.compiler)
 
-        program = engine.run_async(prog, shots=10)
+        engine.run_async(prog, shots=10)
 
-        # No recompilation, original Program
-        assert caplog.records[-1].message == (
+        want_message = (
             f"Program previously compiled for {device.target} using {prog.compile_info[1]}. "
             f"Validating program against the Xstrict compiler."
         )
+        assert infolog.records[-1].message == want_message

@@ -16,6 +16,8 @@ This module provides classes for interfacing with program execution jobs on a re
 """
 import enum
 
+import xcc
+
 from strawberryfields.logger import create_logger
 
 from .result import Result
@@ -65,19 +67,17 @@ class JobStatus(enum.Enum):
 class Job:
     """Represents a remote job that can be queried for its status or result.
 
-    This object should typically not be instantiated directly, but returned by an
-    :class:`strawberryfields.RemoteEngine` or :class:`strawberryfields.api.Connection`
-    when a job is run.
+    This object should typically not be instantiated directly, but returned by a
+    :class:`strawberryfields.RemoteEngine` when a job is run.
 
     Args:
         id_ (str): the job ID
         status (strawberryfields.api.JobStatus): the job status
-        connection (strawberryfields.api.Connection): the connection over which the
-            job is managed
+        connection (xcc.Connection): connection to the Xanadu Cloud
         meta (dict[str, str]): metadata related to job execution
     """
 
-    def __init__(self, id_: str, status: JobStatus, connection, meta: dict = None):
+    def __init__(self, id_: str, status: JobStatus, connection: xcc.Connection, meta: dict = None):
         self._id = id_
         self._status = status
         self._connection = connection
@@ -139,12 +139,16 @@ class Job:
         if self._status.is_final:
             self.log.warning("A %s job cannot be refreshed", self._status.value)
             return
-        job_info = self._connection.get_job(self.id)
-        self._status = JobStatus(job_info.status)
-        self._meta = job_info.meta
-        self.log.debug("Job %s metadata: %s", self.id, job_info.meta)
+
+        job = xcc.Job(id_=self.id, connection=self._connection)
+
+        self._status = JobStatus(job.status)
+        self._meta = job._details["meta"]
+
+        self.log.debug("Job %s metadata: %s", self.id, job.meta)
+
         if self._status == JobStatus.COMPLETED:
-            self._result = self._connection.get_job_result(self.id)
+            self._result = job.result
 
     def cancel(self):
         """Cancels an open or queued job.
@@ -155,7 +159,8 @@ class Job:
             raise InvalidJobOperationError(
                 "A {} job cannot be cancelled".format(self._status.value)
             )
-        self._connection.cancel_job(self.id)
+
+        xcc.Job(id_=self.id, connection=self._connection).cancel()
 
     def __repr__(self):
         return "<{}: id={}, status={}>".format(self.__class__.__name__, self.id, self._status.value)

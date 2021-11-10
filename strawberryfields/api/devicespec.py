@@ -19,6 +19,7 @@ from collections.abc import Sequence
 import re
 
 import blackbird
+import xcc
 from blackbird.error import BlackbirdSyntaxError
 
 import strawberryfields as sf
@@ -39,11 +40,10 @@ class DeviceSpec:
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
 
-        connection (strawberryfields.api.Connection): connection over which the
-            job is managed
+        connection (xcc.Connection): connection to the Xanadu Cloud
     """
 
-    def __init__(self, target, spec, connection):
+    def __init__(self, target, spec, connection: xcc.Connection):
         self._target = target
         self._connection = connection
         self._spec = spec
@@ -147,7 +147,7 @@ class DeviceSpec:
         **Example**
 
         Device specifications can be retrieved from the API by using the
-        :class:`~.Connection` class:
+        :class:`xcc.Device` and :class:`xcc.Connection` classes:
 
         >>> spec.create_program(squeezing_amplitude_0=0.43)
         <strawberryfields.program.Program at 0x7fd37e27ff50>
@@ -180,4 +180,5 @@ class DeviceSpec:
 
     def refresh(self):
         """Refreshes the device specifications"""
-        self._spec = self._connection._get_device_dict(self.target)
+        device = xcc.Device(target=self.target, connection=self._connection)
+        self._spec = device.specification

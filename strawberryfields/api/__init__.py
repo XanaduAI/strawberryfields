@@ -13,16 +13,13 @@
 # limitations under the License.
 """
 This package contains the modules for the low-level Strawberry Fields program
-execution API. The :class:`~strawberryfields.api.Connection` class mediates
-the network connection to, and exposes operations provided by, a remote program
-execution backend. The :class:`~strawberryfields.api.Job` and
+execution API. Specifically, the :class:`~strawberryfields.api.Job` and
 :class:`~strawberryfields.api.Result` classes provide interfaces for managing
 program execution jobs and job results respectively.
 """
 
-from .connection import Connection, RequestFailedError
 from .devicespec import DeviceSpec
 from .job import InvalidJobOperationError, Job, JobStatus
 from .result import Result
 
-__all__ = ["Connection", "DeviceSpec", "Job", "Result"]
+__all__ = ["DeviceSpec", "Job", "Result"]

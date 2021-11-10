@@ -16,8 +16,9 @@ Test fixtures and shared functions for strawberryfields.api tests
 """
 import pytest
 
+import xcc
+
 from strawberryfields import Program, ops
-from strawberryfields.api import Connection
 
 # pylint: disable=expression-not-assigned
 
@@ -34,9 +35,9 @@ def prog():
 
 
 @pytest.fixture
-def connection():
-    """A mock connection object."""
-    return Connection(token="token", host="host", port=123, use_ssl=True)
+def connection() -> xcc.Connection:
+    """A mock connection."""
+    return xcc.Connection(refresh_token="j.w.t", host="cloud.xanadu.ai", port=443, tls=True)
 
 
 def mock_return(return_value):

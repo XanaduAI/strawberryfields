@@ -22,18 +22,19 @@ with open("strawberryfields/_version.py") as f:
 
 
 requirements = [
+    "appdirs",
+    "networkx>=2.0",
+    "numba",
     "numpy>=1.17.4",
+    "python-dateutil>=2.8.0",
+    "quantum-blackbird>=0.3.0",
+    "requests>=2.22.0",
     "scipy>=1.0.0",
     "sympy>=1.5",
-    "networkx>=2.0",
-    "quantum-blackbird>=0.3.0",
-    "python-dateutil>=2.8.0",
     "thewalrus>=0.15.0",
-    "numba",
     "toml",
-    "appdirs",
-    "requests>=2.22.0",
     "urllib3>=1.25.3",
+    "xanadu-cloud-client",
 ]
 
 info = {
@@ -52,7 +53,6 @@ info = {
     "long_description_content_type": "text/x-rst",
     "provides": ["strawberryfields"],
     "install_requires": requirements,
-    # 'extras_require': extra_requirements,
     "command_options": {
         "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
     },
