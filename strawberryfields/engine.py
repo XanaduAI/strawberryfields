@@ -656,8 +656,8 @@ class RemoteEngine:
             while not job.finished:
                 if job.status == "failed":
                     message = (
-                        "The remote job {} failed due to an internal "
-                        "server error. Please try again. {}".format(job.id)
+                        f"The remote job {job.id} failed due to an internal "
+                        "server error. Please try again."
                     )
                     self.log.error(message)
 
@@ -669,7 +669,7 @@ class RemoteEngine:
             raise KeyboardInterrupt("The job has been cancelled.") from e
 
         if job.status == "complete":
-            self.log.info("The remote job %s has been completed.", job.id)
+            self.log.info(f"The remote job {job.id} has been completed.")
             return Result(samples=list(job.result.values())[0], is_stateful=False)
         else:
             message = f"The remote job {job.id} has failed with status {job.status}."
