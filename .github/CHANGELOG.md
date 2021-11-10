@@ -188,7 +188,7 @@
 * The `sf.configuration` module has been replaced with the
   [xcc.Settings](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Settings.html)
   class.
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#649)](https://github.com/XanaduAI/strawberryfields/pull/649)
 
   This means that Xanadu Cloud credentials are now stored in exactly one
   location, the path to which depends on your operating system:
