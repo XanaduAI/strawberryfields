@@ -21,8 +21,6 @@ import pytest
 from strawberryfields.api import DeviceSpec
 from strawberryfields.compilers import Ranges
 
-# pylints: disable=bad-continuation,no-self-use,pointless-statement
-
 pytestmark = pytest.mark.api
 
 mock_layout = inspect.cleandoc(
