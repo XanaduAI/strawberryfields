@@ -58,6 +58,7 @@ def job(connection, monkeypatch):
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
     monkeypatch.setattr(xcc.Job, "result", result)
+    monkeypatch.setattr(xcc.Job, "clear", lambda _: None)
     job._details = {"status": "open"}
     monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
