@@ -281,7 +281,7 @@ class BaseEngine(abc.ABC):
 
             prev = p
 
-        samples = {"output": [self.samples], **self.samples_dict}
+        samples = {"output": self.samples, **self.samples_dict}
         return Result(samples)
 
 

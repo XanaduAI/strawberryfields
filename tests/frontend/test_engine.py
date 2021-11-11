@@ -82,7 +82,7 @@ class TestEngineProgramInteraction:
             ops.MeasureFock() | q
 
         results = eng.run(prog)
-        assert results.samples.shape[0] == 1
+        assert len(results.samples) == 1
 
     def test_shots_run_options(self):
         """Test that run_options takes precedence over default"""
@@ -95,7 +95,7 @@ class TestEngineProgramInteraction:
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog)
-        assert results.samples.shape[0] == 5
+        assert len(results.samples) == 5
 
     def test_shots_passed(self):
         """Test that shots supplied via eng.run takes precedence over
@@ -109,7 +109,7 @@ class TestEngineProgramInteraction:
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog, shots=2)
-        assert results.samples.shape[0] == 2
+        assert len(results.samples) == 2
         assert prog.run_options["shots"] == 5
 
     def test_history(self, eng, prog):
@@ -229,7 +229,7 @@ class TestEngineProgramInteraction:
         # check that shape is (shots, measured_modes)
         assert result.samples.shape == (1, 4)
 
-        # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+        # check that MessureFock measures `0` while MeasureX does NOT measure `0`.
         correct_samples = [0, 0, 1, 0]
         assert [bool(i) for i in result.samples[0]] == correct_samples
 
@@ -248,7 +248,7 @@ class TestEngineProgramInteraction:
         # check that shape is (shots, measured_modes)
         assert result.samples.shape == (1, 3)
 
-        # check that MesureFock measures `0` while MeasureX does NOT measure `0`.
+        # check that MeasureFock measures `0` while MeasureX does NOT measure `0`.
         correct_samples = [0, 1, 0]
         assert [bool(i) for i in result.samples[0]] == correct_samples
 
