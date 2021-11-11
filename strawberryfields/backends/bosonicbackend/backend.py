@@ -158,8 +158,8 @@ class BosonicBackend(BaseBosonic):
                         for i, r in enumerate(cmd.reg):
                             # Internally also store all the measurement outcomes
                             if r.ind not in samples_dict:
-                                samples_dict[r.ind] = np.array([])
-                            samples_dict[r.ind] = np.append(samples_dict[r.ind], val[:, i])
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, i])
 
                     applied.append(cmd)
 
@@ -176,7 +176,7 @@ class BosonicBackend(BaseBosonic):
                             cmd.op, kwargs
                         )
                     ) from e
-
+        samples_dict = {k: np.array(v) for k, v in samples_dict.items()}
         return applied, samples_dict
 
     # pylint: disable=import-outside-toplevel

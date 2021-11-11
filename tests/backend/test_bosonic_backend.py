@@ -256,7 +256,7 @@ class TestBosonicCatStates:
 
             backend = bosonic.BosonicBackend()
             _, results = backend.run_prog(prog)
-            res0, res1 = results[0][0], results[1][0]
+            res0, res1 = results[0][0][0], results[1][0][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
 
@@ -341,7 +341,7 @@ class TestBosonicFockStates:
 
             backend = bosonic.BosonicBackend()
             _, results = backend.run_prog(prog)
-            res0 = results[0][0]
+            res0 = results[0][0][0]
             if n == 0:
                 assert res0 == 0
             else:
@@ -361,7 +361,7 @@ class TestBosonicFockStates:
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
             _, results = backend.run_prog(prog)
-            res0, res1 = results[0][0], results[1][0]
+            res0, res1 = results[0][0][0], results[1][0][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
     def test_g2_threshold(self):
@@ -377,7 +377,7 @@ class TestBosonicFockStates:
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
             _, results = backend.run_prog(prog)
-            res0, res1 = results[0][0], results[1][0]
+            res0, res1 = results[0][0][0], results[1][0][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
 
@@ -620,7 +620,7 @@ class TestBosonicPrograms:
         # Check samples
         for i in range(2):
             assert i in samples_dict.keys()
-            assert samples_dict[i].shape == (1,)
+            assert samples_dict[i].shape == (1, 1)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
@@ -641,7 +641,7 @@ class TestBosonicPrograms:
 
         # Check samples
         assert 0 in samples_dict.keys()
-        assert samples_dict[0].shape == (int(shots),)
+        assert samples_dict[0].shape == (1, int(shots))
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("r", R_VALS)

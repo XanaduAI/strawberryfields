@@ -380,6 +380,7 @@ class LocalEngine(BaseEngine):
                 ) from None
 
         samples = self._combine_and_sort_samples(samples_dict)
+        samples_dict = {k: np.array(v) for k, v in samples_dict.items()}
 
         return applied, samples, samples_dict
 
