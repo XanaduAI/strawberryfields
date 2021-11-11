@@ -255,7 +255,7 @@ class TestBosonicCatStates:
                 sf.ops.MeasureThreshold() | q[1]
 
             backend = bosonic.BosonicBackend()
-            _, _, results = backend.run_prog(prog)
+            _, results = backend.run_prog(prog)
             res0, res1 = results[0][0][0], results[1][0][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
@@ -340,7 +340,7 @@ class TestBosonicFockStates:
                 sf.ops.MeasureThreshold() | q[0]
 
             backend = bosonic.BosonicBackend()
-            _, _, results = backend.run_prog(prog)
+            _, results = backend.run_prog(prog)
             res0 = results[0][0][0]
             if n == 0:
                 assert res0 == 0
@@ -360,7 +360,7 @@ class TestBosonicFockStates:
 
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
-            _, _, results = backend.run_prog(prog)
+            _, results = backend.run_prog(prog)
             res0, res1 = results[0][0][0], results[1][0][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
@@ -376,7 +376,7 @@ class TestBosonicFockStates:
 
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
-            _, _, results = backend.run_prog(prog)
+            _, results = backend.run_prog(prog)
             res0, res1 = results[0][0][0], results[1][0][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
@@ -611,7 +611,7 @@ class TestBosonicPrograms:
             sf.ops.MeasureX | q[0]
             sf.ops.MeasureHD | q[1]
         backend = bosonic.BosonicBackend()
-        applied, samples, all_samples = backend.run_prog(prog)
+        applied, samples_dict = backend.run_prog(prog)
         state = backend.state()
 
         # Check output is vacuum since everything was measured
@@ -619,8 +619,8 @@ class TestBosonicPrograms:
 
         # Check samples
         for i in range(2):
-            assert i in samples.keys()
-            assert samples[i].shape == (1,)
+            assert i in samples_dict.keys()
+            assert samples_dict[i].shape == (1,)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
@@ -633,15 +633,15 @@ class TestBosonicPrograms:
             sf.ops.MeasureHomodyne(0) | q[0]
 
         backend = bosonic.BosonicBackend()
-        applied, samples, all_samples = backend.run_prog(prog, shots=shots)
+        applied, samples_dict = backend.run_prog(prog, shots=shots)
         state = backend.state()
 
         # Check output is vacuum since everything was measured
         assert np.allclose(state.fidelity_vacuum(), 1)
 
         # Check samples
-        assert 0 in samples.keys()
-        assert samples[0].shape == (int(shots),)
+        assert 0 in samples_dict.keys()
+        assert samples_dict[0].shape == (int(shots),)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("r", R_VALS)
@@ -653,13 +653,13 @@ class TestBosonicPrograms:
             sf.ops.MSgate(1, 0, 1, 1, avg=False) | q[1]
             sf.ops.MSgate(1, 0, 1, 1, avg=False) | q[1]
         backend = bosonic.BosonicBackend()
-        applied, samples, all_samples = backend.run_prog(prog)
+        applied, samples_dict = backend.run_prog(prog)
 
         # Check number of active modes did not change
         assert backend.get_modes() == [0, 1]
 
         # Check samples for the data modes are empty
-        assert samples == {}
+        assert samples_dict == {}
 
         # Check ancilla samples exist for the second mode
         ancilla_samples = backend.ancillae_samples_dict
