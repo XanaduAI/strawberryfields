@@ -96,7 +96,7 @@ class Result:
 
         Returns a dictionary which associates each mode (keys) with the list of
         measurements outcomes (values), including modes that are being measured
-        several times. For multiple shots or batched execution arrays and
+        several times. For multiple shots or batched execution, arrays and
         tensors are stored.
 
         Returns:
