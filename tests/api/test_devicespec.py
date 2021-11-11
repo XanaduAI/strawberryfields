@@ -15,7 +15,6 @@
 Unit tests for strawberryfields.api.devicespec
 """
 import inspect
-import regex as re
 
 import pytest
 
