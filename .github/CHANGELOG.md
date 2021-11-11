@@ -26,7 +26,7 @@
   state_out = eng.run(prog).state.ket()
   ```
 
-  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient 
+  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient
   descent directly (as the unitary would not be symplectic after the update). Please use the
   function `sf.backends.tfbackend.update_symplectic` which is designed specifically for this purpose.
 
@@ -186,6 +186,43 @@
   engine = sf.RemoteEngine("X8", connection=connection)
   ```
 
+* The `sf.api.Job` class has been replaced with the
+  [xcc.Job](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html)
+  class.
+  [(#645)](https://github.com/XanaduAI/strawberryfields/pull/645)
+
+  A `Job` object is returned when running jobs asynchronously. In previous versions of Strawberry
+  Fields (v0.19.0 and lower), the `Job` object can be used as follows:
+
+  ```pycon
+  >>> job = engine.run_async(program, shots=1)
+  >>> job.status
+  "queued"
+  >>> job.result
+  InvalidJobOperationError
+  >>> job.refresh()
+  >>> job.status
+  "complete"
+  >>> job.result
+  [[0 1 0 2 1 0 0 0]]
+  ```
+
+  In Strawberry Fields v0.20.0, the `Job` object works slightly differently:
+
+  ```pycon
+  >>> job = engine.run_async(program, shots=1)
+  >>> job.status
+  "queued"
+  >>> job.wait()
+  >>> job.status
+  "complete"
+  >>> job.result
+  {"output": [array([[0 1 0 2 1 0 0 0]])]}
+  ```
+
+  The `job.wait()` method is a blocking method that will wait for the job to finish. Alternatively,
+  `job.clear()` can be called to clear the cache allowing `job.status` to re-fetch the job status.
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
@@ -194,7 +231,8 @@
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov, Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Antal Száva, Yuan Yao.
+Mikhail Andrenkov, Sebastián Duque Mesa, Theodor Isacsson, Filippo Miatto, Nicolás Quesada, Antal
+Száva, Yuan Yao.
 
 # Release 0.19.0 (current release)
 
