@@ -21,7 +21,7 @@ import blackbird
 import xcc
 from blackbird.error import BlackbirdSyntaxError
 
-import strawberryfields as sf
+from strawberryfields.io import to_program
 from strawberryfields.compilers import Ranges
 
 
@@ -39,14 +39,8 @@ class DeviceSpec:
     """
 
     def __init__(self, spec: Mapping[str, Any]) -> None:
-        if not {"layout", "modes", "compiler", "gate_parameters"} <= spec.keys():
-            missing_keys = {
-                "target",
-                "layout",
-                "modes",
-                "compiler",
-                "gate_parameters",
-            } - spec.keys()
+        missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
+        if missing_keys:
             raise ValueError(
                 f"Device specification is missing the following keys: {sorted(missing_keys)}"
             )
@@ -110,6 +104,9 @@ class DeviceSpec:
 
         Gate parameters should be passed as keyword arguments, with names
         corresponding to those present in the Blackbird circuit layout.
+
+        Raises:
+            ValueError: if an invalid parameter is passed
         """
         # check that all provided parameters are valid
         for p, v in parameters.items():
@@ -161,7 +158,7 @@ class DeviceSpec:
 
         # evaluate the blackbird template
         bb = bb(**parameters)
-        prog = sf.io.to_program(bb)
+        prog = to_program(bb)
         prog.compile(compiler=self.default_compiler)
 
         return prog

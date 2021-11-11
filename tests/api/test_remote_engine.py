@@ -64,6 +64,7 @@ def device(connection, monkeypatch):
     """Mocks an X8 device with the "fock" compiler."""
     device = xcc.Device(target="X8_01", connection=connection)
     device.specification = {
+        "target": "X8_01",
         "layout": "",
         "modes": 8,
         "compiler": ["fock"],
@@ -252,7 +253,14 @@ class TestRemoteEngineIntegration:
         device.specification["compiler"] = []
 
         # Set compile_info to a fake device specification and compiler name.
-        X8_spec = DeviceSpec(target="FakeDevice", connection=None, spec=None)
+        dummy_spec = {
+            "target": "DummyDevice",
+            "modes": 2,
+            "layout": None,
+            "gate_parameters": None,
+            "compiler": [None],
+        }
+        X8_spec = DeviceSpec(spec=dummy_spec)
         prog._compile_info = (X8_spec, "fake_compiler")
 
         engine = sf.RemoteEngine("X8")
