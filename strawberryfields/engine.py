@@ -406,7 +406,7 @@ class LocalEngine(BaseEngine):
             samples_dict = {k: [convert_to_tensor(i) for i in v] for k, v in samples_dict.items()}
             return convert_to_tensor(samples), samples_dict
 
-        samples_dict = {k: np.array(v) for k, v in samples_dict.items()}
+        samples_dict = {k: [np.array(i) for i in v] for k, v in samples_dict.items()}
         return samples, samples_dict
 
     # pylint:disable=too-many-branches

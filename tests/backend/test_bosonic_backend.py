@@ -620,7 +620,7 @@ class TestBosonicPrograms:
         # Check samples
         for i in range(2):
             assert i in samples_dict.keys()
-            assert samples_dict[i].shape == (1, 1)
+            assert samples_dict[i][0].shape == (1,)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)
@@ -641,7 +641,7 @@ class TestBosonicPrograms:
 
         # Check samples
         assert 0 in samples_dict.keys()
-        assert samples_dict[0].shape == (1, int(shots))
+        assert samples_dict[0][0].shape == (int(shots),)
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("r", R_VALS)

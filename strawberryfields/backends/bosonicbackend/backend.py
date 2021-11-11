@@ -176,7 +176,6 @@ class BosonicBackend(BaseBosonic):
                             cmd.op, kwargs
                         )
                     ) from e
-        samples_dict = {k: np.array(v) for k, v in samples_dict.items()}
         return applied, samples_dict
 
     # pylint: disable=import-outside-toplevel
