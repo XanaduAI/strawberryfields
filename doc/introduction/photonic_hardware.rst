@@ -46,7 +46,7 @@ will execute.
 
 Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
 method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
-complete, this method instead returns a `xcc.Job` object directly that can be queried
+complete, this method instead returns a :class:`xcc.Job` object directly that can be queried
 to get the job's status.
 
 >>> job = engine.run_async(prog, shots=3)
@@ -61,7 +61,7 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
        [0, 0, 0, 0, 0, 0, 0, 0],
        [0, 0, 0, 0, 0, 0, 0, 2]])
 
-Further details on the `xcc.Job` class can be found in the
+Further details on the :class:`xcc.Job` class can be found in the
 `Xanadu Cloud Client documentation <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_.
 
 Alternatively, if you have your quantum program available as a Blackbird script,
