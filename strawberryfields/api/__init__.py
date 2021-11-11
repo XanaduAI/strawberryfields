@@ -15,7 +15,7 @@
 This package contains the modules for the low-level Strawberry Fields program
 execution API. Specifically, the :class:`~strawberryfields.api.Result` and
 :class:`~strawberryfields.api.DeviceSpec` classes are provided to represent
-hardware results and device specifications.
+hardware results and device specifications, respectively.
 """
 
 from .devicespec import DeviceSpec

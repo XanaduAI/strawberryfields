@@ -542,7 +542,7 @@ class RemoteEngine:
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
     "queued"
-    >>> job.clear()
+    >>> job.wait()
     >>> job.status
     "complete"
     >>> result = sf.api.Result(job.result)
@@ -672,7 +672,7 @@ class RemoteEngine:
             self.log.info(f"The remote job {job.id} has been completed.")
             return Result(samples=list(job.result.values())[0], is_stateful=False)
         else:
-            message = f"The remote job {job.id} has failed with status {job.status}."
+            message = f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
             self.log.info(message)
 
             raise FailedJobError(message)

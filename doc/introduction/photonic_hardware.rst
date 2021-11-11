@@ -52,7 +52,7 @@ to get the job's status.
 >>> job = engine.run_async(prog, shots=3)
 >>> job.status
 "queued"
->>> job.clear()
+>>> job.wait()
 >>> job.status
 "complete"
 >>> result = sf.api.Result(job.result)

@@ -58,7 +58,7 @@ def job(connection, monkeypatch):
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
     monkeypatch.setattr(xcc.Job, "result", result)
-    monkeypatch.setattr(xcc.Job, "_details", _details)
+    job._details = {"status": "open"}
     monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
 
@@ -128,8 +128,8 @@ class TestRemoteEngine:
         assert job.status == "open"
 
         for _ in range(REQUESTS_BEFORE_COMPLETED - 1):
-            assert job.finished == False
-        assert job.finished == True
+            assert job.finished is False
+        assert job.finished is True
 
         assert job.status == "complete"
         assert np.array_equal(job.result["foo"], [np.array([5, 6])])
