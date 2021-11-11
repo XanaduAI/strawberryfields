@@ -653,26 +653,36 @@ class RemoteEngine:
             program, compile_options=compile_options, recompile=recompile, **kwargs
         )
         try:
-            while not job.finished:
-                if job.status == "failed":
-                    message = (
-                        f"The remote job {job.id} failed due to an internal "
-                        "server error. Please try again."
-                    )
-                    self.log.error(message)
+            while True:
+                # TODO: needed to refresh connection; remove once xcc.Connection
+                # is able to refresh config info dynamically
+                job._connection = self.connection
+                job.clear()
 
-                    raise FailedJobError(message)
-
+                if job.finished:
+                    break
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
+
         except KeyboardInterrupt as e:
             xcc.Job(id_=job.id, connection=self.connection).cancel()
             raise KeyboardInterrupt("The job has been cancelled.") from e
 
-        if job.status == "complete":
+        if job.status == "failed":
+            message = (
+                f"The remote job {job.id} failed due to an internal "
+                "server error. Please try again."
+            )
+            self.log.error(message)
+            raise FailedJobError(message)
+
+        elif job.status == "complete":
             self.log.info(f"The remote job {job.id} has been completed.")
             return Result(samples=list(job.result.values())[0], is_stateful=False)
+
         else:
-            message = f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
+            message = (
+                f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
+            )
             self.log.info(message)
 
             raise FailedJobError(message)
