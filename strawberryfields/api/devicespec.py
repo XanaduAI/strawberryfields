@@ -32,7 +32,7 @@ class DeviceSpec:
         spec (dict): dictionary representing the raw device specification.
             This dictionary must contain the following key-value pairs:
 
-            - layout (str): string containing the Blackbird or XIR circuit layout
+            - layout (str): string containing the Blackbird circuit layout or XIR manifest
             - modes (int): number of modes supported by the target
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
