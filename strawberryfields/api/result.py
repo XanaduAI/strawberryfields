@@ -18,6 +18,7 @@ This module provides a class that represents the result of a quantum computation
 import warnings
 import numpy as np
 
+
 class Result:
     """Result of a quantum computation.
 
@@ -100,7 +101,9 @@ class Result:
         Raises:
             AttributeError: if samples dictionary is access for a stateless computation
         """
-        samples_dict = {key: np.array(val) for key, val in self._result.items() if isinstance(key, int)}
+        samples_dict = {
+            key: np.array(val) for key, val in self._result.items() if isinstance(key, int)
+        }
         return samples_dict
 
     @property

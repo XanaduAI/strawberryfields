@@ -256,7 +256,7 @@ class TestBosonicCatStates:
 
             backend = bosonic.BosonicBackend()
             _, results = backend.run_prog(prog)
-            res0, res1 = results[0][0][0], results[1][0][0]
+            res0, res1 = results[0][0], results[1][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
 
@@ -341,7 +341,7 @@ class TestBosonicFockStates:
 
             backend = bosonic.BosonicBackend()
             _, results = backend.run_prog(prog)
-            res0 = results[0][0][0]
+            res0 = results[0][0]
             if n == 0:
                 assert res0 == 0
             else:
@@ -361,7 +361,7 @@ class TestBosonicFockStates:
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
             _, results = backend.run_prog(prog)
-            res0, res1 = results[0][0][0], results[1][0][0]
+            res0, res1 = results[0][0], results[1][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
     def test_g2_threshold(self):
@@ -377,7 +377,7 @@ class TestBosonicFockStates:
             backend = bosonic.BosonicBackend()
             results = backend.run_prog(prog)
             _, results = backend.run_prog(prog)
-            res0, res1 = results[0][0][0], results[1][0][0]
+            res0, res1 = results[0][0], results[1][0]
             assert ([res0, res1] == [0, 1]) or ([res0, res1] == [1, 0])
 
 
