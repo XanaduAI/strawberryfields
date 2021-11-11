@@ -25,15 +25,6 @@ pytestmark = pytest.mark.api
 class TestResult:
     """Tests for the ``Result`` class."""
 
-    def test_stateless_result_raises_on_state_access(self):
-        """Tests that `result.state` raises an error for a stateless result."""
-        result = Result({"samples": np.array([[1, 2], [3, 4]])})
-
-        with pytest.raises(
-            AttributeError, match="The state is undefined for a stateless computation."
-        ):
-            result.state
-
     def test_stateless_print(self, capfd):
         """Test that printing a result object with no state provides the correct output."""
         result = Result({"samples": np.array([[1, 2], [3, 4], [5, 6]])})

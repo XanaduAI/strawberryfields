@@ -16,7 +16,11 @@ This module provides a class that represents the result of a quantum computation
 """
 
 import warnings
+from typing import Mapping, Optional
+
 import numpy as np
+
+from strawberryfields.backends import BaseState
 
 
 class Result:
@@ -64,13 +68,17 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, result, ancilla_samples=None):
+    def __init__(
+        self,
+        result: Mapping,
+        ancilla_samples: Mapping = None
+    ) -> None:
         self._state = None
         self._result = result
         self._ancilla_samples = ancilla_samples
 
     @property
-    def samples(self):
+    def samples(self) -> np.ndarray:
         """Measurement samples.
 
         Returned measurement samples will have shape ``(shots, modes)``.
@@ -84,10 +92,10 @@ class Result:
                 f"Result dictionary has {len(self._result)} entries; "
                 "returning only the primary entry."
             )
-        return np.array(list(self._result.values())[0])
+        return list(self._result.values())[0]
 
     @property
-    def samples_dict(self):
+    def samples_dict(self) -> Mapping:
         """All measurement samples as a dictionary. Only available on simulators.
 
         Returns a dictionary which associates each mode (keys) with the list of
@@ -97,17 +105,14 @@ class Result:
 
         Returns:
             dict[int, list]: mode index associated with the list of measurement outcomes
-
-        Raises:
-            AttributeError: if samples dictionary is access for a stateless computation
         """
         samples_dict = {
-            key: np.array(val) for key, val in self._result.items() if isinstance(key, int)
+            key: val for key, val in self._result.items() if isinstance(key, int)
         }
         return samples_dict
 
     @property
-    def ancilla_samples(self):
+    def ancilla_samples(self) -> Optional[Mapping]:
         """All measurement samples from ancillary modes used for measurement-based
         gates.
 
@@ -122,7 +127,7 @@ class Result:
         return self._ancilla_samples
 
     @property
-    def state(self):
+    def state(self) -> Optional[BaseState]:
         """The quantum state object.
 
         The quantum state object contains details and methods
@@ -140,15 +145,10 @@ class Result:
 
         Returns:
             BaseState: quantum state returned from program execution
-
-        Raises:
-            AttributeError: if samples dictionary is access for a stateless computation
         """
-        if self._state is None:
-            raise AttributeError("The state is undefined for a stateless computation.")
         return self._state
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation."""
         if self.samples.ndim == 2:
             # if samples has dim 2, assume they're from a standard Program

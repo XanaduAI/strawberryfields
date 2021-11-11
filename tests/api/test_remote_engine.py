@@ -111,9 +111,7 @@ class TestRemoteEngine:
         assert result is not None
         assert np.array_equal(result.samples, [[1, 2], [3, 4]])
 
-        match = r"The state is undefined for a stateless computation."
-        with pytest.raises(AttributeError, match=match):
-            _ = result.state
+        result.state is None
 
     def test_run_async(self, prog):
         """Tests that a non-blocking job execution can succeed."""
@@ -129,9 +127,7 @@ class TestRemoteEngine:
         assert job.meta == {"foo": "bar"}
         assert np.array_equal(job.result.samples, [[1, 2], [3, 4]])
 
-        match = r"The state is undefined for a stateless computation."
-        with pytest.raises(AttributeError, match=match):
-            _ = job.result.state
+        job.result.state is None
 
     def test_run_async_options_from_kwargs(self, prog, blackbird):
         """Tests that :meth:`RemoteEngine.run_async` passes all keyword

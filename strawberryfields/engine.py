@@ -379,9 +379,8 @@ class LocalEngine(BaseEngine):
                     )
                 ) from None
 
-        samples = self._combine_and_sort_samples(samples_dict)
-        samples_dict = {k: np.array(v) for k, v in samples_dict.items()}
-
+        # combine the samples sorted by mode, and cast correctly to array or tensor
+        samples, samples_dict = self._combine_and_sort_samples(samples_dict)
         return applied, samples, samples_dict
 
     def _combine_and_sort_samples(self, samples_dict):
@@ -389,10 +388,11 @@ class LocalEngine(BaseEngine):
         batches = self.backend_options.get("batch_size", 0)
 
         if not samples_dict:
-            return np.empty((0, 0))
+            return np.empty((0, 0)), samples_dict
 
-        samples_dict = {key: val[-1] for key, val in samples_dict.items()}
-        samples = np.transpose([i for _, i in sorted(samples_dict.items())])
+
+        single_sample_dict = {key: val[-1] for key, val in samples_dict.items()}
+        samples = np.transpose([i for _, i in sorted(single_sample_dict.items())])
 
         # pylint: disable=import-outside-toplevel
         if self.backend_name == "tf":
@@ -400,13 +400,15 @@ class LocalEngine(BaseEngine):
 
             if batches:
                 samples = [
-                    np.transpose([i[b] for _, i in sorted(samples_dict.items())])
+                    np.transpose([i[b] for _, i in sorted(single_sample_dict.items())])
                     for b in range(batches)
                 ]
 
-            return convert_to_tensor(samples)
+            samples_dict = {k: [convert_to_tensor(i) for i in v] for k, v in samples_dict.items()}
+            return convert_to_tensor(samples), samples_dict
 
-        return samples
+        samples_dict = {k: np.array(v) for k, v in samples_dict.items()}
+        return samples, samples_dict
 
     # pylint:disable=too-many-branches
     def run(self, program, *, args=None, compile_options=None, **kwargs):
@@ -798,5 +800,5 @@ class BosonicEngine(LocalEngine):
     def _run_program(self, prog, **kwargs):
         # Custom Bosonic run code
         applied, samples_dict = self.backend.run_prog(prog, **kwargs)
-        samples = self._combine_and_sort_samples(samples_dict)
+        samples, samples_dict = self._combine_and_sort_samples(samples_dict)
         return applied, samples, samples_dict
