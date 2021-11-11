@@ -27,7 +27,7 @@ class TestResult:
 
     def test_stateless_print(self, capfd):
         """Test that printing a result object with no state provides the correct output."""
-        result = Result({"samples": np.array([[1, 2], [3, 4], [5, 6]])})
+        result = Result({"output": [np.array([[1, 2], [3, 4], [5, 6]])]})
         print(result)
         out, err = capfd.readouterr()
         assert "modes=2" in out
@@ -36,7 +36,7 @@ class TestResult:
 
     def test_state_print(self, capfd):
         """Test that printing a result object with a state provides the correct output."""
-        result = Result({"samples": np.array([[1, 2], [3, 4], [5, 6]])})
+        result = Result({"output": [np.array([[1, 2], [3, 4], [5, 6]])]})
         result._state = [[1, 2], [3, 4]]
         print(result)
         out, err = capfd.readouterr()
@@ -47,7 +47,7 @@ class TestResult:
     def test_tdm_print(self, capfd):
         """Test that printing a result object with TDM samples provides the correct output."""
         samples = np.ones((2, 3, 4))
-        result = Result({"samples": samples})
+        result = Result({"output": [samples]})
         print(result)
         out, err = capfd.readouterr()
         assert "spatial_modes=3" in out
@@ -59,7 +59,7 @@ class TestResult:
         """Test that printing a result object with samples with an unknown shape
         provides the correct output."""
         samples = np.ones((2, 3, 4, 5))
-        result = Result({"samples": samples})
+        result = Result({"output": [samples]})
         print(result)
         out, err = capfd.readouterr()
         assert "modes" not in out

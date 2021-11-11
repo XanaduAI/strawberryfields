@@ -50,7 +50,7 @@ def job(connection, monkeypatch):
     job = xcc.Job(id_="123", connection=connection)
     job._details = {"status": "open"}
 
-    result = Result({"output": np.array([[1, 2], [3, 4]])})
+    result = Result({"output": [np.array([[1, 2], [3, 4]])]})
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
     monkeypatch.setattr(sf.engine.Job, "refresh", refresh)

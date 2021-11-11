@@ -281,7 +281,7 @@ class BaseEngine(abc.ABC):
 
             prev = p
 
-        samples = {"output": self.samples, **self.samples_dict}
+        samples = {"output": [self.samples], **self.samples_dict}
         return Result(samples)
 
 
@@ -503,7 +503,7 @@ class LocalEngine(BaseEngine):
                 )
                 # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
                 result._result = {
-                    "samples": np.array(list(samples_dict.values())).transpose(1, 0, 2)
+                    "output": [np.array(list(samples_dict.values())).transpose(1, 0, 2)]
                 }
                 result._result.update(samples_dict)
             if received_rolled_circuit:

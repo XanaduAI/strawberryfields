@@ -74,7 +74,7 @@ class Result:
         self._ancilla_samples = ancilla_samples
 
     @property
-    def samples(self) -> np.ndarray:
+    def samples(self) -> Optional[np.ndarray]:
         """Measurement samples.
 
         Returned measurement samples will have shape ``(shots, modes)``.
@@ -83,12 +83,12 @@ class Result:
             array[array[float, int]]: measurement samples returned from
             program execution
         """
-        if len(self._result) > 1:
+        if len(self._result["output"]) > 1:
             warnings.warn(
                 f"Result dictionary has {len(self._result)} entries; "
-                "returning only the primary entry."
+                "returning only the 'output' entry."
             )
-        return list(self._result.values())[0]
+        return self._result.get("output", [None])[0]
 
     @property
     def samples_dict(self) -> Mapping:
