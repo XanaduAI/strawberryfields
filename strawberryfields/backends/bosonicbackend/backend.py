@@ -123,7 +123,6 @@ class BosonicBackend(BaseBosonic):
         # TODO: Deal with Preparation classes in the middle of a circuit.
         applied = []
         samples_dict = {}
-        all_samples = {}
 
         non_gauss_preps = (
             Bosonic,
@@ -157,12 +156,10 @@ class BosonicBackend(BaseBosonic):
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val[:, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = []
-                            all_samples[r.ind].append(val[:, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, i])
 
                     applied.append(cmd)
 
@@ -180,7 +177,7 @@ class BosonicBackend(BaseBosonic):
                         )
                     ) from e
 
-        return applied, samples_dict, all_samples
+        return applied, samples_dict
 
     # pylint: disable=import-outside-toplevel
     def init_circuit(self, prog):

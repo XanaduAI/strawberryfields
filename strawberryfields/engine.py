@@ -60,7 +60,6 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
-        self.all_samples = None
 
         if isinstance(backend, str):
             self.backend_name = backend
@@ -128,7 +127,6 @@ class BaseEngine(abc.ABC):
             p._clear_regrefs()
         self.run_progs.clear()
         self.samples = None
-        self.all_samples = None
 
     def print_applied(self, print_fn=print):
         """Print all the Programs run since the backend was initialized.
@@ -278,12 +276,14 @@ class BaseEngine(abc.ABC):
                 p = p.compile(compiler=target, **compile_options)
             p.lock()
 
-            _, self.samples, self.all_samples = self._run_program(p, **kwargs)
+            _, self.samples, self.samples_dict = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
             prev = p
 
-        return Result(self.samples, all_samples=self.all_samples)
+        samples = {"samples": self.samples}
+        samples.update(self.samples_dict)
+        return Result(samples)
 
 
 class LocalEngine(BaseEngine):
@@ -344,7 +344,6 @@ class LocalEngine(BaseEngine):
     def _run_program(self, prog, **kwargs):
         applied = []
         samples_dict = {}
-        all_samples = {}
         batches = self.backend_options.get("batch_size", 0)
 
         for cmd in prog.circuit:
@@ -354,19 +353,15 @@ class LocalEngine(BaseEngine):
                 if val is not None:
                     for i, r in enumerate(cmd.reg):
                         if batches:
-                            samples_dict[r.ind] = val[:, :, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = []
-                            all_samples[r.ind].append(val[:, :, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, :, i])
                         else:
-                            samples_dict[r.ind] = val[:, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = []
-                            all_samples[r.ind].append(val[:, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, i])
 
                 applied.append(cmd)
 
@@ -386,7 +381,7 @@ class LocalEngine(BaseEngine):
 
         samples = self._combine_and_sort_samples(samples_dict)
 
-        return applied, samples, all_samples
+        return applied, samples, samples_dict
 
     def _combine_and_sort_samples(self, samples_dict):
         """Helper function to combine the values in the samples dictionary sorted by its keys."""
@@ -395,6 +390,7 @@ class LocalEngine(BaseEngine):
         if not samples_dict:
             return np.empty((0, 0))
 
+        samples_dict = {key: val[-1] for key, val in samples_dict.items()}
         samples = np.transpose([i for _, i in sorted(samples_dict.items())])
 
         # pylint: disable=import-outside-toplevel
@@ -500,12 +496,15 @@ class LocalEngine(BaseEngine):
         )
 
         if isinstance(program, TDMProgram):
-            if isinstance(result.all_samples, dict) and len(result.all_samples) > 0:
-                result._all_samples = reshape_samples(
-                    result.all_samples, program.measured_modes, program.N, program.timebins
+            if isinstance(result.samples_dict, dict) and len(result.samples_dict) > 0:
+                samples_dict = reshape_samples(
+                    result.samples_dict, program.measured_modes, program.N, program.timebins
                 )
                 # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
-                result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
+                result._result = {
+                    "samples": np.array(list(samples_dict.values())).transpose(1, 0, 2)
+                }
+                result._result.update(samples_dict)
             if received_rolled_circuit:
                 # if the tdm circuit is received in a rolled state, and unrolled
                 # for execution, roll it back again
@@ -797,6 +796,6 @@ class BosonicEngine(LocalEngine):
 
     def _run_program(self, prog, **kwargs):
         # Custom Bosonic run code
-        applied, samples_dict, all_samples = self.backend.run_prog(prog, **kwargs)
+        applied, samples_dict = self.backend.run_prog(prog, **kwargs)
         samples = self._combine_and_sort_samples(samples_dict)
-        return applied, samples, all_samples
+        return applied, samples, samples_dict

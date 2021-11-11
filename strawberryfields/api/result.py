@@ -15,6 +15,8 @@
 This module provides a class that represents the result of a quantum computation.
 """
 
+import warnings
+import numpy as np
 
 class Result:
     """Result of a quantum computation.
@@ -61,11 +63,9 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, samples, all_samples=None, is_stateful=True, ancilla_samples=None):
+    def __init__(self, result, ancilla_samples=None):
         self._state = None
-        self._is_stateful = is_stateful
-        self._samples = samples
-        self._all_samples = all_samples
+        self._result = result
         self._ancilla_samples = ancilla_samples
 
     @property
@@ -78,21 +78,30 @@ class Result:
             array[array[float, int]]: measurement samples returned from
             program execution
         """
-        return self._samples
+        if len(self._result) > 1:
+            warnings.warn(
+                f"Result dictionary has {len(self._result)} entries; "
+                "returning only the primary entry."
+            )
+        return np.array(list(self._result.values())[0])
 
     @property
-    def all_samples(self):
-        """All measurement samples.
+    def samples_dict(self):
+        """All measurement samples as a dictionary. Only available on simulators.
 
-        Returns a dictionary which associates each mode (keys) with the
-        list of measurements outcomes (values). For multiple shots or
-        batched execution arrays and tensors are stored.
+        Returns a dictionary which associates each mode (keys) with the list of
+        measurements outcomes (values), including modes that are being measured
+        several times. For multiple shots or batched execution arrays and
+        tensors are stored.
 
         Returns:
-            dict[int, list]: mode index associated with the list of
-            measurement outcomes
+            dict[int, list]: mode index associated with the list of measurement outcomes
+
+        Raises:
+            AttributeError: if samples dictionary is access for a stateless computation
         """
-        return self._all_samples
+        samples_dict = {key: np.array(val) for key, val in self._result.items() if isinstance(key, int)}
+        return samples_dict
 
     @property
     def ancilla_samples(self):
@@ -128,8 +137,11 @@ class Result:
 
         Returns:
             BaseState: quantum state returned from program execution
+
+        Raises:
+            AttributeError: if samples dictionary is access for a stateless computation
         """
-        if not self._is_stateful:
+        if self._state is None:
             raise AttributeError("The state is undefined for a stateless computation.")
         return self._state
 
@@ -145,18 +157,18 @@ class Result:
                     ancilla_modes += len(self.ancilla_samples[i])
                 return (
                     f"<Result: shots={shots}, num_modes={modes}, num_ancillae={ancilla_modes}, "
-                    f"contains state={self._is_stateful}>"
+                    f"contains state={self._state is not None}>"
                 )
 
             return "<Result: shots={}, num_modes={}, contains state={}>".format(
-                shots, modes, self._is_stateful
+                shots, modes, self._state is not None
             )
 
         if self.samples.ndim == 3:
             # if samples has dim 3, assume they're TDM
             shots, modes, timebins = self.samples.shape
             return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
-                shots, modes, timebins, self._is_stateful
+                shots, modes, timebins, self._state is not None
             )
 
-        return "<Result: contains state={}>".format(self._is_stateful)
+        return "<Result: contains state={}>".format(self._state is not None)
