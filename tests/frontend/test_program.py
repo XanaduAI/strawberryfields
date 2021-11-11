@@ -211,9 +211,9 @@ class TestProgram:
         device_dict = {
             "target": "abc",
             "modes": 2,
-            "layout": None,
-            "gate_parameters": None,
-            "compiler": [None],
+            "layout": "",
+            "gate_parameters": {},
+            "compiler": ["DummyCompiler"],
         }
         spec = sf.api.DeviceSpec(spec=device_dict)
 
@@ -246,9 +246,9 @@ class TestProgram:
         device_dict = {
             "target": "simulon_gaussian",
             "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
-            "layout": None,
+            "layout": "",
             "gate_parameters": {},
-            "compiler": [None],
+            "compiler": ["gaussian"],
         }
         spec = sf.api.DeviceSpec(spec=device_dict)
 
@@ -266,9 +266,9 @@ class TestProgram:
         device_dict = {
             "target": "simulon_gaussian",
             "modes": 2,
-            "layout": None,
-            "gate_parameters": None,
-            "compiler": [None],
+            "layout": "",
+            "gate_parameters": {},
+            "compiler": ["gaussian"],
         }
         spec = sf.api.DeviceSpec(spec=device_dict)
 
@@ -521,9 +521,9 @@ class TestValidation:
         device_dict = {
             "target": "simulon_gaussian",
             "modes": 2,
-            "layout": None,
-            "gate_parameters": None,
-            "compiler": [None],
+            "layout": "",
+            "gate_parameters": {},
+            "compiler": ["gaussian"],
         }
         spec = sf.api.DeviceSpec(spec=device_dict)
 
@@ -566,9 +566,9 @@ class TestValidation:
         device_dict = {
             "target": "simulon_gaussian",
             "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
-            "layout": None,
+            "layout": "",
             "gate_parameters": {},
-            "compiler": [None],
+            "compiler": ["gaussian"],
         }
         spec = sf.api.DeviceSpec(spec=device_dict)
 
@@ -579,27 +579,6 @@ class TestValidation:
 
         with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
             prog.compile(device=spec, compiler=DummyCompiler())
-
-    def test_no_default_compiler(self):
-        """Test that an exception is raised if the DeviceSpec has no compilers
-        specified (and thus no default compiler)"""
-
-        device_dict = {
-            "target": "dummy_target",
-            "modes": 3,
-            "layout": None,
-            "gate_parameters": None,
-            "compiler": [None],
-        }
-        spec = sf.api.DeviceSpec(spec=device_dict)
-
-        prog = sf.Program(3)
-        with prog.context as q:
-            ops.S2gate(0.6) | [q[0], q[1]]
-            ops.S2gate(0.6) | [q[1], q[2]]
-
-        with pytest.raises(program.CircuitError, match="does not specify a compiler."):
-            new_prog = prog.compile(device=spec)
 
     def test_run_optimizations(self):
         """Test that circuit is optimized when optimize is True"""
@@ -614,9 +593,9 @@ class TestValidation:
         device_dict = {
             "target": "dummy_target",
             "modes": 3,
-            "layout": None,
-            "gate_parameters": None,
-            "compiler": [None],
+            "layout": "",
+            "gate_parameters": {},
+            "compiler": ["gaussian"],
         }
         spec = sf.api.DeviceSpec(spec=device_dict)
 
@@ -646,7 +625,7 @@ class TestValidation:
             "target": None,
             "layout": mock_layout,
             "modes": 2,
-            "compiler": [],
+            "compiler": ["DummyCompiler"],
             "gate_parameters": {
                 "squeezing_amplitude_0": [0, 1],
             },

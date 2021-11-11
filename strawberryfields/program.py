@@ -627,15 +627,7 @@ class Program:
 
             if compiler is None:
                 # get the default compiler from the device spec
-                compiler_name = device.default_compiler
-
-                if compiler_name is not None:
-                    compiler = compiler_db[device.default_compiler]()
-                else:
-                    raise CircuitError(
-                        f"The device '{target}' does not specify a compiler. A compiler "
-                        "must be manually provided when calling Program.compile()."
-                    )
+                compiler = compiler_db[device.default_compiler]()
             else:
                 compiler = _get_compiler(compiler)
 
