@@ -52,7 +52,7 @@ extensions = [
 
 intersphinx_mapping = {
     "photonics": ("https://strawberryfields.ai/photonics", None),
-    "xanadu-cloud-client": ("https://xanadu-cloud-client.readthedocs.io/", None)
+    "xcc": ("https://xanadu-cloud-client.readthedocs.io/", None)
 }
 
 source_suffix = ['.rst', '.md']
