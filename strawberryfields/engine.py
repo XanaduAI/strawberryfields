@@ -390,7 +390,6 @@ class LocalEngine(BaseEngine):
         if not samples_dict:
             return np.empty((0, 0)), samples_dict
 
-
         single_sample_dict = {key: val[-1] for key, val in samples_dict.items()}
         samples = np.transpose([i for _, i in sorted(single_sample_dict.items())])
 

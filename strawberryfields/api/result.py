@@ -68,11 +68,7 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(
-        self,
-        result: Mapping,
-        ancilla_samples: Mapping = None
-    ) -> None:
+    def __init__(self, result: Mapping, ancilla_samples: Mapping = None) -> None:
         self._state = None
         self._result = result
         self._ancilla_samples = ancilla_samples
@@ -106,9 +102,7 @@ class Result:
         Returns:
             dict[int, list]: mode index associated with the list of measurement outcomes
         """
-        samples_dict = {
-            key: val for key, val in self._result.items() if isinstance(key, int)
-        }
+        samples_dict = {key: val for key, val in self._result.items() if isinstance(key, int)}
         return samples_dict
 
     @property
