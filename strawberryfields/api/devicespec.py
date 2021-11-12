@@ -15,62 +15,61 @@
 This module contains a class that represents the specifications of
 a device available via the API.
 """
-from collections.abc import Sequence
-import re
+from typing import Sequence, Mapping, Any
 
 import blackbird
 import xcc
 from blackbird.error import BlackbirdSyntaxError
 
-import strawberryfields as sf
+from strawberryfields.io import to_program
 from strawberryfields.compilers import Ranges
-from strawberryfields.tdm.tdmprogram import TDMProgram
 
 
 class DeviceSpec:
     """The specifications for a specific remote device.
 
     Args:
-        target (str): name of the target remote device
         spec (dict): dictionary representing the raw device specification.
-            This dictionary should contain the following key-value pairs:
+            This dictionary must contain the following key-value pairs:
 
-            - layout (str): string containing the Blackbird circuit layout
+            - layout (str): string containing the Blackbird circuit layout or XIR manifest
             - modes (int): number of modes supported by the target
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
-
-        connection (xcc.Connection): connection to the Xanadu Cloud
     """
 
-    def __init__(self, target, spec, connection: xcc.Connection):
-        self._target = target
-        self._connection = connection
+    def __init__(self, spec: Mapping[str, Any]) -> None:
+        missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
+        if missing_keys:
+            raise ValueError(
+                f"Device specification is missing the following keys: {sorted(missing_keys)}"
+            )
+
         self._spec = spec
 
     @property
-    def target(self):
+    def target(self) -> str:
         """str: The name of the target hardware device."""
-        return self._target
+        return self._spec["target"]
 
     @property
-    def layout(self):
+    def layout(self) -> str:
         """str: Returns a string containing the Blackbird circuit layout."""
         return self._spec["layout"]
 
     @property
-    def modes(self):
+    def modes(self) -> int:
         """int: Number of modes supported by the device."""
         return self._spec["modes"]
 
     @property
-    def compiler(self):
+    def compiler(self) -> Sequence[str]:
         """list[str]: A list of strings corresponding to Strawberry Fields compilers supported
         by the hardware device."""
         return self._spec["compiler"]
 
     @property
-    def default_compiler(self):
+    def default_compiler(self) -> str:
         """sf.compilers.Compiler: Specified default compiler"""
         if self.compiler:
             return self.compiler[0]
@@ -80,7 +79,7 @@ class DeviceSpec:
         return "Xunitary"
 
     @property
-    def gate_parameters(self):
+    def gate_parameters(self) -> Mapping[str, Ranges]:
         """dict[str, strawberryfields.compilers.Ranges]: A dictionary of gate parameters
         and allowed ranges.
 
@@ -100,29 +99,14 @@ class DeviceSpec:
 
         return gate_parameters
 
-    def layout_is_formatted(self):
-        """bool: Whether the device layout is formatted or not."""
-        p = re.compile(r"{{\w*}}")
-        return not bool(p.search(self.layout))
-
-    def fill_template(self, program):
-        """Fill template with parameter values from a program"""
-        if self.layout_is_formatted():
-            return
-
-        if isinstance(program, TDMProgram):
-            self._spec["layout"] = self._spec["layout"].format(
-                target=self.target, tm=program.timebins
-            )
-        else:
-            # TODO: update when `self._spec["layout"]` is returned as an unformatted string
-            raise NotImplementedError("Formatting not required or supported for non-TDM programs.")
-
-    def validate_parameters(self, **parameters):
+    def validate_parameters(self, **parameters: complex) -> None:
         """Validate gate parameters against the device spec.
 
         Gate parameters should be passed as keyword arguments, with names
         corresponding to those present in the Blackbird circuit layout.
+
+        Raises:
+            ValueError: if an invalid parameter is passed
         """
         # check that all provided parameters are valid
         for p, v in parameters.items():
@@ -136,9 +120,9 @@ class DeviceSpec:
             if p not in self.gate_parameters:
                 raise ValueError(f"Parameter {p} not a valid parameter for this device")
 
-    def create_program(self, **parameters):
-        """Create a Strawberry Fields program matching the low-level layout of the
-        device.
+    def create_program(self, **parameters: complex):
+        """Create a Strawberry Fields program matching the low-level Blackbird
+        layout of the device.
 
         Gate arguments should be passed as keyword arguments, with names
         correspond to those present in the Blackbird circuit layout. Parameters not
@@ -174,11 +158,7 @@ class DeviceSpec:
 
         # evaluate the blackbird template
         bb = bb(**parameters)
-        prog = sf.io.to_program(bb)
-        prog._compile_info = (self, self.default_compiler)
-        return prog
+        prog = to_program(bb)
+        prog.compile(compiler=self.default_compiler)
 
-    def refresh(self):
-        """Refreshes the device specifications"""
-        device = xcc.Device(target=self.target, connection=self._connection)
-        self._spec = device.specification
+        return prog
