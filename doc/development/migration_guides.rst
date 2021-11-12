@@ -106,8 +106,9 @@ In Strawberry Fields v0.19.0 this could look as follows:
 Result
 ^^^^^^
 
-When running local or remote jobs, a ``strawberryfields.api.Result`` object will be returned. This
-object will function slightly differently in Strawberry Fields v0.20.0.
+When running local or remote jobs, a ``strawberryfields.Result`` object will be returned. This
+object works slightly differently in Strawberry Fields v0.20.0, compared to the
+``strawberryfields.api.Result`` object in Strawberry Fields v0.19.0.
 
 While ``Result.samples`` should return the same type and shape as before, the ``Result.all_samples``
 property has been renamed to ``Result.samples_dict``. This property returns the samples as a
@@ -143,11 +144,10 @@ The (semantically) equivalent code in Strawberry Fields v0.20.0 is
 .. code-block:: python
 
     spec = {"target": "X8", "layout": "", "modes": 8, "gate_parameters": {}}
-    device_spec = sf.api.DeviceSpec(spec=spec)
+    device_spec = sf.DeviceSpec(spec=spec)
 
 .. note::
 
     The remote specification dictionary keys "target", "layout", "modes" and "gate_parameters" are
     mandatory in Strawberry Fields v0.20.0. If one or more are missing, a ``DeviceSpec`` object
     cannot be created.
-  

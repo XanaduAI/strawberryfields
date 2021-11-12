@@ -442,7 +442,7 @@ class TDMProgram(Program):
         Currently, the compilation is simply a check that the program matches the device.
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+            device (~strawberryfields.DeviceSpec): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by

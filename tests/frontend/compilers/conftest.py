@@ -13,11 +13,10 @@
 # limitations under the License.
 import inspect
 
-import pytest
 import numpy as np
 import networkx as nx
 
-from strawberryfields.api import DeviceSpec
+from strawberryfields.devicespec import DeviceSpec
 from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import list_to_DAG
 

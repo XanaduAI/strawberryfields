@@ -23,7 +23,8 @@ import pytest
 import xcc
 
 import strawberryfields as sf
-from strawberryfields.api import DeviceSpec, Result
+from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.result import Result
 from strawberryfields.engine import RemoteEngine
 
 from .conftest import mock_return

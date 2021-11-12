@@ -25,7 +25,8 @@ from typing import Any, Dict, Optional
 import numpy as np
 import xcc
 
-from strawberryfields.api import DeviceSpec, Result, FailedJobError
+from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.result import Result
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -37,6 +38,10 @@ from ._version import __version__
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]
+
+
+class FailedJobError(Exception):
+    """Raised when a job had a failure on the server side."""
 
 
 class BaseEngine(abc.ABC):
@@ -546,7 +551,7 @@ class RemoteEngine:
     >>> job.wait()
     >>> job.status
     "complete"
-    >>> result = sf.api.Result(job.result)
+    >>> result = sf.Result(job.result)
     >>> result.samples
     array([[0 1 0 2 1 0 0 0]])
 
@@ -643,7 +648,7 @@ class RemoteEngine:
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
-            strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
+            strawberryfields.Result, None: the job result if successful, and ``None`` otherwise
 
         Raises:
             requests.exceptions.RequestException: if there was an issue fetching
