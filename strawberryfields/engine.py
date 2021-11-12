@@ -617,7 +617,7 @@ class RemoteEngine:
             target = self.target
             connection = self.connection
             device = xcc.Device(target=target, connection=connection)
-            self._spec = DeviceSpec(target=target, connection=connection, spec=device.specification)
+            self._spec = DeviceSpec(spec=device.specification)
         return self._spec
 
     def run(
