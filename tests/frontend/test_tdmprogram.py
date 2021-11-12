@@ -700,7 +700,7 @@ class TestEngineTDMProgramInteraction:
             ops.MeasureHomodyne(p[1]) | q[0]
 
         results = eng.run(prog)
-        assert results.samples.shape[0] == 1
+        assert len(results.samples) == 1
 
     def test_shots_run_options(self):
         """Test that run_options takes precedence over default"""
@@ -713,7 +713,7 @@ class TestEngineTDMProgramInteraction:
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog)
-        assert results.samples.shape[0] == 5
+        assert len(results.samples) == 5
 
     def test_shots_passed(self):
         """Test that shots supplied via eng.run takes precedence over
@@ -727,7 +727,7 @@ class TestEngineTDMProgramInteraction:
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog, shots=2)
-        assert results.samples.shape[0] == 2
+        assert len(results.samples) == 2
         assert prog.run_options["shots"] == 5
 
     def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):

@@ -223,6 +223,30 @@
   The `job.wait()` method is a blocking method that will wait for the job to finish. Alternatively,
   `job.clear()` can be called to clear the cache, allowing `job.status` to re-fetch the job status.
 
+* The `sf.api.Result` class has been updated to support the Xanadu Cloud Client integration.
+  [(#651)](https://github.com/XanaduAI/strawberryfields/pull/651)
+
+  While `Result.samples` should return the same type and shape as before, the `Result.all_samples`
+  property has been renamed to `Result.samples_dict` and returns the samples as a dictionary with
+  corresponding measured modes as keys.
+
+  ```pycon
+  >>> res = eng.run(prog, shots=3)
+  >>> res.samples
+  array([[1, 0], [0, 1], [1, 1]])
+  >>> res.samples_dict
+  {0: [np.array([1, 0, 1])], 1: [np.array([0, 1, 1])]}
+  ```
+
+  The samples dictionary is only accessible for simulators.
+
+* The `sf.api.DeviceSpec` class has been updated to support the Xanadu Cloud Client integration.
+  [(#644)](https://github.com/XanaduAI/strawberryfields/pull/644)
+
+  It now works as a container for a device specification dictionary. There are no more API
+  connection usages, and `DeviceSpec.target` is retrieved from the device specification rather than
+  passed at initialization.
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
