@@ -53,13 +53,13 @@ def job(connection, monkeypatch):
     _details = {"status": "open"}
 
     job = xcc.Job(id_="123", connection=connection)
+    job._details = {"status": "open"}
 
     result = {"samples": np.array([[1, 2], [3, 4]]), "foo": [np.array([5, 6])]}
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
     monkeypatch.setattr(xcc.Job, "result", result)
-    monkeypatch.setattr(xcc.Job, "clear", lambda _: None)
-    job._details = {"status": "open"}
+    monkeypatch.setattr(xcc.Job, "clear", mock_return(None))
     monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
 
