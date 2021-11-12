@@ -26,7 +26,7 @@
   state_out = eng.run(prog).state.ket()
   ```
 
-  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient 
+  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient
   descent directly (as the unitary would not be symplectic after the update). Please use the
   function `sf.backends.tfbackend.update_symplectic` which is designed specifically for this purpose.
 
@@ -193,7 +193,7 @@
   This means that Xanadu Cloud credentials are now stored in exactly one
   location, the path to which depends on your operating system:
 
-  1. Windows: `C:\Users\%USERNAME%\AppData\Local\xanadu-cloud\xanadu-cloud\.env`
+  1. Windows: `C:\Users\%USERNAME%\AppData\Local\Xanadu\xanadu-cloud\.env`
 
   2. MacOS: `/home/$USER/Library/Application\ Support/xanadu-cloud/.env`
 
@@ -256,6 +256,31 @@
   import xcc
   xcc.Settings(REFRESH_TOKEN="Xanadu Cloud API key goes here").save()
   ```
+
+* The `sf.api.Result` class has been updated to support the Xanadu Cloud Client integration.
+  [(#651)](https://github.com/XanaduAI/strawberryfields/pull/651)
+
+  While `Result.samples` should return the same type and shape as before, the `Result.all_samples`
+  property has been renamed to `Result.samples_dict` and returns the samples as a dictionary with
+  corresponding measured modes as keys.
+
+  ```pycon
+  >>> res = eng.run(prog, shots=3)
+  >>> res.samples
+  array([[1, 0], [0, 1], [1, 1]])
+  >>> res.samples_dict
+  {0: [np.array([1, 0, 1])], 1: [np.array([0, 1, 1])]}
+  ```
+
+  The samples dictionary is only accessible for simulators.
+
+* The `sf.api.DeviceSpec` class has been updated to support the Xanadu Cloud Client integration.
+  [(#644)](https://github.com/XanaduAI/strawberryfields/pull/644)
+
+  It now works as a container for a device specification dictionary. There are no more API
+  connection usages, and `DeviceSpec.target` is retrieved from the device specification rather than
+  passed at initialization.
+
 
 <h3>Bug fixes</h3>
 

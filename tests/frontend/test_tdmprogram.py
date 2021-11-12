@@ -491,6 +491,7 @@ def singleloop_program(r, alpha, phi, theta):
 target = "TD2"
 tm = 4
 device_spec = {
+    "target": target,
     "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
     "compiler": ["TD2"],
@@ -501,7 +502,7 @@ device_spec = {
     },
 }
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
-device = DeviceSpec("TD2", device_spec, connection=None)
+device = DeviceSpec(device_spec)
 
 
 class TestTDMcompiler:
@@ -611,7 +612,7 @@ class TestTDMcompiler:
             0.5643, [np.pi / 4, 0] * c, [0, np.pi / 2] * c, [0, 0, np.pi / 2, np.pi / 2]
         )
         with pytest.raises(CircuitError, match="not found in device specification"):
-            prog.compile(device=DeviceSpec("TDM", spec, connection=None), compiler="TDM")
+            prog.compile(device=DeviceSpec(spec), compiler="TDM")
 
     def test_tdm_inconsistent_temporal_modes(self):
         """Test the correct error is raised when the tdm circuit has too many temporal modes"""
@@ -630,7 +631,7 @@ class TestTDMcompiler:
         device_spec1["modes"][
             "concurrent"
         ] = 100  # Note that singleloop_program has only two concurrent modes
-        device1 = DeviceSpec("x", device_spec1, connection=None)
+        device1 = DeviceSpec(device_spec1)
         c = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -646,7 +647,7 @@ class TestTDMcompiler:
         device_spec1["modes"][
             "spatial"
         ] = 100  # Note that singleloop_program has only one spatial mode
-        device1 = DeviceSpec("x", device_spec1, connection=None)
+        device1 = DeviceSpec(device_spec1)
         c = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -699,7 +700,7 @@ class TestEngineTDMProgramInteraction:
             ops.MeasureHomodyne(p[1]) | q[0]
 
         results = eng.run(prog)
-        assert results.samples.shape[0] == 1
+        assert len(results.samples) == 1
 
     def test_shots_run_options(self):
         """Test that run_options takes precedence over default"""
@@ -712,7 +713,7 @@ class TestEngineTDMProgramInteraction:
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog)
-        assert results.samples.shape[0] == 5
+        assert len(results.samples) == 5
 
     def test_shots_passed(self):
         """Test that shots supplied via eng.run takes precedence over
@@ -726,7 +727,7 @@ class TestEngineTDMProgramInteraction:
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog, shots=2)
-        assert results.samples.shape[0] == 2
+        assert len(results.samples) == 2
         assert prog.run_options["shots"] == 5
 
     def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
@@ -774,6 +775,7 @@ class TestTDMValidation:
             MeasureHomodyne(p3) | 0
         """
         device_spec = {
+            "target": target,
             "layout": inspect.cleandoc(layout),
             "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
             "compiler": [target],
@@ -784,7 +786,7 @@ class TestTDMValidation:
                 "p3": [3],
             },
         }
-        return DeviceSpec("TD2", device_spec, connection=None)
+        return DeviceSpec(device_spec)
 
     @staticmethod
     def compile_test_program(device, args=(-1, 1, 2, 3)):
