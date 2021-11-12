@@ -68,8 +68,8 @@ Result
 When running local or remote jobs, a ``strawberryfields.api.Result`` object will be returned. This
 object will function slightly differently in Strawberry Fields v0.20.0.
 
-While ``Result.samples`` should return the same type and shape as before, the `Result.all_samples`
-property has been renamed to `Result.samples_dict`. This property returns the samples as a
+While ``Result.samples`` should return the same type and shape as before, the ``Result.all_samples``
+property has been renamed to ``Result.samples_dict``. This property returns the samples as a
 dictionary with corresponding measured modes as keys.
 
 .. code-block:: pycon
