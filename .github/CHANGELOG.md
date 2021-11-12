@@ -189,9 +189,9 @@
 * The `sf.api.Result` class has been updated to support the Xanadu Cloud Client integration.
   [(#651)](https://github.com/XanaduAI/strawberryfields/pull/651)
 
-  While `Result.samples` should return the same type and shape as before, a `Result.samples_dict`
-  property has been added, returning the samples as a dictionary with corresponding measured modes
-  as keys.
+  While `Result.samples` should return the same type and shape as before, the `Result.all_samples`
+  property has been renamed to `Result.samples_dict`, which returns the samples as a dictionary with
+  corresponding measured modes as keys.
 
   ```pycon
   >>> res = eng.run(prog, shots=3)
