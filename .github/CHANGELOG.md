@@ -81,7 +81,7 @@
 
   1. Configuring account credentials using:
 
-     * Strawberry Fields v0.19.0
+      * Strawberry Fields v0.19.0
 
         ```console
         $ sf configure --token "foo"
