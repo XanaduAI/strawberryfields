@@ -34,7 +34,7 @@ requirements = [
     "thewalrus>=0.15.0",
     "toml",
     "urllib3>=1.25.3",
-    "xanadu-cloud-client",
+    "xanadu-cloud-client>=0.1.1",
 ]
 
 info = {
