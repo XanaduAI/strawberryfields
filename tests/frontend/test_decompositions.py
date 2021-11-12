@@ -847,9 +847,8 @@ class TestCompactSUnFactorization:
         """
         U = np.identity(n, dtype=complex)
 
-        for param in parameters:
+        for modes, params in parameters:
             # Get the indices of the modes
-            modes = param[0].split(",")
             md1, md2 = int(modes[0]) - 1, int(modes[1]) - 1
 
             if md1 not in range(n) or md2 not in range(n):
@@ -864,7 +863,7 @@ class TestCompactSUnFactorization:
                 )
 
             # Compute the next transformation and multiply
-            next_trans = self.embed_su2(n, md1, md2, param[1])
+            next_trans = self.embed_su2(n, md1, md2, params)
             U = U @ next_trans
 
         return U

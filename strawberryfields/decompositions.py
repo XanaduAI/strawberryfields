@@ -1081,7 +1081,7 @@ def compact_sun(U, tol=1e-11):
         tol (float): the tolerance used when checking if the matrix is special unitary
 
     Returns:
-        list: a list of operations in the form "i,i+1", [a, b, g] where
+        tuple: a tuple in the form ((i,i+1), [a, b, g]) where
             the i indicate the modes of an SU(2) transformation and [a, b, g]
             are its parameters.
     """
@@ -1104,7 +1104,7 @@ def compact_sun(U, tol=1e-11):
 
     for md2 in range(2, n + 1):
         for md1 in range(n - 1, md2 - 2, -1):
-            parameters.append((str(md1) + "," + str(md1 + 1), parameters_no_modes[param_idx]))
+            parameters.append([(md1, md1 + 1), parameters_no_modes[param_idx]])
             param_idx += 1
 
     return parameters
