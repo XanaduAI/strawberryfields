@@ -25,8 +25,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import xcc
 
-from strawberryfields.api import DeviceSpec, Job, JobStatus, Result
-from strawberryfields.api.job import FailedJobError
+from strawberryfields.api import DeviceSpec, Result, FailedJobError
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
@@ -544,13 +543,12 @@ class RemoteEngine:
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
     "queued"
-    >>> job.result
-    InvalidJobOperationError
-    >>> job.refresh()
+    >>> job.wait()
     >>> job.status
     "complete"
-    >>> job.result
-    [[0 1 0 2 1 0 0 0]]
+    >>> result = sf.api.Result(job.result)
+    >>> result.samples
+    array([[0 1 0 2 1 0 0 0]])
 
     Args:
         target (str): the target device
@@ -648,39 +646,54 @@ class RemoteEngine:
             strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
 
         Raises:
-            requests.exceptions.RequestException: if there was an issue sending
-                a request to the Xanadu Cloud
+            requests.exceptions.RequestException: if there was an issue fetching
+                the device specifications from the Xanadu Cloud
+            FailedJobError: if the remote job fails on the server side ("cancelled" or "failed")
         """
         job = self.run_async(
             program, compile_options=compile_options, recompile=recompile, **kwargs
         )
         try:
             while True:
-                job.refresh()
-                if job.status == "complete":
-                    self.log.info("The remote job %s has been completed.", job.id)
-                    return job.result
+                # TODO: needed to refresh connection; remove once xcc.Connection
+                # is able to refresh config info dynamically
+                job._connection = self.connection
+                job.clear()
 
-                if job.status == "failed":
-                    message = (
-                        "The remote job {} failed due to an internal "
-                        "server error. Please try again. {}".format(job.id, job.meta)
-                    )
-                    self.log.error(message)
-
-                    raise FailedJobError(message)
-
+                if job.finished:
+                    break
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
+
         except KeyboardInterrupt as e:
             xcc.Job(id_=job.id, connection=self.connection).cancel()
             raise KeyboardInterrupt("The job has been cancelled.") from e
 
+        if job.status == "failed":
+            message = (
+                f"The remote job {job.id} failed due to an internal "
+                f"server error: {job.metadata}. Please try again."
+            )
+            self.log.error(message)
+            raise FailedJobError(message)
+
+        elif job.status == "complete":
+            self.log.info(f"The remote job {job.id} has been completed.")
+            return Result(job.result)
+
+        else:
+            message = (
+                f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
+            )
+            self.log.info(message)
+
+            raise FailedJobError(message)
+
     def run_async(
         self, program: Program, *, compile_options=None, recompile=False, **kwargs
-    ) -> Job:
+    ) -> xcc.Job:
         """Runs a non-blocking remote job.
 
-        In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
+        In the non-blocking mode, a ``xcc.Job`` object is returned immediately, and the user can
         manually refresh the status and check for updated results of the job.
 
         Args:
@@ -694,7 +707,7 @@ class RemoteEngine:
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
-            strawberryfields.api.Job: the created remote job
+            xcc.Job: the created remote job
         """
         # get the specific chip to submit the program to
         compile_options = compile_options or {}
@@ -771,7 +784,7 @@ class RemoteEngine:
             language=f"blackbird:{bb.version}",
         )
 
-        return Job(job.id, JobStatus(job.status), connection=connection)
+        return job
 
     def __repr__(self):
         return "<{}: target={}, connection={}>".format(

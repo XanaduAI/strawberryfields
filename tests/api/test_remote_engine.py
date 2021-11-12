@@ -23,7 +23,7 @@ import pytest
 import xcc
 
 import strawberryfields as sf
-from strawberryfields.api import DeviceSpec, JobStatus, Result
+from strawberryfields.api import DeviceSpec, Result
 from strawberryfields.engine import RemoteEngine
 
 from .conftest import mock_return
@@ -41,21 +41,26 @@ def job(connection, monkeypatch):
     """Mocks a job which completes after a certain number of requests."""
     refresh_counter = 0
 
-    def refresh(self):
+    @property
+    def finished(self):
         nonlocal refresh_counter
         refresh_counter += 1
         if refresh_counter >= REQUESTS_BEFORE_COMPLETED:
-            self._status = JobStatus.COMPLETED
+            self._details = {"status": "complete"}
+            return True
+        return False
+
+    _details = {"status": "open"}
 
     job = xcc.Job(id_="123", connection=connection)
     job._details = {"status": "open"}
 
-    result = Result({"output": [np.array([[1, 2], [3, 4]])]})
+    result = {"output": [np.array([[1, 2], [3, 4]])], "foo": [np.array([5, 6])]}
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
-    monkeypatch.setattr(sf.engine.Job, "refresh", refresh)
-    monkeypatch.setattr(sf.engine.Job, "result", result)
-    monkeypatch.setattr(sf.engine.Job, "meta", {"foo": "bar"})
+    monkeypatch.setattr(xcc.Job, "result", result)
+    monkeypatch.setattr(xcc.Job, "clear", mock_return(None))
+    monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
 
 
@@ -119,16 +124,19 @@ class TestRemoteEngine:
         engine = RemoteEngine("X8_01")
         job = engine.run_async(prog, shots=10)
 
-        assert job.status == JobStatus.OPEN.value
+        # job.status calls job.finished, incrementing the request counter
+        assert job.status == "open"
 
-        for _ in range(REQUESTS_BEFORE_COMPLETED):
-            job.refresh()
+        for _ in range(REQUESTS_BEFORE_COMPLETED - 1):
+            assert job.finished is False
+        assert job.finished is True
 
-        assert job.status == JobStatus.COMPLETED.value
-        assert job.meta == {"foo": "bar"}
-        assert np.array_equal(job.result.samples, [[1, 2], [3, 4]])
+        assert job.status == "complete"
+        assert np.array_equal(job.result["foo"], [np.array([5, 6])])
+        assert np.array_equal(job.result["output"], [np.array([[1, 2], [3, 4]])])
 
-        job.result.state is None
+        result = Result(job.result)
+        result.state is None
 
     def test_run_async_options_from_kwargs(self, prog, blackbird):
         """Tests that :meth:`RemoteEngine.run_async` passes all keyword
@@ -138,7 +146,7 @@ class TestRemoteEngine:
         engine.run_async(prog, shots=1234)
         assert blackbird._target["options"] == {"cutoff_dim": 12, "shots": 1234}
 
-    def test_run_asnyc_options_from_program(self, prog, blackbird):
+    def test_run_async_options_from_program(self, prog, blackbird):
         """Test that :meth:`RemoteEngine.run_async` correctly parses runtime
         options compiled into the program.
         """
@@ -269,7 +277,7 @@ class TestRemoteEngineIntegration:
         """Test that recompilation happens when the recompile keyword argument
         is set to ``True``.
         """
-        device.specification["compiler"] = "Xunitary"
+        device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8")
         device = engine.device_spec
@@ -288,7 +296,7 @@ class TestRemoteEngineIntegration:
     def test_recompilation_run(self, prog, infolog, device):
         """Test that recompilation happens when the recompile keyword argument
         was set to ``True`` and :meth:`RemoteEngin.run` is called."""
-        device.specification["compiler"] = "Xunitary"
+        device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8")
         device = engine.device_spec
@@ -311,7 +319,7 @@ class TestRemoteEngineIntegration:
         """Test that validation happens (i.e., no recompilation) when the target
         device and device specification match.
         """
-        device.specification["compiler"] = "Xunitary"
+        device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8_01")
         device = engine.device_spec

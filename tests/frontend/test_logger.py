@@ -48,12 +48,11 @@ import logging
 
 import pytest
 
-import strawberryfields.api.job as job
 import strawberryfields.engine as engine
 
 from strawberryfields.logger import logging_handler_defined, default_handler, create_logger
 
-modules_contain_logging = [job, engine]
+modules_contain_logging = [engine]
 
 
 @pytest.fixture(autouse=True)

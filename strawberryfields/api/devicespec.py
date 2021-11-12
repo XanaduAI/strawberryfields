@@ -26,7 +26,7 @@ from strawberryfields.compilers import Ranges
 
 
 class DeviceSpec:
-    """The specifications for a specific hardware device.
+    """The specifications for a specific remote device.
 
     Args:
         spec (dict): dictionary representing the raw device specification.
