@@ -7,6 +7,90 @@ changes between Strawberry Fields releases.
 Version 0.20.0
 --------------
 
+Configuration
+^^^^^^^^^^^^^
+
+The replacement of the ``strawberryfields.configuration`` module with the `XCC
+Settings <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Settings.html>`_
+class has several consequences. Specifically, Xanadu Cloud credentials are now
+stored in exactly one location, the path to which depends on your operating
+system:
+
+#. Windows: ``C:\Users\%USERNAME%\AppData\Local\Xanadu\xanadu-cloud\.env``
+
+#. MacOS: ``/home/$USER/Library/Application\ Support/xanadu-cloud/.env``
+
+#. Linux: ``/home/$USER/.config/xanadu-cloud/.env``
+
+The format of the configuration file has also changed to `.env
+<https://saurabh-kumar.com/python-dotenv/>`_ and the names of some options have
+been updated. For example, the Strawberry Fields v0.19.0 configuration
+
+.. code-block:: toml
+
+  # config.toml
+  [api]
+  authentication_token = "Xanadu Cloud API key goes here"
+  hostname = "platform.strawberryfields.ai"
+  port = 443
+  use_ssl = true
+
+is equivalent to the Strawberry Fields v0.20.0 configuration
+
+.. code-block:: python
+
+  # .env
+  XANADU_CLOUD_REFRESH_TOKEN='Xanadu Cloud API key goes here'
+  XANADU_CLOUD_HOST='platform.strawberryfields.ai'
+  XANADU_CLOUD_PORT=443
+  XANADU_CLOUD_TLS=True
+
+Similarly, the names of the configuration environment variables have changed from
+
+.. code-block:: bash
+
+  # Strawberry Fields v0.19.0
+  export SF_API_AUTHENTICATION_TOKEN="Xanadu Cloud API key goes here"
+  export SF_API_HOSTNAME="platform.strawberryfields.ai"
+  export SF_API_PORT=443
+  export SF_API_USE_SSL=true
+
+to
+
+.. code-block:: bash
+
+  # Strawberry Fields v0.20.0
+  export XANADU_CLOUD_REFRESH_TOKEN="Xanadu Cloud API key goes here"
+  export XANADU_CLOUD_HOST="platform.strawberryfields.ai"
+  export XANADU_CLOUD_PORT=true
+  export XANADU_CLOUD_TLS=443
+
+Finally, ``strawberryfields.store_account()`` has been replaced such that
+
+.. code-block:: python
+
+  # Strawberry Fields v0.19.0
+  import strawberryfields as sf
+  sf.store_account("Xanadu Cloud API key goes here")
+
+becomes
+
+.. code-block:: python
+
+  # Strawberry Fields v0.20.0
+  import xcc
+  xcc.Settings(REFRESH_TOKEN="Xanadu Cloud API key goes here").save()
+
+.. note::
+
+  In most cases, running the following command should be sufficient to configure
+  Strawberry Fields v0.20.0:
+
+  .. code-block:: console
+
+      $ xcc config set REFRESH_TOKEN "Xanadu Cloud API key goes here"
+
+
 Command Line Interface
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -26,9 +110,9 @@ each ``sf`` (v0.19.0) command:
    * - ``sf run "foo.xbb"``
      - ``xcc job submit --name "bar" --target "X8_01" --circuit "$(cat foo.xbb)"``
 
-.. note::
+.. warning::
 
-  To submit a job using Windows PowerShell, simply replace ``cat foo.xbb`` with ``Get-Content foo.xbb -Raw``.
+  Windows PowerShell users should write ``Get-Content foo.xbb -Raw`` instead of ``cat foo.xbb``.
 
 Connection
 ^^^^^^^^^^

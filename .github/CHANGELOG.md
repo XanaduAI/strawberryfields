@@ -81,75 +81,75 @@
 
   1. Configuring account credentials using:
 
-    * Strawberry Fields v0.19.0
+      * Strawberry Fields v0.19.0
 
-      ```console
-      $ sf configure --token "foo"
-      ```
+        ```console
+        $ sf configure --token "foo"
+        ```
 
-    * Strawberry Fields v0.20.0
+      * Strawberry Fields v0.20.0
 
-      ```console
-      $ xcc config set REFRESH_TOKEN "foo"
-      Successfully updated REFRESH_TOKEN setting to 'foo'.
-      ```
+        ```console
+        $ xcc config set REFRESH_TOKEN "foo"
+        Successfully updated REFRESH_TOKEN setting to 'foo'.
+        ```
 
   2. Verifying your connection to the Xanadu Cloud using:
 
-    * Strawberry Fields v0.19.0
+      * Strawberry Fields v0.19.0
 
-      ```console
-      $ sf --ping
-      You have successfully authenticated to the platform!
-      ```
+        ```console
+        $ sf --ping
+        You have successfully authenticated to the platform!
+        ```
 
-    * Strawberry Fields v0.20.0
+      * Strawberry Fields v0.20.0
 
-      ```console
-      $ xcc ping
-      Successfully connected to the Xanadu Cloud.
-
-      ```
+        ```console
+        $ xcc ping
+        Successfully connected to the Xanadu Cloud.
+        ```
 
   3. Submitting a Blackbird circuit to the Xanadu Cloud using:
 
-    * Strawberry Fields v0.19.0
+      * Strawberry Fields v0.19.0
 
-      ```console
-      $ # Version 0.19.0
-      $ sf run "foo.xbb"
-      Executing program on remote hardware...
-      2021-11-02 03:04:05,06 - INFO - The device spec X8_01 has been successfully retrieved.
-      2021-11-02 03:04:05,07 - INFO - Compiling program for device X8_01 using compiler Xunitary.
-      2021-11-02 03:04:05,08 - INFO - Job b185a63c-f302-4adb-acf8-b6e4e413c11d was successfully submitted.
-      2021-11-02 03:04:05,09 - INFO - The remote job b185a63c-f302-4adb-acf8-b6e4e413c11d has been completed.
-      [[0 0 0 0]
-      [0 0 0 0]
-      [0 0 0 0]
-      [0 0 0 0]]
-      ```
+        ```console
+        $ # Version 0.19.0
+        $ sf run "foo.xbb"
+        Executing program on remote hardware...
+        2021-11-02 03:04:05,06 - INFO - The device spec X8_01 has been successfully retrieved.
+        2021-11-02 03:04:05,07 - INFO - Compiling program for device X8_01 using compiler Xunitary.
+        2021-11-02 03:04:05,08 - INFO - Job b185a63c-f302-4adb-acf8-b6e4e413c11d was successfully submitted.
+        2021-11-02 03:04:05,09 - INFO - The remote job b185a63c-f302-4adb-acf8-b6e4e413c11d has been completed.
+        [[0 0 0 0]
+        [0 0 0 0]
+        [0 0 0 0]
+        [0 0 0 0]]
+        ```
 
-    * Strawberry Fields v0.20.0
+      * Strawberry Fields v0.20.0
 
-      ```console
-      $ xcc job submit --name "bar" --target "X8_01" --circuit "$(cat foo.xbb)"
-      {
-          "id": "0b0f5a46-46d8-4157-8005-45a4764361ba",  # Use this ID below.
-          "name": "bar",
-          "status": "open",
-          "target": "X8_01",
-          "language": "blackbird:1.0",
-          "created_at": "2021-11-02 03:04:05,10",
-          "finished_at": null,
-          "running_time": null
-      }
-      $ xcc job get 0b0f5a46-46d8-4157-8005-45a4764361ba --result
-      {
-          "output": [
-              "[[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]]"
-          ]
-      }
-      ```
+        ```console
+        $ xcc job submit --name "bar" --target "X8_01" --circuit "$(cat foo.xbb)"
+        {
+            "id": "0b0f5a46-46d8-4157-8005-45a4764361ba",  # Use this ID below.
+            "name": "bar",
+            "status": "open",
+            "target": "X8_01",
+            "language": "blackbird:1.0",
+            "created_at": "2021-11-02 03:04:05,10",
+            "finished_at": null,
+            "running_time": null,
+            "metadata": {}
+        }
+        $ xcc job get 0b0f5a46-46d8-4157-8005-45a4764361ba --result
+        {
+            "output": [
+                "[[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]]"
+            ]
+        }
+        ```
 
 * The `sf.api.Connection` class has been replaced with the
   [xcc.Connection](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html)
@@ -184,6 +184,78 @@
     tls=True,                                        # See "use_ssl" argument above.
   )
   engine = sf.RemoteEngine("X8", connection=connection)
+  ```
+
+* The `sf.configuration` module has been replaced with the
+  [xcc.Settings](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Settings.html)
+  class.
+  [(#649)](https://github.com/XanaduAI/strawberryfields/pull/649)
+
+  This means that Xanadu Cloud credentials are now stored in exactly one
+  location, the path to which depends on your operating system:
+
+  1. Windows: `C:\Users\%USERNAME%\AppData\Local\Xanadu\xanadu-cloud\.env`
+
+  2. MacOS: `/home/$USER/Library/Application\ Support/xanadu-cloud/.env`
+
+  3. Linux: `/home/$USER/.config/xanadu-cloud/.env`
+
+  The format of the configuration file has also changed to [.env](https://saurabh-kumar.com/python-dotenv/)
+  and the names of some fields have been updated. For example,
+
+  ```toml
+  # Strawberry Fields v0.19.0 (config.toml)
+  [api]
+  authentication_token = "Xanadu Cloud API key goes here"
+  hostname = "platform.strawberryfields.ai"
+  port = 443
+  use_ssl = true
+  ```
+
+  is equivalent to
+
+  ```python
+  # Strawberry Fields v0.20.0 (.env)
+  XANADU_CLOUD_REFRESH_TOKEN='Xanadu Cloud API key goes here'
+  XANADU_CLOUD_HOST='platform.strawberryfields.ai'
+  XANADU_CLOUD_PORT=443
+  XANADU_CLOUD_TLS=True
+  ```
+
+  Similarly, the names of the configuration environment variables have changed from
+
+  ```bash
+  # Strawberry Fields v0.19.0
+  export SF_API_AUTHENTICATION_TOKEN="Xanadu Cloud API key goes here"
+  export SF_API_HOSTNAME="platform.strawberryfields.ai"
+  export SF_API_PORT=443
+  export SF_API_USE_SSL=true
+  ```
+
+  to
+
+  ```bash
+  # Strawberry Fields v0.20.0
+  export XANADU_CLOUD_REFRESH_TOKEN="Xanadu Cloud API key goes here"
+  export XANADU_CLOUD_HOST="platform.strawberryfields.ai"
+  export XANADU_CLOUD_PORT=true
+  export XANADU_CLOUD_TLS=443
+  ```
+
+  Finally, `strawberryfields.store_account()` has been replaced such that
+
+  ```python
+  # Strawberry Fields v0.19.0
+  import strawberryfields as sf
+  sf.store_account("Xanadu Cloud API key goes here")
+  ```
+
+  becomes
+
+  ```python
+  # Strawberry Fields v0.20.0
+  import xcc
+  xcc.Settings(REFRESH_TOKEN="Xanadu Cloud API key goes here").save()
   ```
 
 * The `sf.api.Job` class has been replaced with the
