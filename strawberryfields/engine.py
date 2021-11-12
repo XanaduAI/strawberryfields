@@ -678,7 +678,7 @@ class RemoteEngine:
 
         elif job.status == "complete":
             self.log.info(f"The remote job {job.id} has been completed.")
-            return Result(samples=list(job.result.values())[0], is_stateful=False)
+            return Result(job.result)
 
         else:
             message = (

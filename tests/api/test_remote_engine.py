@@ -55,7 +55,7 @@ def job(connection, monkeypatch):
     job = xcc.Job(id_="123", connection=connection)
     job._details = {"status": "open"}
 
-    result = Result({"output": [np.array([[1, 2], [3, 4]])], , "foo": [np.array([5, 6])})
+    result = {"output": [np.array([[1, 2], [3, 4]])], "foo": [np.array([5, 6])]}
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
     monkeypatch.setattr(xcc.Job, "result", result)
@@ -133,7 +133,7 @@ class TestRemoteEngine:
 
         assert job.status == "complete"
         assert np.array_equal(job.result["foo"], [np.array([5, 6])])
-        assert np.array_equal(job.result["samples"], [[1, 2], [3, 4]])
+        assert np.array_equal(job.result["output"], [np.array([[1, 2], [3, 4]])])
 
         result = Result(job.result)
         result.state is None
@@ -277,7 +277,7 @@ class TestRemoteEngineIntegration:
         """Test that recompilation happens when the recompile keyword argument
         is set to ``True``.
         """
-        device.specification["compiler"] = "Xunitary"
+        device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8")
         device = engine.device_spec
@@ -296,7 +296,7 @@ class TestRemoteEngineIntegration:
     def test_recompilation_run(self, prog, infolog, device):
         """Test that recompilation happens when the recompile keyword argument
         was set to ``True`` and :meth:`RemoteEngin.run` is called."""
-        device.specification["compiler"] = "Xunitary"
+        device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8")
         device = engine.device_spec
@@ -319,7 +319,7 @@ class TestRemoteEngineIntegration:
         """Test that validation happens (i.e., no recompilation) when the target
         device and device specification match.
         """
-        device.specification["compiler"] = "Xunitary"
+        device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8_01")
         device = engine.device_spec
