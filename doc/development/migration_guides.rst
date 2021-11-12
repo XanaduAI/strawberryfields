@@ -100,5 +100,5 @@ In Strawberry Fields v0.19.0 this could look as follows:
     >>> job.result
     {'output': [array([[0 1 0 2 1 0 0 0]])]}
 
-  The `job.wait()` method is a blocking method that will wait for the job to finish. Alternatively,
-  `job.clear()` can be called to clear the cache, allowing `job.status` to re-fetch the job status.
+  The ``job.wait()`` method is a blocking method that will wait for the job to finish. Alternatively,
+  ``job.clear()`` can be called to clear the cache, allowing ``job.status`` to re-fetch the job status.
