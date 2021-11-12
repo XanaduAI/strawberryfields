@@ -140,7 +140,8 @@
             "language": "blackbird:1.0",
             "created_at": "2021-11-02 03:04:05,10",
             "finished_at": null,
-            "running_time": null
+            "running_time": null,
+            "metadata": {},
         }
         $ xcc job get 0b0f5a46-46d8-4157-8005-45a4764361ba --result
         {
