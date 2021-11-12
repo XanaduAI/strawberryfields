@@ -61,3 +61,44 @@ The (semantically) equivalent code in Strawberry Fields v0.20.0 is
         port=443,
         tls=True,                                        # See "token" argument above.
     )
+
+Job
+^^^
+
+``strawberryfields.api.Job`` has been replaced with an equivalent
+`XCC Job <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_
+counterpart. This will affect the object returned when running an asynchronous job on the
+``RemoteEngine``. Any code that uses the ``Job`` object returned by an asynchronous run will need to
+be adapted to work with the new :class:`xcc.Job`.
+
+In Strawberry Fields v0.19.0 this could look as follows:
+
+.. code-block:: pycon
+
+    >>> job = engine.run_async(program, shots=1)
+    >>> job.status
+    'queued'
+    >>> job.result
+    InvalidJobOperationError
+    >>> job.refresh()
+    >>> job.status
+    'complete'
+    >>> job.result
+    [[0 1 0 2 1 0 0 0]]
+
+  In Strawberry Fields v0.20.0, the (semantically) equivalent `Job` object would work slightly
+  differently:
+
+.. code-block:: pycon
+
+    >>> job = engine.run_async(program, shots=1)
+    >>> job.status
+    'queued'
+    >>> job.wait()
+    >>> job.status
+    'complete'
+    >>> job.result
+    {'output': [array([[0 1 0 2 1 0 0 0]])]}
+
+  The `job.wait()` method is a blocking method that will wait for the job to finish. Alternatively,
+  `job.clear()` can be called to clear the cache, allowing `job.status` to re-fetch the job status.

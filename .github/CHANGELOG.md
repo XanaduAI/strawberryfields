@@ -187,9 +187,9 @@
   ```
 
 * The `sf.api.Job` class has been replaced with the
-  [xcc.Job](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html)
+  [xcc.Job](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html)
   class.
-  [(#645)](https://github.com/XanaduAI/strawberryfields/pull/645)
+  [(#650)](https://github.com/XanaduAI/strawberryfields/pull/650)
 
   A `Job` object is returned when running jobs asynchronously. In previous versions of Strawberry
   Fields (v0.19.0 and lower), the `Job` object can be used as follows:
