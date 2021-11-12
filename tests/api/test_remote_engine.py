@@ -50,7 +50,7 @@ def job(connection, monkeypatch):
     job = xcc.Job(id_="123", connection=connection)
     job._details = {"status": "open"}
 
-    result = Result(np.array([[1, 2], [3, 4]]), is_stateful=False)
+    result = Result({"output": [np.array([[1, 2], [3, 4]])]})
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
     monkeypatch.setattr(sf.engine.Job, "refresh", refresh)
@@ -112,9 +112,7 @@ class TestRemoteEngine:
         assert result is not None
         assert np.array_equal(result.samples, [[1, 2], [3, 4]])
 
-        match = r"The state is undefined for a stateless computation."
-        with pytest.raises(AttributeError, match=match):
-            _ = result.state
+        result.state is None
 
     def test_run_async(self, prog):
         """Tests that a non-blocking job execution can succeed."""
@@ -130,9 +128,7 @@ class TestRemoteEngine:
         assert job.meta == {"foo": "bar"}
         assert np.array_equal(job.result.samples, [[1, 2], [3, 4]])
 
-        match = r"The state is undefined for a stateless computation."
-        with pytest.raises(AttributeError, match=match):
-            _ = job.result.state
+        job.result.state is None
 
     def test_run_async_options_from_kwargs(self, prog, blackbird):
         """Tests that :meth:`RemoteEngine.run_async` passes all keyword
