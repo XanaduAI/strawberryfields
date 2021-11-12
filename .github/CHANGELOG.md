@@ -197,12 +197,12 @@
   ```pycon
   >>> job = engine.run_async(program, shots=1)
   >>> job.status
-  "queued"
+  'queued'
   >>> job.result
   InvalidJobOperationError
   >>> job.refresh()
   >>> job.status
-  "complete"
+  'complete'
   >>> job.result
   [[0 1 0 2 1 0 0 0]]
   ```
@@ -212,16 +212,16 @@
   ```pycon
   >>> job = engine.run_async(program, shots=1)
   >>> job.status
-  "queued"
+  'queued'
   >>> job.wait()
   >>> job.status
-  "complete"
+  'complete'
   >>> job.result
-  {"output": [array([[0 1 0 2 1 0 0 0]])]}
+  {'output': [array([[0 1 0 2 1 0 0 0]])]}
   ```
 
   The `job.wait()` method is a blocking method that will wait for the job to finish. Alternatively,
-  `job.clear()` can be called to clear the cache allowing `job.status` to re-fetch the job status.
+  `job.clear()` can be called to clear the cache, allowing `job.status` to re-fetch the job status.
 
 <h3>Bug fixes</h3>
 
