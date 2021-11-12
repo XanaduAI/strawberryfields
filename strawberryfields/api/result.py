@@ -83,12 +83,16 @@ class Result:
             array[array[float, int]]: measurement samples returned from
             program execution
         """
-        if len(self._result["output"]) > 1:
+        output = self._result.get("output")
+        if not output:
+            return None
+
+        if len(output) > 1:
             warnings.warn(
-                f"Result dictionary has {len(self._result)} entries; "
-                "returning only the 'output' entry."
+                f"Result dictionary has {len(output)} output "
+                "entries; returning only the first entry."
             )
-        return self._result.get("output", [None])[0]
+        return output[0]
 
     @property
     def samples_dict(self) -> Mapping:

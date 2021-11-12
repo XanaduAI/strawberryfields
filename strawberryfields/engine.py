@@ -497,7 +497,7 @@ class LocalEngine(BaseEngine):
         )
 
         if isinstance(program, TDMProgram):
-            if isinstance(result.samples_dict, dict) and len(result.samples_dict) > 0:
+            if isinstance(result.samples_dict, dict) and result.samples_dict:
                 samples_dict = reshape_samples(
                     result.samples_dict, program.measured_modes, program.N, program.timebins
                 )
