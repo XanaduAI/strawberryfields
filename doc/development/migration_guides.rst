@@ -80,7 +80,7 @@ dictionary with corresponding measured modes as keys.
     >>> res.samples_dict
     {0: [np.array([1, 0, 1])], 1: [np.array([0, 1, 1])]}
 
-Any use of `Result.all_samples` must be renamed `Result.samples_dict` in Strawberry Fields v0.20.0.
+All instances of ``Result.all_samples`` must be replaced with ``Result.samples_dict`` in Strawberry Fields v0.20.0.
 
 Device Specification
 ^^^^^^^^^^^^^^^^^^^^
@@ -106,6 +106,6 @@ The (semantically) equivalent code in Strawberry Fields v0.20.0 is
 
 .. note::
 
-    Rhe remote specification dictionary keys "target", "layout", "modes" and "gate_parameters" are
+    The remote specification dictionary keys "target", "layout", "modes" and "gate_parameters" are
     mandatory in Strawberry Fields v0.20.0. If one or more are missing, a ``DeviceSpec`` object
     cannot be created.

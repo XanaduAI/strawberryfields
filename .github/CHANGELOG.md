@@ -190,7 +190,7 @@
   [(#651)](https://github.com/XanaduAI/strawberryfields/pull/651)
 
   While `Result.samples` should return the same type and shape as before, the `Result.all_samples`
-  property has been renamed to `Result.samples_dict`, which returns the samples as a dictionary with
+  property has been renamed to `Result.samples_dict` and returns the samples as a dictionary with
   corresponding measured modes as keys.
 
   ```pycon
