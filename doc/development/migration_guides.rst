@@ -61,3 +61,51 @@ The (semantically) equivalent code in Strawberry Fields v0.20.0 is
         port=443,
         tls=True,                                        # See "token" argument above.
     )
+
+Result
+^^^^^^
+
+When running local or remote jobs, a ``strawberryfields.api.Result`` object will be returned. This
+object will function slightly differently in Strawberry Fields v0.20.0.
+
+While ``Result.samples`` should return the same type and shape as before, the `Result.all_samples`
+property has been renamed to `Result.samples_dict`. This property returns the samples as a
+dictionary with corresponding measured modes as keys.
+
+.. code-block:: pycon
+
+    >>> res = eng.run(prog, shots=3)
+    >>> res.samples
+    array([[1, 0], [0, 1], [1, 1]])
+    >>> res.samples_dict
+    {0: [np.array([1, 0, 1])], 1: [np.array([0, 1, 1])]}
+
+Any use of `Result.all_samples` must be renamed `Result.samples_dict` in Strawberry Fields v0.20.0.
+
+Device Specification
+^^^^^^^^^^^^^^^^^^^^
+
+The ``DeviceSpec`` no longer has a connection object, and is simply a container for a remote device
+specification. The target argument has been removed in favour of using the target entry in the
+device specification dictionary.
+
+Creating a ``DeviceSpec`` object in Strawberry Fields v0.19.0:
+
+.. code-block:: python
+
+    connection = sf.api.Connection()
+    spec = {"target": "X8", "layout": "", "modes": 8, "gate_parameters": {}}
+    device_spec = sf.api.DeviceSpec(target="X8", spec=spec, connection=connection)
+
+The (semantically) equivalent code in Strawberry Fields v0.20.0 is
+
+.. code-block:: python
+
+    spec = {"target": "X8", "layout": "", "modes": 8, "gate_parameters": {}}
+    device_spec = sf.api.DeviceSpec(spec=spec)
+
+.. note::
+
+    Rhe remote specification dictionary keys "target", "layout", "modes" and "gate_parameters" are
+    mandatory in Strawberry Fields v0.20.0. If one or more are missing, a ``DeviceSpec`` object
+    cannot be created.
