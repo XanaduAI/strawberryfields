@@ -827,7 +827,7 @@ class TestCompactSUnFactorization:
         )
 
         # Stuff it into modes i and j of SU(n)
-        full_Rij = np.asmatrix(np.identity(n)) + 0j
+        full_Rij = np.identity(n, dtype = complex)
         full_Rij[i : j + 1, i : j + 1] = Rij
 
         return full_Rij
@@ -845,7 +845,7 @@ class TestCompactSUnFactorization:
         Returns:
             U (array[complex]): the reconstructed SU(n) matrix
         """
-        U = np.asmatrix(np.identity(n)) + 0j
+        U = np.identity(n, dtype=complex)
 
         for param in parameters:
             # Get the indices of the modes
@@ -865,7 +865,7 @@ class TestCompactSUnFactorization:
 
             # Compute the next transformation and multiply
             next_trans = self.embed_su2(n, md1, md2, param[1])
-            U = U * next_trans
+            U = U @ next_trans
 
         return U
 
