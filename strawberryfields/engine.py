@@ -211,8 +211,9 @@ class BaseEngine(abc.ABC):
         Args:
             prog (Program): program to run
         Returns:
-            list[Command]: commands that were applied to the backend
-            list[array, tensor]: samples returned from the backend
+            tuple(list[Command], list[array, tensor], dict[int, list]): tuple containing the
+            commands that were applied to the backend, the samples returned from the backend, and
+            the samples as a dictionary with the measured modes as keys
         """
 
     def _run(self, program, *, args, compile_options, **kwargs):

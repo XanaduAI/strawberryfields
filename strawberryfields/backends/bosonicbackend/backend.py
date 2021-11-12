@@ -96,8 +96,7 @@ class BosonicBackend(BaseBosonic):
             prog (object): sf.Program instance
 
         Returns:
-            tuple: a tuple of the list of applied commands, the dictionary of measurement samples,
-            and the dictionary of ancilla measurement samples
+            tuple: a tuple of the list of applied commands and the dictionary of measurement samples
 
         Raises:
             NotApplicableError: if an op in the program does not apply to the bosonic backend
