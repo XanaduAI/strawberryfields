@@ -28,10 +28,10 @@ from strawberryfields.tdm.tdmprogram import TDMProgram
 
 
 class DeviceSpec:
-    """The specifications for a specific hardware device.
+    """The specifications for a specific remote device.
 
     Args:
-        target (str): name of the target hardware device
+        target (str): name of the target remote device
         spec (dict): dictionary representing the raw device specification.
             This dictionary should contain the following key-value pairs:
 
