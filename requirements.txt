@@ -14,4 +14,4 @@ thewalrus==0.16.2
 toml==0.10.2
 typing-extensions==3.7.4
 urllib3==1.25.8
-xanadu-cloud-client==0.1.0
+xanadu-cloud-client==0.1.1
