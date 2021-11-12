@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for strawberryfields.api.result
+Unit tests for strawberryfields.result
 """
 import numpy as np
 import pytest
 
-from strawberryfields.api import Result
+from strawberryfields.result import Result
 
 pytestmark = pytest.mark.api
 

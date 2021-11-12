@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for strawberryfields.api.post_processing
+Unit tests for strawberryfields.utils.post_processing
 """
 import numpy as np
 import pytest

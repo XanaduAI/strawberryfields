@@ -25,7 +25,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import move_vac_modes, reshape_samples
-from strawberryfields.api.devicespec import DeviceSpec
+from strawberryfields.devicespec import DeviceSpec
 
 pytestmark = pytest.mark.frontend
 

@@ -30,6 +30,8 @@ from .program import Program
 from .tdm import TDMProgram
 from .plot import plot_wigner, plot_fock, plot_quad
 from . import tdm
+from .devicespec import DeviceSpec
+from .result import Result
 
 __all__ = [
     "Engine",

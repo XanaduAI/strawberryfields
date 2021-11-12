@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test fixtures and shared functions for strawberryfields.api tests
+Test fixtures and shared functions for Strawberry Fields API tests
 """
 import pytest
 

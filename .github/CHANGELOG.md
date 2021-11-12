@@ -319,6 +319,13 @@
   connection usages, and `DeviceSpec.target` is retrieved from the device specification rather than
   passed at initialization.
 
+* The `api` subpackage has been removed and the contained `DeviceSpec` and `Result` classes have
+  been moved to the root `strawberryfields` folder. They can now be imported as follows:
+
+  ```python
+  from strawberryfields import DeviceSpec, Result
+  ```
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>

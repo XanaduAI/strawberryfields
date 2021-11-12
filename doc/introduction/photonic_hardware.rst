@@ -55,7 +55,7 @@ to get the job's status.
 >>> job.wait()
 >>> job.status
 "complete"
->>> result = sf.api.Result(job.result)
+>>> result = sf.Result(job.result)
 >>> result.samples
 array([[0, 0, 1, 0, 1, 0, 1, 0],
        [0, 0, 0, 0, 0, 0, 0, 0],

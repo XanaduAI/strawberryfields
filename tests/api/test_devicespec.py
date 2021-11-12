@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for strawberryfields.api.devicespec
+Unit tests for strawberryfields.devicespec
 """
 import inspect
 
 import pytest
 
-from strawberryfields.api import DeviceSpec
+from strawberryfields.devicespec import DeviceSpec
 from strawberryfields.compilers import Ranges
 
 pytestmark = pytest.mark.api

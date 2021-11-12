@@ -215,7 +215,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["DummyCompiler"],
         }
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -250,7 +250,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -270,7 +270,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -525,7 +525,7 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -570,7 +570,7 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -597,7 +597,7 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -638,7 +638,7 @@ class TestValidation:
             primitives = {"S2gate"}
             decompositions = set()
 
-        spec = sf.api.DeviceSpec(spec=device_dict)
+        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(2)
         with prog.context as q:

@@ -18,7 +18,6 @@ a device available via the API.
 from typing import Sequence, Mapping, Any
 
 import blackbird
-import xcc
 from blackbird.error import BlackbirdSyntaxError
 
 from strawberryfields.io import to_program
