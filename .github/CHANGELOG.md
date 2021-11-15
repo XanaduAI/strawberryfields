@@ -323,7 +323,9 @@
   been moved to the root `strawberryfields` folder. They can now be imported as follows:
 
   ```python
-  from strawberryfields import DeviceSpec, Result
+  import strawberryfields  as sf
+  # sf.DeviceSpec
+  # sf.Result
   ```
 
 <h3>Bug fixes</h3>
