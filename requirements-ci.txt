@@ -6,7 +6,7 @@ tensorboard
 networkx
 quantum-blackbird
 python-dateutil
-thewalrus
+http://xanadu-wheels.s3-website-us-east-1.amazonaws.com/thewalrus-0.17.0.dev0+20211101181237-cp38-cp38-manylinux2010_x86_64.whl
 toml
 appdirs
 numba
