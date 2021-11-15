@@ -14,6 +14,6 @@ sphinx-autodoc-typehints==1.10.3
 sphinx-copybutton
 sphinx-automodapi
 sphinxcontrib-bibtex==0.4.2
-tensorflow==2.5.1
+tensorflow==2.6.1
 thewalrus>=0.16.0
 toml
