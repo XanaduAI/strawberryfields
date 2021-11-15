@@ -38,6 +38,8 @@ __all__ = [
     "RemoteEngine",
     "Program",
     "TDMProgram",
+    "DeviceSpec",
+    "Result",
     "version",
     "save",
     "load",
