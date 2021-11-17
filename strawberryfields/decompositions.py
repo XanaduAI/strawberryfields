@@ -1077,7 +1077,7 @@ def compact_sun(U, tol=1e-11):
     For more details, see https://arxiv.org/abs/1708.00735
 
     Args:
-        U (array[float]): unitary matrix with :math:`\mathrm{det}(U) = 1`
+        U (array[float]): unitary matrix with :math:`|\mathrm{det}(U)| = 1`
         tol (float): the tolerance used when checking if the matrix is special unitary
 
     Returns:
@@ -1087,19 +1087,24 @@ def compact_sun(U, tol=1e-11):
     """
 
     n = U.shape[0]
+    parameters = []
+    global_phase = None
 
     if n < 3:
         raise ValueError("Input matrix for decomposition must be at least 3x3.")
-    if not np.isclose(np.linalg.det(U), 1, atol=tol, rtol=0):
-        raise ValueError("Input matrix must have determinant 1.")
     if not np.allclose(U @ U.conj().T, np.identity(n), atol=tol, rtol=0):
         raise ValueError("The input matrix is not unitary")
+
+    # if Unitary, factorize into phase times Special Unitary
+    if not np.isclose(np.linalg.det(U), 1, atol=tol, rtol=0):
+        det = np.linalg.det(U)
+        U *= 1/det**(1/n)
+        global_phase = np.angle(det)
 
     # Decompose the matrix
     parameters_no_modes = _sun_parameters(U)
 
     # Add the info about which modes each transformation is on
-    parameters = []
     param_idx = 0
 
     for md2 in range(2, n + 1):
@@ -1107,7 +1112,7 @@ def compact_sun(U, tol=1e-11):
             parameters.append([(md1, md1 + 1), parameters_no_modes[param_idx]])
             param_idx += 1
 
-    return parameters
+    return parameters, global_phase
 
 
 def _sun_parameters(U):

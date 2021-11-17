@@ -20,6 +20,7 @@ import networkx as nx
 import numpy as np
 import scipy as sp
 from scipy.linalg import qr, block_diag
+from scipy.stats import unitary_group
 
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import random_interferometer as haar_measure
@@ -868,21 +869,50 @@ class TestCompactSUnFactorization:
 
         return U
 
-    @pytest.mark.parametrize("n", range(3, 8))
-    def test_sun_reconstruction(self, n, tol):
-        """test SU(n) reconstruction from factorization equals the original matrix"""
-
+    @pytest.mark.parametrize("SU_matrix", [True, False])
+    def test_global_phase(self, SU_matrix, tol):
+        """test factorized phase from unitary matrix"""
+        n = 3
         # Generate a random SU(n) matrix.
-        real_half = np.random.randn(n, n)
-        comp_half = np.random.randn(n, n)
-        U = real_half + 1j * comp_half
-        Q, _ = np.linalg.qr(U)
-        SUn = Q
-        SUn[0, :] = SUn[0, :] / np.linalg.det(SUn)
+        U = unitary_group.rvs(n)
+        det = np.linalg.det(U)
+        if SU_matrix:
+            U /= det**(1/n)
 
         # get result from factorization
-        factorization_params = dec.compact_sun(SUn, tol)
+        _, global_phase = dec.compact_sun(U, tol)
 
-        SUn_reconstructed = self.sun_reconstruction(n, factorization_params)
+        if SU_matrix:
+            assert global_phase is None
+        else:
+            expected_phase = np.angle(det)
+            assert np.allclose(global_phase, expected_phase, atol=tol)
 
-        assert np.allclose(SUn, SUn_reconstructed, atol=tol, rtol=0)
+    @pytest.mark.parametrize("n", range(3, 8))
+    def test_SU_reconstruction(self, n, tol):
+        """test numerical reconstruction of Special Unitary matrix equals the original matrix"""
+
+        # Generate a random SU(n) matrix.
+        U = unitary_group.rvs(n)
+        SU_expected = U/np.linalg.det(U)**(1/n)
+
+        # get result from factorization
+        factorization_params, global_phase = dec.compact_sun(SU_expected, tol)
+
+        SU_reconstructed = self.sun_reconstruction(n, factorization_params)
+
+        assert global_phase is None
+        assert np.allclose(SU_expected, SU_reconstructed, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("n", range(3, 8))
+    def test_U_reconstruction(self, n, tol):
+        """test numerical reconstruction of Unitary matrix equals the original matrix"""
+
+        # Generate a random U(n) matrix.
+        U = unitary_group.rvs(n)
+
+        factorization_params, phase = dec.compact_sun(U, tol)
+        SU_reconstructed = self.sun_reconstruction(n, factorization_params)
+        U_reconstructed = np.exp(1j*phase)**(1/n) * SU_reconstructed
+
+        np.allclose(U_reconstructed, U)
