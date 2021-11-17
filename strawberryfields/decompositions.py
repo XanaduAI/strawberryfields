@@ -1070,7 +1070,7 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
     return ut1.real, st1.real, v1.real
 
 
-def compact_sun(U, tol=1e-11):
+def sun_compact(U, rtol=1e-12, atol=1e-12):
     r"""Decompose an arbitrary element in :math:`SU(n)` as a sequence of
     :math:`SU(2)` transformations.
 
@@ -1092,11 +1092,11 @@ def compact_sun(U, tol=1e-11):
 
     if n < 3:
         raise ValueError("Input matrix for decomposition must be at least 3x3.")
-    if not np.allclose(U @ U.conj().T, np.identity(n), atol=tol, rtol=0):
+    if not np.allclose(U @ U.conj().T, np.identity(n), rtol=rtol, atol=atol):
         raise ValueError("The input matrix is not unitary")
 
     # if Unitary, factorize into phase times Special Unitary
-    if not np.isclose(np.linalg.det(U), 1, atol=tol, rtol=0):
+    if not np.isclose(np.linalg.det(U), 1, rtol=rtol, atol=atol):
         det = np.linalg.det(U)
         U *= 1/det**(1/n)
         global_phase = np.angle(det)

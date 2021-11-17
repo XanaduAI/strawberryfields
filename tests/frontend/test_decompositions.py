@@ -14,13 +14,14 @@
 r"""Unit tests for the Strawberry Fields decompositions module"""
 import pytest
 
+from strawberryfields.utils.random_numbers_matrices import random_interferometer
+
 pytestmark = pytest.mark.frontend
 
 import networkx as nx
 import numpy as np
 import scipy as sp
 from scipy.linalg import qr, block_diag
-from scipy.stats import unitary_group
 
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import random_interferometer as haar_measure
@@ -804,7 +805,7 @@ class TestBlochMessiahDecomposition:
 class TestCompactSUnFactorization:
     """tests for the SU(n) factorization"""
 
-    def embed_su2(self, n, i, j, params):
+    def _embed_su2(self, n, i, j, params):
         """Embed the SU(2) transformation given by params into modes i and j
         of an SU(n) matrix
             SU_ij(3) = [ e^(i(a+g)/2) cos(b/2)   -e^(i(a-g)/2) sin(b/2)
@@ -833,7 +834,7 @@ class TestCompactSUnFactorization:
 
         return full_Rij
 
-    def sun_reconstruction(self, n, parameters):
+    def _sun_reconstruction(self, n, parameters):
         """Reconstruct an SU(n) matrix using a list of transformations given as
         tuples ("i,j", [a, b, g])
 
@@ -864,23 +865,29 @@ class TestCompactSUnFactorization:
                 )
 
             # Compute the next transformation and multiply
-            next_trans = self.embed_su2(n, md1, md2, params)
+            next_trans = self._embed_su2(n, md1, md2, params)
             U = U @ next_trans
 
         return U
+
+    def test_unitary_validation(self, tol):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="The input matrix is not unitary"):
+            dec.sun_compact(A, tol)
 
     @pytest.mark.parametrize("SU_matrix", [True, False])
     def test_global_phase(self, SU_matrix, tol):
         """test factorized phase from unitary matrix"""
         n = 3
         # Generate a random SU(n) matrix.
-        U = unitary_group.rvs(n)
+        U = random_interferometer(n)
         det = np.linalg.det(U)
         if SU_matrix:
             U /= det**(1/n)
 
         # get result from factorization
-        _, global_phase = dec.compact_sun(U, tol)
+        _, global_phase = dec.sun_compact(U, tol)
 
         if SU_matrix:
             assert global_phase is None
@@ -893,26 +900,25 @@ class TestCompactSUnFactorization:
         """test numerical reconstruction of Special Unitary matrix equals the original matrix"""
 
         # Generate a random SU(n) matrix.
-        U = unitary_group.rvs(n)
+        U = random_interferometer(n)
         SU_expected = U/np.linalg.det(U)**(1/n)
 
         # get result from factorization
-        factorization_params, global_phase = dec.compact_sun(SU_expected, tol)
+        factorization_params, global_phase = dec.sun_compact(SU_expected, tol)
 
-        SU_reconstructed = self.sun_reconstruction(n, factorization_params)
+        SU_reconstructed = self._sun_reconstruction(n, factorization_params)
 
         assert global_phase is None
         assert np.allclose(SU_expected, SU_reconstructed, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("n", range(3, 8))
-    def test_U_reconstruction(self, n, tol):
+    def test_interferometer_reconstruction(self, n, tol):
         """test numerical reconstruction of Unitary matrix equals the original matrix"""
 
-        # Generate a random U(n) matrix.
-        U = unitary_group.rvs(n)
+        U = random_interferometer(n)
 
-        factorization_params, phase = dec.compact_sun(U, tol)
-        SU_reconstructed = self.sun_reconstruction(n, factorization_params)
+        factorization_params, phase = dec.sun_compact(U, tol)
+        SU_reconstructed = self._sun_reconstruction(n, factorization_params)
         U_reconstructed = np.exp(1j*phase)**(1/n) * SU_reconstructed
 
         np.allclose(U_reconstructed, U)

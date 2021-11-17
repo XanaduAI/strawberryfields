@@ -31,6 +31,7 @@ from strawberryfields.utils import (
 from strawberryfields import ops
 
 from strawberryfields.utils import random_interferometer as haar_measure
+from strawberryfields.utils.program_functions import extract_unitary
 
 # make the test file deterministic
 np.random.seed(42)
@@ -278,6 +279,17 @@ class TestGaussianBackendDecompositions:
         state = eng.run(p2).state
         O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
         assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
+
+    def test_interferometer_sun_compact(self, setup_eng, tol):
+        """Test applying an interferometer using SU(n) compact mesh"""
+        n_modes = 3
+        eng, p1 = setup_eng(n_modes)
+
+        with p1.context as q:
+            ops.Interferometer(u1, mesh="sun_compact") | q
+        U = extract_unitary(p1, cutoff_dim=n_modes, vectorize_modes=True)
+
+        assert np.allclose(U, u1, atol=tol)
 
     def test_identity_interferometer(self, setup_eng, tol):
         """Test that applying an identity interferometer does nothing"""
