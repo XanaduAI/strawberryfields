@@ -525,7 +525,7 @@ def choi_trick(S, d, dtype=tf.complex128):
 @tf.custom_gradient
 def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix"""
-    gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C], tf.complex128)
+    gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C, True, True, True], tf.complex128)
     N = y.shape[-1] // 2
     transpose_list = [x for pair in zip(range(N), range(N, 2 * N)) for x in pair]
 
