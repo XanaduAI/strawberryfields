@@ -64,6 +64,8 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
+        #: Dict[Any, List]: the measurement results as a dictionary with measured modes as keys
+        self.samples_dict = None
 
         if isinstance(backend, str):
             self.backend_name = backend
@@ -681,7 +683,7 @@ class RemoteEngine:
             self.log.error(message)
             raise FailedJobError(message)
 
-        elif job.status == "complete":
+        if job.status == "complete":
             self.log.info(f"The remote job {job.id} has been completed.")
             return Result(job.result)
 
