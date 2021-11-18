@@ -687,13 +687,13 @@ class RemoteEngine:
             self.log.info(f"The remote job {job.id} has been completed.")
             return Result(job.result)
 
-        else:
-            message = (
-                f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
-            )
-            self.log.info(message)
 
-            raise FailedJobError(message)
+        message = (
+            f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
+        )
+        self.log.info(message)
+
+        raise FailedJobError(message)
 
     def run_async(
         self, program: Program, *, compile_options=None, recompile=False, **kwargs
