@@ -719,9 +719,6 @@ class RemoteEngine:
         kwargs.update(self._backend_options)
 
         device = self.device_spec
-        if isinstance(program, TDMProgram) and not device.layout_is_formatted():
-            device.fill_template(program)
-
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
         program_is_compiled = program.compile_info is not None
