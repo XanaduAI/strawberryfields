@@ -499,7 +499,7 @@ class Program:
         """Check that the number of modes in the program is valid for the given device.
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+            device (~strawberryfields.DeviceSpec): Device specification object to use.
                 ``device.modes`` must be an integer, containing the allowed number of modes
                 for the target.
         """
@@ -518,7 +518,7 @@ class Program:
         measurements according to the device specification.
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+            device (~strawberryfields.DeviceSpec): Device specification object to use.
                 ``device.modes`` must be a dictionary, containing the maximum number of allowed
                 measurements for the specified target.
 
@@ -594,7 +594,7 @@ class Program:
         >>> prog2 = prog.compile(device=device, compiler="Xcov")
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+            device (~strawberryfields.DeviceSpec): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
@@ -627,15 +627,7 @@ class Program:
 
             if compiler is None:
                 # get the default compiler from the device spec
-                compiler_name = device.default_compiler
-
-                if compiler_name is not None:
-                    compiler = compiler_db[device.default_compiler]()
-                else:
-                    raise CircuitError(
-                        f"The device '{target}' does not specify a compiler. A compiler "
-                        "must be manually provided when calling Program.compile()."
-                    )
+                compiler = compiler_db[device.default_compiler]()
             else:
                 compiler = _get_compiler(compiler)
 
