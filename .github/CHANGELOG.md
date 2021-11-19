@@ -1,4 +1,4 @@
-# Release 0.20.0 (development release)
+# Release 0.20.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -320,7 +320,10 @@
   passed at initialization.
 
 * The `api` subpackage has been removed and the contained `DeviceSpec` and `Result` classes have
-  been moved to the root `strawberryfields` folder. They can now be imported as follows:
+  been moved to the root `strawberryfields` folder.
+  [(#652)](https://github.com/XanaduAI/strawberryfields/pull/652)
+
+  They can now be imported as follows:
 
   ```python
   import strawberryfields  as sf
@@ -328,18 +331,19 @@
   # sf.Result
   ```
 
-<h3>Bug fixes</h3>
-
 <h3>Documentation</h3>
+
+* Strawberry Fields interactive has been removed from the documentation.
+[(#635)](https://github.com/XanaduAI/strawberryfields/pull/635)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov, Sebastián Duque Mesa, Theodor Isacsson, Filippo Miatto, Nicolás Quesada, Antal
-Száva, Yuan Yao.
+Mikhail Andrenkov, Sebastián Duque Mesa, Theodor Isacsson, Josh Izaac, Filippo Miatto, Nicolás
+Quesada, Antal Száva, Yuan Yao.
 
-# Release 0.19.0 (current release)
+# Release 0.19.0
 
 <h3>New features since last release</h3>
 
