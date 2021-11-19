@@ -238,8 +238,8 @@
   # Strawberry Fields v0.20.0
   export XANADU_CLOUD_REFRESH_TOKEN="Xanadu Cloud API key goes here"
   export XANADU_CLOUD_HOST="platform.strawberryfields.ai"
-  export XANADU_CLOUD_PORT=true
-  export XANADU_CLOUD_TLS=443
+  export XANADU_CLOUD_PORT=443
+  export XANADU_CLOUD_TLS=true
   ```
 
   Finally, `strawberryfields.store_account()` has been replaced such that

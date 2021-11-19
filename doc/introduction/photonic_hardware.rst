@@ -45,7 +45,7 @@ Python will wait until the job result has been returned from the cloud before fu
 will execute.
 
 Jobs can also be submitted using the **non-blocking** :meth:`eng.run_async() <.RemoteEngine.run_async>`
-method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Results` object once the computation is
+method. Unlike :meth:`eng.run() <.RemoteEngine.run>`, which returns a :class:`~.Result` object once the computation is
 complete, this method instead returns a :class:`xcc.Job` object directly that can be queried
 to get the job's status.
 

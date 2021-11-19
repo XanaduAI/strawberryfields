@@ -62,8 +62,8 @@ to
   # Strawberry Fields v0.20.0
   export XANADU_CLOUD_REFRESH_TOKEN="Xanadu Cloud API key goes here"
   export XANADU_CLOUD_HOST="platform.strawberryfields.ai"
-  export XANADU_CLOUD_PORT=true
-  export XANADU_CLOUD_TLS=443
+  export XANADU_CLOUD_PORT=443
+  export XANADU_CLOUD_TLS=true
 
 Finally, ``strawberryfields.store_account()`` has been replaced such that
 
@@ -83,7 +83,7 @@ becomes
 
 .. note::
 
-  In most cases, running the following command should be sufficient to configure
+  In most cases, running the following command is sufficient to configure
   Strawberry Fields v0.20.0:
 
   .. code-block:: console
@@ -118,7 +118,7 @@ Connection
 ^^^^^^^^^^
 
 All ``strawberryfields.api.Connection`` instances must be replaced by their
-equivalent `XCC Connection <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html>`_
+equivalent `XCC Connection <xcc.Connection>`_
 counterparts. For example, consider the following instantiation of a Xanadu
 Cloud connection in Strawberry Fields v0.19.0:
 
@@ -143,7 +143,7 @@ The (semantically) equivalent code in Strawberry Fields v0.20.0 is
         refresh_token="Xanadu Cloud API key goes here",  # See "token" argument above.
         host="platform.strawberryfields.ai",
         port=443,
-        tls=True,                                        # See "token" argument above.
+        tls=True,                                        # See "use_ssl" argument above.
     )
 
 Job
@@ -151,7 +151,7 @@ Job
 
 ``strawberryfields.api.Job`` has been replaced with an equivalent
 `XCC Job <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_
-counterpart. This will affect the object returned when running an asynchronous job on the
+class. This will affect the object returned when running an asynchronous job on the
 ``RemoteEngine``. Any code that uses the ``Job`` object returned by an asynchronous run will need to
 be adapted to work with the new :class:`xcc.Job`.
 
@@ -170,7 +170,7 @@ In Strawberry Fields v0.19.0 this could look as follows:
     >>> job.result
     [[0 1 0 2 1 0 0 0]]
 
-  In Strawberry Fields v0.20.0, the (semantically) equivalent `Job` object would work slightly
+  In Strawberry Fields v0.20.0, the (semantically) equivalent ``Job`` object would work slightly
   differently:
 
 .. code-block:: pycon

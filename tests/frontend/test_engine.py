@@ -229,7 +229,7 @@ class TestEngineProgramInteraction:
         # check that shape is (shots, measured_modes)
         assert result.samples.shape == (1, 4)
 
-        # check that MessureFock measures `0` while MeasureX does NOT measure `0`.
+        # check that MeasureFock measures `0` while MeasureX does NOT measure `0`.
         correct_samples = [0, 0, 1, 0]
         assert [bool(i) for i in result.samples[0]] == correct_samples
 
