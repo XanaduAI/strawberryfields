@@ -10,7 +10,7 @@ scipy==1.7.1
 sympy==1.8
 tensorflow==2.6.1
 tensorboard==2.6.0
-thewalrus==0.16.2
+thewalrus==0.17.0
 toml==0.10.2
 typing-extensions==3.7.4
 urllib3==1.25.8
