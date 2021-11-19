@@ -687,10 +687,7 @@ class RemoteEngine:
             self.log.info(f"The remote job {job.id} has been completed.")
             return Result(job.result)
 
-
-        message = (
-            f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
-        )
+        message = f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
         self.log.info(message)
 
         raise FailedJobError(message)
