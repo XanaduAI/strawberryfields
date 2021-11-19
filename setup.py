@@ -31,7 +31,7 @@ requirements = [
     "requests>=2.22.0",
     "scipy>=1.0.0",
     "sympy>=1.5",
-    "thewalrus>=0.15.0",
+    "thewalrus>=0.17.0",
     "toml",
     "urllib3>=1.25.3",
     "xanadu-cloud-client>=0.1.1",
