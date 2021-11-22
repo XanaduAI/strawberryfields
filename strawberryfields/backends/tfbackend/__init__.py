@@ -149,7 +149,6 @@ else:
     tf_available = True
     tf_version = tensorflow.__version__
 
-
 tf_info = """\
 To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
 This can be installed as follows:
@@ -170,4 +169,6 @@ if not (tf_available and tf_version[:2] == "2."):
     raise ImportError(tf_info)
 
 
+# The modules inside the tfbackend package assume TensorFlow is importable.
 from .backend import TFBackend
+from .ops import update_symplectic

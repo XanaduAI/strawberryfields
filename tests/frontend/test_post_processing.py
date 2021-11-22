@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for strawberryfields.api.post_processing
+Unit tests for strawberryfields.utils.post_processing
 """
 import numpy as np
 import pytest
@@ -116,43 +116,36 @@ class TestNumberVariance:
 
 
 homodyne_samples = [
-                    (np.array([[1.23]]),
-                            1.23,
-                            0),
-                    (np.array([[1.23],
-                            [12.32],
-                            [0.3222],
-                            [0]]),
-                            3.46805,
-                            26.3224074075),
-                    (np.array([[12.32, 0.32]]),
-                            3.9424,
-                            0),
-                    (np.array([[1.23, 0],
-                            [12.32, 0.32],
-                            [0.3222, 6.34],
-                            [0, 3.543]]),
-                            1.496287,
-                            2.689959501507),
-                    ]
+    (np.array([[1.23]]), 1.23, 0),
+    (np.array([[1.23], [12.32], [0.3222], [0]]), 3.46805, 26.3224074075),
+    (np.array([[12.32, 0.32]]), 3.9424, 0),
+    (np.array([[1.23, 0], [12.32, 0.32], [0.3222, 6.34], [0, 3.543]]), 1.496287, 2.689959501507),
+]
+
 
 class TestQuadratureExpectation:
     """Tests the samples_expectation function using homodyne
     samples."""
 
-    @pytest.mark.parametrize("samples, expval", [(samples, expval) for samples,expval, _ in homodyne_samples])
+    @pytest.mark.parametrize(
+        "samples, expval", [(samples, expval) for samples, expval, _ in homodyne_samples]
+    )
     def test_quadrature_expval(self, samples, expval):
         """Checking the expectation value of pre-defined homodyne samples."""
         assert np.isclose(samples_expectation(samples), expval)
+
 
 class TestQuadratureVariance:
     """Tests the samples_variance function using homodyne
     samples."""
 
-    @pytest.mark.parametrize("samples, var", [(samples, var) for samples, _, var in homodyne_samples])
+    @pytest.mark.parametrize(
+        "samples, var", [(samples, var) for samples, _, var in homodyne_samples]
+    )
     def test_quadrature_variance(self, samples, var):
         """Checking the variance of pre-defined homodyne samples."""
         assert np.isclose(samples_variance(samples), var)
+
 
 def validation_circuit():
     """Returns samples from an example circuit."""
@@ -176,7 +169,7 @@ class TestFockProb:
         circuit preparing Fock states."""
         samples = fock_states_samples()
         probs = all_fock_probs_pnr(samples)
-        assert probs[(2,3,4)] == 1
+        assert probs[(2, 3, 4)] == 1
 
         prob_sum = np.sum(probs)
         assert np.allclose(prob_sum, 1)

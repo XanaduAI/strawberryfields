@@ -15,62 +15,60 @@
 This module contains a class that represents the specifications of
 a device available via the API.
 """
-from collections.abc import Sequence
-import re
+from typing import Sequence, Mapping, Any
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
 
-import strawberryfields as sf
+from strawberryfields.io import to_program
 from strawberryfields.compilers import Ranges
-from strawberryfields.tdm.tdmprogram import TDMProgram
 
 
 class DeviceSpec:
-    """The specifications for a specific hardware device.
+    """The specifications for a specific remote device.
 
     Args:
-        target (str): name of the target hardware device
         spec (dict): dictionary representing the raw device specification.
-            This dictionary should contain the following key-value pairs:
+            This dictionary must contain the following key-value pairs:
 
-            - layout (str): string containing the Blackbird circuit layout
+            - layout (str): string containing the Blackbird circuit layout or XIR manifest
             - modes (int): number of modes supported by the target
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
-
-        connection (strawberryfields.api.Connection): connection over which the
-            job is managed
     """
 
-    def __init__(self, target, spec, connection):
-        self._target = target
-        self._connection = connection
+    def __init__(self, spec: Mapping[str, Any]) -> None:
+        missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
+        if missing_keys:
+            raise ValueError(
+                f"Device specification is missing the following keys: {sorted(missing_keys)}"
+            )
+
         self._spec = spec
 
     @property
-    def target(self):
+    def target(self) -> str:
         """str: The name of the target hardware device."""
-        return self._target
+        return self._spec["target"]
 
     @property
-    def layout(self):
+    def layout(self) -> str:
         """str: Returns a string containing the Blackbird circuit layout."""
         return self._spec["layout"]
 
     @property
-    def modes(self):
+    def modes(self) -> int:
         """int: Number of modes supported by the device."""
         return self._spec["modes"]
 
     @property
-    def compiler(self):
+    def compiler(self) -> Sequence[str]:
         """list[str]: A list of strings corresponding to Strawberry Fields compilers supported
         by the hardware device."""
         return self._spec["compiler"]
 
     @property
-    def default_compiler(self):
+    def default_compiler(self) -> str:
         """sf.compilers.Compiler: Specified default compiler"""
         if self.compiler:
             return self.compiler[0]
@@ -80,7 +78,7 @@ class DeviceSpec:
         return "Xunitary"
 
     @property
-    def gate_parameters(self):
+    def gate_parameters(self) -> Mapping[str, Ranges]:
         """dict[str, strawberryfields.compilers.Ranges]: A dictionary of gate parameters
         and allowed ranges.
 
@@ -91,7 +89,7 @@ class DeviceSpec:
         >>> spec.gate_parameters
         {'squeezing_amplitude_0': x=0, x=1, 'phase_0': x=0, 0≤x≤6.283185307179586}
         """
-        gate_parameters = dict()
+        gate_parameters = {}
 
         for gate_name, param_ranges in self._spec["gate_parameters"].items():
             # convert gate parameter allowed ranges to Range objects
@@ -100,29 +98,14 @@ class DeviceSpec:
 
         return gate_parameters
 
-    def layout_is_formatted(self):
-        """bool: Whether the device layout is formatted or not."""
-        p = re.compile(r"{{\w*}}")
-        return not bool(p.search(self.layout))
-
-    def fill_template(self, program):
-        """Fill template with parameter values from a program"""
-        if self.layout_is_formatted():
-            return
-
-        if isinstance(program, TDMProgram):
-            self._spec["layout"] = self._spec["layout"].format(
-                target=self.target, tm=program.timebins
-            )
-        else:
-            # TODO: update when `self._spec["layout"]` is returned as an unformatted string
-            raise NotImplementedError("Formatting not required or supported for non-TDM programs.")
-
-    def validate_parameters(self, **parameters):
+    def validate_parameters(self, **parameters: complex) -> None:
         """Validate gate parameters against the device spec.
 
         Gate parameters should be passed as keyword arguments, with names
         corresponding to those present in the Blackbird circuit layout.
+
+        Raises:
+            ValueError: if an invalid parameter is passed
         """
         # check that all provided parameters are valid
         for p, v in parameters.items():
@@ -136,9 +119,9 @@ class DeviceSpec:
             if p not in self.gate_parameters:
                 raise ValueError(f"Parameter {p} not a valid parameter for this device")
 
-    def create_program(self, **parameters):
-        """Create a Strawberry Fields program matching the low-level layout of the
-        device.
+    def create_program(self, **parameters: complex):
+        """Create a Strawberry Fields program matching the low-level Blackbird
+        layout of the device.
 
         Gate arguments should be passed as keyword arguments, with names
         correspond to those present in the Blackbird circuit layout. Parameters not
@@ -147,7 +130,7 @@ class DeviceSpec:
         **Example**
 
         Device specifications can be retrieved from the API by using the
-        :class:`~.Connection` class:
+        :class:`xcc.Device` and :class:`xcc.Connection` classes:
 
         >>> spec.create_program(squeezing_amplitude_0=0.43)
         <strawberryfields.program.Program at 0x7fd37e27ff50>
@@ -174,10 +157,7 @@ class DeviceSpec:
 
         # evaluate the blackbird template
         bb = bb(**parameters)
-        prog = sf.io.to_program(bb)
-        prog._compile_info = (self, self.default_compiler)
-        return prog
+        prog = to_program(bb)
+        prog.compile(compiler=self.default_compiler)
 
-    def refresh(self):
-        """Refreshes the device specifications"""
-        self._spec = self._connection._get_device_dict(self.target)
+        return prog

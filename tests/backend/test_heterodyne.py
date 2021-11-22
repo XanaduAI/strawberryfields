@@ -24,10 +24,10 @@ n_meas = 500
 disp_val = 1.0 + 1j * 1.0
 num_stds = 10.0
 std_10 = num_stds / np.sqrt(n_meas)
-R_VALS = [-1.2,0,1,1.4]
+R_VALS = [-1.2, 0, 1, 1.4]
 
 
-@pytest.mark.backends("gaussian","bosonic")
+@pytest.mark.backends("gaussian", "bosonic")
 class TestHeterodyne:
     """Basic implementation-independent tests."""
 
@@ -68,7 +68,7 @@ class TestHeterodyne:
 
     @pytest.mark.parametrize("r", R_VALS)
     def test_std(self, r, setup_backend, pure, tol):
-        """Test heterodyne provides the correct standard deviation for heterodyne outcomes on 
+        """Test heterodyne provides the correct standard deviation for heterodyne outcomes on
         squeezed states"""
         backend = setup_backend(1)
         x = np.empty(0)

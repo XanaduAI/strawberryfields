@@ -1,0 +1,85 @@
+name: Bug report
+description: File a bug report
+title: '[replace with a short descriptive title for your report]'
+labels: "bug"
+
+body:
+  - type: markdown
+    id: posting a bug report
+    attributes:
+      value: |
+          ## Before posting a bug report
+          Search existing GitHub issues to make sure the issue does not already exist:
+          https://github.com/XanaduAI/strawberryfields/issues
+  - type: checkboxes
+    id: terms
+    attributes:
+      options:
+        - label: I have searched exisisting GitHub issues to make sure the issue does not already exist.
+          required: true
+  - type: markdown
+    id: description
+    attributes:
+      value: |
+          For general technical details and contribution guidelines, check out our documentation:
+          https://strawberryfields.readthedocs.io
+
+          # Issue description
+          Description of the issue - include code snippets in the Source code section below and screenshots if relevant.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: |
+        What do you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: |
+        What actually happens?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduces
+    attributes:
+      label: Reproduces how often
+      description: |
+        What percentage of the time does it reproduce?
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label:  System information
+      description: Please post the output of `import strawberryfields as sf; sf.about()` or, if not possible/relevant, a note on why this is not included. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: true
+  - type: markdown
+    id: source-code-and-tracebacks
+    attributes:
+      value: |
+        ## source code and tracebacks
+
+        Any additional code snippets and error tracebacks related to the issue?
+  - type: textarea
+    id: sourcecode
+    attributes:
+      label: Source code
+      description: Please include a minimal non-working example, or any other code related to the issue, here. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: textarea
+    id: tracebacks
+    attributes:
+      label:  Tracebacks
+      description: Please include the error tracebacks related to the issue here. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: textarea
+    id: additional-info
+    attributes:
+      label:  Additional information
+      description: Please include any additional information, configuration or data that might be necessary to reproduce the issue.
+      render: shell

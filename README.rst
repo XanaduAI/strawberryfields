@@ -53,9 +53,6 @@ Features
   <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
   your quantum programs with our end-to-end differentiable TensorFlow backend
 
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows
-  anyone to run a quantum computing simulation via **drag and drop**
-
 
 Installation
 ============
@@ -70,10 +67,6 @@ Strawberry Fields requires Python version 3.6, 3.7, or 3.8. Installation of Stra
 Getting started
 ===============
 
-To see Strawberry Fields in action immediately, try out our `Strawberry Fields Interactive
-<https://strawberryfields.ai>`_ web application. Prepare your initial states, drag and drop gates,
-and watch your simulation run in real time right in your web browser.
-
 To get started with writing your own Strawberry Fields code, begin with our `photonic circuit
 quickstart guides
 <https://strawberryfields.readthedocs.io/en/stable/introduction/introduction.html>`__, before
@@ -86,7 +79,7 @@ exploring our many `tutorials <https://strawberryfields.ai/photonics/demonstrati
     <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/readme_panel1.png" width="900px">
     </a>
 
-Finally, read more about using Strawberry Fields with `photonic hardware
+Next, read more about using Strawberry Fields with `photonic hardware
 <https://strawberryfields.ai/photonics/hardware/index.html>`__, including code demonstrations
 and an overview of Xanadu's quantum photonic hardware.
 

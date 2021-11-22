@@ -116,11 +116,6 @@ Features
   <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
   your quantum programs with our end-to-end differentiable TensorFlow backend
 
-..
-
-* Powers the `Strawberry Fields Interactive <https://strawberryfields.ai>`_ web app, which allows
-  anyone to run a quantum computing simulation via **drag and drop**
-
 
 How to cite
 ===========
@@ -169,6 +164,7 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :hidden:
 
    development/development_guide
+   development/migration_guides
    development/research
    development/release_notes.md
 
@@ -179,12 +175,9 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
 
    code/sf
    code/sf_apps
-   code/sf_api
    code/sf_backends
    code/sf_compilers
    code/sf_circuitdrawer
-   code/sf_cli
-   code/sf_configuration
    code/sf_decompositions
    code/sf_engine
    code/sf_io

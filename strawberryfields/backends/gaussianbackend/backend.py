@@ -67,7 +67,7 @@ class GaussianBackend(BaseGaussian):
         self._init_modes = num_subsystems
         self.circuit = GaussianModes(num_subsystems)
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         self.circuit.add_mode(n)
 
     def del_mode(self, modes):
@@ -251,16 +251,15 @@ class GaussianBackend(BaseGaussian):
 
         mu = self.circuit.mean
         cov = self.circuit.scovmatxp()
+        mean = self.circuit.smeanxp()
         # check we are sampling from a gaussian state with zero mean
-        if not allclose(mu, zeros_like(mu)):
-            raise NotImplementedError(
-                "Threshold measurement is only supported for " "Gaussian states with zero mean"
-            )
+
         x_idxs = array(modes)
         p_idxs = x_idxs + len(mu)
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
-        samples = torontonian_sample_state(reduced_cov, shots)
+        reduced_mean = mean[modes_idxs]
+        samples = torontonian_sample_state(mu=reduced_mean, cov=reduced_cov, samples=shots)
 
         return samples
 
@@ -291,3 +290,6 @@ class GaussianBackend(BaseGaussian):
 
         mode_names = ["q[{}]".format(i) for i in array(self.get_modes())[modes]]
         return BaseGaussianState((means, covmat), len(modes), mode_names=mode_names)
+
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        raise NotImplementedError

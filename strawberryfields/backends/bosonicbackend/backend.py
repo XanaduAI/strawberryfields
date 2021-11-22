@@ -52,6 +52,7 @@ def parameter_checker(parameters):
     return False
 
 
+# pylint: disable=abstract-method
 class BosonicBackend(BaseBosonic):
     r"""The BosonicBackend implements a simulation of quantum optical circuits
     in NumPy by representing states as linear combinations of Gaussian functions
@@ -95,8 +96,7 @@ class BosonicBackend(BaseBosonic):
             prog (object): sf.Program instance
 
         Returns:
-            tuple: a tuple of the list of applied commands, the dictionary of measurement samples,
-            and the dictionary of ancilla measurement samples
+            tuple: a tuple of the list of applied commands and the dictionary of measurement samples
 
         Raises:
             NotApplicableError: if an op in the program does not apply to the bosonic backend
@@ -122,7 +122,6 @@ class BosonicBackend(BaseBosonic):
         # TODO: Deal with Preparation classes in the middle of a circuit.
         applied = []
         samples_dict = {}
-        all_samples = {}
 
         non_gauss_preps = (
             Bosonic,
@@ -156,12 +155,10 @@ class BosonicBackend(BaseBosonic):
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val[:, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, i])
 
                     applied.append(cmd)
 
@@ -178,8 +175,7 @@ class BosonicBackend(BaseBosonic):
                             cmd.op, kwargs
                         )
                     ) from e
-
-        return applied, samples_dict, all_samples
+        return applied, samples_dict
 
     # pylint: disable=import-outside-toplevel
     def init_circuit(self, prog):
@@ -224,6 +220,7 @@ class BosonicBackend(BaseBosonic):
             # Check if an operation other than New() has already acted on these modes.
             labels = [label.ind for label in cmd.reg]
             isitnew = 1 - np.isin(labels, reg_list)
+            new_labels = np.asarray(labels)[np.logical_not(np.isin(labels, reg_list))]
             if np.any(isitnew):
                 # Operation parameters
                 pars = cmd.op.p
@@ -233,7 +230,7 @@ class BosonicBackend(BaseBosonic):
                         "Symbolic non-Gaussian preparations have not been implemented "
                         "in the bosonic backend."
                     )
-                for reg in labels:
+                for reg in new_labels:
                     # All the possible preparations should go in this loop
                     if isinstance(cmd.op, Bosonic):
                         weights, means, covs = [pars[i] for i in range(3)]
@@ -383,14 +380,18 @@ class BosonicBackend(BaseBosonic):
         self.circuit.from_covmat(cov, modes)
         self.circuit.from_mean(means, modes)
 
-    def prepare_cat(self, alpha, phi, representation, ampl_cutoff, D):
+    def prepare_cat(self, a, theta, p, representation, ampl_cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi} \ket{-\alpha})`,
+
+        where :math:`\alpha = ae^{i\theta}`.
 
         Args:
-            alpha (complex): alpha value of cat state
-            phi (float): phi value of cat state
+            a (float): displacement magnitude :math:`|\alpha|`
+            theta (float): displacement angle :math:`\theta`
+            p (float): Parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+                cat state, and ``p=1`` an odd cat state.
             representation (str): whether to use the ``'real'`` or ``'complex'`` representation
             ampl_cutoff (float): if using the ``'real'`` representation, this determines
                  how many terms to keep
@@ -400,24 +401,27 @@ class BosonicBackend(BaseBosonic):
             tuple: arrays of the weights, means and covariances for the state
         """
 
+        phi = np.pi * p
+
         if representation not in ("complex", "real"):
             raise ValueError(
                 'The representation argument accepts only "real" or "complex" as arguments.'
             )
 
         # Case alpha = 0, prepare vacuum
-        if np.isclose(np.absolute(alpha), 0):
+        if np.isclose(a, 0):
             weights = np.array([1], dtype=complex)
             means = np.array([[0, 0]], dtype=complex)
             covs = np.array([0.5 * self.circuit.hbar * np.identity(2)])
             return weights, means, covs
 
         # Normalization factor
-        norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
+        norm = 1 / (2 * (1 + np.exp(-2 * a ** 2) * np.cos(phi)))
         hbar = self.circuit.hbar
 
         if representation == "complex":
-            phi = np.pi * phi
+
+            alpha = a * np.exp(1j * theta)
 
             # Mean of |alpha><alpha| term
             rplus = np.sqrt(2 * hbar) * np.array([alpha.real, alpha.imag])
@@ -440,32 +444,35 @@ class BosonicBackend(BaseBosonic):
             return weights, means, covs
 
         # The only remaining option is a real-valued cat state
-        return self.prepare_cat_real_rep(alpha, phi, ampl_cutoff, D)
+        return self.prepare_cat_real_rep(a, theta, p, ampl_cutoff, D)
 
-    def prepare_cat_real_rep(self, alpha, phi, ampl_cutoff, D):
+    def prepare_cat_real_rep(self, a, theta, p, ampl_cutoff, D):
         r"""Prepares the arrays of weights, means and covs for a cat state:
 
-        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`.
+        :math:`\ket{\text{cat}(\alpha)} = \frac{1}{N} (\ket{\alpha} +e^{i\phi\pi} \ket{-\alpha})`,
+
+        where :math:`\alpha = ae^{i\theta}`.
 
         For this representation, weights, means and covariances are real-valued.
 
         Args:
-            alpha (complex): alpha value of cat state
-            phi (float): phi value of cat state
+            a (float): displacement magnitude :math:`|\alpha|`
+            theta (float): displacement angle :math:`\theta`
+            p (float): Parity, where :math:`\phi=p\pi`. ``p=0`` corresponds to an even
+                cat state, and ``p=1`` an odd cat state.
             ampl_cutoff (float): this determines how many terms to keep
             D (float): quality parameter of approximation
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
         """
+
         # Normalization factor
-        norm = 1 / (2 * (1 + np.exp(-2 * np.absolute(alpha) ** 2) * np.cos(phi)))
-        phi = np.pi * phi
+        phi = np.pi * p
+        norm = 1 / (2 * (1 + np.exp(-2 * a ** 2) * np.cos(phi)))
         hbar = self.circuit.hbar
 
         # Defining useful constants
-        a = np.absolute(alpha)
-        phase = np.angle(alpha)
         E = np.pi ** 2 * D * hbar / (16 * a ** 2)
         v = hbar / 2
         num_mean = 8 * a * np.sqrt(hbar) / (np.pi * D * np.sqrt(2))
@@ -526,8 +533,8 @@ class BosonicBackend(BaseBosonic):
         cov = cov[filt]
 
         # applying a rotation if necessary
-        if not np.isclose(phase, 0):
-            S = np.array([[np.cos(phase), -np.sin(phase)], [np.sin(phase), np.cos(phase)]])
+        if not np.isclose(theta, 0):
+            S = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
             means = np.dot(S, means.T).T
             cov = S @ cov @ S.T
 
@@ -696,7 +703,8 @@ class BosonicBackend(BaseBosonic):
             [
                 (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
-            ]
+            ],
+            dtype=complex,
         )
         weights = weights / np.sum(weights)
         return weights, means, covs
@@ -797,7 +805,17 @@ class BosonicBackend(BaseBosonic):
         raise NotImplementedError("Bosonic backend does not yet support Fock measurements.")
 
     def measure_threshold(self, modes, shots=1, select=None, **kwargs):
-        raise NotImplementedError("Bosonic backend does not yet support threshold measurements.")
+        if select is not None:
+            raise NotImplementedError("Bosonic backend currently does not support " "postselection")
+        if shots != 1:
+            raise NotImplementedError(
+                "Bosonic backend currently does not support " "multiple shots"
+            )
+
+        samples = []
+        for mode in modes:
+            samples.append(self.circuit.measure_threshold([mode]))
+        return np.array([samples])
 
     def state(self, modes=None, **kwargs):
         """Returns the state of the quantum simulation.

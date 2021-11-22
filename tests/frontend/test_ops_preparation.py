@@ -24,7 +24,9 @@ from strawberryfields.program_utils import MergeFailure, RegRefError
 from strawberryfields import utils
 
 
-@pytest.mark.parametrize("state", ops.simple_state_preparations)  # these have __init__ methods with default arguments
+@pytest.mark.parametrize(
+    "state", ops.simple_state_preparations
+)  # these have __init__ methods with default arguments
 class TestStatePreparationBasics:
     """Basic properties of state preparation operations."""
 

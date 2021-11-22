@@ -198,6 +198,11 @@ class TFBackend(BaseFock):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.beamsplitter(theta, phi, remapped_modes[0], remapped_modes[1])
 
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        with tf.name_scope("MZgate"):
+            remapped_modes = self._remap_modes([mode1, mode2])
+            self.circuit.mzgate(phi_in, phi_ex, remapped_modes[0], remapped_modes[1])
+
     def two_mode_squeeze(self, r, phi, mode1, mode2):
         with tf.name_scope("Two-mode_squeezing"):
             remapped_modes = self._remap_modes([mode1, mode2])
@@ -222,6 +227,12 @@ class TFBackend(BaseFock):
         with tf.name_scope("Cross-Kerr_interaction"):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
+
+    def gaussian_gate(self, S, d, *modes):
+        """Multimode gaussian gate parametrized by its symplectic matrix and displacement vector, the number of modes to be applied is not fixed"""
+        with tf.name_scope("Gaussian_gate"):
+            remapped_modes = self._remap_modes(modes)
+            self.circuit.gaussian_gate(S, d, remapped_modes)
 
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
@@ -341,7 +352,13 @@ class TFBackend(BaseFock):
             self.circuit.del_mode(remapped_modes)
             self._modemap.delete(modes)
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         with tf.name_scope("Add_mode"):
             self.circuit.add_mode(n)
             self._modemap.add(n)
+
+    def thermal_loss(self, T, nbar, mode):
+        raise NotImplementedError
+
+    def measure_threshold(self, modes, shots=1, select=None, **kwargs):
+        raise NotImplementedError

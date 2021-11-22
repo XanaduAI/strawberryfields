@@ -61,6 +61,7 @@ class TestBackendStateCreation:
         state = backend.state(modes=[0])
         f = state.fidelity_coherent([a])
         assert np.allclose(f, 1, atol=tol, rtol=0)
+
     def test_reduced_state_fock_probs(self, cutoff, setup_backend, batch_size, tol):
         """Test backend calculates correct fock prob of reduced coherent state"""
         backend = setup_backend(2)
@@ -134,12 +135,16 @@ class TestBaseStateMeanPhotonNumber:
         magnitude_squared = np.abs(a) ** 2
 
         mean_ex = magnitude_squared + np.sinh(r) ** 2
-        var_ex = - magnitude_squared + magnitude_squared ** 2 + 2 *\
-            magnitude_squared*np.cosh(2*r) - np.exp(-1j*phi) * a ** 2 *\
-            np.cosh(r)*np.sinh(r) - np.exp(1j* phi) * np.conj(a) **2 *\
-            np.cosh(r)*np.sinh(r) + np.sinh(r)**4 - (magnitude_squared +\
-                    np.conj(np.sinh(r))*np.sinh(r)) ** 2 +\
-            np.cosh(r)*np.sinh(r)*np.sinh(2*r)
+        var_ex = (
+            -magnitude_squared
+            + magnitude_squared ** 2
+            + 2 * magnitude_squared * np.cosh(2 * r)
+            - np.exp(-1j * phi) * a ** 2 * np.cosh(r) * np.sinh(r)
+            - np.exp(1j * phi) * np.conj(a) ** 2 * np.cosh(r) * np.sinh(r)
+            + np.sinh(r) ** 4
+            - (magnitude_squared + np.conj(np.sinh(r)) * np.sinh(r)) ** 2
+            + np.cosh(r) * np.sinh(r) * np.sinh(2 * r)
+        )
 
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
@@ -162,7 +167,8 @@ class TestBaseStateMeanPhotonNumber:
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-@pytest.mark.backends("fock", "tf","gaussian")
+
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestBaseFockKetDensityMatrix:
     """Tests for the ket, dm, and reduced density matrix function."""
 
@@ -318,7 +324,8 @@ class TestQuadratureExpectations:
 
         assert np.allclose(res.flatten(), res_exact.flatten(), atol=tol, rtol=0)
 
-@pytest.mark.backends("fock", "tf","gaussian")
+
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestNumberExpectation:
     """Multimode photon-number expectation value tests"""
 
@@ -355,10 +362,14 @@ class TestNumberExpectation:
 
         def squared_term(a, r, phi):
             magnitude_squared = np.abs(a) ** 2
-            squared_term = - magnitude_squared + magnitude_squared ** 2 + 2 *\
-                magnitude_squared*np.cosh(2*r) - 2 * np.real(np.exp(-1j*phi) *\
-                a ** 2 * np.cosh(r)*np.sinh(r)) + np.sinh(r)**4 +\
-                np.cosh(r)*np.sinh(r)*np.sinh(2*r)
+            squared_term = (
+                -magnitude_squared
+                + magnitude_squared ** 2
+                + 2 * magnitude_squared * np.cosh(2 * r)
+                - 2 * np.real(np.exp(-1j * phi) * a ** 2 * np.cosh(r) * np.sinh(r))
+                + np.sinh(r) ** 4
+                + np.cosh(r) * np.sinh(r) * np.sinh(2 * r)
+            )
             return squared_term
 
         res = state.number_expectation([0, 1])
@@ -393,7 +404,7 @@ class TestNumberExpectation:
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(-r, phi, 2)
-        backend.beamsplitter(np.pi/4, np.pi, 0, 2)
+        backend.beamsplitter(np.pi / 4, np.pi, 0, 2)
         state = backend.state()
         nbar = np.sinh(r) ** 2
 
@@ -458,21 +469,30 @@ class TestNumberExpectation:
         phi = 0.0
         backend.prepare_squeezed_state(r, phi, 0)
         backend.prepare_squeezed_state(r, phi + np.pi, 1)
-        backend.beamsplitter(np.pi/4, np.pi, 0, 1)
+        backend.beamsplitter(np.pi / 4, np.pi, 0, 1)
         backend.prepare_squeezed_state(r, phi, 2)
         backend.prepare_squeezed_state(r, phi + np.pi, 3)
-        backend.beamsplitter(np.pi/4, np.pi, 2, 3)
+        backend.beamsplitter(np.pi / 4, np.pi, 2, 3)
 
         state = backend.state()
         nbar = np.sinh(r) ** 2
         assert np.allclose(
-            state.number_expectation([0, 1, 2, 3])[0], (2 * nbar ** 2 + nbar) ** 2, atol=tol, rtol=0,
+            state.number_expectation([0, 1, 2, 3])[0],
+            (2 * nbar ** 2 + nbar) ** 2,
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([0, 1, 3])[0], nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
+            state.number_expectation([0, 1, 3])[0],
+            nbar * (2 * nbar ** 2 + nbar),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.number_expectation([3, 1, 2])[0], nbar * (2 * nbar ** 2 + nbar), atol=tol, rtol=0,
+            state.number_expectation([3, 1, 2])[0],
+            nbar * (2 * nbar ** 2 + nbar),
+            atol=tol,
+            rtol=0,
         )
 
 
@@ -488,7 +508,7 @@ class TestParityExpectation:
         n2 = 2
         backend.prepare_fock_state(n1, 0)
         backend.prepare_fock_state(n2, 1)
-        backend.beamsplitter(np.pi/4, 0, 0, 1)
+        backend.beamsplitter(np.pi / 4, 0, 0, 1)
         state = backend.state()
 
         assert np.allclose(state.parity_expectation([0]), 0, atol=tol, rtol=0)
@@ -564,7 +584,8 @@ class TestParityExpectation:
 
         assert np.allclose(state.parity_expectation([0]), (1 / ((2 * m) + 1)), atol=tol, rtol=0)
 
-@pytest.mark.backends("fock", "tf","gaussian")
+
+@pytest.mark.backends("fock", "tf", "gaussian")
 class TestFidelities:
     """Fidelity tests."""
 
@@ -580,7 +601,9 @@ class TestFidelities:
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.coherent_state(np.abs(a), np.angle(a), basis="fock", fock_dim=cutoff, hbar=hbar)
+            in_state = utils.coherent_state(
+                np.abs(a), np.angle(a), basis="fock", fock_dim=cutoff, hbar=hbar
+            )
         else:
             in_state = utils.coherent_state(np.abs(a), np.angle(a), basis="gaussian", hbar=hbar)
 
@@ -610,56 +633,62 @@ class TestFidelities:
         state = backend.state()
 
         if isinstance(backend, backends.BaseFock):
-            in_state = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="fock", fock_dim=cutoff, hbar=hbar)
+            in_state = utils.displaced_squeezed_state(
+                np.abs(a), np.angle(a), r, phi, basis="fock", fock_dim=cutoff, hbar=hbar
+            )
         else:
-            in_state = utils.displaced_squeezed_state(np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar)
+            in_state = utils.displaced_squeezed_state(
+                np.abs(a), np.angle(a), r, phi, basis="gaussian", hbar=hbar
+            )
 
         assert np.allclose(state.fidelity(in_state, 0), 1, atol=tol, rtol=0)
         assert np.allclose(state.fidelity(in_state, 1), 1, atol=tol, rtol=0)
 
+
 @pytest.mark.backends("bosonic")
 class TestBosonicState:
     """Tests the bosonic state class."""
-    def test_weights(self,setup_backend):
+
+    def test_weights(self, setup_backend):
         """Test weights are correct for a Gaussian state represented using the bosonic backend."""
         backend = setup_backend(1)
-        backend.prepare_coherent_state(1,0,0)
+        backend.prepare_coherent_state(1, 0, 0)
         weights = backend.state().weights()
         assert len(weights) == 1
         assert weights == np.array([1])
         assert sum(weights) == 1
-        
-    def test_bosonic_purity(self,setup_backend,tol):
+
+    def test_bosonic_purity(self, setup_backend, tol):
         """Test purities are correct for Gaussian states represented using the bosonic backend."""
         backend = setup_backend(1)
-        backend.prepare_coherent_state(r,phi,0)
+        backend.prepare_coherent_state(r, phi, 0)
         purity1 = backend.state().purity()
         backend.reset()
-        backend.prepare_thermal_state(1,0)
+        backend.prepare_thermal_state(1, 0)
         purity2 = backend.state().purity()
         assert np.allclose(purity1, 1, atol=tol, rtol=0)
         assert purity2 < 1
-        
-    def test_displacement(self,setup_backend,tol):
+
+    def test_displacement(self, setup_backend, tol):
         """Tests average displacement calculation."""
         backend = setup_backend(1)
-        backend.prepare_coherent_state(r,phi,0)
+        backend.prepare_coherent_state(r, phi, 0)
         disp = backend.state().displacement(0)
-        assert np.allclose(r*np.cos(phi)+1j*r*np.sin(phi),disp)
-    
-    def test_density_matrix(self,setup_backend,tol):
+        assert np.allclose(r * np.cos(phi) + 1j * r * np.sin(phi), disp)
+
+    def test_density_matrix(self, setup_backend, tol):
         """Tests vacuum density matrix."""
         backend = setup_backend(1)
         backend.prepare_vacuum_state(0)
         dm = backend.state().dm()
-        dm_compare = np.zeros((10,10))
-        dm_compare[0,0] = 1
-        assert np.allclose(dm,dm_compare)
-    
-    def test_is_vacuum(self,setup_backend):
+        dm_compare = np.zeros((10, 10))
+        dm_compare[0, 0] = 1
+        assert np.allclose(dm, dm_compare)
+
+    def test_is_vacuum(self, setup_backend):
         """Tests fidelity_vacuum method in BaseBosonicState."""
         backend = setup_backend(1)
         backend.prepare_vacuum_state(0)
-        assert np.allclose(backend.state().fidelity_vacuum(),1)
+        assert np.allclose(backend.state().fidelity_vacuum(), 1)
         backend.del_mode(0)
-        assert np.allclose(backend.state().fidelity_vacuum(),1)
+        assert np.allclose(backend.state().fidelity_vacuum(), 1)

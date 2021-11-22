@@ -384,6 +384,7 @@ class TestTriangularDecomposition:
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
 
+
 def _rectangular_compact_recompose(phases):
     r"""Calculates the unitary of a rectangular compact interferometer,
     using the phases provided in phases dict.
@@ -391,7 +392,7 @@ def _rectangular_compact_recompose(phases):
     Args:
         phases (dict):
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameters for the phase-shifters
         * ``sigmas``: parameters for the sMZI
@@ -418,6 +419,7 @@ def _rectangular_compact_recompose(phases):
     for j, phi_j in phases["phi_outs"].items():
         U = dec.P(j, phi_j, m) @ U
     return U
+
 
 class TestRectangularCompactDecomposition:
     """Tests for linear interferometer decomposition into rectangular grid of
@@ -465,6 +467,7 @@ class TestRectangularCompactDecomposition:
         Uout = _rectangular_compact_recompose(phases)
         assert np.allclose(U, Uout, atol=tol, rtol=0)
 
+
 def _triangular_compact_recompose(phases):
     r"""Calculates the unitary of a triangular compact interferometer,
     using the phases provided in phases dict.
@@ -472,7 +475,7 @@ def _triangular_compact_recompose(phases):
     Args:
         phases (dict):
         where the keywords:
-        
+
         * ``m``: the length of the matrix
         * ``phi_ins``: parameter of the phase-shifter at the beginning of the mode
         * ``sigmas``: parameter of the sMZI :math:`\frac{(\theta_1+\theta_2)}{2}`, where `\theta_{1,2}` are the values of the two internal phase-shifts of sMZI

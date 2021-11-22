@@ -8,6 +8,7 @@ help:
 	@echo "  install            to install Strawberry Fields"
 	@echo "  wheel              to build the Strawberry Fields wheel"
 	@echo "  dist               to package the source distribution"
+	@echo "  docs               to generate the Sphinx documentation"
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
 	@echo "  format             to run black formatting"
@@ -47,6 +48,7 @@ clean:
 	rm -rf dist
 	rm -rf build
 
+.PHONY : docs
 docs:
 	make -C doc html
 
@@ -57,7 +59,7 @@ clean-docs:
 
 .PHONY : format
 format: 
-	black -l 100 strawberryfields
+	black -l 100 strawberryfields tests
 
 test: test-frontend test-gaussian test-fock test-tf batch-test-tf test-apps test-api
 

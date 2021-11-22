@@ -25,7 +25,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import move_vac_modes, reshape_samples
-from strawberryfields.api.devicespec import DeviceSpec
+from strawberryfields.devicespec import DeviceSpec
 
 pytestmark = pytest.mark.frontend
 
@@ -123,7 +123,7 @@ def test_single_parameter_list_program():
     eng.run(prog)
 
     assert isinstance(prog.loop_vars, Iterable)
-    assert prog.parameters == {'p0': [1, 2]}
+    assert prog.parameters == {"p0": [1, 2]}
 
 
 class TestSingleLoopNullifier:
@@ -491,6 +491,7 @@ def singleloop_program(r, alpha, phi, theta):
 target = "TD2"
 tm = 4
 device_spec = {
+    "target": target,
     "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
     "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
     "compiler": ["TD2"],
@@ -501,7 +502,7 @@ device_spec = {
     },
 }
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
-device = DeviceSpec("TD2", device_spec, connection=None)
+device = DeviceSpec(device_spec)
 
 
 class TestTDMcompiler:
@@ -541,9 +542,7 @@ class TestTDMcompiler:
             ops.Rgate(p[1]) | q[1]
             ops.MeasureHomodyne(p[2]) | q[0]
         eng = sf.Engine("gaussian")
-        with pytest.raises(
-            CircuitError, match="due to incompatible mode ordering."
-        ):
+        with pytest.raises(CircuitError, match="due to incompatible mode ordering."):
             prog.compile(device=device, compiler="TD2")
 
     def test_tdm_wrong_parameters_explicit(self):
@@ -601,6 +600,20 @@ class TestTDMcompiler:
         with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
+    def test_tdm_parameters_not_in_devicespec(self):
+        """Test the correct error is raised when the tdm circuit symbolic parameters are not found
+        in the device specification"""
+        spec = copy.deepcopy(device_spec)
+        # "p1" removed from device spec, but is still used in layout
+        del spec["gate_parameters"]["p1"]
+
+        c = 2
+        prog = singleloop_program(
+            0.5643, [np.pi / 4, 0] * c, [0, np.pi / 2] * c, [0, 0, np.pi / 2, np.pi / 2]
+        )
+        with pytest.raises(CircuitError, match="not found in device specification"):
+            prog.compile(device=DeviceSpec(spec), compiler="TDM")
+
     def test_tdm_inconsistent_temporal_modes(self):
         """Test the correct error is raised when the tdm circuit has too many temporal modes"""
         sq_r = 0.5643
@@ -618,7 +631,7 @@ class TestTDMcompiler:
         device_spec1["modes"][
             "concurrent"
         ] = 100  # Note that singleloop_program has only two concurrent modes
-        device1 = DeviceSpec("x", device_spec1, connection=None)
+        device1 = DeviceSpec(device_spec1)
         c = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -634,7 +647,7 @@ class TestTDMcompiler:
         device_spec1["modes"][
             "spatial"
         ] = 100  # Note that singleloop_program has only one spatial mode
-        device1 = DeviceSpec("x", device_spec1, connection=None)
+        device1 = DeviceSpec(device_spec1)
         c = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -648,33 +661,24 @@ class TestTDMcompiler:
 class TestTDMProgramFunctions:
     """Test functions in the ``tdmprogram`` module"""
 
-    @pytest.mark.parametrize("N, crop, expected", [
-        (
-            1,
-            False,
-            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
-        ),
-        (
-            1,
-            True,
-            [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
-        ),
-        (
-            3,
-            False,
-            [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]
-        ),
-        (
-            [1, 4],
-            False,
-            [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]
-        ),
-        (
-            [4],
-            True,
-            [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]
-        ),
-    ])
+    @pytest.mark.parametrize(
+        "N, crop, expected",
+        [
+            (
+                1,
+                False,
+                [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+            ),
+            (
+                1,
+                True,
+                [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]],
+            ),
+            (3, False, [[[3, 4], [5, 6]], [[7, 8], [9, 10]], [[11, 12], [0, 0]]]),
+            ([1, 4], False, [[[4, 5], [6, 7]], [[8, 9], [10, 11]], [[12, 0], [0, 0]]]),
+            ([4], True, [[[4, 5], [6, 7]], [[8, 9], [10, 11]]]),
+        ],
+    )
     def test_move_vac_modes(self, N, crop, expected):
         """Test the `move_vac_modes` function"""
         samples = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]])
@@ -691,25 +695,25 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
         results = eng.run(prog)
-        assert results.samples.shape[0] == 1
+        assert len(results.samples) == 1
 
     def test_shots_run_options(self):
         """Test that run_options takes precedence over default"""
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog)
-        assert results.samples.shape[0] == 5
+        assert len(results.samples) == 5
 
     def test_shots_passed(self):
         """Test that shots supplied via eng.run takes precedence over
@@ -717,13 +721,13 @@ class TestEngineTDMProgramInteraction:
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
 
-        with prog.context([1,2], [3,4]) as (p, q):
+        with prog.context([1, 2], [3, 4]) as (p, q):
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
         prog.run_options = {"shots": 5}
         results = eng.run(prog, shots=2)
-        assert results.samples.shape[0] == 2
+        assert len(results.samples) == 2
         assert prog.run_options["shots"] == 5
 
     def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
@@ -747,6 +751,7 @@ class TestEngineTDMProgramInteraction:
 
 class TestTDMValidation:
     """Test the validation of TDMProgram against the device specs"""
+
     @pytest.fixture(scope="class")
     def device(self):
         target = "TD2"
@@ -770,6 +775,7 @@ class TestTDMValidation:
             MeasureHomodyne(p3) | 0
         """
         device_spec = {
+            "target": target,
             "layout": inspect.cleandoc(layout),
             "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
             "compiler": [target],
@@ -780,7 +786,7 @@ class TestTDMValidation:
                 "p3": [3],
             },
         }
-        return DeviceSpec("TD2", device_spec, connection=None)
+        return DeviceSpec(device_spec)
 
     @staticmethod
     def compile_test_program(device, args=(-1, 1, 2, 3)):
@@ -805,5 +811,7 @@ class TestTDMValidation:
         """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
         args = [-1, 1, 2, 3]
         args[incorrect_index] = -999
-        with pytest.raises(CircuitError, match="Parameter has value '-999' while its valid range is "):
+        with pytest.raises(
+            CircuitError, match="Parameter has value '-999' while its valid range is "
+        ):
             self.compile_test_program(device, args=args)

@@ -65,7 +65,7 @@ def test_all_passive_gates(hbar, tol):
         for i in range(4):
             ops.Sgate(1, 0.3) | q[i]
         ops.Rgate(np.pi) | q[0]
-        ops.PassiveChannel(np.ones((2,2))) | (q[1], q[2])
+        ops.PassiveChannel(np.ones((2, 2))) | (q[1], q[2])
         ops.LossChannel(0.9) | q[1]
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
         ops.PassiveChannel(np.array([[0.83]])) | q[0]
@@ -80,7 +80,7 @@ def test_all_passive_gates(hbar, tol):
     circuit = sf.Program(4)
     with circuit.context as q:
         ops.Rgate(np.pi) | q[0]
-        ops.PassiveChannel(np.ones((2,2))) | (q[1], q[2])
+        ops.PassiveChannel(np.ones((2, 2))) | (q[1], q[2])
         ops.LossChannel(0.9) | q[1]
         ops.MZgate(0.25 * np.pi, 0) | (q[2], q[3])
         ops.PassiveChannel(np.array([[0.83]])) | q[0]
@@ -111,6 +111,7 @@ def test_all_passive_gates(hbar, tol):
 
     assert np.allclose(cov, cov2, atol=tol, rtol=0)
 
+
 @pytest.mark.parametrize("depth", [1, 2, 3])
 def test_modes_subset(depth):
     """Tests that the compiler recognizes which modes are not being modified and acts accordingly"""
@@ -131,6 +132,7 @@ def test_modes_subset(depth):
     assert len(compiled_circuit.circuit[0].reg) == 5
     indices = [compiled_circuit.circuit[0].reg[i].ind for i in range(5)]
     assert indices == sorted(list(indices))
+
 
 @pytest.mark.parametrize("M", range(4, 8))
 def test_one_mode_gate(M, tol):
@@ -156,6 +158,7 @@ def test_two_mode_gate(M, tol):
     T1 = G_expand @ np.arange(M ** 2).reshape((M, M))
 
     assert np.allclose(T, T1, atol=tol, rtol=0)
+
 
 @pytest.mark.parametrize("theta", [0, 0.4, np.pi])
 @pytest.mark.parametrize("phi", [0, 0.1, np.pi])

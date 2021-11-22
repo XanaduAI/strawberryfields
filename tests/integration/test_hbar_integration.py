@@ -33,7 +33,7 @@ HBAR = [0.5, 1]
 @pytest.mark.parametrize("hbar", HBAR, indirect=True)
 class TestIntegration:
     """Tests that go through the frontend and backend, and state object"""
-    
+
     def test_squeeze_variance_frontend(self, setup_eng, hbar, tol):
         """test homodyne measurement of a squeeze state is correct,
         returning a variance of np.exp(-2*r)*h/2, via the frontend"""
@@ -50,9 +50,7 @@ class TestIntegration:
             res = np.append(res, q[0].val)
             eng.reset()
 
-        assert np.allclose(
-            np.var(res), np.exp(-2 * R) * hbar / 2, atol=STD_10 + tol, rtol=0
-        )
+        assert np.allclose(np.var(res), np.exp(-2 * R) * hbar / 2, atol=STD_10 + tol, rtol=0)
 
     @pytest.mark.backends("gaussian", "bosonic")
     def test_x_displacement(self, setup_eng, hbar, tol):
@@ -66,7 +64,7 @@ class TestIntegration:
         if eng.backend_name == "gaussian":
             mu_x = state.means()[0]
         elif eng.backend_name == "bosonic":
-            mu_x = state.means()[0,0]
+            mu_x = state.means()[0, 0]
 
         assert state.hbar == hbar
         assert np.allclose(mu_x, X, atol=tol, rtol=0)
@@ -83,7 +81,7 @@ class TestIntegration:
         if eng.backend_name == "gaussian":
             mu_z = state.means()[1]
         elif eng.backend_name == "bosonic":
-            mu_z = state.means()[0,1]
+            mu_z = state.means()[0, 1]
 
         assert state.hbar == hbar
         assert np.allclose(mu_z, P, atol=tol, rtol=0)
@@ -111,6 +109,4 @@ class BackendOnly:
             x = backend.measure_homodyne(phi=0, mode=0)
             res = np.append(res, x)
 
-        assert np.allclose(
-            np.var(res), np.exp(-2 * R) * hbar / 2, atol=STD_10 + tol, rtol=0
-        )
+        assert np.allclose(np.var(res), np.exp(-2 * R) * hbar / 2, atol=STD_10 + tol, rtol=0)

@@ -11,63 +11,64 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import textwrap
+import inspect
 
-import pytest
 import numpy as np
 import networkx as nx
 
-from strawberryfields.api import DeviceSpec
+from strawberryfields.devicespec import DeviceSpec
 from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import list_to_DAG
 
+layout = inspect.cleandoc(
+    """
+    name template_4x2_X8
+    version 1.0
+    target X8_01 (shots=1)
+
+    # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
+    S2gate({squeezing_amplitude_0}, 0.0) | [0, 4]
+    S2gate({squeezing_amplitude_1}, 0.0) | [1, 5]
+    S2gate({squeezing_amplitude_2}, 0.0) | [2, 6]
+    S2gate({squeezing_amplitude_3}, 0.0) | [3, 7]
+
+    # standard 4x4 interferometer for the signal modes (the lower ones in frequency)
+    # even phase indices correspond to internal Mach-Zehnder interferometer phases
+    # odd phase indices correspond to external Mach-Zehnder interferometer phases
+    MZgate({phase_0}, {phase_1}) | [0, 1]
+    MZgate({phase_2}, {phase_3}) | [2, 3]
+    MZgate({phase_4}, {phase_5}) | [1, 2]
+    MZgate({phase_6}, {phase_7}) | [0, 1]
+    MZgate({phase_8}, {phase_9}) | [2, 3]
+    MZgate({phase_10}, {phase_11}) | [1, 2]
+
+    # duplicate the interferometer for the idler modes (the higher ones in frequency)
+    MZgate({phase_0}, {phase_1}) | [4, 5]
+    MZgate({phase_2}, {phase_3}) | [6, 7]
+    MZgate({phase_4}, {phase_5}) | [5, 6]
+    MZgate({phase_6}, {phase_7}) | [4, 5]
+    MZgate({phase_8}, {phase_9}) | [6, 7]
+    MZgate({phase_10}, {phase_11}) | [5, 6]
+
+    # add final dummy phases to allow mapping any unitary to this template (these do not
+    # affect the photon number measurement)
+    Rgate({final_phase_0}) | [0]
+    Rgate({final_phase_1}) | [1]
+    Rgate({final_phase_2}) | [2]
+    Rgate({final_phase_3}) | [3]
+    Rgate({final_phase_4}) | [4]
+    Rgate({final_phase_5}) | [5]
+    Rgate({final_phase_6}) | [6]
+    Rgate({final_phase_7}) | [7]
+
+    # measurement in Fock basis
+    MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
+    """
+)
 
 test_spec = {
-    "layout": textwrap.dedent(
-        """\
-        name template_4x2_X8
-        version 1.0
-        target X8_01 (shots=1)
-
-        # for n spatial degrees, first n signal modes, then n idler modes, all phases zero
-        S2gate({squeezing_amplitude_0}, 0.0) | [0, 4]
-        S2gate({squeezing_amplitude_1}, 0.0) | [1, 5]
-        S2gate({squeezing_amplitude_2}, 0.0) | [2, 6]
-        S2gate({squeezing_amplitude_3}, 0.0) | [3, 7]
-
-        # standard 4x4 interferometer for the signal modes (the lower ones in frequency)
-        # even phase indices correspond to internal Mach-Zehnder interferometer phases
-        # odd phase indices correspond to external Mach-Zehnder interferometer phases
-        MZgate({phase_0}, {phase_1}) | [0, 1]
-        MZgate({phase_2}, {phase_3}) | [2, 3]
-        MZgate({phase_4}, {phase_5}) | [1, 2]
-        MZgate({phase_6}, {phase_7}) | [0, 1]
-        MZgate({phase_8}, {phase_9}) | [2, 3]
-        MZgate({phase_10}, {phase_11}) | [1, 2]
-
-        # duplicate the interferometer for the idler modes (the higher ones in frequency)
-        MZgate({phase_0}, {phase_1}) | [4, 5]
-        MZgate({phase_2}, {phase_3}) | [6, 7]
-        MZgate({phase_4}, {phase_5}) | [5, 6]
-        MZgate({phase_6}, {phase_7}) | [4, 5]
-        MZgate({phase_8}, {phase_9}) | [6, 7]
-        MZgate({phase_10}, {phase_11}) | [5, 6]
-
-        # add final dummy phases to allow mapping any unitary to this template (these do not
-        # affect the photon number measurement)
-        Rgate({final_phase_0}) | [0]
-        Rgate({final_phase_1}) | [1]
-        Rgate({final_phase_2}) | [2]
-        Rgate({final_phase_3}) | [3]
-        Rgate({final_phase_4}) | [4]
-        Rgate({final_phase_5}) | [5]
-        Rgate({final_phase_6}) | [6]
-        Rgate({final_phase_7}) | [7]
-
-        # measurement in Fock basis
-        MeasureFock() | [0, 1, 2, 3, 4, 5, 6, 7]
-    """
-    ),
+    "target": "X8_01",
+    "layout": layout,
     "modes": 8,
     "compiler": [],
     "gate_parameters": {
@@ -99,7 +100,7 @@ test_spec = {
 }
 
 
-X8_spec = DeviceSpec(target="X8_01", connection=None, spec=test_spec)
+X8_spec = DeviceSpec(spec=test_spec)
 
 
 def generate_X8_params(r, p):

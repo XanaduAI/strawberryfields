@@ -127,7 +127,7 @@ class FockBackend(BaseFock):
         self.circuit = Circuit(num_subsystems, cutoff_dim, pure)
         self._modemap = ModeMap(num_subsystems)
 
-    def add_mode(self, n=1):
+    def add_mode(self, n=1, **kwargs):
         self.circuit.alloc(n)
         self._modemap.add(n)
 
@@ -177,6 +177,9 @@ class FockBackend(BaseFock):
 
     def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(theta, phi, self._remap_modes(mode1), self._remap_modes(mode2))
+
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        self.circuit.mzgate(phi_in, phi_ex, self._remap_modes(mode1), self._remap_modes(mode2))
 
     def measure_homodyne(self, phi, mode, shots=1, select=None, **kwargs):
         """Perform a homodyne measurement on the specified mode.
