@@ -2481,12 +2481,15 @@ def _triangular_compact_cmds(reg, phases):
         cmds.append(Command(Rgate(zeta), reg[j]))
     return cmds
 
-def _sun_compact_cmds(reg, parameters):
+def _sun_compact_cmds(reg, parameters, global_phase):
     cmds = []
+
+    if global_phase is not None:
+        cmds += [Command(Rgate(global_phase), mode) for mode in reg]
 
     for modes, params in parameters:
 
-        md1, md2 = int(modes[0]) - 1, int(modes[1]) - 1
+        md1, md2 = modes[0] - 1, modes[1] - 1
         a, b, g = params[0], params[1], params[2]
 
         if md2 != md1 + 1:
@@ -2646,11 +2649,9 @@ class Interferometer(Decomposition):
 
         elif mesh == "sun_compact":
             parameters, global_phase = dec.sun_compact(self.p[0], rtol=tol, atol=tol)
-            if global_phase is not None:
-                cmds += [Command(Rgate(global_phase), mode) for mode in reg]
-            cmds = _sun_compact_cmds(reg, parameters)
+            cmds = _sun_compact_cmds(reg, parameters, global_phase)
 
-        elif not self.identity or not drop_identity:
+        else:
             decomp_fn = getattr(dec, mesh)
             BS1, R, BS2 = decomp_fn(self.p[0], tol=tol)
 
