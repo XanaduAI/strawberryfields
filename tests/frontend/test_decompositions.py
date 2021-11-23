@@ -829,7 +829,7 @@ class TestCompactSUnFactorization:
         )
 
         # Stuff it into modes i and j of SU(n)
-        full_Rij = np.identity(n, dtype = complex)
+        full_Rij = np.identity(n, dtype=complex)
         full_Rij[i : j + 1, i : j + 1] = Rij
 
         return full_Rij
@@ -884,7 +884,7 @@ class TestCompactSUnFactorization:
         U = random_interferometer(n)
         det = np.linalg.det(U)
         if SU_matrix:
-            U /= det**(1/n)
+            U /= det ** (1 / n)
 
         # get result from factorization
         _, global_phase = dec.sun_compact(U, tol)
@@ -901,7 +901,7 @@ class TestCompactSUnFactorization:
 
         # Generate a random SU(n) matrix.
         U = random_interferometer(n)
-        SU_expected = U/np.linalg.det(U)**(1/n)
+        SU_expected = U / np.linalg.det(U) ** (1 / n)
 
         # get result from factorization
         factorization_params, global_phase = dec.sun_compact(SU_expected, tol)
@@ -919,6 +919,6 @@ class TestCompactSUnFactorization:
 
         factorization_params, phase = dec.sun_compact(U, tol)
         SU_reconstructed = self._sun_reconstruction(n, factorization_params)
-        U_reconstructed = np.exp(1j*phase)**(1/n) * SU_reconstructed
+        U_reconstructed = np.exp(1j * phase) ** (1 / n) * SU_reconstructed
 
         np.allclose(U_reconstructed, U)

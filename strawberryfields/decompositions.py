@@ -1098,7 +1098,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
     # if Unitary, factorize into phase times Special Unitary
     if not np.isclose(np.linalg.det(U), 1, rtol=rtol, atol=atol):
         det = np.linalg.det(U)
-        U *= 1/det**(1/n)
+        U *= 1 / det ** (1 / n)
         global_phase = np.angle(det)
 
     # Decompose the matrix
