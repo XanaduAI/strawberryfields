@@ -2634,6 +2634,8 @@ class Interferometer(Decomposition):
 
         cmds = []
 
+        if self.identity or drop_identity: return cmds
+
         if mesh == "rectangular_compact":
             phases = dec.rectangular_compact(self.p[0], rtol=tol, atol=tol)
             cmds = _rectangular_compact_cmds(reg, phases)
