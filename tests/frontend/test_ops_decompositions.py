@@ -33,6 +33,16 @@ pytestmark = pytest.mark.frontend
 # make the test file deterministic
 np.random.seed(42)
 
+interferometer_meshes = [
+            "rectangular",
+            "rectangular_phase_end",
+            "rectangular_symmetric",
+            "rectangular_compact",
+            "triangular",
+            "triangular_compact",
+            "sun_compact",
+        ]
+
 
 def expand(S, modes, num_modes):
     r"""Expands a Symplectic matrix S to act on the entire subsystem.
@@ -195,7 +205,7 @@ class TestInterferometer:
         # two merged unitaries are the same as their product
         assert np.allclose(int1.merge(int2).p[0], U2 @ U1, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("mesh", ["rectangular", "rectangular_phase_end", "rectangular_symmetric", "rectangular_compact", "triangular", "triangular_compact"])
+    @pytest.mark.parametrize("mesh", interferometer_meshes)
     def test_identity(self, mesh):
         """Test that nothing is done if the unitary is the identity"""
         prog = sf.Program(2)
@@ -207,18 +217,30 @@ class TestInterferometer:
         # as a result, no gates are returned when decomposed
         assert not G.decompose(prog.register)
 
-    def test_decomposition(self, tol):
+    @pytest.mark.parametrize("mesh", interferometer_meshes)
+    def test_decomposition(self, mesh, tol):
         """Test that an interferometer is correctly decomposed"""
         n = 3
         prog = sf.Program(n)
         U = random_interferometer(n)
 
-        G = ops.Interferometer(U)
-        cmds = G.decompose(prog.register)
+        G = ops.Interferometer(U, mesh)
+        seq = G.decompose(prog.register)
 
-        S = np.identity(2 * n)
+        # decompose unitary gates if possible
+        cmds = []
+        for cmd in seq:
+            # all operations should be unitary gates
+            assert isinstance(cmd.op, (ops.Gate))
+
+            try:
+                decomp_seq = cmd.op.decompose(cmd.reg)
+                cmds.extend(decomp_seq)
+            except NotImplementedError:
+                cmds.append(cmd)
 
         # calculating the resulting decomposed symplectic
+        S = np.identity(2 * n)
         for cmd in cmds:
             # all operations should be BSgates or Rgates
             assert isinstance(cmd.op, (ops.BSgate, ops.Rgate))
