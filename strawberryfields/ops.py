@@ -2639,7 +2639,7 @@ class Interferometer(Decomposition):
 
         cmds = []
 
-        if self.identity or drop_identity:
+        if self.identity:
             return cmds
 
         if mesh == "rectangular_compact":
