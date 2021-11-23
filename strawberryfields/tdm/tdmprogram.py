@@ -557,6 +557,8 @@ class TDMProgram(Program):
                                     device.target, program_param, param_range
                                 )
                             )
+            self._compile_info = (device, "TDM")
+            self._target = device.target
             return self
 
         raise CircuitError("TDM programs cannot be compiled without a valid device specification.")
