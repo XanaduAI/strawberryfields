@@ -162,7 +162,7 @@ for accessing the results of your program execution:
   for manipulation of the final circuit state. Not available for remote
   backends.
 
-  .. code-block:: python
+  .. code-block:: pycon
 
       >>> print(result.state)
       <FockState: num_modes=3, cutoff=5, pure=True, hbar=2.0>

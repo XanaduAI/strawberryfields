@@ -2285,6 +2285,42 @@ class Fouriergate(Gate):
         return temp
 
 
+class Ggate(Gate):
+    r"""General N-mode Gaussian gate.
+
+    The general N-mode Gaussian gate can be parametrized by a symplectic matrix S and a displacement parameter d.
+
+    .. math::
+        G(S,d)
+
+    Args:
+
+        S (array): symplectic matrix
+        d (array): vector of displacement parameters
+
+    .. details::
+
+        .. admonition:: Definition
+            :class: defn
+
+        .. math::
+            & cov = S*cov*S^T,\\
+            & mean = mean + d.
+
+    """
+
+    def __init__(self, S, d):
+        super().__init__([S, d])
+        self.ns = S.shape[-1] // 2
+
+    def _apply(self, reg, backend, **kwargs):
+        S, d = par_evaluate(self.p)
+        backend.gaussian_gate(S, d, *reg)
+
+    def _decompose(self, reg, **kwargs):
+        raise NotImplementedError("Decomposition of general N-mode Gaussian gate not implemented")
+
+
 # ====================================================================
 # Metaoperations
 # ====================================================================

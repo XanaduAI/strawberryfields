@@ -139,7 +139,6 @@ Code details
 
 """
 import sys
-from .backend import TFBackend
 
 try:
     import tensorflow
@@ -149,7 +148,6 @@ except ImportError:
 else:
     tf_available = True
     tf_version = tensorflow.__version__
-
 
 tf_info = """\
 To use Strawberry Fields with TensorFlow support, version 2.x of TensorFlow is required.
@@ -169,3 +167,8 @@ if not (tf_available and tf_version[:2] == "2."):
     sys.excepthook = excepthook
 
     raise ImportError(tf_info)
+
+
+# The modules inside the tfbackend package assume TensorFlow is importable.
+from .backend import TFBackend
+from .ops import update_symplectic

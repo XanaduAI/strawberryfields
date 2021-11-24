@@ -15,11 +15,14 @@ r"""Unit tests for the states.py fock probabilities methods"""
 import pytest
 
 import numpy as np
-import tensorflow as tf
 from scipy.special import factorial as fac
 
-from strawberryfields import backends
-from strawberryfields import utils
+try:
+    import tensorflow as tf
+except ImportError:
+    import unittest.mock as mock
+
+    tf = mock.Mock()
 
 
 MAG_ALPHAS = np.linspace(0, 0.8, 3)

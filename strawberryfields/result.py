@@ -15,6 +15,13 @@
 This module provides a class that represents the result of a quantum computation.
 """
 
+import warnings
+from typing import Mapping, Optional
+
+import numpy as np
+
+from strawberryfields.backends import BaseState
+
 
 class Result:
     """Result of a quantum computation.
@@ -61,15 +68,13 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, samples, all_samples=None, is_stateful=True, ancilla_samples=None):
+    def __init__(self, result: Mapping, ancilla_samples: Mapping = None) -> None:
         self._state = None
-        self._is_stateful = is_stateful
-        self._samples = samples
-        self._all_samples = all_samples
+        self._result = result
         self._ancilla_samples = ancilla_samples
 
     @property
-    def samples(self):
+    def samples(self) -> Optional[np.ndarray]:
         """Measurement samples.
 
         Returned measurement samples will have shape ``(shots, modes)``.
@@ -78,24 +83,34 @@ class Result:
             array[array[float, int]]: measurement samples returned from
             program execution
         """
-        return self._samples
+        output = self._result.get("output")
+        if not output:
+            return None
+
+        if len(output) > 1:
+            warnings.warn(
+                f"Result dictionary has {len(output)} output "
+                "entries; returning only the first entry."
+            )
+        return output[0]
 
     @property
-    def all_samples(self):
-        """All measurement samples.
+    def samples_dict(self) -> Mapping:
+        """All measurement samples as a dictionary. Only available on simulators.
 
-        Returns a dictionary which associates each mode (keys) with the
-        list of measurements outcomes (values). For multiple shots or
-        batched execution arrays and tensors are stored.
+        Returns a dictionary which associates each mode (keys) with the list of
+        measurements outcomes (values), including modes that are being measured
+        several times. For multiple shots or batched execution, arrays and
+        tensors are stored.
 
         Returns:
-            dict[int, list]: mode index associated with the list of
-            measurement outcomes
+            dict[int, list]: mode index associated with the list of measurement outcomes
         """
-        return self._all_samples
+        samples_dict = {key: val for key, val in self._result.items() if isinstance(key, int)}
+        return samples_dict
 
     @property
-    def ancilla_samples(self):
+    def ancilla_samples(self) -> Optional[Mapping]:
         """All measurement samples from ancillary modes used for measurement-based
         gates.
 
@@ -110,7 +125,7 @@ class Result:
         return self._ancilla_samples
 
     @property
-    def state(self):
+    def state(self) -> Optional[BaseState]:
         """The quantum state object.
 
         The quantum state object contains details and methods
@@ -129,11 +144,9 @@ class Result:
         Returns:
             BaseState: quantum state returned from program execution
         """
-        if not self._is_stateful:
-            raise AttributeError("The state is undefined for a stateless computation.")
         return self._state
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation."""
         if self.samples.ndim == 2:
             # if samples has dim 2, assume they're from a standard Program
@@ -145,18 +158,18 @@ class Result:
                     ancilla_modes += len(self.ancilla_samples[i])
                 return (
                     f"<Result: shots={shots}, num_modes={modes}, num_ancillae={ancilla_modes}, "
-                    f"contains state={self._is_stateful}>"
+                    f"contains state={self._state is not None}>"
                 )
 
             return "<Result: shots={}, num_modes={}, contains state={}>".format(
-                shots, modes, self._is_stateful
+                shots, modes, self._state is not None
             )
 
         if self.samples.ndim == 3:
             # if samples has dim 3, assume they're TDM
             shots, modes, timebins = self.samples.shape
             return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
-                shots, modes, timebins, self._is_stateful
+                shots, modes, timebins, self._state is not None
             )
 
-        return "<Result: contains state={}>".format(self._is_stateful)
+        return "<Result: contains state={}>".format(self._state is not None)

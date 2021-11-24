@@ -228,6 +228,12 @@ class TFBackend(BaseFock):
             remapped_modes = self._remap_modes([mode1, mode2])
             self.circuit.cross_kerr_interaction(kappa, remapped_modes[0], remapped_modes[1])
 
+    def gaussian_gate(self, S, d, *modes):
+        """Multimode gaussian gate parametrized by its symplectic matrix and displacement vector, the number of modes to be applied is not fixed"""
+        with tf.name_scope("Gaussian_gate"):
+            remapped_modes = self._remap_modes(modes)
+            self.circuit.gaussian_gate(S, d, remapped_modes)
+
     def state(self, modes=None, **kwargs):
         r"""Returns the state of the quantum simulation, restricted to the subsystems defined by `modes`.
 
