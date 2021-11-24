@@ -6,8 +6,8 @@
 
 <h3>Bug fixes</h3>
 
-* ``program.compile_info`` and ``program.target`` are correctly set if compilation is successfully
-  completed when compiling a ``TDMProgram``.
+* The `TDMProgram.compile_info` and `TDMProgram.target` fields are now set when
+  a `TDMProgram` is compiled using the "TDM" compiler.
   [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
 
 <h3>Documentation</h3>
