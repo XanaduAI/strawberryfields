@@ -598,7 +598,7 @@ class Program:
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DevicSpec`.
+                the hardware :class:`~.DeviceSpec`.
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.

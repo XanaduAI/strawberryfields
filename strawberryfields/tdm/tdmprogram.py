@@ -437,9 +437,11 @@ class TDMProgram(Program):
 
     # pylint: disable=too-many-branches
     def compile(self, *, device=None, compiler=None):
-        """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
+        """Compile the time-domain program given a Strawberry Fields photonic hardware device
+        specification.
 
-        Currently, the compilation is simply a check that the program matches the device.
+        The compilation checks that the program matches the device and sets the compile information
+        and the program target to the correct device target.
 
         Args:
             device (~strawberryfields.DeviceSpec): device specification object to use for
@@ -557,6 +559,8 @@ class TDMProgram(Program):
                                     device.target, program_param, param_range
                                 )
                             )
+            self._compile_info = (device, "TDM")
+            self._target = device.target
             return self
 
         raise CircuitError("TDM programs cannot be compiled without a valid device specification.")

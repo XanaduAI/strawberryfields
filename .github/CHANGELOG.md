@@ -6,11 +6,17 @@
 
 <h3>Bug fixes</h3>
 
+* The `TDMProgram.compile_info` and `TDMProgram.target` fields are now set when
+  a `TDMProgram` is compiled using the "TDM" compiler.
+  [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson
 
 # Release 0.20.0 (current release)
 
