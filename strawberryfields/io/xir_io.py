@@ -23,6 +23,7 @@ from typing import Iterable
 import numpy as np
 
 import xir
+from xir.program import Declaration
 
 import strawberryfields.program as sfp
 from strawberryfields.tdm.tdmprogram import TDMProgram
@@ -104,15 +105,18 @@ def from_xir(xir_prog):
 def from_xir_to_tdm(xir_prog):
     prog = TDMProgram(xir_prog.options["N"], name=xir_prog.options.get("name", "xir"))
 
-    args = {}
-    for stmt in xir_prog.statements:
-        if isinstance(stmt.params, dict):
-            for p, val in stmt.params.items():
-                if p[0] == "p" and p[1:].isdigit():
-                    args[p] = val
+    # extract the tdm gate arguments from the function declarations
+    args = [d.params for d in xir_prog.declarations["func"] if d.name[0] == "p" and d.name[1:].isdigit()]
+    # convert arguments to float/complex if stored as Decimal/DecimalComplex objects
+    for i, params in enumerate(args):
+        for j, p in enumerate(params):
+            if isinstance(p, Decimal):
+                args[i][j] = float(p)
+            elif isinstance(p, xir.DecimalComplex):
+                args[i][j] = complex(p)
 
     # append the quantum operations
-    with prog.context(*args.values()) as (p, q):
+    with prog.context(*args) as (p, q):
         for op in xir_prog.statements:
             # check if operation name is in the list of
             # defined StrawberryFields operations.
@@ -131,26 +135,22 @@ def from_xir_to_tdm(xir_prog):
             if op.params:
                 # convert symbolic expressions to symbolic expressions containing the corresponding
                 # MeasuredParameter and FreeParameter instances.
-                params = []
                 if isinstance(op.params, dict):
-                    has_ptype = any(px[0] == "p" and px[1:].isdigit() for px in op.params.keys())
                     vals = sfpar.par_convert(op.params.values(), prog)
-                    params_dict = dict(zip(op.params.keys(), vals))
-                    if has_ptype:
-                        for key, val in params_dict.items():
-                            if key[0] == "p" and key[1:].isdigit():
-                                params.append(p[int(key[1:])])
-                            else:
-                                params.append(val)
-                        gate(*params) | regrefs
-                    else:
-                        gate(**params_dict) | regrefs  # pylint:disable=expression-not-assigned
+                    params = dict(zip(op.params.keys(), vals))
+                    for key, val in params.items():
+                        if val[0] == "p" and val[1:].isdigit():
+                            params[key] = p[int(val[1:])]
+                    gate(**params) | regrefs  # pylint:disable=expression-not-assigned
                 else:
+                    params = []
                     for param in op.params:
                         if isinstance(param, Decimal):
                             params.append(float(param))
-                        elif isinstance(param, Iterable):
+                        elif isinstance(param, (list, np.ndarray)):
                             params.append(np.array(_listr(param)))
+                        elif isinstance(param, str) and param[0] == "p" and param[1:].isdigit():
+                            params.append(p[int(param[1:])])
                         else:
                             params.append(param)
                     params = sfpar.par_convert(params, prog)
@@ -191,6 +191,8 @@ def to_xir(prog, **kwargs):
     if isinstance(prog, TDMProgram):
         xir_prog.add_option("type", "tdm")
         xir_prog.add_option("N", prog.N)
+        for i, p in enumerate(prog.tdm_params):
+            xir_prog.add_declaration(Declaration(f"p{i}", "func", _listr(p)))
 
     if prog._target:
         xir_prog.add_option("target", prog._target)  # pylint: disable=protected-access
@@ -217,7 +219,7 @@ def to_xir(prog, **kwargs):
                 # argument is quadrature phase
                 a = cmd.op.p[0]
                 if a in getattr(prog, "loop_vars", ()):
-                    params[a.name] = _listr(prog.tdm_params[prog.loop_vars.index(a)])
+                    params["phi"] = a.name
                 else:
                     params["phi"] = a
 
@@ -240,11 +242,7 @@ def to_xir(prog, **kwargs):
 
 
             params = []
-            has_loop_var = any(a in getattr(prog, "loop_vars", ()) for a in cmd.op.p)
-            if has_loop_var:
-                params = {}
             for i, a in enumerate(cmd.op.p):
-                a_tdm = a
                 if sfpar.par_is_symbolic(a):
                     # try to evaluate symbolic parameter
                     try:
@@ -252,7 +250,7 @@ def to_xir(prog, **kwargs):
                     except sfpar.ParameterError:
                         # if a tdm param
                         if a in getattr(prog, "loop_vars", ()):
-                            a_tdm = _listr(prog.tdm_params[prog.loop_vars.index(a)])
+                            a = a.name
                         # if a pure symbol (free parameter), convert to string
                         elif a.is_symbol:
                             a = a.name
@@ -266,12 +264,7 @@ def to_xir(prog, **kwargs):
                 elif isinstance(a, Iterable):
                     # if an iterable, make sure it only consists of lists and Python types
                     a = _listr(a)
-                if has_loop_var:
-                    assert isinstance(params, dict)
-                    params[getattr(a, "name", f"static_param_{i}")] = a_tdm
-                else:
-                    assert isinstance(params, list)
-                    params.append(a)
+                params.append(a)
 
         op = xir.Statement(name, params, wires)
         xir_prog.add_statement(op)
