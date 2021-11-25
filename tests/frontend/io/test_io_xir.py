@@ -13,10 +13,11 @@
 # limitations under the License.
 r"""Unit tests for the IO module"""
 import pytest
-import textwrap
+import inspect
 
 import numpy as np
 import xir
+from xir.program import Declaration
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -25,6 +26,7 @@ from strawberryfields.program import Program
 from strawberryfields.tdm.tdmprogram import TDMProgram
 from strawberryfields.parameters import (
     par_funcs as pf,
+    FreeParameter,
 )
 
 
@@ -272,24 +274,24 @@ class TestSFtoXIRConversion:
         expected = [("Sgate", ["r", 0.0], (0,)), ("Zgate", ["3*log(-alpha)"], (1,))]
         assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
-    # def test_tdm_program(self):
-    #     sf_prog = TDMProgram(2)
+    def test_tdm_program(self):
+        sf_prog = TDMProgram(2)
 
-    #     with sf_prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
-    #         ops.Sgate(0.7, 0) | q[1]
-    #         ops.BSgate(p[0]) | (q[0], q[1])
-    #         ops.Rgate(p[1]) | q[1]
-    #         ops.MeasureHomodyne(p[2]) | q[0]
+        with sf_prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
+            ops.Sgate(0.7, 0) | q[1]
+            ops.BSgate(p[0]) | (q[0], q[1])
+            ops.Rgate(p[1]) | q[1]
+            ops.MeasureHomodyne(p[2]) | q[0]
 
-    #     xir_prog = io.to_xir(sf_prog)
+        xir_prog = io.to_xir(sf_prog)
 
-    #     expected = [
-    #         ("Sgate", [0.7, 0], (0,)),
-    #         ("BSgate", ["p0"], (1,)),
-    #         ("Rgate", ["p1"], (1,)),
-    #         ("MeasureHomodyne", {"phi": "p2"}, (1,)),
-    #     ]
-    #     assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
+        expected = [
+            ("Sgate", [0.7, 0], (1,)),
+            ("BSgate", ["p0", 0.0], (0, 1)),
+            ("Rgate", ["p1"], (1,)),
+            ("MeasureHomodyne", {"phi": "p2"}, (0,)),
+        ]
+        assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
 
 class TestXIRtoSFConversion:
@@ -336,6 +338,7 @@ class TestXIRtoSFConversion:
         sf_prog = io.to_program(xir_prog)
 
         assert len(sf_prog) == 1
+        assert sf_prog.circuit
         assert sf_prog.circuit[0].op.__class__.__name__ == "Vacuum"
         assert sf_prog.circuit[0].reg[0].ind == 0
 
@@ -347,6 +350,7 @@ class TestXIRtoSFConversion:
         sf_prog = io.to_program(xir_prog)
 
         assert len(sf_prog) == 1
+        assert sf_prog.circuit
         assert sf_prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert sf_prog.circuit[0].op.p[0] == 0.54
         assert sf_prog.circuit[0].op.p[1] == 0.12
@@ -360,6 +364,7 @@ class TestXIRtoSFConversion:
         sf_prog = io.to_program(xir_prog)
 
         assert len(sf_prog) == 1
+        assert sf_prog.circuit
         assert sf_prog.circuit[0].op.__class__.__name__ == "Dgate"
         assert sf_prog.circuit[0].op.p[0] == 0.54
         assert sf_prog.circuit[0].reg[0].ind == 0
@@ -372,83 +377,135 @@ class TestXIRtoSFConversion:
         sf_prog = io.to_program(xir_prog)
 
         assert len(sf_prog) == 1
+        assert sf_prog.circuit
         assert sf_prog.circuit[0].op.__class__.__name__ == "BSgate"
         assert sf_prog.circuit[0].op.p[0] == 0.54
         assert sf_prog.circuit[0].op.p[1] == np.pi
         assert sf_prog.circuit[0].reg[0].ind == 0
         assert sf_prog.circuit[0].reg[1].ind == 2
 
-    # TODO: fix TDM test
-    # def test_tdm_program(self):
-    #     """Test converting a tdm bb_script to a TDMProgram"""
+    def test_tdm_program(self):
+        """Test converting a TDM XIR program to a TDMProgram"""
 
-    #     # bb_script = textwrap.dedent(
-    #     #     """\
-    #     # name None
-    #     # version 1.0
-    #     # type tdm (temporal_modes=3)
+        xir_prog = xir.Program()
 
-    #     # int array p0 =
-    #     #     1, 2
-    #     # int array p1 =
-    #     #     3, 4
-    #     # int array p2 =
-    #     #     5, 6
+        xir_prog.add_statement(xir.Statement("Sgate", [0.7, 0], (1,)))
+        xir_prog.add_statement(xir.Statement("BSgate", ["p0", 0.0], (0, 1)))
+        xir_prog.add_statement(xir.Statement("Rgate", ["p1"], (1,)))
+        xir_prog.add_statement(xir.Statement("MeasureHomodyne", {"phi": "p2"}, (0,)))
 
-    #     # Sgate(0.7, 0) | 1
-    #     # BSgate(p0, 0.0) | [0, 1]
-    #     # Rgate(p1) | 1
-    #     # MeasureHomodyne(phi=p2) | 0
-    #     # """
-    #     # )
+        # TODO: invalid to pass non-string parameters to declaration; must do so
+        # to store parameter values due to TDM workaround
+        xir_prog.add_declaration(Declaration("p0", "func", [1, 2]))
+        xir_prog.add_declaration(Declaration("p1", "func", [3, 4]))
+        xir_prog.add_declaration(Declaration("p2", "func", [5, 6]))
 
-    #     xir_prog = xir.Program()
+        xir_prog.add_option("type", "tdm")
+        xir_prog.add_option("N", [2])
 
-    #     xir_prog.add_statement(xir.Statement("Sgate", [0.7, 0], (1,)))
-    #     xir_prog.add_statement(xir.Statement("BSgate", [[1, 2], 0.0], (0, 1)))
-    #     xir_prog.add_statement(xir.Statement("Rgate", [[3, 4]], (1,)))
-    #     xir_prog.add_statement(xir.Statement("MeasureHomodyne", {"phi": [5, 6]}, (0,)))
+        sf_prog = io.to_program(xir_prog)
 
-    #     xir_prog.add_option("type", "tdm")
-    #     xir_prog.add_option("temporal_modes", 3)
+        assert isinstance(sf_prog, TDMProgram)
 
-    #     sf_prog = io.to_program(xir_prog)
+        assert len(sf_prog) == 4
+        assert sf_prog.circuit
+        assert sf_prog.circuit[0].op.__class__.__name__ == "Sgate"
+        assert sf_prog.circuit[0].op.p[0] == 0.7
+        assert sf_prog.circuit[0].op.p[1] == 0
+        assert sf_prog.circuit[0].reg[0].ind == 1
 
-    #     assert len(sf_prog) == 4
-    #     assert sf_prog.circuit[0].op.__class__.__name__ == "Sgate"
-    #     assert sf_prog.circuit[0].op.p[0] == 0.7
-    #     assert sf_prog.circuit[0].op.p[1] == 0
-    #     assert sf_prog.circuit[0].reg[0].ind == 1
+        assert sf_prog.circuit[1].op.__class__.__name__ == "BSgate"
+        assert sf_prog.circuit[1].op.p[0] == FreeParameter("p0")
+        assert sf_prog.circuit[1].op.p[1] == 0.0
+        assert sf_prog.circuit[1].reg[0].ind == 0
+        assert sf_prog.circuit[1].reg[1].ind == 1
 
-    #     assert sf_prog.circuit[1].op.__class__.__name__ == "BSgate"
-    #     assert sf_prog.circuit[1].op.p[0] == FreeParameter("p0")
-    #     assert sf_prog.circuit[1].op.p[1] == 0.0
-    #     assert sf_prog.circuit[1].reg[0].ind == 0
-    #     assert sf_prog.circuit[1].reg[1].ind == 1
+        assert sf_prog.circuit[2].op.__class__.__name__ == "Rgate"
+        assert sf_prog.circuit[2].op.p[0] == FreeParameter("p1")
+        assert sf_prog.circuit[2].reg[0].ind == 1
 
-    #     assert sf_prog.circuit[2].op.__class__.__name__ == "Rgate"
-    #     assert sf_prog.circuit[2].op.p[0] == FreeParameter("p1")
-    #     assert sf_prog.circuit[2].reg[0].ind == 1
+        assert sf_prog.circuit[3].op.__class__.__name__ == "MeasureHomodyne"
+        assert sf_prog.circuit[3].op.p[0] == FreeParameter("p2")
+        assert sf_prog.circuit[3].reg[0].ind == 0
 
-    #     assert sf_prog.circuit[3].op.__class__.__name__ == "MeasureHomodyne"
-    #     assert sf_prog.circuit[3].op.p[0] == FreeParameter("p2")
-    #     assert sf_prog.circuit[3].reg[0].ind == 0
+        assert sf_prog.concurr_modes == 2
+        assert sf_prog.timebins == 2
+        assert sf_prog.spatial_modes == 1
+        assert sf_prog.free_params == {
+            "p0": FreeParameter("p0"),
+            "p1": FreeParameter("p1"),
+            "p2": FreeParameter("p2"),
+        }
+        assert all(sf_prog.tdm_params[0] == np.array([1, 2]))
+        assert all(sf_prog.tdm_params[1] == np.array([3, 4]))
+        assert all(sf_prog.tdm_params[2] == np.array([5, 6]))
 
-    #     assert sf_prog.concurr_modes == 2
-    #     assert sf_prog.timebins == 2
-    #     assert sf_prog.spatial_modes == 1
-    #     assert sf_prog.free_params == {
-    #         "p0": FreeParameter("p0"),
-    #         "p1": FreeParameter("p1"),
-    #         "p2": FreeParameter("p2"),
-    #     }
-    #     assert all(sf_prog.tdm_params[0] == np.array([1, 2]))
-    #     assert all(sf_prog.tdm_params[1] == np.array([3, 4]))
-    #     assert all(sf_prog.tdm_params[2] == np.array([5, 6]))
+    def test_tdm_program(self):
+        """Test converting a TDM XIR script to a TDMProgram"""
+        xir_script = inspect.cleandoc(
+            """
+            options:
+                type: tdm;
+                N: [2, 3];
+            end;
+
+            func p0(pi, 3*pi/2, 0);
+            func p1(1, 0.5, pi);
+            func p2(0, 0, 0);
+
+            Sgate(0.123, pi/4) | [2];
+            BSgate(p0, 0.0) | [1, 2];
+            Rgate(p1) | [2];
+            MeasureHomodyne(phi: p0) | [0];
+            MeasureHomodyne(phi: p2) | [2];
+            """
+        )
+
+        xir_prog = xir.parse_script(xir_script, eval_pi=True)
+        sf_prog = io.to_program(xir_prog)
+
+        assert isinstance(sf_prog, TDMProgram)
+
+        assert len(sf_prog) == 5
+        assert sf_prog.circuit
+        assert sf_prog.circuit[0].op.__class__.__name__ == "Sgate"
+        assert sf_prog.circuit[0].op.p[0] == 0.123
+        assert sf_prog.circuit[0].op.p[1] == np.pi/4
+        assert sf_prog.circuit[0].reg[0].ind == 2
+
+        assert sf_prog.circuit[1].op.__class__.__name__ == "BSgate"
+        assert sf_prog.circuit[1].op.p[0] == FreeParameter("p0")
+        assert sf_prog.circuit[1].op.p[1] == 0.0
+        assert sf_prog.circuit[1].reg[0].ind == 1
+        assert sf_prog.circuit[1].reg[1].ind == 2
+
+        assert sf_prog.circuit[2].op.__class__.__name__ == "Rgate"
+        assert sf_prog.circuit[2].op.p[0] == FreeParameter("p1")
+        assert sf_prog.circuit[2].reg[0].ind == 2
+
+        assert sf_prog.circuit[3].op.__class__.__name__ == "MeasureHomodyne"
+        assert sf_prog.circuit[3].op.p[0] == FreeParameter("p0")
+        assert sf_prog.circuit[3].reg[0].ind == 0
+
+        assert sf_prog.circuit[4].op.__class__.__name__ == "MeasureHomodyne"
+        assert sf_prog.circuit[4].op.p[0] == FreeParameter("p2")
+        assert sf_prog.circuit[4].reg[0].ind == 2
+
+        assert sf_prog.concurr_modes == 5
+        assert sf_prog.timebins == 3
+        assert sf_prog.spatial_modes == 2
+        assert sf_prog.free_params == {
+            "p0": FreeParameter("p0"),
+            "p1": FreeParameter("p1"),
+            "p2": FreeParameter("p2"),
+        }
+        assert all(sf_prog.tdm_params[0] == np.array([np.pi, 3*np.pi/2, 0]))
+        assert all(sf_prog.tdm_params[1] == np.array([1, 0.5, np.pi]))
+        assert all(sf_prog.tdm_params[2] == np.array([0, 0, 0]))
 
 
-prog_txt = textwrap.dedent(
-    """\
+prog_txt = inspect.cleandoc(
+    """
     import strawberryfields as sf
     from strawberryfields import ops
 
@@ -463,11 +520,11 @@ prog_txt = textwrap.dedent(
         ops.MeasureFock() | q[0]
 
     results = eng.run(prog)
-"""
+    """
 )
 
-prog_txt_no_engine = textwrap.dedent(
-    """\
+prog_txt_no_engine = inspect.cleandoc(
+    """
     import strawberryfields as sf
     from strawberryfields import ops
 
@@ -482,8 +539,8 @@ prog_txt_no_engine = textwrap.dedent(
 """
 )
 
-prog_txt_tdm = textwrap.dedent(
-    """\
+prog_txt_tdm = inspect.cleandoc(
+    """
     import strawberryfields as sf
     from strawberryfields import ops
 

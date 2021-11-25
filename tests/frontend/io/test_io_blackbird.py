@@ -446,6 +446,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Vacuum"
         assert prog.circuit[0].reg[0].ind == 0
 
@@ -462,6 +463,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].op.p[1] == 0.12
@@ -481,6 +483,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Dgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
@@ -500,6 +503,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 3
+        assert prog.circuit
 
         cmd = prog.circuit[1]
         assert cmd.op.__class__.__name__ == "Dgate"
@@ -531,6 +535,7 @@ class TestBlackbirdToSFConversion:
 
         assert prog.free_params.keys() == set(["foo_bar1", "foo_bar2", "ALPHA"])
         assert len(prog) == 4
+        assert prog.circuit
 
         cmd = prog.circuit[0]
         assert cmd.op.__class__.__name__ == "Dgate"
@@ -572,6 +577,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "BSgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].op.p[1] == np.pi
@@ -603,8 +609,10 @@ class TestBlackbirdToSFConversion:
 
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
+        assert isinstance(prog, TDMProgram)
 
         assert len(prog) == 4
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.7
         assert prog.circuit[0].op.p[1] == 0
