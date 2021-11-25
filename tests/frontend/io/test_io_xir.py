@@ -314,22 +314,6 @@ class TestXIRtoSFConversion:
         with pytest.raises(NameError, match="operation 'np' not defined"):
             io.to_program(xir_prog)
 
-    # def test_metadata(self):
-    #     """Test metadata converts"""
-
-    #     bb_script = """\
-    #     name test_program
-    #     version 1.0
-    #     Vac | 0
-    #     """
-
-    #     xir_prog = xir.Program()
-
-    #     sf_prog = io.to_program(bb)
-
-    #     assert sf_prog.version == xir_prog.name
-    #     assert sf_prog.name == "test_program"
-
     def test_gate_no_arg(self):
         """Test gate with no argument converts"""
         xir_prog = xir.Program()
