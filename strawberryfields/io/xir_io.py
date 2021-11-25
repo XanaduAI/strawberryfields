@@ -106,10 +106,11 @@ def from_xir(xir_prog):
 def from_xir_to_tdm(xir_prog):
     prog = TDMProgram(xir_prog.options["N"], name=xir_prog.options.get("name", "xir"))
 
-    # extract the tdm gate arguments from the function declarations
+    # extract the tdm gate arguments from the xir program constants
     args = [
-        d.params for d in xir_prog.declarations["func"] if d.name[0] == "p" and d.name[1:].isdigit()
+        val for key, val in xir_prog.constants.items() if key[0] == "p" and key[1:].isdigit()
     ]
+
     # convert arguments to float/complex if stored as Decimal/DecimalComplex objects
     for i, params in enumerate(args):
         for j, p in enumerate(params):
@@ -195,7 +196,7 @@ def to_xir(prog, **kwargs):
         xir_prog.add_option("type", "tdm")
         xir_prog.add_option("N", prog.N)
         for i, p in enumerate(prog.tdm_params):
-            xir_prog.add_declaration(Declaration(f"p{i}", "func", _listr(p)))
+            xir_prog.add_constant(f"p{i}", _listr(p))
 
     if prog._target:
         xir_prog.add_option("target", prog._target)  # pylint: disable=protected-access

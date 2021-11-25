@@ -394,15 +394,12 @@ class TestXIRtoSFConversion:
         xir_prog.add_statement(xir.Statement("Rgate", ["p1"], (1,)))
         xir_prog.add_statement(xir.Statement("MeasureHomodyne", {"phi": "p2"}, (0,)))
 
-        # TODO: invalid to pass non-string parameters to declaration; must do so
-        # to store parameter values due to TDM workaround
-        xir_prog.add_declaration(Declaration("p0", "func", [1, 2]))
-        xir_prog.add_declaration(Declaration("p1", "func", [3, 4]))
-        xir_prog.add_declaration(Declaration("p2", "func", [5, 6]))
+        xir_prog.add_constant("p0", [1, 2])
+        xir_prog.add_constant("p1", [3, 4])
+        xir_prog.add_constant("p2", [5, 6])
 
         xir_prog.add_option("type", "tdm")
         xir_prog.add_option("N", [2])
-
         sf_prog = io.to_program(xir_prog)
 
         assert isinstance(sf_prog, TDMProgram)
@@ -440,7 +437,7 @@ class TestXIRtoSFConversion:
         assert all(sf_prog.tdm_params[1] == np.array([3, 4]))
         assert all(sf_prog.tdm_params[2] == np.array([5, 6]))
 
-    def test_tdm_program(self):
+    def test_tdm_program_script(self):
         """Test converting a TDM XIR script to a TDMProgram"""
         xir_script = inspect.cleandoc(
             """
@@ -449,9 +446,11 @@ class TestXIRtoSFConversion:
                 N: [2, 3];
             end;
 
-            func p0(pi, 3*pi/2, 0);
-            func p1(1, 0.5, pi);
-            func p2(0, 0, 0);
+            constants:
+                p0: [pi, 3*pi/2, 0];
+                p1: [1, 0.5, pi];
+                p2: [0, 0, 0];
+            end;
 
             Sgate(0.123, pi/4) | [2];
             BSgate(p0, 0.0) | [1, 2];
