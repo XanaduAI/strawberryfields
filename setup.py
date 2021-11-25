@@ -34,7 +34,7 @@ requirements = [
     "thewalrus>=0.17.0",
     "toml",
     "urllib3>=1.25.3",
-    "git+https://github.com:XanaduAI/quantum-xir.git@constants-block#egg=quantum-xir",
+    "quantum-xir>=0.1.0",
     "xanadu-cloud-client>=0.1.1",
 ]
 
