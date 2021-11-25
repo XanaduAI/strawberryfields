@@ -107,9 +107,7 @@ def from_xir_to_tdm(xir_prog):
     prog = TDMProgram(xir_prog.options["N"], name=xir_prog.options.get("name", "xir"))
 
     # extract the tdm gate arguments from the xir program constants
-    args = [
-        val for key, val in xir_prog.constants.items() if key[0] == "p" and key[1:].isdigit()
-    ]
+    args = [val for key, val in xir_prog.constants.items() if key[0] == "p" and key[1:].isdigit()]
 
     # convert arguments to float/complex if stored as Decimal/DecimalComplex objects
     for i, params in enumerate(args):
