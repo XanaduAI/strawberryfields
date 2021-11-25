@@ -101,12 +101,15 @@ def from_xir(xir_prog):
 
     return prog
 
+
 # pylint: disable=too-many-branches
 def from_xir_to_tdm(xir_prog):
     prog = TDMProgram(xir_prog.options["N"], name=xir_prog.options.get("name", "xir"))
 
     # extract the tdm gate arguments from the function declarations
-    args = [d.params for d in xir_prog.declarations["func"] if d.name[0] == "p" and d.name[1:].isdigit()]
+    args = [
+        d.params for d in xir_prog.declarations["func"] if d.name[0] == "p" and d.name[1:].isdigit()
+    ]
     # convert arguments to float/complex if stored as Decimal/DecimalComplex objects
     for i, params in enumerate(args):
         for j, p in enumerate(params):
@@ -239,7 +242,6 @@ def to_xir(prog, **kwargs):
                         name, type_="gate", params=params, wires=tuple(range(len(wires)))
                     )
                     xir_prog.add_declaration(gate_decl)
-
 
             params = []
             for i, a in enumerate(cmd.op.p):

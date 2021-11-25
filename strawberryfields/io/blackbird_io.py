@@ -26,6 +26,7 @@ from strawberryfields.tdm.tdmprogram import TDMProgram
 from strawberryfields import ops
 import strawberryfields.parameters as sfpar
 
+
 def from_blackbird(bb):
     """Convert a Blackbird program to a Strawberry Fields program.
 
@@ -144,6 +145,7 @@ def from_blackbird_to_tdm(bb):
         prog.backend_options["cutoff_dim"] = bb.target["options"]["cutoff_dim"]
 
     return prog
+
 
 def to_blackbird(prog, version="1.0"):
     """Convert a Strawberry Fields Program to a Blackbird Program.

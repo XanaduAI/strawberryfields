@@ -470,7 +470,7 @@ class TestXIRtoSFConversion:
         assert sf_prog.circuit
         assert sf_prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert sf_prog.circuit[0].op.p[0] == 0.123
-        assert sf_prog.circuit[0].op.p[1] == np.pi/4
+        assert sf_prog.circuit[0].op.p[1] == np.pi / 4
         assert sf_prog.circuit[0].reg[0].ind == 2
 
         assert sf_prog.circuit[1].op.__class__.__name__ == "BSgate"
@@ -499,7 +499,7 @@ class TestXIRtoSFConversion:
             "p1": FreeParameter("p1"),
             "p2": FreeParameter("p2"),
         }
-        assert all(sf_prog.tdm_params[0] == np.array([np.pi, 3*np.pi/2, 0]))
+        assert all(sf_prog.tdm_params[0] == np.array([np.pi, 3 * np.pi / 2, 0]))
         assert all(sf_prog.tdm_params[1] == np.array([1, 0.5, np.pi]))
         assert all(sf_prog.tdm_params[2] == np.array([0, 0, 0]))
 
