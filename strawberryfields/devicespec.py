@@ -15,7 +15,7 @@
 This module contains a class that represents the specifications of
 a device available via the API.
 """
-from typing import Sequence, Mapping, Any, Optional, Type
+from typing import Sequence, Mapping, Any, Optional
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
