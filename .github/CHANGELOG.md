@@ -33,7 +33,7 @@ Theodor Isacsson
 
 * The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
   module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
-  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
+  symplectic matrix `S` (size `2N * 2N`) and a displacement vector `d` (size `N`). You can also
   obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
   [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
   [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
@@ -426,7 +426,7 @@ Quesada, Antal Száva, Yuan Yao.
   modes = 4
   cutoff_dim = 6
 
-  # prepare an intial state with 4 photons in as many modes
+  # prepare an initial state with 4 photons in as many modes
   initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
   initial_state[1, 1, 1, 1] = 1
 
@@ -518,7 +518,7 @@ Quesada, Antal Száva, Yuan Yao.
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
-* Speed improvements are addded to ``gaussian_unitary`` compiler.
+* Speed improvements are added to ``gaussian_unitary`` compiler.
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
 * Adds native support in the Fock backend for the MZgate.
