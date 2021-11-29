@@ -650,6 +650,37 @@ class TestValidation:
                 compiler=DummyCircuit(),
             )
 
+    def test_missing_layout(self):
+        """Test that an error is raised if the device spec is missing a layout when compiled"""
+        device_dict = {
+            "target": None,
+            "layout": None,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        class DummyCircuit(Compiler):
+            """A circuit with 2 modes"""
+
+            interactive = True
+            primitives = {"S2gate"}
+            decompositions = set()
+
+        spec = sf.DeviceSpec(spec=device_dict)
+
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+
+        with pytest.raises(ValueError, match="missing a circuit layout"):
+            new_prog = prog.compile(
+                device=spec,
+                compiler=DummyCircuit(),
+            )
+
     def test_no_decompositions(self):
         """Test that no decompositions take
         place if the circuit spec doesn't support it."""
