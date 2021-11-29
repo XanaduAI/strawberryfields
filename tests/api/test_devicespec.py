@@ -121,6 +121,24 @@ class TestDeviceSpec:
         assert prog.circuit
         assert [str(cmd) for cmd in prog.circuit] == circuit
 
+    def test_create_program_no_layout(self):
+        """Test that the program creation raises an error if the device spec contains no layout"""
+
+        params = {"phase_0": 1.23}
+        device_dict_no_layout = {
+            "target": "abc",
+            "layout": None,
+            "modes": 2,
+            "compiler": ["Xcov"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+                "phase_0": [0, [0, 6.3]],
+                "phase_1": [[0.5, 1.4]],
+            },
+        }
+        with pytest.raises(ValueError, match="missing a circuit layout"):
+            DeviceSpec(spec=device_dict_no_layout).create_program(**params)
+
     @pytest.mark.parametrize(
         "params", [{"phase_0": 7.5}, {"phase_1": 0.4}, {"squeezing_amplitude_0": 0.5}]
     )
