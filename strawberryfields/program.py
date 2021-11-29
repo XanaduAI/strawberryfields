@@ -673,8 +673,13 @@ class Program:
         backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
         compiled.backend_options.update(backend_options)
 
-        # validate gate parameters
-        if device is not None and device.gate_parameters:
+        # if device spec has allowed gate parameters, validate the applied gate parameters
+        if device and device.gate_parameters:
+            if not device.layout:
+                raise ValueError(
+                    "Gate parameters cannot be validated. Device specification is missing a "
+                    "circuit layout."
+                )
             bb_device = bb.loads(device.layout)
             bb_compiled = sf.io.to_blackbird(compiled)
 
