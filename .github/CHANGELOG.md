@@ -2,6 +2,10 @@
 
 <h3>New features since last release</h3>
 
+* `DeviceSpec.layout` and `DeviceSpec.gate_parameters` can now return `None`, which can happen when
+  e.g., a remote simulator device is used.
+  [(#660)](https://github.com/XanaduAI/strawberryfields/pull/660)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
