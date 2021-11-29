@@ -10,6 +10,11 @@
   a `TDMProgram` is compiled using the "TDM" compiler.
   [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
 
+* `program.compile` now raises an error if the device specification contains gate parameters but no
+  circuit layout. Without a layout, the gate parameters cannot be validated against the device
+  specification.
+  [(#660)](https://github.com/XanaduAI/strawberryfields/pull/660)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
