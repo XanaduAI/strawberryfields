@@ -681,6 +681,49 @@ class TestValidation:
                 compiler=DummyCircuit(),
             )
 
+    def test_missing_gate_parameters(self):
+        """Test that an error is raised if the device spec is missing gate parameters when compiled"""
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": None  # no gate_parameters, so any value is valid
+        }
+
+        class DummyCircuit(Compiler):
+            """A circuit with 2 modes"""
+
+            interactive = True
+            primitives = {"S2gate"}
+            decompositions = set()
+
+        spec = sf.DeviceSpec(spec=device_dict)
+
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.S2gate(123) | q
+
+        new_prog = prog.compile(
+            device=spec,
+            compiler=DummyCircuit(),
+        )
+
+        assert len(new_prog) == 1
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "S2gate"
+
     def test_no_decompositions(self):
         """Test that no decompositions take
         place if the circuit spec doesn't support it."""
