@@ -2,9 +2,9 @@
 
 <h3>New features since last release</h3>
 
-* `DeviceSpec.layout` and `DeviceSpec.gate_parameters` can now return `None`, which can happen when
-  e.g., a remote simulator device is used.
-  [(#660)](https://github.com/XanaduAI/strawberryfields/pull/660)
+* `DeviceSpec.layout` and `DeviceSpec.gate_parameters` may now return `None`. This can happen
+  when a remote simulator device is used.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
 <h3>Breaking Changes</h3>
 
@@ -17,7 +17,7 @@
 * `program.compile` now raises an error if the device specification contains gate parameters but no
   circuit layout. Without a layout, the gate parameters cannot be validated against the device
   specification.
-  [(#660)](https://github.com/XanaduAI/strawberryfields/pull/660)
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
 <h3>Documentation</h3>
 
