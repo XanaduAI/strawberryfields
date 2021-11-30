@@ -89,14 +89,16 @@ class DeviceSpec:
         >>> spec.gate_parameters
         {'squeezing_amplitude_0': x=0, x=1, 'phase_0': x=0, 0≤x≤6.283185307179586}
         """
-        gate_parameters = {}
-        if self._spec["gate_parameters"]:
-            for gate_name, param_ranges in self._spec["gate_parameters"].items():
-                # convert gate parameter allowed ranges to Range objects
-                range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
-                gate_parameters[gate_name] = Ranges(*range_list)
+        if not self._spec["gate_parameters"]:
+            return None
 
-        return gate_parameters or None
+        gate_parameters = {}
+        for gate_name, param_ranges in self._spec["gate_parameters"].items():
+            # convert gate parameter allowed ranges to Range objects
+            range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
+            gate_parameters[gate_name] = Ranges(*range_list)
+
+        return gate_parameters
 
     def validate_parameters(self, **parameters: complex) -> None:
         """Validate gate parameters against the device spec.
