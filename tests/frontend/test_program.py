@@ -697,7 +697,7 @@ class TestValidation:
             "layout": mock_layout,
             "modes": 2,
             "compiler": ["DummyCompiler"],
-            "gate_parameters": None  # no gate_parameters, so any value is valid
+            "gate_parameters": None,  # no gate_parameters, so any value is valid
         }
 
         class DummyCircuit(Compiler):
@@ -719,6 +719,7 @@ class TestValidation:
         )
 
         assert len(new_prog) == 1
+        assert spec.gate_parameters is None
 
         # test gates are correct
         circuit = new_prog.circuit
