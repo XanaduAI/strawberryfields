@@ -204,15 +204,17 @@ class Result:
                     f"contains state={self._state is not None}>"
                 )
 
-            return "<Result: shots={}, num_modes={}, contains state={}>".format(
-                shots, modes, self._state is not None
+            return (
+                f"<Result: shots={shots}, num_modes={modes}, contains "
+                f"state={self._state is not None}>"
             )
 
         if self.samples is not None and self.samples.ndim == 3:
             # if samples has dim 3, assume they're TDM
             shots, modes, timebins = self.samples.shape
-            return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
-                shots, modes, timebins, self._state is not None
+            return (
+                f"<Result: shots={shots}, spatial_modes={modes}, timebins={timebins}, "
+                f"contains state={self._state is not None}>"
             )
 
-        return "<Result: contains state={}>".format(self._state is not None)
+        return "<Result: contains state={self._state is not None}>"
