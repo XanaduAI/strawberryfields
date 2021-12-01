@@ -245,7 +245,7 @@ class TestProgram:
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
+            "modes": {"pnr_max": 2, "homodyne_max": 2, "heterodyne_max": 2},
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],
@@ -565,7 +565,7 @@ class TestValidation:
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
+            "modes": {"pnr_max": 2, "homodyne_max": 2, "heterodyne_max": 2},
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],
