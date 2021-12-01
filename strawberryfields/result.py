@@ -175,6 +175,20 @@ class Result:
         """
         return self._state
 
+    @state.setter
+    def state(self, state) -> None:
+        """Set the state on local simulations if not previously set.
+
+        Raises:
+            TypeError: if state is already set
+            ValueError: if result have ``samples_dict`` (i.e, do not come from a local simulation)
+        """
+        if self._state:
+            raise TypeError("State already set and cannot be changed.")
+        if not self.samples_dict:
+            raise ValueError("State can only be set for local simulations.")
+        self._state = state
+
     def __repr__(self) -> str:
         """String representation."""
         if self.samples is not None and self.samples.ndim == 2:
