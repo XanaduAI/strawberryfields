@@ -197,7 +197,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn("Run {}:".format(k))
+            print_fn(f"Run {k}:")
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -265,7 +265,7 @@ class BaseEngine(abc.ABC):
                 # there was a previous program segment
                 if not p.can_follow(prev):
                     raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                        f"Register mismatch: program {len(self.run_progs)}, '{p.name}'."
                     )
 
                 # Copy the latest measured values in the RegRefs of p.
@@ -336,7 +336,7 @@ class LocalEngine(BaseEngine):
         return super().__new__(cls)
 
     def __str__(self):
-        return self.__class__.__name__ + "({})".format(self.backend_name)
+        return self.__class__.__name__ + f"({self.backend_name})"
 
     def reset(self, backend_options=None):
         backend_options = backend_options or {}
@@ -374,15 +374,14 @@ class LocalEngine(BaseEngine):
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    f"The operation {cmd.op} cannot be used with {self.backend}."
                 ) from None
 
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError(
-                    "The operation {} has not been implemented in {} for the arguments {}.".format(
-                        cmd.op, self.backend, kwargs
-                    )
+                    f"The operation {cmd.op} has not been implemented in {self.backend} for the "
+                    f"arguments {kwargs}."
                 ) from None
 
         # combine the samples sorted by mode, and cast correctly to array or tensor
@@ -788,9 +787,7 @@ class RemoteEngine:
         return job
 
     def __repr__(self):
-        return "<{}: target={}, connection={}>".format(
-            self.__class__.__name__, self.target, self._connection
-        )
+        return f"<{self.__class__.__name__}: target={self.target}, connection={self._connection}>"
 
     def __str__(self):
         return self.__repr__()
