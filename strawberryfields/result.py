@@ -39,6 +39,13 @@ class Result:
 
     * ``results.samples``: Measurement samples from any measurements performed.
 
+    * ``results.samples_dict``: Measurement samples from any measurements performed,
+      sorted by measured mode. Not available for remote backends.
+
+    * ``results.metadata``: Metadata for job results.
+
+    * ``results.raw``: Raw results retrieved from the job, including samples and metadata.
+
     * ``results.ancilla_samples``: Measurement samples from any ancillary states
       used for measurement-based gates.
 
@@ -72,6 +79,15 @@ class Result:
         self._state = None
         self._result = result
         self._ancilla_samples = ancilla_samples
+
+    @property
+    def raw(self) -> Mapping:
+        """The raw results dictionary containing any samples and metadata.
+
+        Returns:
+            dict: samples and metadata
+        """
+        return self._result
 
     @property
     def samples(self) -> Optional[np.ndarray]:
@@ -108,6 +124,19 @@ class Result:
         """
         samples_dict = {key: val for key, val in self._result.items() if isinstance(key, int)}
         return samples_dict
+
+    @property
+    def metadata(self) -> Mapping:
+        """Metadata for the job results.
+
+        The metadata is considered to be everything contained in the raw results
+        except for the samples, which is stored under the "output" key.
+
+        Returns:
+            dict: dictionary containing job result metadata
+        """
+        metadata = {key: val for key, val in self._result.items() if key != "output"}
+        return metadata
 
     @property
     def ancilla_samples(self) -> Optional[Mapping]:
@@ -148,7 +177,7 @@ class Result:
 
     def __repr__(self) -> str:
         """String representation."""
-        if self.samples.ndim == 2:
+        if self.samples is not None and self.samples.ndim == 2:
             # if samples has dim 2, assume they're from a standard Program
             shots, modes = self.samples.shape
 
@@ -165,7 +194,7 @@ class Result:
                 shots, modes, self._state is not None
             )
 
-        if self.samples.ndim == 3:
+        if self.samples is not None and self.samples.ndim == 3:
             # if samples has dim 3, assume they're TDM
             shots, modes, timebins = self.samples.shape
             return "<Result: shots={}, spatial_modes={}, timebins={}, contains state={}>".format(
