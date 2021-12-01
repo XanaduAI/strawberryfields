@@ -606,7 +606,7 @@ class Program:
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
                 connected. The default is True.
             shots (int): Number of times the program measurement evaluation is repeated. Passed
-                along to the compiled program's `run_options`.
+                along to the compiled program's ``run_options``.
 
         Returns:
             Program: compiled program
