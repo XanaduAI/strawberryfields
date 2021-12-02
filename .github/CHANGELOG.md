@@ -12,7 +12,8 @@
 
 * Updates `Program.assert_max_number_of_measurements` to expect the maximum number
   of measurements from the device specification as a flat dictionary entry instead
-  of a nested one:
+  of a nested one.
+  [(#662)](https://github.com/XanaduAI/strawberryfields/pull/662)
 
   ```python
   "modes": {
