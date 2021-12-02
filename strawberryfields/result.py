@@ -187,7 +187,7 @@ class Result:
             raise TypeError("State already set and cannot be changed.")
         # Samples from local simulation jobs will always have a samples_dict containing the same
         # samples organized by measured mode. `self.samples` is either `None` or an array.
-        if self.samples is not None and len(self.samples) !=0 and not self.samples_dict:
+        if self.samples is not None and len(self.samples) != 0 and not self.samples_dict:
             raise ValueError("State can only be set for local simulations.")
         self._state = state
 
