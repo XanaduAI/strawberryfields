@@ -245,7 +245,7 @@ class TestProgram:
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
+            "modes": {"pnr_max": 2, "homodyne_max": 2, "heterodyne_max": 2},
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],
@@ -258,6 +258,28 @@ class TestProgram:
                 measure_op | reg
 
         with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
+            prog.assert_max_number_of_measurements(spec)
+
+    def test_keyerror_assert_max_number_of_measurements(self):
+        """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
+        with an incorrect device spec modes entry."""
+        # set maximum number of measurements to 2, and measure 3 in prog below
+        device_dict = {
+            "target": "simulon_gaussian",
+            "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
+            "layout": "",
+            "gate_parameters": {},
+            "compiler": ["gaussian"],
+        }
+        spec = sf.DeviceSpec(spec=device_dict)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            for reg in q:
+                ops.MeasureFock() | reg
+
+        match = "Expected keys for the maximum allowed number of PNR"
+        with pytest.raises(KeyError, match=match):
             prog.assert_max_number_of_measurements(spec)
 
     def test_assert_max_number_of_measurements_wrong_entry(self):
@@ -277,7 +299,7 @@ class TestProgram:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.S2gate(0.6) | [q[1], q[2]]
 
-        with pytest.raises(KeyError, match="Have you specified the correct target?"):
+        with pytest.raises(KeyError, match="Expected keys for the maximum allowed number of PNR"):
             prog.assert_max_number_of_measurements(spec)
 
     def test_has_post_selection(self):
@@ -565,7 +587,7 @@ class TestValidation:
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
+            "modes": {"pnr_max": 2, "homodyne_max": 2, "heterodyne_max": 2},
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],

@@ -20,6 +20,31 @@
   a `TDMProgram` is compiled using the "TDM" compiler.
   [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
 
+* Updates `Program.assert_max_number_of_measurements` to expect the maximum number
+  of measurements from the device specification as a flat dictionary entry instead
+  of a nested one.
+  [(#662)](https://github.com/XanaduAI/strawberryfields/pull/662)
+
+  ```python
+  "modes": {
+      "pnr_max": 20,
+      "homodyne_max": 1000,
+      "heterodyne_max": 1000,
+  }
+  ```
+
+  instead of
+
+  ```python
+  "modes": {
+      "max": {
+          "pnr": 20,
+          "homodyne": 1000,
+          "heterodyne": 1000,
+      }
+  }
+  ```
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
