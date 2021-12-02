@@ -132,11 +132,11 @@ class BosonicBackend(BaseBosonic):
             Ket,
             _New_modes,
         )
-        ancilla_gates = (MSgate,)
+        ancillae_gates = (MSgate,)
         for cmd in prog.circuit:
             # For ancilla-assisted gates, if they return measurement values, store
             # them in ancillae_samples_dict
-            if isinstance(cmd.op, ancilla_gates):
+            if isinstance(cmd.op, ancillae_gates):
                 # if the op returns a measurement outcome store it in a dictionary
                 val = cmd.op.apply(cmd.reg, self, **kwargs)
                 if val is not None:
@@ -747,8 +747,8 @@ class BosonicBackend(BaseBosonic):
         Returns:
             float: the measurement outcome of the ancilla
         """
-        ancilla_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
-        return ancilla_val
+        ancillae_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
+        return ancillae_val
 
     def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(theta, phi, mode1, mode2)

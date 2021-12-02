@@ -672,7 +672,7 @@ Antal Száva, Federico Rueda, Yuan Yao.
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
 
   results = eng.run(prog)
-  ancilla_samples = results.ancilla_samples
+  ancillae_samples = results.ancillae_samples
 
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)
