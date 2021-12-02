@@ -526,13 +526,18 @@ class Program:
         num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
 
         try:
-            max_pnr = device.modes["max"]["pnr"]
-            max_homodyne = device.modes["max"]["homodyne"]
-            max_heterodyne = device.modes["max"]["heterodyne"]
+            max_pnr = device.modes["pnr_max"]
+            max_homodyne = device.modes["homodyne_max"]
+            max_heterodyne = device.modes["heterodyne_max"]
         except (KeyError, TypeError) as e:
+            device_modes = device.modes
+            if isinstance(device.modes, dict):
+                device_modes = set(device.modes.keys())
+
             raise KeyError(
-                "Device specification must contain an entry for the maximum allowed number "
-                "of measurments. Have you specified the correct target?"
+                "Expected keys for the maximum allowed number of PNR ('pnr_max'), homodyne "
+                "('homodyne_max'), and heterodyne ('heterodyne_max') measurements. Got keys "
+                f"{device_modes}"
             ) from e
 
         for c in self.circuit:
@@ -605,6 +610,8 @@ class Program:
                 The default is False.
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
                 connected. The default is True.
+            shots (int): Number of times the program measurement evaluation is repeated. Passed
+                along to the compiled program's ``run_options``.
 
         Returns:
             Program: compiled program
