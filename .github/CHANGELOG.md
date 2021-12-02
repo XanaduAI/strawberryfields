@@ -2,6 +2,16 @@
 
 <h3>New features since last release</h3>
 
+* A `Result.raw` property is added to retrieve the raw results from a job.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* A `Result.metadata` property is added to retrieve the job results metadata.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* A setter method for `Result.state` is added for setting a state for a local simulation if a state
+  has not previously been set.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
