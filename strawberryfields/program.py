@@ -530,9 +530,14 @@ class Program:
             max_homodyne = device.modes["homodyne_max"]
             max_heterodyne = device.modes["heterodyne_max"]
         except (KeyError, TypeError) as e:
+            device_modes = device.modes
+            if isinstance(device.modes, dict):
+                device_modes = set(device.modes.keys())
+
             raise KeyError(
-                "Device specification must contain an entry for the maximum allowed number "
-                "of measurements. Have you specified the correct target?"
+                "Expected keys for the maximum allowed number of PNR ('pnr_max'), homodyne "
+                "('homodyne_max'), and heterodyne ('heterodyne_max') measurements. Got keys "
+                f"{device_modes}"
             ) from e
 
         for c in self.circuit:

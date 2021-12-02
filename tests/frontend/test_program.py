@@ -277,7 +277,7 @@ class TestProgram:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.S2gate(0.6) | [q[1], q[2]]
 
-        with pytest.raises(KeyError, match="Have you specified the correct target?"):
+        with pytest.raises(KeyError, match="Expected keys for the maximum allowed number of PNR"):
             prog.assert_max_number_of_measurements(spec)
 
     def test_has_post_selection(self):
