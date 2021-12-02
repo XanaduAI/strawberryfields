@@ -129,7 +129,7 @@ class Result:
     def metadata(self) -> Mapping:
         """Metadata for the job results.
 
-        The metadata is considered to be everything contained in the raw results
+        The metadata is considered to be everything contained in the raw result
         except for the samples, which is stored under the "output" key.
 
         Returns:
