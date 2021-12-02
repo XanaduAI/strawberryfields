@@ -274,7 +274,7 @@ class BaseEngine(abc.ABC):
                 # Copy the latest measured values in the RegRefs of p.
                 # We cannot copy from prev directly because it could be used in more than one
                 # engine.
-                for k, v in enumerate(self.samples or []):
+                for k, v in enumerate(self.samples):
                     p.reg_refs[k].val = v
 
             # bind free parameters to their values
