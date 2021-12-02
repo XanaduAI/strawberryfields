@@ -219,4 +219,4 @@ class Result:
                 f"contains state={self._state is not None}>"
             )
 
-        return "<Result: contains state={self._state is not None}>"
+        return f"<Result: contains state={self._state is not None}>"
