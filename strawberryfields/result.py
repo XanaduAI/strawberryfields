@@ -86,8 +86,13 @@ class Result:
     def raw(self) -> Mapping[str, Union[np.ndarray, List[np.ndarray]]]:
         """The raw results dictionary containing any samples and metadata.
 
+        .. warning::
+
+            The raw values are returned by reference, meaning that any changes to
+            them will be reflected in the ``Result`` object.
+
         Returns:
-            dict: samples and metadata
+            Mapping[str, Union[np.ndarray, List[np.ndarray]]: samples and metadata
         """
         return self._result
 
@@ -98,7 +103,7 @@ class Result:
         Returned measurement samples will have shape ``(shots, modes)``.
 
         Returns:
-            array[array[float, int]]: measurement samples returned from
+            ndarray[ndarray[float, int]]: measurement samples returned from
             program execution
         """
         output = self._result.get("output")
@@ -129,7 +134,7 @@ class Result:
             dictionary, on the other hand, keeps _all_ measurements.
 
         Returns:
-            dict[int, list]: mode index associated with the list of measurement outcomes
+            Mapping[int, List]: mode index associated with the list of measurement outcomes
         """
         return self._samples_dict
 
@@ -141,7 +146,7 @@ class Result:
         except for the samples, which is stored under the "output" key.
 
         Returns:
-            dict: dictionary containing job result metadata
+            Mapping[str, np.ndarray]: dictionary containing job result metadata
         """
         metadata = {key: val for key, val in self._result.items() if key != "output"}
         return metadata
@@ -156,7 +161,7 @@ class Result:
         gates applied to that mode.
 
         Returns:
-            dict[int, list]: mode index associated with the list of ancilla
+            Mapping[int, List]: mode index associated with the list of ancilla
             measurement outcomes
         """
         return self._ancillae_samples
@@ -197,7 +202,7 @@ class Result:
         # samples organized by measured mode. `self.samples` is either `None` or an array.
         if self.samples is not None and len(self.samples) != 0 and not self.samples_dict:
             raise ValueError("State can only be set for local simulations.")
-        if not isinstance(state, BaseState):
+        if not (isinstance(state, BaseState) or state is None):
             raise TypeError(f"State must be of type 'BaseState', not '{type(state)}'")
 
         self._state = state
