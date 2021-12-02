@@ -16,7 +16,7 @@ This module provides a class that represents the result of a quantum computation
 """
 
 import warnings
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Union, List
 
 import numpy as np
 
@@ -46,7 +46,7 @@ class Result:
 
     * ``results.raw``: Raw results retrieved from the job, including samples and metadata.
 
-    * ``results.ancilla_samples``: Measurement samples from any ancillary states
+    * ``results.ancillae_samples``: Measurement samples from any ancillary states
       used for measurement-based gates.
 
     **Example:**
@@ -75,13 +75,15 @@ class Result:
         but the return value of ``Result.state`` will be ``None``.
     """
 
-    def __init__(self, result: Mapping, ancilla_samples: Mapping = None) -> None:
+    def __init__(self, result: Mapping, **kwargs) -> None:
         self._state = None
         self._result = result
-        self._ancilla_samples = ancilla_samples
+
+        self._ancillae_samples = kwargs.get("ancillae_samples", None)
+        self._samples_dict = kwargs.get("samples_dict", None)
 
     @property
-    def raw(self) -> Mapping:
+    def raw(self) -> Mapping[str, Union[np.ndarray, List[np.ndarray]]]:
         """The raw results dictionary containing any samples and metadata.
 
         Returns:
@@ -111,7 +113,7 @@ class Result:
         return output[0]
 
     @property
-    def samples_dict(self) -> Mapping:
+    def samples_dict(self) -> Optional[Mapping[int, List]]:
         """All measurement samples as a dictionary. Only available on simulators.
 
         Returns a dictionary which associates each mode (keys) with the list of
@@ -119,14 +121,20 @@ class Result:
         several times. For multiple shots or batched execution, arrays and
         tensors are stored.
 
+        .. note::
+
+            The samples dictionary may contain samples that are not present in
+            the samples array. In the samples array, each time a mode is measured
+            the prior measured sample on the same mode is replaced. The samples
+            dictionary, on the other hand, keeps _all_ measurements.
+
         Returns:
             dict[int, list]: mode index associated with the list of measurement outcomes
         """
-        samples_dict = {key: val for key, val in self._result.items() if isinstance(key, int)}
-        return samples_dict
+        return self._samples_dict
 
     @property
-    def metadata(self) -> Mapping:
+    def metadata(self) -> Mapping[str, np.ndarray]:
         """Metadata for the job results.
 
         The metadata is considered to be everything contained in the raw result
@@ -139,7 +147,7 @@ class Result:
         return metadata
 
     @property
-    def ancilla_samples(self) -> Optional[Mapping]:
+    def ancillae_samples(self) -> Optional[Mapping[int, List]]:
         """All measurement samples from ancillary modes used for measurement-based
         gates.
 
@@ -151,7 +159,7 @@ class Result:
             dict[int, list]: mode index associated with the list of ancilla
             measurement outcomes
         """
-        return self._ancilla_samples
+        return self._ancillae_samples
 
     @property
     def state(self) -> Optional[BaseState]:
@@ -176,7 +184,7 @@ class Result:
         return self._state
 
     @state.setter
-    def state(self, state) -> None:
+    def state(self, state: BaseState) -> None:
         """Set the state on local simulations if not previously set.
 
         Raises:
@@ -189,6 +197,9 @@ class Result:
         # samples organized by measured mode. `self.samples` is either `None` or an array.
         if self.samples is not None and len(self.samples) != 0 and not self.samples_dict:
             raise ValueError("State can only be set for local simulations.")
+        if not isinstance(state, BaseState):
+            raise TypeError(f"State must be of type 'BaseState', not '{type(state)}'")
+
         self._state = state
 
     def __repr__(self) -> str:
@@ -197,12 +208,12 @@ class Result:
             # if samples has dim 2, assume they're from a standard Program
             shots, modes = self.samples.shape
 
-            if self.ancilla_samples is not None:
-                ancilla_modes = 0
-                for i in self.ancilla_samples.keys():
-                    ancilla_modes += len(self.ancilla_samples[i])
+            if self.ancillae_samples is not None:
+                ancillae_modes = 0
+                for i in self.ancillae_samples.keys():
+                    ancillae_modes += len(self.ancillae_samples[i])
                 return (
-                    f"<Result: shots={shots}, num_modes={modes}, num_ancillae={ancilla_modes}, "
+                    f"<Result: shots={shots}, num_modes={modes}, num_ancillae={ancillae_modes}, "
                     f"contains state={self._state is not None}>"
                 )
 

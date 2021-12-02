@@ -25,10 +25,8 @@ pytestmark = pytest.mark.api
 
 raw_results = {
     "output": [np.ones((2, 3, 4, 5))],
-    0: [1, 2, 3],
-    1: [4, 5],
-    "other_data": [1, 0, 1, 2],
-    "string": "metadata",
+    "meta_array": np.array([1, 0, 1, 2]),
+    "meta_matrix": np.array([[1, 2], [3, 4]]),
 }
 
 
@@ -48,19 +46,21 @@ class TestResult:
 
     def test_samples_dict(self):
         """Test that ``samples_dict`` is correctly returned."""
-        result = Result(raw_results)
-        assert result.samples_dict == {0: [1, 2, 3], 1: [4, 5]}
+        samples_dict = {0: [1, 2, 3], 1: [4, 5]}
+        result = Result(raw_results, samples_dict=samples_dict)
+        assert result.samples_dict == samples_dict
 
-    def test_ancilla_samples(self):
+    def test_ancillae_samples(self):
         """Test that ancilla samples are correctly returned."""
-        ancilla_samples = {0: [0, 1], 2: [1, 3]}
-        result = Result(raw_results, ancilla_samples=ancilla_samples)
-        assert result.ancilla_samples == ancilla_samples
+        ancillae_samples = {0: [0, 1], 2: [1, 3]}
+        result = Result(raw_results, ancillae_samples=ancillae_samples)
+        assert result.ancillae_samples == ancillae_samples
 
     def test_state(self):
-        """Test that the state can be correctly set and returned."""
+        """Test that the state can be correctly set and returned, and that the
+        correct error is raised when attempting to set it again."""
         state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
-        result = Result(raw_results)
+        result = Result(raw_results, samples_dict={0: [0, 1, 0], 2: [0]})
         result.state = state
         assert result.state == state
 
@@ -69,13 +69,8 @@ class TestResult:
 
     def test_state_no_modes(self):
         """Test that the correct error is raised when setting a state on remote job result."""
-        raw_results_without_modes = {
-            "output": [np.ones((2, 3, 4, 5))],
-            "other_data": [1, 0, 1, 2],
-            "string": "metadata",
-        }
         state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
-        result = Result(raw_results_without_modes)
+        result = Result(raw_results)
 
         with pytest.raises(ValueError, match="State can only be set for local simulations."):
             result.state = state
@@ -83,12 +78,14 @@ class TestResult:
     def test_metadata(self):
         """Test that metadata is correctly returned."""
         result = Result(raw_results)
-        assert result.metadata == {
-            0: [1, 2, 3],
-            1: [4, 5],
-            "other_data": [1, 0, 1, 2],
-            "string": "metadata",
+        expected = {
+            "meta_array": np.array([1, 0, 1, 2]),
+            "meta_matrix": np.array([[1, 2], [3, 4]]),
         }
+
+        assert result.metadata.keys() == expected.keys()
+        for key, val in result.metadata.items():
+            assert np.allclose(val, expected[key])
 
 
 class TestResultPrint:
@@ -105,8 +102,11 @@ class TestResultPrint:
 
     def test_state_print(self, capfd):
         """Test that printing a result object with a state provides the correct output."""
-        result = Result({"output": [np.array([[1, 2], [3, 4], [5, 6]])], 0: [1, 2, 3, 4, 5, 6]})
-        result.state = [[1, 2], [3, 4]]
+        samples = {"output": [np.array([[1, 2], [3, 4], [5, 6]])]}
+        samples_dict = {0: [1, 2, 3, 4, 5, 6]}
+
+        result = Result(samples, samples_dict=samples_dict)
+        result.state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
         print(result)
         out, _ = capfd.readouterr()
         assert "modes=2" in out
