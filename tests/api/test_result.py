@@ -23,11 +23,17 @@ from strawberryfields.result import Result
 pytestmark = pytest.mark.api
 
 
+test_samples = np.ones((2, 3, 4, 5))
+meta_array = np.array([1, 0, 1, 2])
+meta_matrix = np.array([[1, 2], [3, 4]])
+
 raw_results = {
-    "output": [np.ones((2, 3, 4, 5))],
-    "meta_array": np.array([1, 0, 1, 2]),
-    "meta_matrix": np.array([[1, 2], [3, 4]]),
+    "output": [test_samples],
+    "meta_array": meta_array,
+    "meta_matrix": meta_matrix,
 }
+
+base_gaussian_state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
 
 
 class TestResult:
@@ -37,7 +43,7 @@ class TestResult:
         """Test that ``samples`` is correctly returned."""
         result = Result(raw_results)
         assert result.samples is not None
-        assert np.array_equal(result.samples, np.ones((2, 3, 4, 5)))
+        assert np.array_equal(result.samples, test_samples)
 
     def test_raw(self):
         """Test that raw results are correctly returned."""
@@ -59,28 +65,26 @@ class TestResult:
     def test_state(self):
         """Test that the state can be correctly set and returned, and that the
         correct error is raised when attempting to set it again."""
-        state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
         result = Result(raw_results, samples_dict={0: [0, 1, 0], 2: [0]})
-        result.state = state
-        assert result.state == state
+        result.state = base_gaussian_state
+        assert result.state == base_gaussian_state
 
         with pytest.raises(TypeError, match="State already set and cannot be changed."):
-            result.state = state
+            result.state = base_gaussian_state
 
     def test_state_no_modes(self):
         """Test that the correct error is raised when setting a state on remote job result."""
-        state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
         result = Result(raw_results)
 
         with pytest.raises(ValueError, match="State can only be set for local simulations."):
-            result.state = state
+            result.state = base_gaussian_state
 
     def test_metadata(self):
         """Test that metadata is correctly returned."""
         result = Result(raw_results)
         expected = {
-            "meta_array": np.array([1, 0, 1, 2]),
-            "meta_matrix": np.array([[1, 2], [3, 4]]),
+            "meta_array": meta_array,
+            "meta_matrix": meta_matrix,
         }
 
         assert result.metadata.keys() == expected.keys()
@@ -106,7 +110,7 @@ class TestResultPrint:
         samples_dict = {0: [1, 2, 3, 4, 5, 6]}
 
         result = Result(samples, samples_dict=samples_dict)
-        result.state = BaseGaussianState((np.array([0.0, 0.0]), np.identity(2)), 1)
+        result.state = base_gaussian_state
         print(result)
         captured = capfd.readouterr()
         assert "modes=2" in captured.out
