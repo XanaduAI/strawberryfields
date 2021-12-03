@@ -37,7 +37,7 @@ class TestResult:
         """Test that ``samples`` is correctly returned."""
         result = Result(raw_results)
         assert result.samples is not None
-        assert np.equal(result.samples, np.ones((2, 3, 4, 5))).all()
+        assert np.array_equal(result.samples, np.ones((2, 3, 4, 5)))
 
     def test_raw(self):
         """Test that raw results are correctly returned."""
