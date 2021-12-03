@@ -92,7 +92,7 @@ class Result:
             them will be reflected in the ``Result`` object.
 
         Returns:
-            Mapping[str, Union[np.ndarray, List[np.ndarray]]: samples and metadata
+            Mapping[str, Union[ndarray, list[ndarray]]: samples and metadata
         """
         return self._result
 
@@ -134,7 +134,7 @@ class Result:
             dictionary, on the other hand, keeps _all_ measurements.
 
         Returns:
-            Mapping[int, List]: mode index associated with the list of measurement outcomes
+            Mapping[int, list]: mode index associated with the list of measurement outcomes
         """
         return self._samples_dict
 
@@ -146,7 +146,7 @@ class Result:
         except for the samples, which is stored under the "output" key.
 
         Returns:
-            Mapping[str, np.ndarray]: dictionary containing job result metadata
+            Mapping[str, ndarray]: dictionary containing job result metadata
         """
         metadata = {key: val for key, val in self._result.items() if key != "output"}
         return metadata
@@ -161,7 +161,7 @@ class Result:
         gates applied to that mode.
 
         Returns:
-            Mapping[int, List]: mode index associated with the list of ancilla
+            Mapping[int, list]: mode index associated with the list of ancilla
             measurement outcomes
         """
         return self._ancillae_samples
