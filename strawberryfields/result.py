@@ -44,8 +44,6 @@ class Result:
 
     * ``results.metadata``: Metadata for job results.
 
-    * ``results.raw``: Raw results retrieved from the job, including samples and metadata.
-
     * ``results.ancillae_samples``: Measurement samples from any ancillary states
       used for measurement-based gates.
 
@@ -81,20 +79,6 @@ class Result:
 
         self._ancillae_samples = kwargs.get("ancillae_samples", None)
         self._samples_dict = kwargs.get("samples_dict", None)
-
-    @property
-    def raw(self) -> Mapping[str, Union[np.ndarray, List[np.ndarray]]]:
-        """The raw results dictionary containing any samples and metadata.
-
-        .. warning::
-
-            The raw values are returned by reference, meaning that any changes to
-            them will be reflected in the ``Result`` object.
-
-        Returns:
-            Mapping[str, Union[ndarray, list[ndarray]]: samples and metadata
-        """
-        return self._result
 
     @property
     def samples(self) -> Optional[np.ndarray]:
@@ -142,7 +126,7 @@ class Result:
     def metadata(self) -> Mapping[str, np.ndarray]:
         """Metadata for the job results.
 
-        The metadata is considered to be everything contained in the raw result
+        The metadata is considered to be everything contained in the raw results
         except for the samples, which is stored under the "output" key.
 
         Returns:

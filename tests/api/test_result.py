@@ -45,11 +45,6 @@ class TestResult:
         assert result.samples is not None
         assert np.array_equal(result.samples, test_samples)
 
-    def test_raw(self):
-        """Test that raw results are correctly returned."""
-        result = Result(raw_results)
-        assert result.raw == raw_results
-
     def test_samples_dict(self):
         """Test that ``samples_dict`` is correctly returned."""
         samples_dict = {0: [1, 2, 3], 1: [4, 5]}

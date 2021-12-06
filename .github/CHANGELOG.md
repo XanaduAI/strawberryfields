@@ -2,9 +2,6 @@
 
 <h3>New features since last release</h3>
 
-* A `Result.raw` property is added to retrieve the raw results from a job.
-  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
-
 * A `Result.metadata` property is added to retrieve the metadata of a job result.
   [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
 
