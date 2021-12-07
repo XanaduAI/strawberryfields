@@ -95,7 +95,7 @@ which is responsible for executing the program on a specified backend
 
 .. code-block:: python3
 
-    # intialize the fock backend with a
+    # initialize the fock backend with a
     # Fock cutoff dimension (truncation) of 5
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
 
@@ -234,7 +234,7 @@ the mathematical functions in the :data:`strawberryfields.math` namespace.
         ops.Sgate(1 - sf.math.sin(q[0].par)) | q[1]  # measured parameter
         ops.MeasureFock()    | q[1]
 
-    # intialize the Fock backend
+    # initialize the Fock backend
     eng = sf.Engine('fock', backend_options={'cutoff_dim': 5})
 
     # run the program, with the free parameter 'a' bound to the value 0.9

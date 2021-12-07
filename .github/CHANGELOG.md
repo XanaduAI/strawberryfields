@@ -2,6 +2,13 @@
 
 <h3>New features since last release</h3>
 
+* A `Result.metadata` property is added to retrieve the metadata of a job result.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* A setter method for `Result.state` is added for setting a state for a local simulation if a state
+  has not previously been set.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -662,7 +669,7 @@ Antal Száva, Federico Rueda, Yuan Yao.
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
 
   results = eng.run(prog)
-  ancilla_samples = results.ancilla_samples
+  ancillae_samples = results.ancillae_samples
 
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)
