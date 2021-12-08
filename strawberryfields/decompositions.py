@@ -1093,7 +1093,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
     if n < 3:
         raise ValueError("Input matrix for decomposition must be at least 3x3.")
     if not np.allclose(U @ U.conj().T, np.identity(n), rtol=rtol, atol=atol):
-        raise ValueError("The input matrix is not unitary")
+        raise ValueError("The input matrix is not unitary.")
 
     # if Unitary, factorize into phase times Special Unitary
     if not np.isclose(np.linalg.det(U), 1, rtol=rtol, atol=atol):
