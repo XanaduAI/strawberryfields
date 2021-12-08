@@ -927,6 +927,6 @@ class TestSUnFactorization:
         factorization_params, phase = dec.sun_compact(U, tol)
         det = np.exp(1j * phase) ** (1 / n)
         SU_reconstructed = self._sun_reconstruction(n, factorization_params)
-        U_reconstructed = np.linalg.det(U) * SU_reconstructed
+        U_reconstructed = det * SU_reconstructed
 
         assert np.allclose(U_reconstructed, U)

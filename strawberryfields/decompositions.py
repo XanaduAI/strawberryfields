@@ -1089,6 +1089,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
     n = U.shape[0]
     parameters = []
     global_phase = None
+    det = np.linalg.det(U)
 
     if n < 3:
         raise ValueError("Input matrix for decomposition must be at least 3x3.")
@@ -1096,13 +1097,13 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
         raise ValueError("The input matrix is not unitary.")
 
     # if Unitary, factorize into phase times Special Unitary
-    if not np.isclose(np.linalg.det(U), 1, rtol=rtol, atol=atol):
-        det = np.linalg.det(U)
-        U *= 1 / det ** (1 / n)
+    SU = U.copy()
+    if not np.isclose(det, 1, rtol=rtol, atol=atol):
+        SU *= det**(-1/n)
         global_phase = np.angle(det)
 
     # Decompose the matrix
-    parameters_no_modes = _sun_parameters(U)
+    parameters_no_modes = _sun_parameters(SU)
 
     # Add the info about which modes each transformation is on
     param_idx = 0
