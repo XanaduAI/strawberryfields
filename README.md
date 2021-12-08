@@ -98,7 +98,7 @@ projects or applications built on Strawberry Fields.
 See our [contributions page](https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md)
 and [changelog](https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHANGELOG.md)
 for more details, and then check out some of the Strawberry Fields
-[challenges][https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md]
+[challenges](https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md)
 for some inspiration.
 
 
@@ -109,9 +109,14 @@ Strawberry Fields is the work of
 
 If you are doing research using Strawberry Fields, please cite our papers:
 
-  Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. "Strawberry Fields: A Software Platform for Photonic Quantum Computing", [Quantum, 3, 129](https://quantum-journal.org/papers/q-2019-03-11-129/) (2019).
+> Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and
+> Christian Weedbrook. "Strawberry Fields: A Software Platform for Photonic Quantum Computing",
+> [Quantum, 3, 129](https://quantum-journal.org/papers/q-2019-03-11-129/) (2019).
 
-  Thomas R. Bromley, Juan Miguel Arrazola, Soran Jahangiri, Josh Izaac, Nicolás Quesada, Alain Delgado Gran, Maria Schuld, Jeremy Swinarton, Zeid Zabaneh, and Nathan Killoran. "Applications of Near-Term Photonic Quantum Computers: Software and Algorithms", [Quantum Sci. Technol. 5 034010](https://iopscience.iop.org/article/10.1088/2058-9565/ab8504/meta) (2020).
+> Thomas R. Bromley, Juan Miguel Arrazola, Soran Jahangiri, Josh Izaac, Nicolás Quesada,
+> Alain Delgado Gran, Maria Schuld, Jeremy Swinarton, Zeid Zabaneh, and Nathan Killoran.
+> "Applications of Near-Term Photonic Quantum Computers: Software and Algorithms",
+> [Quantum Sci. Technol. 5 034010](https://iopscience.iop.org/article/10.1088/2058-9565/ab8504/meta) (2020).
 
 
 ## Support
