@@ -44,6 +44,9 @@
 
 <h3>Documentation</h3>
 
+* Port README to markdown.
+  [(#664)](https://github.com/XanaduAI/strawberryfields/pull/664)
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
@@ -54,10 +57,10 @@ Theodor Isacsson
 
 <h3>New features since last release</h3>
 
-* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
-  module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
-  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
-  obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
+* The generic multimode Gaussian gate `Ggate` is now available in the `sf.ops`
+  module with the backend choice of `tf`. The N mode `Ggate` can be parametrized by a real
+  symplectic matrix `S` (size `2N * 2N`) and a displacement vector `d` (size `N`). You can also
+  obtain the gradients of the Ggate gate via TensorFlow's `tape.gradient`
   [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
   [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
