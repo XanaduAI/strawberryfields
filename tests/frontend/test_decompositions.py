@@ -802,7 +802,7 @@ class TestBlochMessiahDecomposition:
         assert np.allclose(S @ O @ S.T, O, atol=tol, rtol=0)
 
 
-class TestCompactSUnFactorization:
+class TestSUnFactorization:
     """tests for the SU(n) factorization"""
 
     def _embed_su2(self, n, i, j, params):
@@ -873,8 +873,15 @@ class TestCompactSUnFactorization:
     def test_unitary_validation(self, tol):
         """Test that an exception is raised if not unitary"""
         A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
-        with pytest.raises(ValueError, match="The input matrix is not unitary"):
+        with pytest.raises(ValueError, match="The input matrix is not unitary."):
             dec.sun_compact(A, tol)
+
+    def test_unitary_size(self, tol):
+        """test n=2 unitaries are not decomposed"""
+
+        U = random_interferometer(2)
+        with pytest.raises(ValueError, match="Input matrix for decomposition must be at least 3x3."):
+            dec.sun_compact(U, tol)
 
     @pytest.mark.parametrize("SU_matrix", [True, False])
     def test_global_phase(self, SU_matrix, tol):
@@ -918,7 +925,8 @@ class TestCompactSUnFactorization:
         U = random_interferometer(n)
 
         factorization_params, phase = dec.sun_compact(U, tol)
+        det = np.exp(1j * phase) ** (1 / n)
         SU_reconstructed = self._sun_reconstruction(n, factorization_params)
-        U_reconstructed = np.exp(1j * phase) ** (1 / n) * SU_reconstructed
+        U_reconstructed = np.linalg.det(U) * SU_reconstructed
 
-        np.allclose(U_reconstructed, U)
+        assert np.allclose(U_reconstructed, U)
