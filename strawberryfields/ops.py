@@ -2490,12 +2490,12 @@ def _sun_compact_cmds(reg, parameters, global_phase):
 
     for modes, params in parameters:
 
-        md1, md2 = modes[0] - 1, modes[1] - 1
+        md1, md2 = modes[0], modes[1]
         a, b, g = params[0], params[1], params[2]
 
         if md2 != md1 + 1:
             raise ValueError(
-                f"Mode combination {md1 + 1},{md2 + 1} is invalid.\n"
+                f"Mode combination {md1},{md2} is invalid.\n"
                 + "Currently only transformations on adjacent modes are implemented."
             )
 

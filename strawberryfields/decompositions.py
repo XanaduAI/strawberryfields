@@ -1110,7 +1110,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
 
     for md2 in range(2, n + 1):
         for md1 in range(n - 1, md2 - 2, -1):
-            parameters.append([(md1, md1 + 1), parameters_no_modes[param_idx]])
+            parameters.append([(md1 - 1, md1), parameters_no_modes[param_idx]])
             param_idx += 1
 
     return parameters, global_phase

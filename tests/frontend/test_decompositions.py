@@ -851,16 +851,16 @@ class TestSUnFactorization:
 
         for modes, params in parameters:
             # Get the indices of the modes
-            md1, md2 = int(modes[0]) - 1, int(modes[1]) - 1
+            md1, md2 = int(modes[0]), int(modes[1])
 
             if md1 not in range(n) or md2 not in range(n):
                 raise ValueError(
-                    f"Mode combination {md1 + 1},{md2 + 1}  is invalid for a system of dimension {n}."
+                    f"Mode combination {md1},{md2}  is invalid for a system of dimension {n}."
                 )
 
             if md2 != md1 + 1:
                 raise ValueError(
-                    f"Mode combination {md1 + 1},{md2 + 1} is invalid.\n"
+                    f"Mode combination {md1},{md2} is invalid.\n"
                     + "Currently only transformations on adjacent modes are implemented."
                 )
 
