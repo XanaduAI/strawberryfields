@@ -36,11 +36,6 @@
  designing, simulating, and optimizing continuous-variable quantum optical circuits.
 </p>
 
-<p align="center">
-  <strong>Train a quantum computer the same way as a neural network.</strong>
-  <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/header.png" width="700px">
-</p>
-
 
 ## Features
 
