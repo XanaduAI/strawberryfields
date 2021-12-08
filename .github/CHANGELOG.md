@@ -44,7 +44,7 @@
 
 <h3>Documentation</h3>
 
-* Port README to markdown.
+* README has been ported to Markdown.
   [(#664)](https://github.com/XanaduAI/strawberryfields/pull/664)
 
 <h3>Contributors</h3>
