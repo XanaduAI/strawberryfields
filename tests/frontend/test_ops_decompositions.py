@@ -218,9 +218,9 @@ class TestInterferometer:
         assert not G.decompose(prog.register)
 
     @pytest.mark.parametrize("mesh", interferometer_meshes)
-    def test_decomposition(self, mesh, tol):
+    @pytest.mark.parametrize("n", range(3, 6))
+    def test_decomposition(self, mesh, n, tol):
         """Test that an interferometer is correctly decomposed"""
-        n = 3
         prog = sf.Program(n)
         U = random_interferometer(n)
 
