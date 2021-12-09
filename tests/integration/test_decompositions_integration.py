@@ -282,14 +282,19 @@ class TestGaussianBackendDecompositions:
 
     def test_interferometer_sun_compact(self, setup_eng, tol):
         """Test applying an interferometer using SU(n) compact mesh"""
-        n_modes = 3
-        eng, p1 = setup_eng(n_modes)
+        eng, p1 = setup_eng(3)
 
         with p1.context as q:
-            ops.Interferometer(u1, mesh="sun_compact") | q
-        U = extract_unitary(p1, cutoff_dim=n_modes, vectorize_modes=True)
+            ops.All(ops.Squeezed(0.5)) | q
+        init = eng.run(p1).state
 
-        assert np.allclose(U, u1, atol=tol)
+        p2 = sf.Program(p1)
+        with p2.context as q:
+            ops.Interferometer(u1, mesh="sun_compact") | q
+
+        state = eng.run(p2).state
+        O = np.vstack([np.hstack([u1.real, -u1.imag]), np.hstack([u1.imag, u1.real])])
+        assert np.allclose(state.cov(), O @ init.cov() @ O.T, atol=tol)
 
     def test_identity_interferometer(self, setup_eng, tol):
         """Test that applying an identity interferometer does nothing"""
