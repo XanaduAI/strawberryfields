@@ -23,8 +23,6 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
 """
 from . import apps
 from ._version import __version__
-from .cli import ping
-from .configuration import store_account, active_configs, reset_config, delete_config
 from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
 from .parameters import par_funcs as math
@@ -32,22 +30,21 @@ from .program import Program
 from .tdm import TDMProgram
 from .plot import plot_wigner, plot_fock, plot_quad
 from . import tdm
+from .devicespec import DeviceSpec
+from .result import Result
 
 __all__ = [
     "Engine",
     "RemoteEngine",
     "Program",
     "TDMProgram",
+    "DeviceSpec",
+    "Result",
     "version",
     "save",
     "load",
     "about",
     "cite",
-    "ping",
-    "store_account",
-    "active_configs",
-    "reset_config",
-    "delete_config",
 ]
 
 
@@ -79,17 +76,18 @@ def about():
         Strawberry Fields: a Python library for continuous-variable quantum circuits.
         Copyright 2018-2020 Xanadu Quantum Technologies Inc.
 
-        Python version:            3.6.10
-        Platform info:             Linux-5.8.18-1-MANJARO-x86_64-with-arch-Manjaro-Linux
+        Python version:            3.9.6
+        Platform info:             Linux-5.10.60.1-microsoft-standard-WSL2-x86_64-with-glibc2.31
         Installation path:         /home/strawberryfields/
-        Strawberry Fields version: 0.17.0
+        Strawberry Fields version: 0.20.0
         Numpy version:             1.19.5
-        Scipy version:             1.4.1
-        SymPy version:             1.5.1
-        NetworkX version:          2.4
-        The Walrus version:        0.14.0
-        Blackbird version:         0.3.0
-        TensorFlow version:        2.4.0
+        Scipy version:             1.7.2
+        SymPy version:             1.9
+        NetworkX version:          2.6.3
+        The Walrus version:        0.16.2
+        Blackbird version:         0.4.0
+        XCC version:               0.1.0
+        TensorFlow version:        2.5.1
     """
     # pylint: disable=import-outside-toplevel
     import sys
@@ -101,6 +99,7 @@ def about():
     import networkx
     import thewalrus
     import blackbird
+    import xcc
 
     # a QuTiP-style infobox
     print("\nStrawberry Fields: a Python library for continuous-variable quantum circuits.")
@@ -116,6 +115,7 @@ def about():
     print("NetworkX version:          {}".format(networkx.__version__))
     print("The Walrus version:        {}".format(thewalrus.__version__))
     print("Blackbird version:         {}".format(blackbird.__version__))
+    print("XCC version:               {}".format(xcc.__version__))
 
     try:
         import tensorflow

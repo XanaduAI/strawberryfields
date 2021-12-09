@@ -47,9 +47,9 @@ from thewalrus.fock_gradients import mzgate as mzgate_tw
 from thewalrus.fock_gradients import grad_mzgate as grad_mzgate_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
-from thewalrus._hermite_multidimensional import hermite_multidimensional_numba as gaussian_gate_tw
+from thewalrus._hermite_multidimensional import hermite_multidimensional as gaussian_gate_tw
 from thewalrus._hermite_multidimensional import (
-    grad_hermite_multidimensional_numba as grad_gaussian_gate_tw,
+    grad_hermite_multidimensional as grad_gaussian_gate_tw,
 )
 from thewalrus.symplectic import is_symplectic, sympmat
 
@@ -525,7 +525,7 @@ def choi_trick(S, d, dtype=tf.complex128):
 @tf.custom_gradient
 def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
     """creates a N-mode gaussian gate matrix"""
-    gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C], tf.complex128)
+    gate = tf.numpy_function(gaussian_gate_tw, [R, cutoff, y, C, True, True, True], tf.complex128)
     N = y.shape[-1] // 2
     transpose_list = [x for pair in zip(range(N), range(N, 2 * N)) for x in pair]
 

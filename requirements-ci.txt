@@ -6,7 +6,7 @@ tensorboard
 networkx
 quantum-blackbird
 python-dateutil
-thewalrus
+thewalrus>=0.17.0
 toml
 appdirs
 numba

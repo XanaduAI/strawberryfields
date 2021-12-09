@@ -96,8 +96,7 @@ class BosonicBackend(BaseBosonic):
             prog (object): sf.Program instance
 
         Returns:
-            tuple: a tuple of the list of applied commands, the dictionary of measurement samples,
-            and the dictionary of ancilla measurement samples
+            tuple: a tuple of the list of applied commands and the dictionary of measurement samples
 
         Raises:
             NotApplicableError: if an op in the program does not apply to the bosonic backend
@@ -123,7 +122,6 @@ class BosonicBackend(BaseBosonic):
         # TODO: Deal with Preparation classes in the middle of a circuit.
         applied = []
         samples_dict = {}
-        all_samples = {}
 
         non_gauss_preps = (
             Bosonic,
@@ -134,11 +132,11 @@ class BosonicBackend(BaseBosonic):
             Ket,
             _New_modes,
         )
-        ancilla_gates = (MSgate,)
+        ancillae_gates = (MSgate,)
         for cmd in prog.circuit:
             # For ancilla-assisted gates, if they return measurement values, store
             # them in ancillae_samples_dict
-            if isinstance(cmd.op, ancilla_gates):
+            if isinstance(cmd.op, ancillae_gates):
                 # if the op returns a measurement outcome store it in a dictionary
                 val = cmd.op.apply(cmd.reg, self, **kwargs)
                 if val is not None:
@@ -157,12 +155,10 @@ class BosonicBackend(BaseBosonic):
                     val = cmd.op.apply(cmd.reg, self, **kwargs)
                     if val is not None:
                         for i, r in enumerate(cmd.reg):
-                            samples_dict[r.ind] = val[:, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = []
-                            all_samples[r.ind].append(val[:, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, i])
 
                     applied.append(cmd)
 
@@ -179,8 +175,7 @@ class BosonicBackend(BaseBosonic):
                             cmd.op, kwargs
                         )
                     ) from e
-
-        return applied, samples_dict, all_samples
+        return applied, samples_dict
 
     # pylint: disable=import-outside-toplevel
     def init_circuit(self, prog):
@@ -752,8 +747,8 @@ class BosonicBackend(BaseBosonic):
         Returns:
             float: the measurement outcome of the ancilla
         """
-        ancilla_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
-        return ancilla_val
+        ancillae_val = self.circuit.mb_squeeze_single_shot(mode, r, phi, r_anc, eta_anc)
+        return ancillae_val
 
     def beamsplitter(self, theta, phi, mode1, mode2):
         self.circuit.beamsplitter(theta, phi, mode1, mode2)

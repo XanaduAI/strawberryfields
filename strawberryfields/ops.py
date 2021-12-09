@@ -1446,8 +1446,8 @@ class MSgate(Channel):
             return None
 
         s = np.sqrt(sf.hbar / 2)
-        ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
-        return ancilla_val / s
+        ancillae_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
+        return ancillae_val / s
 
 
 class PassiveChannel(Channel):

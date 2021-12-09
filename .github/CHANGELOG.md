@@ -1,11 +1,66 @@
-# Release 0.20.0 (development release)
+# Release 0.21.0 (development release)
 
 <h3>New features since last release</h3>
 
-* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
-  module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
-  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
-  obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
+* A `Result.metadata` property is added to retrieve the metadata of a job result.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* A setter method for `Result.state` is added for setting a state for a local simulation if a state
+  has not previously been set.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+* The `TDMProgram.compile_info` and `TDMProgram.target` fields are now set when
+  a `TDMProgram` is compiled using the "TDM" compiler.
+  [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
+
+* Updates `Program.assert_max_number_of_measurements` to expect the maximum number
+  of measurements from the device specification as a flat dictionary entry instead
+  of a nested one.
+  [(#662)](https://github.com/XanaduAI/strawberryfields/pull/662)
+
+  ```python
+  "modes": {
+      "pnr_max": 20,
+      "homodyne_max": 1000,
+      "heterodyne_max": 1000,
+  }
+  ```
+
+  instead of
+
+  ```python
+  "modes": {
+      "max": {
+          "pnr": 20,
+          "homodyne": 1000,
+          "heterodyne": 1000,
+      }
+  }
+  ```
+
+<h3>Documentation</h3>
+
+* README has been ported to Markdown.
+  [(#664)](https://github.com/XanaduAI/strawberryfields/pull/664)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson
+
+# Release 0.20.0 (current release)
+
+<h3>New features since last release</h3>
+
+* The generic multimode Gaussian gate `Ggate` is now available in the `sf.ops`
+  module with the backend choice of `tf`. The N mode `Ggate` can be parametrized by a real
+  symplectic matrix `S` (size `2N * 2N`) and a displacement vector `d` (size `N`). You can also
+  obtain the gradients of the Ggate gate via TensorFlow's `tape.gradient`
   [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
   [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
@@ -26,7 +81,7 @@
   state_out = eng.run(prog).state.ket()
   ```
 
-  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient 
+  Note that in order to update the parameter `S` by using its gradient, you cannot use gradient
   descent directly (as the unitary would not be symplectic after the update). Please use the
   function `sf.backends.tfbackend.update_symplectic` which is designed specifically for this purpose.
 
@@ -75,17 +130,275 @@
   two separate real parameters.
   [(#441)](https://github.com/XanaduAI/strawberryfields/pull/441)
 
-<h3>Bug fixes</h3>
+* The `sf` CLI has been removed in favour of the
+  [Xanadu Cloud Client](https://github.com/XanaduAI/xanadu-cloud-client).
+  [(#642)](https://github.com/XanaduAI/strawberryfields/pull/642)
+
+  1. Configuring account credentials using:
+
+      * Strawberry Fields v0.19.0
+
+        ```console
+        $ sf configure --token "foo"
+        ```
+
+      * Strawberry Fields v0.20.0
+
+        ```console
+        $ xcc config set REFRESH_TOKEN "foo"
+        Successfully updated REFRESH_TOKEN setting to 'foo'.
+        ```
+
+  2. Verifying your connection to the Xanadu Cloud using:
+
+      * Strawberry Fields v0.19.0
+
+        ```console
+        $ sf --ping
+        You have successfully authenticated to the platform!
+        ```
+
+      * Strawberry Fields v0.20.0
+
+        ```console
+        $ xcc ping
+        Successfully connected to the Xanadu Cloud.
+        ```
+
+  3. Submitting a Blackbird circuit to the Xanadu Cloud using:
+
+      * Strawberry Fields v0.19.0
+
+        ```console
+        $ # Version 0.19.0
+        $ sf run "foo.xbb"
+        Executing program on remote hardware...
+        2021-11-02 03:04:05,06 - INFO - The device spec X8_01 has been successfully retrieved.
+        2021-11-02 03:04:05,07 - INFO - Compiling program for device X8_01 using compiler Xunitary.
+        2021-11-02 03:04:05,08 - INFO - Job b185a63c-f302-4adb-acf8-b6e4e413c11d was successfully submitted.
+        2021-11-02 03:04:05,09 - INFO - The remote job b185a63c-f302-4adb-acf8-b6e4e413c11d has been completed.
+        [[0 0 0 0]
+        [0 0 0 0]
+        [0 0 0 0]
+        [0 0 0 0]]
+        ```
+
+      * Strawberry Fields v0.20.0
+
+        ```console
+        $ xcc job submit --name "bar" --target "X8_01" --circuit "$(cat foo.xbb)"
+        {
+            "id": "0b0f5a46-46d8-4157-8005-45a4764361ba",  # Use this ID below.
+            "name": "bar",
+            "status": "open",
+            "target": "X8_01",
+            "language": "blackbird:1.0",
+            "created_at": "2021-11-02 03:04:05,10",
+            "finished_at": null,
+            "running_time": null,
+            "metadata": {}
+        }
+        $ xcc job get 0b0f5a46-46d8-4157-8005-45a4764361ba --result
+        {
+            "output": [
+                "[[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]\n[0 0 0 0]]"
+            ]
+        }
+        ```
+
+* The `sf.api.Connection` class has been replaced with the
+  [xcc.Connection](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Connection.html)
+  class.
+  [(#645)](https://github.com/XanaduAI/strawberryfields/pull/645)
+
+  Previously, in Strawberry Fields v0.19.0, an `sf.RemoteEngine` can be
+  instantiated with a custom Xanadu Cloud connection as follows:
+
+  ```python
+  import strawberryfields as sf
+  import strawberryfields.api
+
+  connection = strawberryfields.api.Connection(
+    token="Xanadu Cloud API key goes here",
+    host="platform.strawberryfields.ai",
+    port=443,
+    use_ssl=True,
+  )
+  engine = sf.RemoteEngine("X8", connection=connection)
+  ```
+
+  In Strawberry Fields v0.20.0, the same result can be achieved using
+  ```python
+  import strawberryfields as sf
+  import xcc
+
+  connection = xcc.Connection(
+    refresh_token="Xanadu Cloud API key goes here",  # See "token" argument above.
+    host="platform.strawberryfields.ai",
+    port=443,
+    tls=True,                                        # See "use_ssl" argument above.
+  )
+  engine = sf.RemoteEngine("X8", connection=connection)
+  ```
+
+* The `sf.configuration` module has been replaced with the
+  [xcc.Settings](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Settings.html)
+  class.
+  [(#649)](https://github.com/XanaduAI/strawberryfields/pull/649)
+
+  This means that Xanadu Cloud credentials are now stored in exactly one
+  location, the path to which depends on your operating system:
+
+  1. Windows: `C:\Users\%USERNAME%\AppData\Local\Xanadu\xanadu-cloud\.env`
+
+  2. MacOS: `/home/$USER/Library/Application\ Support/xanadu-cloud/.env`
+
+  3. Linux: `/home/$USER/.config/xanadu-cloud/.env`
+
+  The format of the configuration file has also changed to [.env](https://saurabh-kumar.com/python-dotenv/)
+  and the names of some fields have been updated. For example,
+
+  ```toml
+  # Strawberry Fields v0.19.0 (config.toml)
+  [api]
+  authentication_token = "Xanadu Cloud API key goes here"
+  hostname = "platform.strawberryfields.ai"
+  port = 443
+  use_ssl = true
+  ```
+
+  is equivalent to
+
+  ```python
+  # Strawberry Fields v0.20.0 (.env)
+  XANADU_CLOUD_REFRESH_TOKEN='Xanadu Cloud API key goes here'
+  XANADU_CLOUD_HOST='platform.strawberryfields.ai'
+  XANADU_CLOUD_PORT=443
+  XANADU_CLOUD_TLS=True
+  ```
+
+  Similarly, the names of the configuration environment variables have changed from
+
+  ```bash
+  # Strawberry Fields v0.19.0
+  export SF_API_AUTHENTICATION_TOKEN="Xanadu Cloud API key goes here"
+  export SF_API_HOSTNAME="platform.strawberryfields.ai"
+  export SF_API_PORT=443
+  export SF_API_USE_SSL=true
+  ```
+
+  to
+
+  ```bash
+  # Strawberry Fields v0.20.0
+  export XANADU_CLOUD_REFRESH_TOKEN="Xanadu Cloud API key goes here"
+  export XANADU_CLOUD_HOST="platform.strawberryfields.ai"
+  export XANADU_CLOUD_PORT=443
+  export XANADU_CLOUD_TLS=true
+  ```
+
+  Finally, `strawberryfields.store_account()` has been replaced such that
+
+  ```python
+  # Strawberry Fields v0.19.0
+  import strawberryfields as sf
+  sf.store_account("Xanadu Cloud API key goes here")
+  ```
+
+  becomes
+
+  ```python
+  # Strawberry Fields v0.20.0
+  import xcc
+  xcc.Settings(REFRESH_TOKEN="Xanadu Cloud API key goes here").save()
+  ```
+
+* The `sf.api.Job` class has been replaced with the
+  [xcc.Job](https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html)
+  class.
+  [(#650)](https://github.com/XanaduAI/strawberryfields/pull/650)
+
+  A `Job` object is returned when running jobs asynchronously. In previous versions of Strawberry
+  Fields (v0.19.0 and lower), the `Job` object can be used as follows:
+
+  ```pycon
+  >>> job = engine.run_async(program, shots=1)
+  >>> job.status
+  'queued'
+  >>> job.result
+  InvalidJobOperationError
+  >>> job.refresh()
+  >>> job.status
+  'complete'
+  >>> job.result
+  [[0 1 0 2 1 0 0 0]]
+  ```
+
+  In Strawberry Fields v0.20.0, the `Job` object works slightly differently:
+
+  ```pycon
+  >>> job = engine.run_async(program, shots=1)
+  >>> job.status
+  'queued'
+  >>> job.wait()
+  >>> job.status
+  'complete'
+  >>> job.result
+  {'output': [array([[0 1 0 2 1 0 0 0]])]}
+  ```
+
+  The `job.wait()` method is a blocking method that will wait for the job to finish. Alternatively,
+  `job.clear()` can be called to clear the cache, allowing `job.status` to re-fetch the job status.
+
+* The `sf.api.Result` class has been updated to support the Xanadu Cloud Client integration.
+  [(#651)](https://github.com/XanaduAI/strawberryfields/pull/651)
+
+  While `Result.samples` should return the same type and shape as before, the `Result.all_samples`
+  property has been renamed to `Result.samples_dict` and returns the samples as a dictionary with
+  corresponding measured modes as keys.
+
+  ```pycon
+  >>> res = eng.run(prog, shots=3)
+  >>> res.samples
+  array([[1, 0], [0, 1], [1, 1]])
+  >>> res.samples_dict
+  {0: [np.array([1, 0, 1])], 1: [np.array([0, 1, 1])]}
+  ```
+
+  The samples dictionary is only accessible for simulators.
+
+* The `sf.api.DeviceSpec` class has been updated to support the Xanadu Cloud Client integration.
+  [(#644)](https://github.com/XanaduAI/strawberryfields/pull/644)
+
+  It now works as a container for a device specification dictionary. There are no more API
+  connection usages, and `DeviceSpec.target` is retrieved from the device specification rather than
+  passed at initialization.
+
+* The `api` subpackage has been removed and the contained `DeviceSpec` and `Result` classes have
+  been moved to the root `strawberryfields` folder.
+  [(#652)](https://github.com/XanaduAI/strawberryfields/pull/652)
+
+  They can now be imported as follows:
+
+  ```python
+  import strawberryfields  as sf
+  # sf.DeviceSpec
+  # sf.Result
+  ```
 
 <h3>Documentation</h3>
+
+* Strawberry Fields interactive has been removed from the documentation.
+[(#635)](https://github.com/XanaduAI/strawberryfields/pull/635)
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov, Sebastián Duque Mesa, Filippo Miatto, Nicolás Quesada, Antal Száva, Yuan Yao.
+Mikhail Andrenkov, Sebastián Duque Mesa, Theodor Isacsson, Josh Izaac, Filippo Miatto, Nicolás
+Quesada, Antal Száva, Yuan Yao.
 
-# Release 0.19.0 (current release)
+# Release 0.19.0
 
 <h3>New features since last release</h3>
 
@@ -359,7 +672,7 @@ Antal Száva, Federico Rueda, Yuan Yao.
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
 
   results = eng.run(prog)
-  ancilla_samples = results.ancilla_samples
+  ancillae_samples = results.ancillae_samples
 
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)

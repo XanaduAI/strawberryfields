@@ -142,7 +142,7 @@ class TestProperExecution:
         res = eng.run(prog)
 
         assert isinstance(eng, sf.engine.BosonicEngine)
-        assert len(res.ancilla_samples[0]) == 2
+        assert len(res.ancillae_samples[0]) == 2
         assert str(res) == "<Result: shots=0, num_modes=0, num_ancillae=2, contains state=True>"
 
     # TODO: Some of these tests should probably check *something* after execution
