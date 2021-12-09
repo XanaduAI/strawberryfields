@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the IO module"""
+r"""Unit tests for the Blackbird IO module"""
 import pytest
 import textwrap
 
@@ -41,12 +41,6 @@ U = np.array([[0.219546940711-0.256534554457j, 0.611076853957+0.524178937791j, -
               [-0.156619083736+0.224568570065j, 0.109992223305-0.163750223027j, -0.421179844245+0.183644837982j, 0.818769184612+0.068015658737j]
     ])
 # fmt: on
-
-
-@pytest.fixture
-def eng(backend):
-    """Engine fixture."""
-    return sf.LocalEngine(backend)
 
 
 @pytest.fixture(scope="module")
@@ -354,6 +348,7 @@ class TestSFToBlackbirdConversion:
         }
 
     def test_tdm_program(self):
+        """Test TDM program converts properly"""
         prog = TDMProgram(2)
 
         with prog.context([1, 2], [3, 4], [5, 6]) as (p, q):

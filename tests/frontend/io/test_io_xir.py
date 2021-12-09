@@ -42,12 +42,6 @@ U = np.array([[0.219546940711-0.256534554457j, 0.611076853957+0.524178937791j, -
 # fmt: on
 
 
-@pytest.fixture
-def eng(backend):
-    """Engine fixture."""
-    return sf.LocalEngine(backend)
-
-
 @pytest.fixture(scope="module")
 def prog():
     prog = Program(4, name="test_program")
@@ -275,6 +269,7 @@ class TestSFtoXIRConversion:
         assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
     def test_tdm_program(self):
+        """Test the TDM programs converts properly"""
         sf_prog = TDMProgram(2)
 
         with sf_prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
@@ -557,7 +552,7 @@ class TestSaveXIR:
 
     def test_save_filename_string(self, prog, tmpdir):
         """Test saving a program to a file path using a string filename"""
-        filename = str(tmpdir.join("test.xbb"))
+        filename = str(tmpdir.join("test.xir"))
         sf.save(filename, prog, ir="xir")
 
         with open(filename, "r") as f:
@@ -567,7 +562,7 @@ class TestSaveXIR:
 
     def test_save_file_object(self, prog, tmpdir):
         """Test writing a program to a file object"""
-        filename = tmpdir.join("test.xbb")
+        filename = tmpdir.join("test.xir")
 
         with open(filename, "w") as f:
             sf.save(f, prog, ir="xir")
@@ -582,7 +577,7 @@ class TestSaveXIR:
         filename = str(tmpdir.join("test.txt"))
         sf.save(filename, prog, ir="xir")
 
-        with open(filename + ".xbb", "r") as f:
+        with open(filename + ".xir", "r") as f:
             res = f.read()
 
         assert res == test_xir_prog_not_compiled
@@ -618,7 +613,7 @@ class TestLoadXIR:
 
     def test_load_filename_string(self, prog, tmpdir):
         """Test loading a program using a string filename"""
-        filename = str(tmpdir.join("test.xbb"))
+        filename = str(tmpdir.join("test.xir"))
 
         with open(filename, "w") as f:
             f.write(test_xir_prog_not_compiled)
@@ -630,7 +625,7 @@ class TestLoadXIR:
 
     def test_load_file_object(self, prog, tmpdir):
         """Test loading a program via a file object"""
-        filename = tmpdir.join("test.xbb")
+        filename = tmpdir.join("test.xir")
 
         with open(filename, "w") as f:
             sf.save(f, prog, ir="xir", add_decl=False)
