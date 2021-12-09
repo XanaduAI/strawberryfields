@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This module contains functions for loading and saving Strawberry Fields
-:class:`~.Program` objects from/to Blackbird scripts and Strawberry Fields
+:class:`~.Program` objects from/to XIR scripts and Strawberry Fields
 code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
@@ -23,7 +23,6 @@ from typing import Iterable
 import numpy as np
 
 import xir
-from xir.program import Declaration
 
 import strawberryfields.program as sfp
 from strawberryfields.tdm.tdmprogram import TDMProgram
@@ -43,12 +42,14 @@ def from_xir(xir_prog):
     """
     # only script-level statements are part of `xir_prog.statements`, which can only have integer
     # wires, leading to `xir_prog.wires` only containing integer wire labels
-    num_of_modes = int(max(xir_prog.wires or [-1])) + 1
-    name = xir_prog.options.get("name", "xir")
-    if num_of_modes == 0:
+    if not xir_prog.wires:
         raise ValueError(
-            "The XIR program is empty and cannot be transformed into a Strawberry Fields program"
+            "The XIR program is empty and cannot be transformed "
+            "into a Strawberry Fields program."
         )
+
+    num_of_modes = max(xir_prog.wires) + 1
+    name = xir_prog.options.get("name", "xir")
     prog = sfp.Program(num_of_modes, name=name)
 
     # append the quantum operations
@@ -92,7 +93,7 @@ def from_xir(xir_prog):
                 else:
                     gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
-    prog._target = xir_prog.options.get("target", None)  # pylint: disable=protected-access
+    prog._target = xir_prog.options.get("_target_", None)  # pylint: disable=protected-access
 
     if "shots" in xir_prog.options:
         prog.run_options["shots"] = xir_prog.options["shots"]
@@ -187,8 +188,7 @@ def to_xir(prog, **kwargs):
     Returns:
         xir.Program
     """
-    version = kwargs.get("version", "0.1.0")
-    xir_prog = xir.Program(version=version)
+    xir_prog = xir.Program()
 
     if isinstance(prog, TDMProgram):
         xir_prog.add_option("type", "tdm")

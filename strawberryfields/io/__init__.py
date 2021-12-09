@@ -29,7 +29,7 @@ from .xir_io import to_xir, from_xir, from_xir_to_tdm
 __all__ = ["to_blackbird", "to_xir", "to_program", "loads"]
 
 
-def to_program(prog):
+def to_program(prog) -> Program:
     """Convert a Blackbird or an XIR program to a Strawberry Fields program.
 
     Args:
@@ -53,10 +53,10 @@ def to_program(prog):
             return from_xir_to_tdm(prog)
         return from_xir(prog)
 
-    raise TypeError(f"Cannot convert '{prog.__class__}' to Strawberry Fields Program")
+    raise TypeError(f"Cannot convert {type(prog)}' to Strawberry Fields Program")
 
 
-def generate_code(prog, eng=None):
+def generate_code(prog: Program, eng: Optional[Engine] = None) -> str:
     """Converts a Strawberry Fields program into valid Strawberry Fields code.
 
     **Example:**
@@ -196,7 +196,7 @@ def _factor_out_pi(num_list, denominator=12):
 
 
 def save(f, prog, ir="blackbird", **kwargs):
-    """Saves a quantum program to a Blackbird .xbb or an XIR .xir file.
+    """Saves a quantum program to a Blackbird ``.xbb`` or an XIR ``.xir`` file.
 
     **Example:**
 
@@ -245,7 +245,7 @@ def save(f, prog, ir="blackbird", **kwargs):
         prog_str = to_blackbird(prog).serialize()
     else:
         raise ValueError(
-            f"'{ir}' not recognized as a valid XIR option. Valid options are 'xir' and 'blackbird'."
+            f"'{ir}' not recognized as a valid IR option. Valid options are 'xir' and 'blackbird'."
         )
 
     if hasattr(f, "read"):
@@ -278,6 +278,7 @@ def loads(s, ir="blackbird"):
     Args:
         s (str): string containing the Blackbird or XIR circuit
         ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
+
     Returns:
         prog (Program): Strawberry Fields program
 
@@ -288,13 +289,13 @@ def loads(s, ir="blackbird"):
         prog = blackbird.loads(s)
     else:
         raise ValueError(
-            f"'{ir}' not recognized as a valid XIR option. Valid options are 'xir' and 'blackbird'."
+            f"'{ir}' not recognized as a valid IR option. Valid options are 'xir' and 'blackbird'."
         )
     return to_program(prog)
 
 
 def load(f, ir="blackbird"):
-    """Load a quantum program from a Blackbird .xbb file.
+    """Load a quantum program from a Blackbird .xbb or an XIR .xir file.
 
     **Example:**
 
@@ -312,7 +313,7 @@ def load(f, ir="blackbird"):
     can be imported into Strawberry Fields using the ``loads``
     function:
 
-    >>> sf.loads("program1.xbb")
+    >>> sf.loads("program1.xbb", ir="blackbird")
     >>> prog.name
     'test_program'
     >>> prog.num_subsystems
@@ -353,5 +354,5 @@ def load(f, ir="blackbird"):
             # safely close the file
             fid.close()
 
-    # load blackbird program
+    # load Blackbird or XIR program
     return loads(prog_str, ir=ir)
