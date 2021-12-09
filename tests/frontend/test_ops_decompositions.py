@@ -38,7 +38,7 @@ interferometer_meshes = [
             "rectangular_phase_end",
             "rectangular_symmetric",
             "rectangular_compact",
-            "triangular",
+            # "triangular",
             "triangular_compact",
             "sun_compact",
         ]

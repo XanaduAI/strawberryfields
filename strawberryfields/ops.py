@@ -2484,9 +2484,10 @@ def _triangular_compact_cmds(reg, phases):
 
 def _sun_compact_cmds(reg, parameters, global_phase):
     cmds = []
+    n = len(reg)
 
     if global_phase is not None:
-        cmds += [Command(Rgate(global_phase), mode) for mode in reg]
+        cmds += [Command(Rgate(global_phase/n), mode) for mode in reg]
 
     for modes, params in parameters:
 
@@ -2503,7 +2504,9 @@ def _sun_compact_cmds(reg, parameters, global_phase):
         cmds.append(Command(BSgate(b / 2, 0), (reg[md1], reg[md2])))
         cmds += [Command(Rgate(g / 2), reg[md1]), Command(Rgate(-g / 2), reg[md2])]
 
-    return cmds
+    # note cmds have to be reversed as they are build in matrix multiplication order,
+    # which is in opposite order to gate application
+    return cmds[::-1]
 
 
 class Interferometer(Decomposition):
