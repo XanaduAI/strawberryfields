@@ -880,7 +880,9 @@ class TestSUnFactorization:
         """test n=2 unitaries are not decomposed"""
 
         U = random_interferometer(2)
-        with pytest.raises(ValueError, match="Input matrix for decomposition must be at least 3x3."):
+        with pytest.raises(
+            ValueError, match="Input matrix for decomposition must be at least 3x3."
+        ):
             dec.sun_compact(U, tol)
 
     @pytest.mark.parametrize("SU_matrix", [True, False])

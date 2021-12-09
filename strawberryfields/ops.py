@@ -2487,7 +2487,7 @@ def _sun_compact_cmds(reg, parameters, global_phase):
     n = len(reg)
 
     if global_phase is not None:
-        cmds += [Command(Rgate(global_phase/n), mode) for mode in reg]
+        cmds += [Command(Rgate(global_phase / n), mode) for mode in reg]
 
     for modes, params in parameters:
 
@@ -2642,7 +2642,7 @@ class Interferometer(Decomposition):
 
         cmds = []
 
-        if self.identity:
+        if self.identity or drop_identity:
             return cmds
 
         if mesh == "rectangular_compact":

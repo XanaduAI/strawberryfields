@@ -34,14 +34,14 @@ pytestmark = pytest.mark.frontend
 np.random.seed(42)
 
 interferometer_meshes = [
-            "rectangular",
-            "rectangular_phase_end",
-            "rectangular_symmetric",
-            "rectangular_compact",
-            # "triangular",
-            "triangular_compact",
-            "sun_compact",
-        ]
+    "rectangular",
+    "rectangular_phase_end",
+    "rectangular_symmetric",
+    "rectangular_compact",
+    # "triangular",
+    "triangular_compact",
+    "sun_compact",
+]
 
 
 def expand(S, modes, num_modes):
