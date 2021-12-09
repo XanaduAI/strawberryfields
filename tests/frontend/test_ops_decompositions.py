@@ -205,7 +205,9 @@ class TestInterferometer:
         # two merged unitaries are the same as their product
         assert np.allclose(int1.merge(int2).p[0], U2 @ U1, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("mesh", interferometer_meshes)
+    @pytest.mark.parametrize(
+        "mesh", ["rectangular", "rectangular_phase_end", "rectangular_symmetric", "triangular"]
+    )
     def test_identity(self, mesh):
         """Test that nothing is done if the unitary is the identity"""
         prog = sf.Program(2)
