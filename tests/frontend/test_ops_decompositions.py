@@ -210,7 +210,7 @@ class TestInterferometer:
         """Test that nothing is done if the unitary is the identity"""
         prog = sf.Program(2)
 
-        G = ops.Interferometer(np.identity(2), mesh)
+        G = ops.Interferometer(np.identity(6), mesh)
         # identity flag is correctly set
         assert G.identity
 
