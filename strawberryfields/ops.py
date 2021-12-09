@@ -2642,9 +2642,6 @@ class Interferometer(Decomposition):
 
         cmds = []
 
-        if self.identity or drop_identity:
-            return cmds
-
         if mesh == "rectangular_compact":
             phases = dec.rectangular_compact(self.p[0], rtol=tol, atol=tol)
             cmds = _rectangular_compact_cmds(reg, phases)
@@ -2657,7 +2654,7 @@ class Interferometer(Decomposition):
             parameters, global_phase = dec.sun_compact(self.p[0], rtol=tol, atol=tol)
             cmds = _sun_compact_cmds(reg, parameters, global_phase)
 
-        else:
+        elif not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
             BS1, R, BS2 = decomp_fn(self.p[0], tol=tol)
 
