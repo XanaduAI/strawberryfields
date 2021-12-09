@@ -21,13 +21,13 @@ import numpy as np
 
 import blackbird
 
-import strawberryfields.program as sfp
-from strawberryfields.tdm.tdmprogram import TDMProgram
-from strawberryfields import ops
 import strawberryfields.parameters as sfpar
+from strawberryfields.program import Program
+from strawberryfields.tdm.tdmprogram import TDMProgram, is_ptype
+from strawberryfields import ops
 
 
-def from_blackbird(bb):
+def from_blackbird(bb: blackbird.BlackbirdProgram) -> Program:
     """Convert a Blackbird program to a Strawberry Fields program.
 
     Args:
@@ -35,9 +35,12 @@ def from_blackbird(bb):
 
     Returns:
         Program: corresponding Strawberry Fields program
+
+    Raises:
+        NameError: if an applied quantum operation is not defined in Strawberry Fields
     """
     # create a SF program
-    prog = sfp.Program(max(bb.modes) + 1, name=bb.name)
+    prog = Program(max(bb.modes) + 1, name=bb.name)
 
     # append the quantum operations
     with prog.context as q:
@@ -83,11 +86,22 @@ def from_blackbird(bb):
 
 
 # pylint:disable=too-many-branches
-def from_blackbird_to_tdm(bb):
+def from_blackbird_to_tdm(bb: blackbird.BlackbirdProgram) -> TDMProgram:
+    """Convert a ``BlackbirdProgram`` to a ``TDMProgram``.
+
+    Args:
+        bb (blackbird.BlackbirdProgram): the input Blackbird program object
+
+    Returns:
+        Program: corresponding ``TDMProgram``
+
+    Raises:
+        NameError: if an applied quantum operation is not defined in Strawberry Fields
+    """
     prog = TDMProgram(max(bb.modes) + 1, name=bb.name)
 
     def is_free_param(param):
-        return isinstance(param, str) and param[0] == "p" and param[1:].isdigit()
+        return isinstance(param, str) and is_ptype(param)
 
     # retrieve all the free parameters in the Blackbird program (e.g. "p0", "p1"
     # etc.) and add their corresponding values to args
@@ -147,7 +161,7 @@ def from_blackbird_to_tdm(bb):
     return prog
 
 
-def to_blackbird(prog, version="1.0"):
+def to_blackbird(prog: Program, version: str = "1.0") -> blackbird.BlackbirdProgram:
     """Convert a Strawberry Fields Program to a Blackbird Program.
 
     Args:

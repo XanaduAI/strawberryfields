@@ -18,20 +18,20 @@ code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 from decimal import Decimal
-from typing import Iterable
+from typing import Iterable, List
 
 import numpy as np
 
 import xir
 
-import strawberryfields.program as sfp
-from strawberryfields.tdm.tdmprogram import TDMProgram
 import strawberryfields.parameters as sfpar
+from strawberryfields.program import Program
+from strawberryfields.tdm.tdmprogram import TDMProgram, is_ptype
 from strawberryfields import ops
 
 
 # pylint: disable=too-many-branches
-def from_xir(xir_prog):
+def from_xir(xir_prog: xir.Program) -> Program:
     """Convert an XIR Program to a Strawberry Fields program.
 
     Args:
@@ -39,6 +39,9 @@ def from_xir(xir_prog):
 
     Returns:
         Program: corresponding Strawberry Fields program
+
+    Raises:
+        ValueError: if the XIR program is empty
     """
     # only script-level statements are part of `xir_prog.statements`, which can only have integer
     # wires, leading to `xir_prog.wires` only containing integer wire labels
@@ -48,9 +51,9 @@ def from_xir(xir_prog):
             "into a Strawberry Fields program."
         )
 
-    num_of_modes = max(xir_prog.wires) + 1
+    num_of_modes = int(max(xir_prog.wires)) + 1
     name = xir_prog.options.get("name", "xir")
-    prog = sfp.Program(num_of_modes, name=name)
+    prog = Program(num_of_modes, name=name)
 
     # append the quantum operations
     with prog.context as q:
@@ -104,11 +107,27 @@ def from_xir(xir_prog):
 
 
 # pylint: disable=too-many-branches
-def from_xir_to_tdm(xir_prog):
-    prog = TDMProgram(xir_prog.options["N"], name=xir_prog.options.get("name", "xir"))
+def from_xir_to_tdm(xir_prog: xir.Program) -> TDMProgram:
+    """Convert an XIR Program to a ``TDMProgram``.
+
+    Args:
+        xir_prog (xir.Program): the input XIR program object
+
+    Returns:
+        Program: corresponding ``TDMProgram``
+
+    Raises:
+        ValueError: if the number of modes 'N' is missing from the XIR program options
+        NameError: if an applied quantum operation is not defined in Strawberry Fields
+    """
+    N = xir_prog.options.get("N")
+    if not N:
+        raise ValueError("Number of modes 'N' is missing from the XIR program options.")
+
+    prog = TDMProgram(N, name=xir_prog.options.get("name", "xir"))
 
     # extract the tdm gate arguments from the xir program constants
-    args = [val for key, val in xir_prog.constants.items() if key[0] == "p" and key[1:].isdigit()]
+    args = [val for key, val in xir_prog.constants.items() if is_ptype(key)]
 
     # convert arguments to float/complex if stored as Decimal/DecimalComplex objects
     for i, params in enumerate(args):
@@ -133,7 +152,7 @@ def from_xir_to_tdm(xir_prog):
                 raise NameError(f"Quantum operation {op.name!r} not defined!")
 
             # create the list of regrefs
-            regrefs = [q[i] for i in op.wires]
+            regrefs = [q[int(i)] for i in op.wires]
 
             if op.params:
                 # convert symbolic expressions to symbolic expressions containing the corresponding
@@ -142,7 +161,7 @@ def from_xir_to_tdm(xir_prog):
                     vals = sfpar.par_convert(op.params.values(), prog)
                     params = dict(zip(op.params.keys(), vals))
                     for key, val in params.items():
-                        if val[0] == "p" and val[1:].isdigit():
+                        if is_ptype(val):
                             params[key] = p[int(val[1:])]
                     gate(**params) | regrefs  # pylint:disable=expression-not-assigned
                 else:
@@ -152,7 +171,7 @@ def from_xir_to_tdm(xir_prog):
                             params.append(float(param))
                         elif isinstance(param, (list, np.ndarray)):
                             params.append(np.array(_listr(param)))
-                        elif isinstance(param, str) and param[0] == "p" and param[1:].isdigit():
+                        elif isinstance(param, str) and is_ptype(param):
                             params.append(p[int(param[1:])])
                         else:
                             params.append(param)
@@ -174,7 +193,7 @@ def from_xir_to_tdm(xir_prog):
     return prog
 
 
-def to_xir(prog, **kwargs):
+def to_xir(prog: Program, **kwargs) -> xir.Program:
     """Convert a Strawberry Fields Program to an XIR Program.
 
     Args:
@@ -183,12 +202,12 @@ def to_xir(prog, **kwargs):
     Keyword Args:
         add_decl (bool): Whether gate and output declarations should be added to
             the XIR program. Default is ``False``.
-        version (str): Version number for the program. Default is ``0.1.0``.
 
     Returns:
         xir.Program
     """
     xir_prog = xir.Program()
+    add_decl = kwargs.get("add_decl", False)
 
     if isinstance(prog, TDMProgram):
         xir_prog.add_option("type", "tdm")
@@ -212,8 +231,8 @@ def to_xir(prog, **kwargs):
         wires = tuple(i.ind for i in cmd.reg)
 
         if "Measure" in name:
-            if kwargs.get("add_decl", False):
-                output_decl = xir.Declaration(name, type_="out")
+            if add_decl:
+                output_decl = xir.Declaration(name, type_="out", wires=wires)
                 xir_prog.add_declaration(output_decl)
 
             params = {}
@@ -234,7 +253,7 @@ def to_xir(prog, **kwargs):
                 if cmd.op.dark_counts is not None:
                     params["dark_counts"] = cmd.op.dark_counts
         else:
-            if kwargs.get("add_decl", False):
+            if add_decl:
                 if name not in [gdecl.name for gdecl in xir_prog.declarations["gate"]]:
                     params = [f"p{i}" for i, _ in enumerate(cmd.op.p)]
                     gate_decl = xir.Declaration(
@@ -273,20 +292,26 @@ def to_xir(prog, **kwargs):
     return xir_prog
 
 
-def _listr(mixed_list):
-    """Casts a nested iterable to a list recursively"""
+def _listr(mixed_iterable: Iterable) -> List:
+    """Casts a nested iterable to a list recursively, maintaining the same shape.
+
+    Any iterable will be cast to a list, including casting all internal types to native Python
+    types (e.g., ``Decimal`` and ``np.floating`` to ``float``), maintaining the shape.
+    """
     list_ = []
 
-    for l in mixed_list:
+    for l in mixed_iterable:
         if isinstance(l, Iterable):
             list_.append(_listr(l))
         else:
-            if isinstance(l, Decimal):
+            if isinstance(l, (Decimal, np.floating)):
                 list_.append(float(l))
-            elif isinstance(l, xir.DecimalComplex):
+            elif isinstance(l, (xir.DecimalComplex, np.complexfloating)):
                 list_.append(complex(l))
             else:
                 try:
+                    # if a NumPy-like object, extract the internal object
+                    # with native Python type (e.g., `np.int` to Python `int`)
                     list_.append(l.item())
                 except AttributeError:
                     list_.append(l)

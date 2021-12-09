@@ -17,10 +17,17 @@ and converting from/to Blackbird and XIR scripts to Strawberry Fields code.
 """
 import os
 
+from typing import Optional, Union, List, TextIO
+from numbers import Number
+from pathlib import Path
+
 import xir
 import blackbird
 import numpy as np
+
 from strawberryfields.tdm.tdmprogram import TDMProgram
+from strawberryfields.program import Program
+from strawberryfields.engine import Engine, RemoteEngine
 
 from .blackbird_io import to_blackbird, from_blackbird, from_blackbird_to_tdm
 from .xir_io import to_xir, from_xir, from_xir_to_tdm
@@ -29,7 +36,7 @@ from .xir_io import to_xir, from_xir, from_xir_to_tdm
 __all__ = ["to_blackbird", "to_xir", "to_program", "loads"]
 
 
-def to_program(prog) -> Program:
+def to_program(prog: Union[blackbird.BlackbirdProgram, xir.Program]) -> Program:
     """Convert a Blackbird or an XIR program to a Strawberry Fields program.
 
     Args:
@@ -37,6 +44,10 @@ def to_program(prog) -> Program:
 
     Returns:
         Program: corresponding Strawberry Fields program
+
+    Raises:
+        ValueError: if the Blackbird program contains no quantum operations
+        TypeError: if the program has an invalid type
     """
     if isinstance(prog, blackbird.BlackbirdProgram):
         if not prog.modes:
@@ -49,7 +60,7 @@ def to_program(prog) -> Program:
         return from_blackbird(prog)
 
     if isinstance(prog, xir.Program):
-        if prog.options.get("type") == "tdm":
+        if prog.options.get("_type_") == "tdm":
             return from_xir_to_tdm(prog)
         return from_xir(prog)
 
@@ -111,8 +122,7 @@ def generate_code(prog: Program, eng: Optional[Engine] = None) -> str:
     # check if an engine is supplied; if so, format and add backend/target
     # along with backend options
     if eng:
-        eng_type = eng.__class__.__name__
-        if eng_type == "RemoteEngine":
+        if isinstance(eng, RemoteEngine):
             code_seq.append(f'eng = sf.RemoteEngine("{eng.target}")')
         else:
             if "cutoff_dim" in eng.backend_options:
@@ -156,12 +166,12 @@ def generate_code(prog: Program, eng: Optional[Engine] = None) -> str:
     return "\n".join(code_seq)
 
 
-def _factor_out_pi(num_list, denominator=12):
+def _factor_out_pi(num_list: List[Union[Number, str]], denominator: int = 12) -> str:
     """Factors out pi, divided by the denominator value, from all number in a list
     and returns a string representation.
 
     Args:
-        num_list (list[Number, string]): a list of numbers and/or strings
+        num_list (list[Number, str]): a list of numbers and/or strings
         denominator (int): factor out pi divided by denominator;
             e.g. default would be to factor out np.pi/12
 
@@ -195,7 +205,7 @@ def _factor_out_pi(num_list, denominator=12):
     return ", ".join(a)
 
 
-def save(f, prog, ir="blackbird", **kwargs):
+def save(f: Union[TextIO, str, Path], prog: Program, ir: str = "blackbird", **kwargs) -> None:
     """Saves a quantum program to a Blackbird ``.xbb`` or an XIR ``.xir`` file.
 
     **Example:**
@@ -235,7 +245,6 @@ def save(f, prog, ir="blackbird", **kwargs):
     Keyword Args:
         add_decl (bool): Whether gate and output declarations should be added to
             the XIR program. Default is ``False``.
-        version (str): Version number for the program. Default is ``0.1.0``.
     """
     own_file = False
 
@@ -255,8 +264,10 @@ def save(f, prog, ir="blackbird", **kwargs):
         # argument file is a string or Path
         filename = os.fspath(f)
 
-        if not filename.endswith(".xbb"):
+        if ir == "blackbird" and not filename.endswith(".xbb"):
             filename = filename + ".xbb"
+        elif ir == "xir" and not filename.endswith(".xir"):
+            filename = filename + ".xir"
 
         fid = open(filename, "w")
 
@@ -272,7 +283,7 @@ def save(f, prog, ir="blackbird", **kwargs):
             fid.close()
 
 
-def loads(s, ir="blackbird"):
+def loads(s: str, ir: str = "blackbird") -> Program:
     """Load a quantum program from a string.
 
     Args:
@@ -282,6 +293,8 @@ def loads(s, ir="blackbird"):
     Returns:
         prog (Program): Strawberry Fields program
 
+    Raises:
+        ValueError: if an invalid IR name is passed
     """
     if ir == "xir":
         prog = xir.parse_script(s)
@@ -294,7 +307,7 @@ def loads(s, ir="blackbird"):
     return to_program(prog)
 
 
-def load(f, ir="blackbird"):
+def load(f: Union[TextIO, str, Path], ir: str = "blackbird") -> Program:
     """Load a quantum program from a Blackbird .xbb or an XIR .xir file.
 
     **Example:**
@@ -331,6 +344,9 @@ def load(f, ir="blackbird"):
 
     Returns:
         prog (Program): Strawberry Fields program
+
+    Raises:
+        ValueError: if file is not a string, pathlib.Path, or file-like object
     """
     own_file = False
 
