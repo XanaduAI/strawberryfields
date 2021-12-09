@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2021 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the IO module"""
+r"""Unit tests for the XIR IO module"""
 import pytest
 import inspect
 
@@ -132,7 +132,7 @@ class TestSFtoXIRConversion:
         sf_prog = Program(2)
 
         with sf_prog.context as q:
-            ops.Dgate(r=np.abs(0.54 + 0.324j), phi=np.angle(0.54 + 0.324j)) | q[1]
+            ops.Dgate(r=np.abs(0.54 + 0.324j), phi=np.angle(0.54 + 0.324j)) | q[0]
 
         xir_prog = io.to_xir(sf_prog)
 
@@ -547,7 +547,7 @@ class TestSaveXIR:
 
     def test_save_filename_path_object(self, prog, tmpdir):
         """Test saving a program to a file path using a path object"""
-        filename = tmpdir.join("test.xbb")
+        filename = tmpdir.join("test.xir")
         sf.save(filename, prog, ir="xir")
 
         with open(filename, "r") as f:
@@ -606,7 +606,7 @@ class TestLoadXIR:
 
     def test_load_filename_path_object(self, prog, tmpdir):
         """Test loading a program using a path object"""
-        filename = tmpdir.join("test.xbb")
+        filename = tmpdir.join("test.xir")
 
         with open(filename, "w") as f:
             f.write(test_xir_prog_not_compiled)
