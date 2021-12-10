@@ -1155,7 +1155,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
 
 
 def _sun_parameters(U):
-    """Compute the set of parameters of the :math:`\mathrm{SU}(2)` transforms in the
+    r"""Compute the set of parameters of the :math:`\mathrm{SU}(2)` transforms in the
     factorization scheme.
 
     Args:
@@ -1289,7 +1289,7 @@ def _build_staircase(U):
 
 
 def _su2_parameters(U, tol=1e-11):
-    """Compute and return the parameters `[a, b, g]` of an :math:`\mathrm{SU}(2)` matrix.
+    r"""Compute and return the parameters `[a, b, g]` of an :math:`\mathrm{SU}(2)` matrix.
 
     Args:
         U (array): unitary matrix of shape ``(2,2)`` with :math:`\det U = 1`
@@ -1333,7 +1333,7 @@ def _su2_parameters(U, tol=1e-11):
 
 
 def _su3_parameters(U):
-    """Factorizes an :math:`\mathrm{SU}(3)` transformation into 3 :math:`\mathrm{SU}(2)`
+    r"""Factorizes an :math:`\mathrm{SU}(3)` transformation into 3 :math:`\mathrm{SU}(2)`
     transformations.
 
     Args:
