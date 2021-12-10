@@ -1071,19 +1071,58 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
 
 
 def sun_compact(U, rtol=1e-12, atol=1e-12):
-    r"""Decompose an arbitrary element in :math:`SU(n)` as a sequence of
-    :math:`SU(2)` transformations.
+    r"""Recursive factorization of unitary transfomations.
 
-    For more details, see https://arxiv.org/abs/1708.00735
+    Decomposes elements of :math:`\mathrm{SU}(n)` as a sequence of :math:`\mathrm{SU}(2)`
+    transformations and entangling beamsplitters, see :cite:`deguise2018simple`.
+    This sequence of :math:`\mathrm{SU}(2)` transformations can then be mapped to an operation
+    on optical modes including two phase plates and one beam splitter.
+
+    This implementation is based on the authors' code at `github:glassnotes/Caspar
+    <https://github.com/glassnotes/Caspar>`_.
 
     Args:
-        U (array[float]): unitary matrix with :math:`|\mathrm{det}(U)| = 1`
-        tol (float): the tolerance used when checking if the matrix is special unitary
-
+        U (array): unitary matrix
+        rtol (float): relative tolerance used when checking if the matrix unitary
+        atol (float): absolute tolerance used when checking if the matrix unitary
     Returns:
-        tuple: a tuple in the form ((i,i+1), [a, b, g]) where
-            the i indicate the modes of an SU(2) transformation and [a, b, g]
-            are its parameters.
+        tuple[list[tuple,list], float]: Returns a list of operations with elements in
+        the form ``(i,i+1), [a, b, g]`` where the ``i`` indicate the mode of an
+        :math:`\mathrm{SU}(2)` transformation and ``[a, b, g]`` are its parameters.
+
+    .. details::
+
+    Note that any unitary can be written in terms of an special unitary as
+
+    .. math:: U = e^{i \phi/n} S
+
+    where :math:`S \in \mathrm{SU}(n)` and :math:`e^{i\phi} = \mathrm{det}\,U`.
+
+    Here any :math:`S \in \mathrm{SU}(n)` is parametrized in terms of the Euler angles and written as
+
+    .. math::
+        S(\alpha, \beta, \gamma) =
+        \begin{pmatrix}
+            e^{i\alpha/2} & 0              \\
+            0             & e^{-i\alpha/2}
+        \end{pmatrix}
+        \begin{pmatrix}
+            \cos{\beta/2} & -\sin{\beta/2}  \\
+            \sin{\beta/2}  & \cos{\beta/2}
+        \end{pmatrix}
+        \begin{pmatrix}
+            e^{i\gamma/2} & 0              \\
+            0             & e^{-i\gamma/2}
+        \end{pmatrix}.
+
+    This factorization then determines the constructions of the :math:`\mathrm{SU}(2)` device
+    acting on the respective optical modes
+
+    .. math::
+         S(\alpha, \beta, \gamma) =
+            \left[ R(\alpha/2) \otimes R(-\alpha/2) \right] \,
+            BS(\beta/2) \,
+            \left[ R(\gamma/2) \otimes R(-\gamma/2) \right].
     """
 
     n = U.shape[0]
@@ -1107,7 +1146,6 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
 
     # Add the info about which modes each transformation is on
     param_idx = 0
-
     for md2 in range(2, n + 1):
         for md1 in range(n - 1, md2 - 2, -1):
             parameters.append([(md1 - 1, md1), parameters_no_modes[param_idx]])
@@ -1117,34 +1155,44 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
 
 
 def _sun_parameters(U):
-    """Compute the set of parameters of the SU(2) transforms in the
+    """Compute the set of parameters of the :math:`\mathrm{SU}(2)` transforms in the
     factorization scheme.
 
+    Args:
+        U (array): unitary matrix
+    Returns:
+        list: a list of parameters ``[a, b, g]`` of an :math:`\mathrm{SU}(2)` operation
+
+    .. details::
+
     This is a recursive process. The first step is to produce a
-    "staircase" of transformations on adjacent modes (d-1, d), (d-2, d-1),...
-    so that what's left is an SU(n-1) transformation embedded in the lower
-    portion of the original system. This is performed recursively down to
-    the case of SU(3) where we use the Rowe et al algorithm to get the
-    rest of the transformation.
+    "staircase" of transformations on adjacent modes ``(d-1, d), (d-2, d-1), \dots``
+    so that what's left is an :math:`\mathrm{SU}(n-1)` transformation embedded in the lower
+    portion of the original system.
+    This is performed recursively down to the case of :math:`\mathrm{SU}(3)` where the
+    Rowe et al algorithm :cite:`rowe1999representations` is used to get the rest of the
+    transformation.
+
     """
     if U.shape == (3, 3):
-        # Base case of recursion is SU(3).
         return _su3_parameters(U)
     else:
-        # All other cases we must build the staircase and repeat the
-        # process on the resultant SU(n-1) transformation
         staircase_transformation, new_U = _build_staircase(U)
-        Unm1 = new_U[1:, 1:]  # Grab the lower chunk of the matrix
+        Unm1 = new_U[1:, 1:]
         return staircase_transformation + _sun_parameters(Unm1)
 
 
 def _build_staircase(U):
-    r"""Take a matrix in SU(n) and find the staircase of SU(2)
-    transformations which turns it into an SU(n-1) transformation
-    on all but the first mode.
-    Returns the list of parameters in the order in which they appear
-    graphically, e.g. for SU(5) will return parameters for a staircase
-    order as transformations on modes 45, 34, 23, and finally 12.
+    r"""Take a matrix in :math:`\mathrm{SU}(n)` and find the staircase of :math:`\mathrm{SU}(n)`
+    transformations which turns it into an :math:`\mathrm{SU}(n-1)` transformation on all but
+    the first mode.
+
+    Args:
+        U (array): unitary matrix
+    Returns:
+        list: Returns the list of parameters in the order in which they appear
+            graphically, e.g. for :math:`\mathrm{SU}(5)` will return parameters for a staircase
+            order as transformations on modes `(4,5)`, `(3,4)`, `(2,3)`, and finally `(1,2)`.
     """
     n = U.shape[0]
 
@@ -1240,10 +1288,26 @@ def _build_staircase(U):
 
 
 def _su2_parameters(U, tol=1e-11):
-    """Given a matrix in SU(2), parametrized as
-        U(a, b, g) = [ e^(i(a+g)/2) cos(b/2)  -e^(i(a-g)/2) sin(b/2)
-                       e^(-i(a-g)/2) sin(b/2)  e^(-i(a+g)/2) cos(b/2) ]
-    compute and return the parameters [a, b, g].
+    """Compute and return the parameters `[a, b, g]` of an :math:`\mathrm{SU}(2)` matrix.
+
+    Args:
+        U (array): unitary matrix of shape ``(2,2)`` with :math:`\det U = 1`
+    Returns:
+        list: a list of parameters ``[a, b, g]`` of the :math:`\mathrm{SU}(2)` matrix
+
+    .. details::
+
+    Given a matrix in :math:`\mathrm{SU}(2)`, parametrized as
+
+    .. math:
+
+        U(a, b, g) =
+        \begin{pmatrix}
+            e^{i(\alpha+\gamma)/2} \cos(\beta/2)   & -e^{i(\alpha-\gamma)/2} \sin(\beta/2) \\
+            e^{-i(\alpha-\gamma)/2} \sin(\beta/2)  & e^{-i(\alpha+\gamma)/2} \cos(\beta/2)
+        \end{pmatrix}
+
+    compute and return the parameters :math:`\alpha, \beta, \gamma`.
     """
     if U.shape != (2, 2):
         raise ValueError("Input matrix dimensions of _su2_parameters must be 2x2.")
@@ -1268,19 +1332,41 @@ def _su2_parameters(U, tol=1e-11):
 
 
 def _su3_parameters(U):
-    """Uses the factorization of
-        Rowe et. al (1999), "Representations of the Weyl group and Wigner
-        functions for SU(3)", J. Math. Phys. 40 (7), 3604.
-    to factorize an SU(3) transformation into 3 SU(2) transformations.
-    Parameters for each SU(2) transformation are returned as a list
-    [a, b, g] (three-parameter transformation) or [a, b, a] (two-parameter
-    transformation) where the matrices are to be parametrized as
-        SU_ij(a, b, g) = [ e^(i(a+g)/2) cos(b/2)  -e^(i(a-g)/2) sin(b/2)
-                           e^(-i(a-g)/2) sin(b/2)  e^(-i(a+g)/2) cos(b/2) ]
-    The ij subscript indicates that the matrix should be embedded into
-    modes i and j of the full n-dimensional transformation.
+    """Factorizes an :math:`\mathrm{SU}(3)` transformation into 3 :math:`\mathrm{SU}(2)`
+    transformations.
+
+    Args:
+        U (array): unitary matrix of shape ``(3,3)`` with :math:`\det U = 1`
+    Returns:
+        list[list]: a list containing three entries of the form ``[a, b, g]``, where every
+            entry has the parameters of an :math:`\mathrm{SU}(2)` matrix.
+
+    .. details::
+
+    Uses the factorization on :cite:`rowe1999representations` to factorize an
+    :math:`\mathrm{SU}(3)` transformation into 3 :math:`\mathrm{SU}(2)` transformations.
+    Parameters for each :math:`\mathrm{SU}(3)` transformation are returned as a list
+    :math:`[\alpha, \beta, \gamma]` (three-parameter transformation) or
+    :math:`[\alpha, \beta, \alpha]` (two-parameter transformation) where the matrices
+    are to be parametrized as
+
+    .. math::
+
+        SU_{ij}(\alpha, \beta, \gamma) =
+        \begin{pmatrix}
+            e^{i(\alpha+\gamma)/2} \cos(\beta/2)   & -e^{i(\alpha-\gamma)/2} \sin(\beta/2) \\
+            e^{-i(\alpha-\gamma)/2} \sin(\beta/2)  & e^{-i(\alpha+\gamma)/2} \cos(\beta/2)
+        \end{pmatrix}
+
+    The `ij` subscript indicates that the matrix should be embedded into modes `i` and `j` of the full
+    `n`-dimensional transformation.
+
     The resultant matrix is expressed as
-        U = SU_23(a1, b1, g1) SU_12(a2, b2, a2) SU_23(a3, b3, g3).
+
+    .. math::
+        U = SU_{23}(\alpha_1, \beta_1, \gamma_1)
+        SU_{12}(\alpha_2, \beta_2, \alpha_2)
+        SU_{23}(\alpha_3, \beta_3, \gamma_3).
     """
     if U.shape != (3, 3):
         raise ValueError("Input matrix dimensions of _su3_parameters must be 3x3.")
