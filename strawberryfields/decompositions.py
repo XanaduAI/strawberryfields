@@ -1218,9 +1218,9 @@ def _build_staircase(U):
             phase_su2 = np.array([[np.conj(running_prod[0, 0]), 0], [0, running_prod[0, 0]]])
             transformations = [[0.0, 0.0, 0.0]] * (n - 2) + [_su2_parameters(phase_su2.conj().T)]
 
-            full_phase_su2 = np.asmatrix(np.identity(n)) + 0j
+            full_phase_su2 = np.asarray(np.identity(n)) + 0j
             full_phase_su2[0:2, 0:2] = phase_su2
-            running_prod = full_phase_su2 * running_prod
+            running_prod = full_phase_su2 @ running_prod
         else:
             # If the non-zero entry is lower down, permute until it
             # reaches the top and then apply a phase transformation.
@@ -1228,7 +1228,7 @@ def _build_staircase(U):
                 if running_prod[rot_idx, 0] != 0:
                     permmat = np.array([[0, -1], [1, 0]])
 
-                    full_permmat = np.asmatrix(np.identity(n)) + 0j
+                    full_permmat = np.asarray(np.identity(n)) + 0j
                     full_permmat[rot_idx - 1 : rot_idx + 1, rot_idx - 1 : rot_idx + 1] = permmat
                     temp_product = full_permmat * running_prod
 
@@ -1236,11 +1236,11 @@ def _build_staircase(U):
                         phase_su2 = np.array(
                             [[np.conj(temp_product[0, 0]), 0], [0, temp_product[0, 0]]]
                         )
-                        permmat = phase_su2 * permmat
+                        permmat = phase_su2 @ permmat
 
                     transformations.append(_su2_parameters(permmat.conj().T))
 
-                    full_trans = np.asmatrix(np.identity(n)) + 0j
+                    full_trans = np.asarray(np.identity(n)) + 0j
                     full_trans[rot_idx - 1 : rot_idx + 1, rot_idx - 1 : rot_idx + 1] = permmat
 
                     running_prod = full_trans * running_prod
@@ -1254,8 +1254,8 @@ def _build_staircase(U):
 
             # Initially we work with the inverses in order to "0 out" entries
             # from the left; later we'll get the parameters from the "true" matrices.
-            Rij_inv = np.asmatrix(np.identity(2)) + 0j
-            full_Rij_inv = np.asmatrix(np.identity(n)) + 0j
+            Rij_inv = np.asarray(np.identity(2)) + 0j
+            full_Rij_inv = np.asarray(np.identity(n)) + 0j
 
             if rot_idx != n - 2:
                 # The denominator of the transformation is the difference of
@@ -1283,7 +1283,7 @@ def _build_staircase(U):
 
             # Embed into larger space
             full_Rij_inv[i : j + 1, i : j + 1] = Rij_inv
-            running_prod = full_Rij_inv * running_prod
+            running_prod = full_Rij_inv @ running_prod
 
     return transformations, running_prod
 
@@ -1391,11 +1391,11 @@ def _su3_parameters(U):
         # Compute the required phase matrix and embed into SU(3)
         phase_su2 = np.array([[np.conj(x), 0], [0, x]])
 
-        full_phase_su2 = np.asmatrix(np.identity(3)) + 0j
+        full_phase_su2 = np.asarray(np.identity(3)) + 0j
         full_phase_su2[0:2, 0:2] = phase_su2
 
         # Compute what's left of the product, and the parameters
-        running_product = full_phase_su2 * U
+        running_product = full_phase_su2 @ U
         remainder_su2 = running_product[1:, 1:]
 
         params = [
