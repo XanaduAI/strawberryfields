@@ -2,6 +2,13 @@
 
 <h3>New features since last release</h3>
 
+* A `Result.metadata` property is added to retrieve the metadata of a job result.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* A setter method for `Result.state` is added for setting a state for a local simulation if a state
+  has not previously been set.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -10,7 +17,35 @@
   a `TDMProgram` is compiled using the "TDM" compiler.
   [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
 
+* Updates `Program.assert_max_number_of_measurements` to expect the maximum number
+  of measurements from the device specification as a flat dictionary entry instead
+  of a nested one.
+  [(#662)](https://github.com/XanaduAI/strawberryfields/pull/662)
+
+  ```python
+  "modes": {
+      "pnr_max": 20,
+      "homodyne_max": 1000,
+      "heterodyne_max": 1000,
+  }
+  ```
+
+  instead of
+
+  ```python
+  "modes": {
+      "max": {
+          "pnr": 20,
+          "homodyne": 1000,
+          "heterodyne": 1000,
+      }
+  }
+  ```
+
 <h3>Documentation</h3>
+
+* README has been ported to Markdown.
+  [(#664)](https://github.com/XanaduAI/strawberryfields/pull/664)
 
 <h3>Contributors</h3>
 
@@ -22,10 +57,10 @@ Theodor Isacsson
 
 <h3>New features since last release</h3>
 
-* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
-  module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
-  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
-  obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
+* The generic multimode Gaussian gate `Ggate` is now available in the `sf.ops`
+  module with the backend choice of `tf`. The N mode `Ggate` can be parametrized by a real
+  symplectic matrix `S` (size `2N * 2N`) and a displacement vector `d` (size `N`). You can also
+  obtain the gradients of the Ggate gate via TensorFlow's `tape.gradient`
   [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
   [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
@@ -637,7 +672,7 @@ Antal Száva, Federico Rueda, Yuan Yao.
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
 
   results = eng.run(prog)
-  ancilla_samples = results.ancilla_samples
+  ancillae_samples = results.ancillae_samples
 
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)

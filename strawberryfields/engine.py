@@ -30,9 +30,9 @@ from strawberryfields.result import Result
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
-from strawberryfields.tdm.tdmprogram import TDMProgram
+from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
 
-from .backends import load_backend
+from .backends import load_backend, BosonicBackend
 from .backends.base import BaseBackend, NotApplicableError
 from ._version import __version__
 
@@ -197,7 +197,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn("Run {}:".format(k))
+            print_fn(f"Run {k}:")
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -221,6 +221,9 @@ class BaseEngine(abc.ABC):
             commands that were applied to the backend, the samples returned from the backend, and
             the samples as a dictionary with the measured modes as keys
         """
+        # `_run_program` is called in `BaseEngine._run` but should never be called
+        # from a `BaseEngine` object, in which case an error should be raised.
+        raise NotImplementedError("'run_program' method must be implemented on child class")
 
     def _run(self, program, *, args, compile_options, **kwargs):
         """Execute the given programs by sending them to the backend.
@@ -265,7 +268,7 @@ class BaseEngine(abc.ABC):
                 # there was a previous program segment
                 if not p.can_follow(prev):
                     raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                        f"Register mismatch: program {len(self.run_progs)}, '{p.name}'."
                     )
 
                 # Copy the latest measured values in the RegRefs of p.
@@ -288,8 +291,12 @@ class BaseEngine(abc.ABC):
 
             prev = p
 
-        samples = {"output": [self.samples], **self.samples_dict}
-        return Result(samples)
+        ancillae_samples = None
+        if isinstance(self.backend, BosonicBackend):
+            ancillae_samples = self.backend.ancillae_samples_dict.copy()
+
+        samples = {"output": [self.samples]}
+        return Result(samples, samples_dict=self.samples_dict, ancillae_samples=ancillae_samples)
 
 
 class LocalEngine(BaseEngine):
@@ -336,7 +343,7 @@ class LocalEngine(BaseEngine):
         return super().__new__(cls)
 
     def __str__(self):
-        return self.__class__.__name__ + "({})".format(self.backend_name)
+        return self.__class__.__name__ + f"({self.backend_name})"
 
     def reset(self, backend_options=None):
         backend_options = backend_options or {}
@@ -374,19 +381,24 @@ class LocalEngine(BaseEngine):
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    f"The operation {cmd.op} cannot be used with {self.backend}."
                 ) from None
 
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError(
-                    "The operation {} has not been implemented in {} for the arguments {}.".format(
-                        cmd.op, self.backend, kwargs
-                    )
+                    f"The operation {cmd.op} has not been implemented in {self.backend} for the "
+                    f"arguments {kwargs}."
                 ) from None
 
         # combine the samples sorted by mode, and cast correctly to array or tensor
         samples, samples_dict = self._combine_and_sort_samples(samples_dict)
+
+        if isinstance(prog, TDMProgram) and samples_dict:
+            samples_dict = reshape_samples(samples_dict, prog.measured_modes, prog.N, prog.timebins)
+            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+            samples = np.array(list(samples_dict.values())).transpose(1, 0, 2)
+
         return applied, samples, samples_dict
 
     def _combine_and_sort_samples(self, samples_dict):
@@ -432,9 +444,6 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
-        # pylint: disable=import-outside-toplevel
-        from strawberryfields.tdm.tdmprogram import reshape_samples
-
         received_rolled_circuit = False
         if isinstance(program, TDMProgram):
             # priority order for the shots value should be kwargs > run_options > 1
@@ -485,7 +494,7 @@ class LocalEngine(BaseEngine):
 
         # check that post-selection and feed-forwarding is not used together with shots > 1
         for p in program_lst:
-            for c in p.circuit:
+            for c in p.circuit or []:
                 try:
                     if c.op.select and eng_run_options["shots"] > 1:
                         raise NotImplementedError(
@@ -503,29 +512,18 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if isinstance(program, TDMProgram):
-            if isinstance(result.samples_dict, dict) and result.samples_dict:
-                samples_dict = reshape_samples(
-                    result.samples_dict, program.measured_modes, program.N, program.timebins
-                )
-                # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
-                result._result = {
-                    "output": [np.array(list(samples_dict.values())).transpose(1, 0, 2)]
-                }
-                result._result.update(samples_dict)
-            if received_rolled_circuit:
-                # if the tdm circuit is received in a rolled state, and unrolled
-                # for execution, roll it back again
-                program.roll()
-        modes = temp_run_options["modes"]
+        if isinstance(program, TDMProgram) and received_rolled_circuit:
+            # if the tdm circuit is received in a rolled state, and unrolled
+            # for execution, roll it back again
+            program.roll()
 
+        modes = temp_run_options["modes"]
         if modes is None or modes:
             # state object requested
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
-            result._state = self.backend.state(**temp_run_options)
-            if self.backend_name == "bosonic":
-                result._ancilla_samples = self.backend.ancillae_samples_dict.copy()
+            result.state = self.backend.state(**temp_run_options)
+
         return result
 
 
@@ -727,14 +725,15 @@ class RemoteEngine:
             # program was compiled but recompilation was not allowed by the
             # user
 
-            if (
+            if program.compile_info and (
                 program.compile_info[0].target != device.target
                 or program.compile_info[0]._spec != device._spec
             ):
+                compile_target = program.compile_info[0].target
                 # program was compiled for a different device
                 raise ValueError(
                     "Cannot use program compiled with "
-                    f"{program._compile_info[0].target} for target {self.target}. "
+                    f"{compile_target} for target {self.target}. "
                     'Pass the "recompile=True" keyword argument '
                     f"to compile with {compiler_name}."
                 )
@@ -788,9 +787,7 @@ class RemoteEngine:
         return job
 
     def __repr__(self):
-        return "<{}: target={}, connection={}>".format(
-            self.__class__.__name__, self.target, self._connection
-        )
+        return f"<{self.__class__.__name__}: target={self.target}, connection={self._connection}>"
 
     def __str__(self):
         return self.__repr__()
