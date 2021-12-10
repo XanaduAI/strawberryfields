@@ -93,7 +93,7 @@ def from_blackbird_to_tdm(bb: blackbird.BlackbirdProgram) -> TDMProgram:
         bb (blackbird.BlackbirdProgram): the input Blackbird program object
 
     Returns:
-        Program: corresponding ``TDMProgram``
+        TDMProgram: corresponding ``TDMProgram``
 
     Raises:
         NameError: if an applied quantum operation is not defined in Strawberry Fields

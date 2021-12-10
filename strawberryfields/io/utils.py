@@ -124,7 +124,7 @@ def generate_code(prog: Program, eng: Optional["Engine"] = None) -> str:
 
 
 def _factor_out_pi(num_list: List[Union[Number, str]], denominator: int = 12) -> str:
-    """Factors out pi, divided by the denominator value, from all number in a list
+    """Factors out pi, divided by the denominator value, from all numbers in a list
     and returns a string representation.
 
     Args:

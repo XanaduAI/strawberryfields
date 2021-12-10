@@ -34,7 +34,7 @@ def is_ptype(name: str) -> bool:
     p-type variables are used with TDM programs to represent a looped-over parameter, and
     consist of the letter 'p' followed by an integer. For example, 'p0', 'p1', 'p42'.
     """
-    return name[0] == "p" and name[1:].isdigit()
+    return len(name) > 1 and name[0] == "p" and name[1:].isdigit()
 
 
 def shift_by(l, n):

@@ -41,7 +41,7 @@ def get_expanded_statements(prog: xir.Program) -> List[xir.Statement]:
     """
     statements = []
     for op in prog.statements:
-        sub_statements = prog.gates.get(op.name, [])
+        sub_statements = prog.gates.get(op.name)
         if sub_statements:
             wire_mapping = dict(zip(prog.search("gate", "wires", op.name), op.wires))
             param_mapping = dict(zip(prog.search("gate", "params", op.name), op.params))
@@ -137,7 +137,7 @@ def from_xir_to_tdm(xir_prog: xir.Program) -> TDMProgram:
         xir_prog (xir.Program): the input XIR program object
 
     Returns:
-        Program: corresponding ``TDMProgram``
+        TDMProgram: corresponding ``TDMProgram``
 
     Raises:
         ValueError: if the number of modes 'N' is missing from the XIR program options
@@ -319,7 +319,8 @@ def _listr(mixed_iterable: Iterable) -> List:
     """Casts a nested iterable to a list recursively, maintaining the same shape.
 
     Any iterable will be cast to a list, including casting all internal types to native Python
-    types (e.g., ``Decimal`` and ``np.floating`` to ``float``), maintaining the shape.
+    types (e.g., ``Decimal`` and ``np.floating`` to ``float``); Python strings will be cast to
+    lists of strings containing a single character each.
     """
     list_ = []
 
