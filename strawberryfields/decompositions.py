@@ -1426,6 +1426,7 @@ def _su3_parameters(U):
 
     return params
 
+
 def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
     r"""Converts a covariance matrix to a Hamiltonian.
 

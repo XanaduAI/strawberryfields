@@ -932,14 +932,14 @@ class TestSUnFactorization:
 
         assert np.allclose(U_reconstructed, U)
 
-    @pytest.mark.parametrize("top_entry", [1, np.exp(1j*np.random.rand()*np.pi)])
-    def test_su2_embeded(self, top_entry ,tol):
+    @pytest.mark.parametrize("top_entry", [1, np.exp(1j * np.random.rand() * np.pi)])
+    def test_su2_embeded(self, top_entry, tol):
         """test factorization of SU(2) transformations embeded on SU(3) transformations"""
 
         # Embed SU(2) on n=3 matrix
-        U3 = np.zeros((3,3), dtype=complex)
-        U3[0,0] = top_entry
-        U3[1:,1:] = random_interferometer(2)
+        U3 = np.zeros((3, 3), dtype=complex)
+        U3[0, 0] = top_entry
+        U3[1:, 1:] = random_interferometer(2)
 
         factorization_params, _ = dec.sun_compact(U3, tol)
         _, first_params = factorization_params[0]
