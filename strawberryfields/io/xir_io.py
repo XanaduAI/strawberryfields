@@ -18,7 +18,7 @@ code.
 """
 # pylint: disable=protected-access,too-many-nested-blocks
 from decimal import Decimal
-from typing import Iterable, List
+from typing import Iterable, List, Sequence
 
 import numpy as np
 
@@ -30,7 +30,7 @@ from strawberryfields.tdm.tdmprogram import TDMProgram, is_ptype
 from strawberryfields import ops
 
 
-def get_expanded_statements(prog: xir.Program) -> List[xir.Statement]:
+def get_expanded_statements(prog: xir.Program) -> Sequence[xir.Statement]:
     """Get a list of statements with all gate definitions expanded.
 
     Args:
@@ -39,21 +39,24 @@ def get_expanded_statements(prog: xir.Program) -> List[xir.Statement]:
     Returns:
         list[xir.Statement]: list of expanded XIR statements
     """
-    statements = []
-    for op in prog.statements:
-        sub_statements = prog.gates.get(op.name)
-        if sub_statements:
-            wire_mapping = dict(zip(prog.search("gate", "wires", op.name), op.wires))
-            param_mapping = dict(zip(prog.search("gate", "params", op.name), op.params))
+    def expand_statements(statements: Sequence[xir.Statement]) -> Sequence[xir.Statement]:
+        flattened_statements = []
+        for op in statements:
+            sub_statements = expand_statements(prog.gates.get(op.name, []))
+            if sub_statements:
+                wire_mapping = dict(zip(prog.search("gate", "wires", op.name), op.wires))
+                param_mapping = dict(zip(prog.search("gate", "params", op.name), op.params))
 
-            # create a new statement object with substituted parameters and wires
-            for stmt in sub_statements:
-                wires = tuple(wire_mapping[w] for w in stmt.wires)
-                params = [param_mapping[w] for w in stmt.params]
-                statements.append(xir.Statement(stmt.name, params, wires))
-        else:
-            statements.append(op)
-    return statements
+                # create a new statement object with substituted parameters and wires
+                for stmt in sub_statements:
+                    wires = tuple(wire_mapping[w] for w in stmt.wires)
+                    params = [param_mapping[w] for w in stmt.params]
+                    flattened_statements.append(xir.Statement(stmt.name, params, wires))
+            else:
+                flattened_statements.append(op)
+        return flattened_statements
+
+    return expand_statements(prog.statements)
 
 
 # pylint: disable=too-many-branches

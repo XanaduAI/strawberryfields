@@ -17,7 +17,6 @@ import inspect
 
 import numpy as np
 import xir
-from xir.program import Declaration
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -486,15 +485,20 @@ class TestXIRtoSFConversion:
         """Test converting a XIR script with gate definitions to a Program"""
         xir_script = inspect.cleandoc(
             """
-            gate Banana(a, b, c, d):
+            gate Aubergine(x, y)[w]:
+                Squeezed(x, y) | [w];
+            end;
+
+            gate Banana(a, b, c, d, x, y):
+                Aubergine(x, y) | [0];
+                Aubergine(x, y) | [1];
                 Rgate(a) | [0];
                 BSgate(b, c) | [0, 1];
                 Rgate(d) | [1];
             end;
 
             Vacuum | [1];
-            Banana(0.5, 0.4, 0.0, 0.5) | [3, 0];
-            Squeezed(0.12, 0.0) | [2];
+            Banana(0.5, 0.4, 0.0, 0.5, 1.0, 0.0) | [3, 0];
             """
         )
 
@@ -503,16 +507,16 @@ class TestXIRtoSFConversion:
 
         assert isinstance(sf_prog, Program)
 
-        assert len(sf_prog) == 5
+        assert len(sf_prog) == 6
         assert sf_prog.circuit
 
         names = [cmd.op.__class__.__name__ for cmd in sf_prog.circuit]
         parameters = [cmd.op.p for cmd in sf_prog.circuit]
         modes = [[r.ind for r in cmd.reg] for cmd in sf_prog.circuit]
 
-        assert names == ["Vacuum", "Rgate", "BSgate", "Rgate", "Squeezed"]
-        assert parameters == [[], [0.5], [0.4, 0.0], [0.5], [0.12, 0.0]]
-        assert modes == [[1], [3], [3, 0], [0], [2]]
+        assert names == ["Vacuum", "Squeezed", "Squeezed", "Rgate", "BSgate", "Rgate"]
+        assert parameters == [[], [1.0, 0.0], [1.0, 0.0], [0.5], [0.4, 0.0], [0.5]]
+        assert modes == [[1], [3], [0], [3], [3, 0], [0]]
 
 
 prog_txt = inspect.cleandoc(
