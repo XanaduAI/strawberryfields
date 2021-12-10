@@ -1383,7 +1383,7 @@ def _su3_parameters(U):
     # already have an SU(2) transformation embedded in an SU(3) transform,
     # so all we need to do is get the parameters of that SU(2) transform.
     if np.isclose(x, 1):
-        return [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], _su2_parameters(U[1:, 1:])]
+        params = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], _su2_parameters(U[1:, 1:])]
     # Another special case: the modulus of the top left element is 1.
     # Then we need to do a transformation on modes 1 and 2 to make the top
     # entry 1, then an SU(2) transformation on modes 2 and 3 with what's left.
@@ -1398,31 +1398,33 @@ def _su3_parameters(U):
         running_product = full_phase_su2 * U
         remainder_su2 = running_product[1:, 1:]
 
-        return [
+        params = [
             [0.0, 0.0, 0.0],
             _su2_parameters(phase_su2.conj().T),
             _su2_parameters(remainder_su2),
         ]
 
-    # Typical case
-    cf = np.sqrt(1 - pow(np.absolute(x), 2))
-    capY, capZ = y / cf, z / cf
+    else:
+        # Typical case
+        cf = np.sqrt(1 - pow(np.absolute(x), 2))
+        capY, capZ = y / cf, z / cf
 
-    # Build the SU(2) transformation matrices
-    # SU_23(3) - three parameters
-    left = np.array([[1, 0, 0], [0, capY, -np.conj(capZ)], [0, capZ, np.conj(capY)]])
-    left_params = _su2_parameters(left[1:, 1:])
+        # Build the SU(2) transformation matrices
+        # SU_23(3) - three parameters
+        left = np.array([[1, 0, 0], [0, capY, -np.conj(capZ)], [0, capZ, np.conj(capY)]])
+        left_params = _su2_parameters(left[1:, 1:])
 
-    # SU_12(2) - only two parameters
-    middle = np.array([[x, -cf, 0], [cf, np.conj(x), 0], [0, 0, 1]])
-    middle_params = _su2_parameters(middle[0:2, 0:2])
+        # SU_12(2) - only two parameters
+        middle = np.array([[x, -cf, 0], [cf, np.conj(x), 0], [0, 0, 1]])
+        middle_params = _su2_parameters(middle[0:2, 0:2])
 
-    # SU_23(3) - again three parameters
-    right = middle.conj().T @ left.conj().T @ U
-    right_params = _su2_parameters(right[1:, 1:])
+        # SU_23(3) - again three parameters
+        right = middle.conj().T @ left.conj().T @ U
+        right_params = _su2_parameters(right[1:, 1:])
 
-    return [left_params, middle_params, right_params]
+        params = [left_params, middle_params, right_params]
 
+    return params
 
 def covmat_to_hamil(V, tol=1e-10):  # pragma: no cover
     r"""Converts a covariance matrix to a Hamiltonian.
