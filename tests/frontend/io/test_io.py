@@ -192,7 +192,7 @@ class TestGenerateCode:
             val = eval(value)
         except NameError:
             val = value
-        res = sf.io._factor_out_pi([val])
+        res = sf.io.utils._factor_out_pi([val])
         expected = value
 
         assert res == expected

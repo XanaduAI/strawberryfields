@@ -30,6 +30,32 @@ from strawberryfields.tdm.tdmprogram import TDMProgram, is_ptype
 from strawberryfields import ops
 
 
+def get_expanded_statements(prog: xir.Program) -> List[xir.Statement]:
+    """Get a list of statements with all gate definitions expanded.
+
+    Args:
+        prog (xir.Program): XIR program with statements and definitions
+
+    Returns:
+        list[xir.Statement]: list of expanded XIR statements
+    """
+    statements = []
+    for op in prog.statements:
+        sub_statements = prog.gates.get(op.name, [])
+        if sub_statements:
+            wire_mapping = dict(zip(prog.search("gate", "wires", op.name), op.wires))
+            param_mapping = dict(zip(prog.search("gate", "params", op.name), op.params))
+
+            # create a new statement object with substituted parameters and wires
+            for stmt in sub_statements:
+                wires = tuple(wire_mapping[w] for w in stmt.wires)
+                params = [param_mapping[w] for w in stmt.params]
+                statements.append(xir.Statement(stmt.name, params, wires))
+        else:
+            statements.append(op)
+    return statements
+
+
 # pylint: disable=too-many-branches
 def from_xir(xir_prog: xir.Program) -> Program:
     """Convert an XIR Program to a Strawberry Fields program.
@@ -57,7 +83,7 @@ def from_xir(xir_prog: xir.Program) -> Program:
 
     # append the quantum operations
     with prog.context as q:
-        for op in xir_prog.statements:
+        for op in get_expanded_statements(xir_prog):
             # check if operation name is in the list of
             # defined StrawberryFields operations.
             # This is used by checking against the ops.py __all__
@@ -91,10 +117,7 @@ def from_xir(xir_prog: xir.Program) -> Program:
                     params = sfpar.par_convert(params, prog)
                     gate(*params) | regrefs  # pylint:disable=expression-not-assigned
             else:
-                if callable(gate):
-                    gate() | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
-                else:
-                    gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+                gate() | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
     prog._target = xir_prog.options.get("_target_", None)  # pylint: disable=protected-access
 
@@ -139,7 +162,7 @@ def from_xir_to_tdm(xir_prog: xir.Program) -> TDMProgram:
 
     # append the quantum operations
     with prog.context(*args) as (p, q):
-        for op in xir_prog.statements:
+        for op in get_expanded_statements(xir_prog):
             # check if operation name is in the list of
             # defined StrawberryFields operations.
             # This is used by checking against the ops.py __all__
@@ -178,10 +201,7 @@ def from_xir_to_tdm(xir_prog: xir.Program) -> TDMProgram:
                     params = sfpar.par_convert(params, prog)
                     gate(*params) | regrefs  # pylint:disable=expression-not-assigned
             else:
-                if callable(gate):
-                    gate() | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
-                else:
-                    gate | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
+                gate() | regrefs  # pylint:disable=expression-not-assigned,pointless-statement
 
     prog._target = xir_prog.options.get("target", None)  # pylint: disable=protected-access
 
@@ -210,7 +230,7 @@ def to_xir(prog: Program, **kwargs) -> xir.Program:
     add_decl = kwargs.get("add_decl", False)
 
     if isinstance(prog, TDMProgram):
-        xir_prog.add_option("type", "tdm")
+        xir_prog.add_option("_type_", "tdm")
         xir_prog.add_option("N", prog.N)
         for i, p in enumerate(prog.tdm_params):
             xir_prog.add_constant(f"p{i}", _listr(p))
@@ -281,6 +301,9 @@ def to_xir(prog: Program, **kwargs) -> xir.Program:
                             for s in symbolic_func.free_symbols:
                                 symbolic_func = symbolic_func.subs(s, s.name)
                             a = str(symbolic_func)
+
+                elif isinstance(a, str):
+                    pass
                 elif isinstance(a, Iterable):
                     # if an iterable, make sure it only consists of lists and Python types
                     a = _listr(a)
@@ -301,7 +324,10 @@ def _listr(mixed_iterable: Iterable) -> List:
     list_ = []
 
     for l in mixed_iterable:
-        if isinstance(l, Iterable):
+        # if string, then create a list of chars
+        if isinstance(l, str):
+            list_.append(l if len(l) == 1 else list(l))
+        elif isinstance(l, Iterable):
             list_.append(_listr(l))
         else:
             if isinstance(l, (Decimal, np.floating)):

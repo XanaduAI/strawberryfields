@@ -132,7 +132,7 @@ class TestSFtoXIRConversion:
 
         # Note: due to how SF stores quantum commands with the Parameter class,
         # all kwargs get converted to positional args internally.
-        expected = [("Dgate", [np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)], (1,))]
+        expected = [("Dgate", [np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)], (0,))]
         assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
     def test_two_mode_gate(self):
@@ -377,7 +377,7 @@ class TestXIRtoSFConversion:
         xir_prog.add_constant("p1", [3, 4])
         xir_prog.add_constant("p2", [5, 6])
 
-        xir_prog.add_option("type", "tdm")
+        xir_prog.add_option("_type_", "tdm")
         xir_prog.add_option("N", [2])
         sf_prog = io.to_program(xir_prog)
 
@@ -421,7 +421,7 @@ class TestXIRtoSFConversion:
         xir_script = inspect.cleandoc(
             """
             options:
-                type: tdm;
+                _type_: tdm;
                 N: [2, 3];
             end;
 
@@ -440,6 +440,7 @@ class TestXIRtoSFConversion:
         )
 
         xir_prog = xir.parse_script(xir_script, eval_pi=True)
+        print(xir_prog.options)
         sf_prog = io.to_program(xir_prog)
 
         assert isinstance(sf_prog, TDMProgram)
@@ -480,6 +481,36 @@ class TestXIRtoSFConversion:
         assert all(sf_prog.tdm_params[0] == np.array([np.pi, 3 * np.pi / 2, 0]))
         assert all(sf_prog.tdm_params[1] == np.array([1, 0.5, np.pi]))
         assert all(sf_prog.tdm_params[2] == np.array([0, 0, 0]))
+
+    def test_script_with_gate_definition(self):
+        """Test converting a XIR script with gate definitions to a Program"""
+        xir_script = inspect.cleandoc("""
+            gate Banana(a, b, c, d):
+                Rgate(a) | [0];
+                BSgate(b, c) | [0, 1];
+                Rgate(d) | [1];
+            end;
+
+            Vacuum | [1];
+            Banana(0.5, 0.4, 0.0, 0.5) | [3, 0];
+            Squeezed(0.12, 0.0) | [2];
+            """)
+
+        xir_prog = xir.parse_script(xir_script, eval_pi=True)
+        sf_prog = io.to_program(xir_prog)
+
+        assert isinstance(sf_prog, Program)
+
+        assert len(sf_prog) == 5
+        assert sf_prog.circuit
+
+        names = [cmd.op.__class__.__name__ for cmd in sf_prog.circuit]
+        parameters = [cmd.op.p for cmd in sf_prog.circuit]
+        modes = [[r.ind for r in cmd.reg] for cmd in sf_prog.circuit]
+
+        assert names == ["Vacuum", "Rgate", "BSgate", "Rgate", "Squeezed"]
+        assert parameters == [[], [0.5], [0.4, 0.0], [0.5], [0.12, 0.0]]
+        assert modes == [[1], [3], [3, 0], [0], [2]]
 
 
 prog_txt = inspect.cleandoc(
