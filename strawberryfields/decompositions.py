@@ -1176,12 +1176,13 @@ def _sun_parameters(U):
     """
     if U.shape == (3, 3):
         return _su3_parameters(U)
-    else:
-        staircase_transformation, new_U = _build_staircase(U)
-        Unm1 = new_U[1:, 1:]
-        return staircase_transformation + _sun_parameters(Unm1)
+
+    staircase_transformation, new_U = _build_staircase(U)
+    Unm1 = new_U[1:, 1:]
+    return staircase_transformation + _sun_parameters(Unm1)
 
 
+# pylint: disable=too-many-branches
 def _build_staircase(U):
     r"""Take a matrix in :math:`\mathrm{SU}(n)` and find the staircase of :math:`\mathrm{SU}(n)`
     transformations which turns it into an :math:`\mathrm{SU}(n-1)` transformation on all but
