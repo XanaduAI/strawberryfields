@@ -39,6 +39,7 @@ def get_expanded_statements(prog: xir.Program) -> Sequence[xir.Statement]:
     Returns:
         list[xir.Statement]: list of expanded XIR statements
     """
+
     def expand_statements(statements: Sequence[xir.Statement]) -> Sequence[xir.Statement]:
         flattened_statements = []
         for op in statements:
