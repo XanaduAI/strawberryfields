@@ -484,7 +484,8 @@ class TestXIRtoSFConversion:
 
     def test_script_with_gate_definition(self):
         """Test converting a XIR script with gate definitions to a Program"""
-        xir_script = inspect.cleandoc("""
+        xir_script = inspect.cleandoc(
+            """
             gate Banana(a, b, c, d):
                 Rgate(a) | [0];
                 BSgate(b, c) | [0, 1];
@@ -494,7 +495,8 @@ class TestXIRtoSFConversion:
             Vacuum | [1];
             Banana(0.5, 0.4, 0.0, 0.5) | [3, 0];
             Squeezed(0.12, 0.0) | [2];
-            """)
+            """
+        )
 
         xir_prog = xir.parse_script(xir_script, eval_pi=True)
         sf_prog = io.to_program(xir_prog)

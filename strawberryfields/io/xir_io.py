@@ -78,7 +78,7 @@ def from_xir(xir_prog: xir.Program) -> Program:
         )
 
     num_of_modes = int(max(xir_prog.wires)) + 1
-    name = xir_prog.options.get("name", "xir")
+    name = xir_prog.options.get("_name_", "sf_from_xir")
     prog = Program(num_of_modes, name=name)
 
     # append the quantum operations
@@ -147,7 +147,7 @@ def from_xir_to_tdm(xir_prog: xir.Program) -> TDMProgram:
     if not N:
         raise ValueError("Number of modes 'N' is missing from the XIR program options.")
 
-    prog = TDMProgram(N, name=xir_prog.options.get("name", "xir"))
+    prog = TDMProgram(N, name=xir_prog.options.get("_name_", "xir"))
 
     # extract the tdm gate arguments from the xir program constants
     args = [val for key, val in xir_prog.constants.items() if is_ptype(key)]
@@ -240,7 +240,7 @@ def to_xir(prog: Program, **kwargs) -> xir.Program:
     if "cutoff_dim" in prog.run_options:
         xir_prog.add_option("cutoff_dim", prog.run_options["cutoff_dim"])
     if "name" in prog.run_options:
-        xir_prog.add_option("name", prog.run_options["name"])
+        xir_prog.add_option("_name_", prog.run_options["name"])
     if "shots" in prog.run_options:
         xir_prog.add_option("shots", prog.run_options["shots"])
 
