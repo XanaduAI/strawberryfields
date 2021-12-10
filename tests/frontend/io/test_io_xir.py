@@ -14,9 +14,12 @@
 r"""Unit tests for the XIR IO module"""
 import pytest
 import inspect
+from decimal import Decimal
 
 import numpy as np
 import xir
+
+from strawberryfields.io.xir_io import _listr
 
 import strawberryfields as sf
 from strawberryfields import ops
@@ -676,3 +679,26 @@ class TestLoadXIR:
     def test_loads(self, prog):
         """Test loading a program from a string"""
         self.assert_programs_equal(io.loads(test_xir_prog_not_compiled, ir="xir"), prog)
+
+
+class TestUtilsXIR:
+    """Test utility functions in the XIR io"""
+
+    @pytest.mark.parametrize(
+        "list_, expected", [
+            (np.array([1.2, 2.3, 3.4]), [1.2, 2.3, 3.4]),
+            ([1.2, 2.3, np.float64(3.4)], [1.2, 2.3, 3.4]),
+            ([1.2, 2.3, np.array([3.4])], [1.2, 2.3, [3.4]]),
+            ([1.2, [2.3, 3], np.array([3.4, 4.5])], [1.2, [2.3, 3], [3.4, 4.5]]),
+            ([1.2, xir.DecimalComplex("2.3", "1"), Decimal(3.4)], [1.2, 2.3+1j, 3.4]),
+        ]
+    )
+    def test_listr(self, list_, expected):
+        """Test the `_listr` function"""
+        res = _listr(list_)
+        assert res == expected
+
+    def test_listr_string_error(self):
+        """Test the `_listr` function raises the correct error when passing a string."""
+        with pytest.raises(TypeError, match="Cannot pass a string"):
+            _listr("abc")

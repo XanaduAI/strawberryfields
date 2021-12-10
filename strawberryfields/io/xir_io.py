@@ -325,13 +325,21 @@ def _listr(mixed_iterable: Iterable) -> List:
     Any iterable will be cast to a list, including casting all internal types to native Python
     types (e.g., ``Decimal`` and ``np.floating`` to ``float``); Python strings will be cast to
     lists of strings containing a single character each.
+
+    .. note:
+
+        Strings cannot be passed to the function (despite them being iterables). An error will be
+        raised if a string is passed.
     """
+    if isinstance(mixed_iterable, str):
+        raise TypeError("Cannot pass a string.")
+
     list_ = []
 
     for l in mixed_iterable:
         # if string, then create a list of chars
         if isinstance(l, str):
-            list_.append(l if len(l) == 1 else list(l))
+            list_.append(l)
         elif isinstance(l, Iterable):
             list_.append(_listr(l))
         else:
