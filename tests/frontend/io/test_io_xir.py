@@ -122,6 +122,23 @@ class TestSFtoXIRConversion:
         expected = [("Sgate", [0.54, 0.324], (1,))]
         assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
+    def test_gate_arg_add_declarations(self):
+        """Test gate with argument converts with declarations"""
+        # create a test program
+        sf_prog = Program(2)
+
+        with sf_prog.context as q:
+            ops.Sgate(0.54, 0.324) | q[1]
+
+        xir_prog = io.to_xir(sf_prog, add_decl=True)
+
+        expected = [("Sgate", [0.54, 0.324], (1,))]
+        assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
+
+        assert len(xir_prog.declarations["gate"]) == 1
+        assert xir_prog.declarations["gate"][0].wires == (0,)
+        assert xir_prog.declarations["gate"][0].params == ["p0", "p1"]
+
     def test_gate_kwarg(self):
         """Test gate with keyword argument converts"""
         # create a test program
@@ -685,13 +702,14 @@ class TestUtilsXIR:
     """Test utility functions in the XIR io"""
 
     @pytest.mark.parametrize(
-        "list_, expected", [
+        "list_, expected",
+        [
             (np.array([1.2, 2.3, 3.4]), [1.2, 2.3, 3.4]),
             ([1.2, 2.3, np.float64(3.4)], [1.2, 2.3, 3.4]),
             ([1.2, 2.3, np.array([3.4])], [1.2, 2.3, [3.4]]),
             ([1.2, [2.3, 3], np.array([3.4, 4.5])], [1.2, [2.3, 3], [3.4, 4.5]]),
-            ([1.2, xir.DecimalComplex("2.3", "1"), Decimal(3.4)], [1.2, 2.3+1j, 3.4]),
-        ]
+            ([1.2, xir.DecimalComplex("2.3", "1"), Decimal(3.4)], [1.2, 2.3 + 1j, 3.4]),
+        ],
     )
     def test_listr(self, list_, expected):
         """Test the `_listr` function"""
