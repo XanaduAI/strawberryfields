@@ -14,7 +14,7 @@
 """Utility functions for the io module."""
 from __future__ import annotations
 
-from typing import Optional, List, Union, TYPE_CHECKING
+from typing import List, Union
 from numbers import Number
 
 import numpy as np
@@ -23,7 +23,7 @@ from strawberryfields.program import Program
 from strawberryfields.tdm.tdmprogram import TDMProgram
 
 
-def generate_code(prog: Program, eng: Optional[Engine] = None) -> str:
+def generate_code(prog: Program, eng) -> str:
     """Converts a Strawberry Fields program into valid Strawberry Fields code.
 
     **Example:**
