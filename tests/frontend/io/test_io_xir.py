@@ -718,5 +718,5 @@ class TestUtilsXIR:
 
     def test_listr_string_error(self):
         """Test the `_listr` function raises the correct error when passing a string."""
-        with pytest.raises(TypeError, match="Cannot pass a string"):
+        with pytest.raises(TypeError, match="Strings cannot be passed"):
             _listr("abc")
