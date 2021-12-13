@@ -9,8 +9,7 @@
   has not previously been set.
   [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
 
-* Converter functions for the XIR language have been added. It's now possible to convert between
-  XIR and Strawberry Fields scripts/programs.
+* Functions are now available to convert between XIR and Strawberry Fields programs.
   [(#643)](https://github.com/XanaduAI/strawberryfields/pull/643)
 
   For example,

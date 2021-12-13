@@ -326,13 +326,13 @@ def _listr(mixed_iterable: Iterable) -> List:
     types (e.g., ``Decimal`` and ``np.floating`` to ``float``); Python strings will be cast to
     lists of strings containing a single character each.
 
-    .. note:
+    .. warning:
 
-        Strings cannot be passed to the function (despite them being iterables). An error will be
-        raised if a string is passed.
+        Currently, strings cannot be passed to the function; an error will be raised if
+        ``mixed_iterable`` is of type ``str``.
     """
     if isinstance(mixed_iterable, str):
-        raise TypeError("Cannot pass a string.")
+        raise TypeError("Strings cannot be passed to _listr().")
 
     list_ = []
 
