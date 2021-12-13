@@ -23,7 +23,7 @@ from strawberryfields.program import Program
 from strawberryfields.tdm.tdmprogram import TDMProgram
 
 
-def generate_code(prog: Program, eng) -> str:
+def generate_code(prog: Program, eng=None) -> str:
     """Converts a Strawberry Fields program into valid Strawberry Fields code.
 
     **Example:**
