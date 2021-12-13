@@ -466,7 +466,8 @@ class TestXIRtoSFConversion:
         assert all(sf_prog.tdm_params[1] == np.array([3, 4]))
         assert all(sf_prog.tdm_params[2] == np.array([5, 6]))
 
-    def test_tdm_program_script(self):
+    @pytest.mark.parametrize("use_floats", [False, True])
+    def test_tdm_program_script(self, use_floats):
         """Test converting a TDM XIR script to a TDMProgram"""
         xir_script = inspect.cleandoc(
             """
@@ -484,18 +485,22 @@ class TestXIRtoSFConversion:
             Sgate(0.123, pi/4) | [2];
             BSgate(p0, 0.0) | [1, 2];
             Rgate(p1) | [2];
+
+            // test a gate that takes in an array
+            Ket([1, 0, 0]) | [0, 1];
+
             MeasureHomodyne(phi: p0) | [0];
-            MeasureHomodyne(phi: p2) | [2];
+            MeasureFock | [2];
             """
         )
 
-        xir_prog = xir.parse_script(xir_script, eval_pi=True)
+        xir_prog = xir.parse_script(xir_script, eval_pi=True, use_floats=use_floats)
         print(xir_prog.options)
         sf_prog = io.to_program(xir_prog)
 
         assert isinstance(sf_prog, TDMProgram)
 
-        assert len(sf_prog) == 5
+        assert len(sf_prog) == 6
         assert sf_prog.circuit
         assert sf_prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert sf_prog.circuit[0].op.p[0] == 0.123
@@ -512,13 +517,18 @@ class TestXIRtoSFConversion:
         assert sf_prog.circuit[2].op.p[0] == FreeParameter("p1")
         assert sf_prog.circuit[2].reg[0].ind == 2
 
-        assert sf_prog.circuit[3].op.__class__.__name__ == "MeasureHomodyne"
-        assert sf_prog.circuit[3].op.p[0] == FreeParameter("p0")
+        assert sf_prog.circuit[3].op.__class__.__name__ == "Ket"
+        assert np.array_equal(sf_prog.circuit[3].op.p[0], [1, 0, 0])
         assert sf_prog.circuit[3].reg[0].ind == 0
+        assert sf_prog.circuit[3].reg[1].ind == 1
 
         assert sf_prog.circuit[4].op.__class__.__name__ == "MeasureHomodyne"
-        assert sf_prog.circuit[4].op.p[0] == FreeParameter("p2")
-        assert sf_prog.circuit[4].reg[0].ind == 2
+        assert sf_prog.circuit[4].op.p[0] == FreeParameter("p0")
+        assert sf_prog.circuit[4].reg[0].ind == 0
+
+        assert sf_prog.circuit[5].op.__class__.__name__ == "MeasureFock"
+        assert sf_prog.circuit[5].op.p == []
+        assert sf_prog.circuit[5].reg[0].ind == 2
 
         assert sf_prog.concurr_modes == 5
         assert sf_prog.timebins == 3
@@ -532,7 +542,24 @@ class TestXIRtoSFConversion:
         assert all(sf_prog.tdm_params[1] == np.array([1, 0.5, np.pi]))
         assert all(sf_prog.tdm_params[2] == np.array([0, 0, 0]))
 
-    def test_script_with_gate_definition(self):
+    def test_gate_not_defined_tdm(self):
+        """Test unknown gate in a TDM program raises error"""
+        xir_prog = xir.Program()
+
+        xir_prog.add_constant("p0", [1, 2])
+        xir_prog.add_constant("p1", [3, 4])
+        xir_prog.add_constant("p2", [5, 6])
+
+        xir_prog.add_option("_type_", "tdm")
+        xir_prog.add_option("N", [2])
+
+        xir_prog.add_statement(xir.Statement("np", [1, 2, 3], (0,)))
+
+        with pytest.raises(NameError, match="operation 'np' not defined"):
+            io.to_program(xir_prog)
+
+    @pytest.mark.parametrize("use_floats", [False, True])
+    def test_script_with_gate_definition(self, use_floats):
         """Test converting a XIR script with gate definitions to a Program"""
         xir_script = inspect.cleandoc(
             """
@@ -553,7 +580,7 @@ class TestXIRtoSFConversion:
             """
         )
 
-        xir_prog = xir.parse_script(xir_script, eval_pi=True)
+        xir_prog = xir.parse_script(xir_script, eval_pi=True, use_floats=use_floats)
         sf_prog = io.to_program(xir_prog)
 
         assert isinstance(sf_prog, Program)
