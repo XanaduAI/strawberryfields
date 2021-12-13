@@ -211,8 +211,6 @@ def from_xir_to_tdm(xir_prog: xir.Program) -> TDMProgram:
 
     if "shots" in xir_prog.options:
         prog.run_options["shots"] = xir_prog.options["shots"]
-    if "cutoff_dim" in xir_prog.options:
-        prog.backend_options["cutoff_dim"] = xir_prog.options["cutoff_dim"]
 
     return prog
 
@@ -239,12 +237,12 @@ def to_xir(prog: Program, **kwargs) -> xir.Program:
         for i, p in enumerate(prog.tdm_params):
             xir_prog.add_constant(f"p{i}", _listr(p))
 
-    if prog._target:
-        xir_prog.add_option("target", prog._target)  # pylint: disable=protected-access
-    if "cutoff_dim" in prog.run_options:
-        xir_prog.add_option("cutoff_dim", prog.run_options["cutoff_dim"])
-    if "name" in prog.run_options:
-        xir_prog.add_option("_name_", prog.run_options["name"])
+    if prog.name:
+        xir_prog.add_option("_name_", prog.name)
+    if prog.target:
+        xir_prog.add_option("target", prog.target)  # pylint: disable=protected-access
+    if "cutoff_dim" in prog.backend_options:
+        xir_prog.add_option("cutoff_dim", prog.backend_options["cutoff_dim"])
     if "shots" in prog.run_options:
         xir_prog.add_option("shots", prog.run_options["shots"])
 

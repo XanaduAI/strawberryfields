@@ -46,7 +46,7 @@ U = np.array([[0.219546940711-0.256534554457j, 0.611076853957+0.524178937791j, -
 
 @pytest.fixture(scope="module")
 def prog():
-    prog = Program(4, name="test_program")
+    prog = Program(4)
 
     with prog.context as q:
         # state preparation
@@ -90,11 +90,21 @@ class TestSFtoXIRConversion:
     def test_empty_program(self):
         """Test that an empty program is correctly converted"""
         # create a test program
-        sf_prog = Program(4, name="test_program")
+        sf_prog = Program(4, name="")
         xir_prog = io.to_xir(sf_prog)
 
         assert xir_prog.serialize() == ""
         assert xir_prog.version == "0.1.0"
+
+    def test_program_with_options(self):
+        """Test that program with options is correctly converted"""
+        # create a test program
+        sf_prog = Program(4, name="test_program")
+        sf_prog.run_options = {"shots": 2}
+        sf_prog.backend_options = {"cutoff_dim": 5}
+        xir_prog = io.to_xir(sf_prog)
+
+        assert xir_prog.options == {"_name_": "test_program", "cutoff_dim": 5, "shots": 2}
 
     def test_gate_noarg(self):
         """Test gate with no argument converts"""
@@ -129,15 +139,20 @@ class TestSFtoXIRConversion:
 
         with sf_prog.context as q:
             ops.Sgate(0.54, 0.324) | q[1]
+            ops.MeasureFock() | q
 
         xir_prog = io.to_xir(sf_prog, add_decl=True)
 
-        expected = [("Sgate", [0.54, 0.324], (1,))]
+        expected = [("Sgate", [0.54, 0.324], (1,)), ("MeasureFock", {}, (0, 1))]
         assert [(stmt.name, stmt.params, stmt.wires) for stmt in xir_prog.statements] == expected
 
         assert len(xir_prog.declarations["gate"]) == 1
         assert xir_prog.declarations["gate"][0].wires == (0,)
         assert xir_prog.declarations["gate"][0].params == ["p0", "p1"]
+
+        assert len(xir_prog.declarations["out"]) == 1
+        assert xir_prog.declarations["out"][0].wires == (0, 1)
+        assert xir_prog.declarations["out"][0].params == []
 
     def test_gate_kwarg(self):
         """Test gate with keyword argument converts"""
@@ -320,6 +335,19 @@ class TestXIRtoSFConversion:
         ):
             io.to_program(xir_prog)
 
+    def test_program_with_options(self):
+        """Test program with options raises error"""
+        xir_prog = xir.Program()
+        xir_prog.add_statement(xir.Statement("Vacuum", [], (0,)))
+
+        xir_prog.add_option("cutoff_dim", 5)
+        xir_prog.add_option("shots", 3)
+
+        sf_prog = io.to_program(xir_prog)
+
+        assert sf_prog.run_options == {"shots": 3}
+        assert sf_prog.backend_options == {"cutoff_dim": 5}
+
     def test_gate_not_defined(self):
         """Test unknown gate raises error"""
         xir_prog = xir.Program()
@@ -398,9 +426,12 @@ class TestXIRtoSFConversion:
 
         xir_prog.add_option("_type_", "tdm")
         xir_prog.add_option("N", [2])
+        xir_prog.add_option("shots", 3)
         sf_prog = io.to_program(xir_prog)
 
         assert isinstance(sf_prog, TDMProgram)
+
+        assert sf_prog.run_options == {"shots": 3}
 
         assert len(sf_prog) == 4
         assert sf_prog.circuit
@@ -705,6 +736,7 @@ class TestUtilsXIR:
         "list_, expected",
         [
             (np.array([1.2, 2.3, 3.4]), [1.2, 2.3, 3.4]),
+            ([1.2, "2.3", "abc"], [1.2, "2.3", "abc"]),
             ([1.2, 2.3, np.float64(3.4)], [1.2, 2.3, 3.4]),
             ([1.2, 2.3, np.array([3.4])], [1.2, 2.3, [3.4]]),
             ([1.2, [2.3, 3], np.array([3.4, 4.5])], [1.2, [2.3, 3], [3.4, 4.5]]),
