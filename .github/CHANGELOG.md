@@ -9,6 +9,34 @@
   has not previously been set.
   [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
 
+* Functions are now available to convert between XIR and Strawberry Fields programs.
+  [(#643)](https://github.com/XanaduAI/strawberryfields/pull/643)
+
+  For example,
+
+  ```python
+  prog = sf.Program(3)
+  eng = sf.Engine("gaussian")
+
+  with prog.context as q:
+      ops.Sgate(0, 0) | q[0]
+      ops.Sgate(1, 0) | q[1]
+      ops.BSgate(0.45, 0.0) | (q[0], q[2])
+      ops.MeasureFock() | q[0]
+
+  xir_prog = sf.io.to_xir(prog)
+  ```
+
+  resulting in the following XIR script
+
+  ```pycon
+  >>> print(xir_prog.serialize())
+  Sgate(0, 0) | [0];
+  Sgate(1, 0) | [1];
+  BSgate(0.45, 0.0) | [0, 2];
+  MeasureFock | [0];
+  ```
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>

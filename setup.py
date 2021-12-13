@@ -31,6 +31,7 @@ requirements = [
     "thewalrus>=0.17.0",
     "toml",
     "urllib3>=1.25.3",
+    "quantum-xir>=0.1.1",
     "xanadu-cloud-client>=0.1.1",
 ]
 
