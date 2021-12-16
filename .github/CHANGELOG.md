@@ -1,4 +1,4 @@
-# Release 0.21.0 (development release)
+# Release 0.21.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -36,8 +36,6 @@
   BSgate(0.45, 0.0) | [0, 2];
   MeasureFock | [0];
   ```
-
-<h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
 
@@ -81,7 +79,7 @@ This release contains contributions from (in alphabetical order):
 
 Theodor Isacsson
 
-# Release 0.20.0 (current release)
+# Release 0.20.0
 
 <h3>New features since last release</h3>
 
