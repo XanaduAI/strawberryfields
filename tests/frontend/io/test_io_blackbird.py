@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the IO module"""
+r"""Unit tests for the Blackbird IO module"""
 import pytest
 import textwrap
 
@@ -21,9 +21,14 @@ import blackbird
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
-from strawberryfields.program import Program, CircuitError
+from strawberryfields.program import Program
 from strawberryfields.tdm.tdmprogram import TDMProgram
-from strawberryfields.parameters import MeasuredParameter, FreeParameter, par_is_symbolic, par_funcs as pf
+from strawberryfields.parameters import (
+    MeasuredParameter,
+    FreeParameter,
+    par_is_symbolic,
+    par_funcs as pf,
+)
 
 
 pytestmark = pytest.mark.frontend
@@ -36,12 +41,6 @@ U = np.array([[0.219546940711-0.256534554457j, 0.611076853957+0.524178937791j, -
               [-0.156619083736+0.224568570065j, 0.109992223305-0.163750223027j, -0.421179844245+0.183644837982j, 0.818769184612+0.068015658737j]
     ])
 # fmt: on
-
-
-@pytest.fixture
-def eng(backend):
-    """Engine fixture."""
-    return sf.LocalEngine(backend)
 
 
 @pytest.fixture(scope="module")
@@ -71,7 +70,7 @@ def prog():
     return prog
 
 
-test_prog_not_compiled = """\
+test_blackbird_prog_not_compiled = """\
 name test_program
 version 1.0
 
@@ -154,7 +153,7 @@ class TestSFToBlackbirdConversion:
         prog = Program(2)
 
         with prog.context as q:
-            ops.Dgate(np.abs(0.54 + 0.324j), np.angle(0.54 + 0.324j)) | q[1]
+            ops.Dgate(r=np.abs(0.54 + 0.324j), phi=np.angle(0.54 + 0.324j)) | q[1]
 
         bb = io.to_blackbird(prog)
         # Note: due to how SF stores quantum commands with the Parameter class,
@@ -331,20 +330,25 @@ class TestSFToBlackbirdConversion:
 
         assert bb.operations[-1]["kwargs"] == {}
 
-
     def test_free_par_str(self):
         """Test a FreeParameter with some transformations converts properly"""
         prog = Program(2)
-        r, alpha = prog.params('r', 'alpha')
+        r, alpha = prog.params("r", "alpha")
         with prog.context as q:
             ops.Sgate(r) | q[0]
             ops.Zgate(3 * pf.log(-alpha)) | q[1]
 
         bb = io.to_blackbird(prog)
-        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ['{r}', 0.0], "kwargs": {}}
-        assert bb.operations[1] == {"op": "Zgate", "modes": [1], "args": ['3*log(-{alpha})'], "kwargs": {}}
+        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ["{r}", 0.0], "kwargs": {}}
+        assert bb.operations[1] == {
+            "op": "Zgate",
+            "modes": [1],
+            "args": ["3*log(-{alpha})"],
+            "kwargs": {},
+        }
 
     def test_tdm_program(self):
+        """Test TDM program converts properly"""
         prog = TDMProgram(2)
 
         with prog.context([1, 2], [3, 4], [5, 6]) as (p, q):
@@ -355,22 +359,31 @@ class TestSFToBlackbirdConversion:
 
         bb = io.to_blackbird(prog)
 
-        assert bb.operations[0] == {'kwargs': {}, 'args': [0.7, 0], 'op': 'Sgate', 'modes': [1]}
-        assert bb.operations[1] == {'kwargs': {}, 'args': ['p0', 0.0], 'op': 'BSgate', 'modes': [0, 1]}
-        assert bb.operations[2] == {'kwargs': {}, 'args': ['p1'], 'op': 'Rgate', 'modes': [1]}
-        assert bb.operations[3] == {'kwargs': {}, 'args': ['p2'], 'op': 'MeasureHomodyne', 'modes': [0]}
+        assert bb.operations[0] == {"kwargs": {}, "args": [0.7, 0], "op": "Sgate", "modes": [1]}
+        assert bb.operations[1] == {
+            "kwargs": {},
+            "args": ["p0", 0.0],
+            "op": "BSgate",
+            "modes": [0, 1],
+        }
+        assert bb.operations[2] == {"kwargs": {}, "args": ["p1"], "op": "Rgate", "modes": [1]}
+        assert bb.operations[3] == {
+            "kwargs": {},
+            "args": ["p2"],
+            "op": "MeasureHomodyne",
+            "modes": [0],
+        }
 
-        assert bb.programtype == {'name': 'tdm', 'options': {'temporal_modes': 2}}
+        assert bb.programtype == {"name": "tdm", "options": {"temporal_modes": 2}}
         assert list(bb._var.keys()) == ["p0", "p1", "p2"]
         assert np.all(bb._var["p0"] == np.array([[1, 2]]))
         assert np.all(bb._var["p1"] == np.array([[3, 4]]))
         assert np.all(bb._var["p2"] == np.array([[5, 6]]))
-        assert bb.modes == [0, 1]
-
+        assert bb.modes == {0, 1}
 
 
 class TestBlackbirdToSFConversion:
-    """Tests for the io.to_program utility function"""
+    """Tests for the io.to_program utility function for Blackbird programs"""
 
     def test_empty_program(self):
         """Test empty program raises error"""
@@ -413,7 +426,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert prog.name == bb.name
-        assert prog.name == 'test_program'
+        assert prog.name == "test_program"
 
     def test_gate_no_arg(self):
         """Test gate with no argument converts"""
@@ -428,6 +441,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Vacuum"
         assert prog.circuit[0].reg[0].ind == 0
 
@@ -444,6 +458,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].op.p[1] == 0.12
@@ -456,13 +471,14 @@ class TestBlackbirdToSFConversion:
         name test_program
         version 1.0
 
-        Dgate(0.54, 0) | 0
+        Dgate(r=0.54, phi=0) | 0
         """
 
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Dgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].reg[0].ind == 0
@@ -482,6 +498,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 3
+        assert prog.circuit
 
         cmd = prog.circuit[1]
         assert cmd.op.__class__.__name__ == "Dgate"
@@ -511,8 +528,9 @@ class TestBlackbirdToSFConversion:
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
 
-        assert prog.free_params.keys() == set(['foo_bar1', 'foo_bar2', 'ALPHA'])
+        assert prog.free_params.keys() == set(["foo_bar1", "foo_bar2", "ALPHA"])
         assert len(prog) == 4
+        assert prog.circuit
 
         cmd = prog.circuit[0]
         assert cmd.op.__class__.__name__ == "Dgate"
@@ -524,7 +542,7 @@ class TestBlackbirdToSFConversion:
         assert cmd.op.__class__.__name__ == "Rgate"
         p = cmd.op.p[0]
         assert isinstance(p, FreeParameter)
-        assert p.name == 'foo_bar1'
+        assert p.name == "foo_bar1"
         assert cmd.reg[0].ind == 0
 
         cmd = prog.circuit[2]
@@ -537,7 +555,7 @@ class TestBlackbirdToSFConversion:
         assert cmd.op.__class__.__name__ == "Rgate"
         p = cmd.op.p[0]
         assert isinstance(p, FreeParameter)
-        assert p.name == 'foo_bar2'
+        assert p.name == "foo_bar2"
         assert cmd.reg[0].ind == 0
 
     def test_gate_multimode(self):
@@ -554,6 +572,7 @@ class TestBlackbirdToSFConversion:
         prog = io.to_program(bb)
 
         assert len(prog) == 1
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "BSgate"
         assert prog.circuit[0].op.p[0] == 0.54
         assert prog.circuit[0].op.p[1] == np.pi
@@ -563,7 +582,8 @@ class TestBlackbirdToSFConversion:
     def test_tdm_program(self):
         """Test converting a tdm bb_script to a TDMProgram"""
 
-        bb_script = textwrap.dedent("""\
+        bb_script = textwrap.dedent(
+            """\
         name None
         version 1.0
         type tdm (temporal_modes=3)
@@ -579,12 +599,15 @@ class TestBlackbirdToSFConversion:
         BSgate(p0, 0.0) | [0, 1]
         Rgate(p1) | 1
         MeasureHomodyne(phi=p2) | 0
-        """)
+        """
+        )
 
         bb = blackbird.loads(bb_script)
         prog = io.to_program(bb)
+        assert isinstance(prog, TDMProgram)
 
         assert len(prog) == 4
+        assert prog.circuit
         assert prog.circuit[0].op.__class__.__name__ == "Sgate"
         assert prog.circuit[0].op.p[0] == 0.7
         assert prog.circuit[0].op.p[1] == 0
@@ -608,9 +631,9 @@ class TestBlackbirdToSFConversion:
         assert prog.timebins == 2
         assert prog.spatial_modes == 1
         assert prog.free_params == {
-            'p0': FreeParameter("p0"),
-            'p1': FreeParameter("p1"),
-            'p2': FreeParameter("p2")
+            "p0": FreeParameter("p0"),
+            "p1": FreeParameter("p1"),
+            "p2": FreeParameter("p2"),
         }
         assert all(prog.tdm_params[0] == np.array([1, 2]))
         assert all(prog.tdm_params[1] == np.array([3, 4]))
@@ -633,7 +656,8 @@ class TestBlackbirdToSFConversion:
     def test_gate_not_defined_tdm(self):
         """Test unknown gate raises error for tdm program"""
 
-        bb_script = textwrap.dedent("""\
+        bb_script = textwrap.dedent(
+            """\
         name test_program
         version 1.0
         type tdm (temporal_modes= 12)
@@ -642,7 +666,8 @@ class TestBlackbirdToSFConversion:
             1, 3, 5
 
         np | [0, 1]
-        """)
+        """
+        )
 
         bb = blackbird.loads(bb_script)
 
@@ -650,7 +675,8 @@ class TestBlackbirdToSFConversion:
             io.to_program(bb)
 
 
-prog_txt = textwrap.dedent('''\
+prog_txt = textwrap.dedent(
+    """\
     import strawberryfields as sf
     from strawberryfields import ops
 
@@ -665,9 +691,11 @@ prog_txt = textwrap.dedent('''\
         ops.MeasureFock() | q[0]
 
     results = eng.run(prog)
-''')
+"""
+)
 
-prog_txt_no_engine = textwrap.dedent('''\
+prog_txt_no_engine = textwrap.dedent(
+    """\
     import strawberryfields as sf
     from strawberryfields import ops
 
@@ -679,9 +707,11 @@ prog_txt_no_engine = textwrap.dedent('''\
         ops.Sgate(3*np.pi/2, 0) | q[1]
         ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
         ops.MeasureFock() | q[0]
-''')
+"""
+)
 
-prog_txt_tdm = textwrap.dedent('''\
+prog_txt_tdm = textwrap.dedent(
+    """\
     import strawberryfields as sf
     from strawberryfields import ops
 
@@ -696,200 +726,11 @@ prog_txt_tdm = textwrap.dedent('''\
         ops.MeasureHomodyne(p[2]) | q[2]
 
     results = eng.run(prog)
-''')
-
-class TestGenerateCode:
-    """Tests for the generate_code function"""
-
-    def test_generate_code_no_engine(self):
-        """Test generating code for a regular program with no engine"""
-        prog = sf.Program(3)
-
-        with prog.context as q:
-            ops.Sgate(0.54, 0) | q[0]
-            ops.BSgate(0.45, np.pi/2) | (q[0], q[2])
-            ops.Sgate(3*np.pi/2, 0) | q[1]
-            ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
-            ops.MeasureFock() | q[0]
-
-        code = io.generate_code(prog)
-
-        code_list = code.split("\n")
-        expected = prog_txt_no_engine.split("\n")
-
-        for i, row in enumerate(code_list):
-            assert row == expected[i]
-
-    @pytest.mark.parametrize("engine_kwargs", [
-        {"backend": "fock", "backend_options": {"cutoff_dim": 5}},
-        {"backend": "gaussian"},
-    ])
-    def test_generate_code_with_engine(self, engine_kwargs):
-        """Test generating code for a regular program with an engine"""
-        prog = sf.Program(3)
-        eng = sf.Engine(**engine_kwargs)
-
-        with prog.context as q:
-            ops.Sgate(0.54, 0) | q[0]
-            ops.BSgate(0.45, np.pi/2) | (q[0], q[2])
-            ops.Sgate(3*np.pi/2, 0) | q[1]
-            ops.BSgate(2*np.pi, 0.62) | (q[0], q[1])
-            ops.MeasureFock() | q[0]
-
-        results = eng.run(prog)
-
-        code = io.generate_code(prog, eng)
-
-        code_list = code.split("\n")
-        formatting_str = f"\"{engine_kwargs['backend']}\""
-        if "backend_options" in engine_kwargs:
-            formatting_str += (
-                ", backend_options="
-                f'{{"cutoff_dim": {engine_kwargs["backend_options"]["cutoff_dim"]}}}'
-            )
-        expected = prog_txt.format(engine_args=formatting_str).split("\n")
-
-        for i, row in enumerate(code_list):
-            assert row == expected[i]
+"""
+)
 
 
-    def test_generate_code_tdm(self):
-        """Test generating code for a TDM program with an engine"""
-        prog = sf.TDMProgram(N=[2, 3])
-        eng = sf.Engine("gaussian")
-
-        with prog.context([np.pi, 3*np.pi/2, 0], [1, 0.5, np.pi], [0, 0, 0]) as (p, q):
-            ops.Sgate(0.123, np.pi/4) | q[2]
-            ops.BSgate(p[0]) | (q[1], q[2])
-            ops.Rgate(p[1]) | q[2]
-            ops.MeasureHomodyne(p[0]) | q[0]
-            ops.MeasureHomodyne(p[2]) | q[2]
-
-        results = eng.run(prog)
-
-        code = io.generate_code(prog, eng)
-
-        code_list = code.split("\n")
-        expected = prog_txt_tdm.split("\n")
-
-        for i, row in enumerate(code_list):
-            assert row == expected[i]
-
-    @pytest.mark.parametrize(
-        "value", [
-            "np.pi", "np.pi/2", "np.pi/12", "2*np.pi", "2*np.pi/3",
-            "0", "42", "9.87", "-0.2", "no_number", "{p3}"
-        ],
-    )
-    def test_factor_out_pi(self, value):
-        """Test that the factor_out_pi function is able to convert floats
-        that are equal to a pi expression, to strings containing a pi
-        expression.
-
-        For example, the float 6.28318530718 should be converted to the string "2*np.pi"
-        """
-        try:
-            val = eval(value)
-        except NameError:
-            val = value
-        res = sf.io._factor_out_pi([val])
-        expected = value
-
-        assert res == expected
-
-
-class DummyResults:
-    """Dummy results object"""
-
-
-def dummy_run(self, program, args, compile_options=None, **eng_run_options):
-    """A dummy run function, that when called returns a dummy
-    results object, with run options available as an attribute.
-    This allows run_options to be returned and inspected after calling eng.run
-    """
-    results = DummyResults()
-    results.run_options = eng_run_options
-    return results
-
-
-class TestEngineIntegration:
-    """Test that target options interface correctly with eng.run"""
-
-    def test_shots(self, eng, monkeypatch):
-        """Test that passing shots correctly propagates to an engine run"""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=100)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
-
-        assert prog.run_options == {"shots": 100}
-
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog)
-
-        assert results.run_options == {"shots": 100}
-
-    def test_shots_overwritten(self, eng, monkeypatch):
-        """Test if run_options are passed to eng.run, they
-        overwrite those stored in the compiled program"""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=100)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog = io.to_program(bb)
-
-        assert prog.run_options == {"shots": 100}
-
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog, shots=1000)
-
-        assert results.run_options == {"shots": 1000}
-
-    def test_program_sequence(self, eng, monkeypatch):
-        """Test that program run_options are successively
-        updated if a sequence of programs is executed."""
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=100)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog1 = io.to_program(bb)
-
-        bb_script = """\
-        name test_program
-        version 1.0
-        target gaussian (shots=1024)
-        Pgate(0.54) | 0
-        MeasureX | 0
-        """
-        bb = blackbird.loads(bb_script)
-        prog2 = io.to_program(bb)
-
-        assert prog1.run_options == {"shots": 100}
-        assert prog2.run_options == {"shots": 1024}
-
-        with monkeypatch.context() as m:
-            m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run([prog1, prog2])
-
-        assert results.run_options == prog2.run_options
-
-
-class TestSave:
+class TestSaveBlackbird:
     """Test sf.save functionality"""
 
     def test_save_filename_path_object(self, prog, tmpdir):
@@ -900,7 +741,7 @@ class TestSave:
         with open(filename, "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
     def test_save_filename_string(self, prog, tmpdir):
         """Test saving a program to a file path using a string filename"""
@@ -910,7 +751,7 @@ class TestSave:
         with open(filename, "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
     def test_save_file_object(self, prog, tmpdir):
         """Test writing a program to a file object"""
@@ -922,20 +763,20 @@ class TestSave:
         with open(filename, "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
     def test_save_append_extension(self, prog, tmpdir):
         """Test appending the extension if not present"""
         filename = str(tmpdir.join("test.txt"))
         sf.save(filename, prog)
 
-        with open(filename+'.xbb', "r") as f:
+        with open(filename + ".xbb", "r") as f:
             res = f.read()
 
-        assert res == test_prog_not_compiled
+        assert res == test_blackbird_prog_not_compiled
 
 
-class TestLoad:
+class TestLoadBlackbird:
     """Test sf.load functionality"""
 
     def test_invalid_file(self, prog, tmpdir):
@@ -956,7 +797,7 @@ class TestLoad:
         filename = tmpdir.join("test.xbb")
 
         with open(filename, "w") as f:
-            f.write(test_prog_not_compiled)
+            f.write(test_blackbird_prog_not_compiled)
 
         res = sf.load(filename)
 
@@ -968,7 +809,7 @@ class TestLoad:
         filename = str(tmpdir.join("test.xbb"))
 
         with open(filename, "w") as f:
-            f.write(test_prog_not_compiled)
+            f.write(test_blackbird_prog_not_compiled)
 
         res = sf.load(filename)
 
@@ -990,4 +831,4 @@ class TestLoad:
 
     def test_loads(self, prog):
         """Test loading a program from a string"""
-        self.assert_programs_equal(io.loads(test_prog_not_compiled), prog)
+        self.assert_programs_equal(io.loads(test_blackbird_prog_not_compiled), prog)

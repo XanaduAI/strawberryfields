@@ -20,21 +20,28 @@ One can think of each BaseEngine instance as a separate quantum computation.
 import abc
 import collections.abc
 import time
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
+import xcc
 
-from strawberryfields.api import Connection, Job, Result
-from strawberryfields.api.job import FailedJobError
+from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.result import Result
+from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
-from strawberryfields.tdm.tdmprogram import TDMProgram
+from strawberryfields.tdm.tdmprogram import TDMProgram, reshape_samples
 
-from .backends import load_backend
+from .backends import load_backend, BosonicBackend
 from .backends.base import BaseBackend, NotApplicableError
+from ._version import __version__
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]
+
+
+class FailedJobError(Exception):
+    """Raised when a job had a failure on the server side."""
 
 
 class BaseEngine(abc.ABC):
@@ -57,7 +64,8 @@ class BaseEngine(abc.ABC):
         self.run_progs = []
         #: List[List[Number]]: latest measurement results, shape == (modes, shots)
         self.samples = None
-        self.all_samples = None
+        #: Dict[Any, List]: the measurement results as a dictionary with measured modes as keys
+        self.samples_dict = None
 
         if isinstance(backend, str):
             self.backend_name = backend
@@ -125,7 +133,6 @@ class BaseEngine(abc.ABC):
             p._clear_regrefs()
         self.run_progs.clear()
         self.samples = None
-        self.all_samples = None
 
     def print_applied(self, print_fn=print):
         """Print all the Programs run since the backend was initialized.
@@ -190,7 +197,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn("Run {}:".format(k))
+            print_fn(f"Run {k}:")
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -210,9 +217,13 @@ class BaseEngine(abc.ABC):
         Args:
             prog (Program): program to run
         Returns:
-            list[Command]: commands that were applied to the backend
-            list[array, tensor]: samples returned from the backend
+            tuple(list[Command], list[array, tensor], dict[int, list]): tuple containing the
+            commands that were applied to the backend, the samples returned from the backend, and
+            the samples as a dictionary with the measured modes as keys
         """
+        # `_run_program` is called in `BaseEngine._run` but should never be called
+        # from a `BaseEngine` object, in which case an error should be raised.
+        raise NotImplementedError("'run_program' method must be implemented on child class")
 
     def _run(self, program, *, args, compile_options, **kwargs):
         """Execute the given programs by sending them to the backend.
@@ -257,7 +268,7 @@ class BaseEngine(abc.ABC):
                 # there was a previous program segment
                 if not p.can_follow(prev):
                     raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                        f"Register mismatch: program {len(self.run_progs)}, '{p.name}'."
                     )
 
                 # Copy the latest measured values in the RegRefs of p.
@@ -275,12 +286,17 @@ class BaseEngine(abc.ABC):
                 p = p.compile(compiler=target, **compile_options)
             p.lock()
 
-            _, self.samples, self.all_samples = self._run_program(p, **kwargs)
+            _, self.samples, self.samples_dict = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
             prev = p
 
-        return Result(self.samples, all_samples=self.all_samples)
+        ancillae_samples = None
+        if isinstance(self.backend, BosonicBackend):
+            ancillae_samples = self.backend.ancillae_samples_dict.copy()
+
+        samples = {"output": [self.samples]}
+        return Result(samples, samples_dict=self.samples_dict, ancillae_samples=ancillae_samples)
 
 
 class LocalEngine(BaseEngine):
@@ -327,7 +343,7 @@ class LocalEngine(BaseEngine):
         return super().__new__(cls)
 
     def __str__(self):
-        return self.__class__.__name__ + "({})".format(self.backend_name)
+        return self.__class__.__name__ + f"({self.backend_name})"
 
     def reset(self, backend_options=None):
         backend_options = backend_options or {}
@@ -341,7 +357,6 @@ class LocalEngine(BaseEngine):
     def _run_program(self, prog, **kwargs):
         applied = []
         samples_dict = {}
-        all_samples = {}
         batches = self.backend_options.get("batch_size", 0)
 
         for cmd in prog.circuit:
@@ -351,48 +366,50 @@ class LocalEngine(BaseEngine):
                 if val is not None:
                     for i, r in enumerate(cmd.reg):
                         if batches:
-                            samples_dict[r.ind] = val[:, :, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, :, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, :, i])
                         else:
-                            samples_dict[r.ind] = val[:, i]
-
                             # Internally also store all the measurement outcomes
-                            if r.ind not in all_samples:
-                                all_samples[r.ind] = list()
-                            all_samples[r.ind].append(val[:, i])
+                            if r.ind not in samples_dict:
+                                samples_dict[r.ind] = []
+                            samples_dict[r.ind].append(val[:, i])
 
                 applied.append(cmd)
 
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    f"The operation {cmd.op} cannot be used with {self.backend}."
                 ) from None
 
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError(
-                    "The operation {} has not been implemented in {} for the arguments {}.".format(
-                        cmd.op, self.backend, kwargs
-                    )
+                    f"The operation {cmd.op} has not been implemented in {self.backend} for the "
+                    f"arguments {kwargs}."
                 ) from None
 
-        samples = self._combine_and_sort_samples(samples_dict)
+        # combine the samples sorted by mode, and cast correctly to array or tensor
+        samples, samples_dict = self._combine_and_sort_samples(samples_dict)
 
-        return applied, samples, all_samples
+        if isinstance(prog, TDMProgram) and samples_dict:
+            samples_dict = reshape_samples(samples_dict, prog.measured_modes, prog.N, prog.timebins)
+            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+            samples = np.array(list(samples_dict.values())).transpose(1, 0, 2)
+
+        return applied, samples, samples_dict
 
     def _combine_and_sort_samples(self, samples_dict):
         """Helper function to combine the values in the samples dictionary sorted by its keys."""
         batches = self.backend_options.get("batch_size", 0)
 
         if not samples_dict:
-            return np.empty((0, 0))
+            return np.empty((0, 0)), samples_dict
 
-        samples = np.transpose([i for _, i in sorted(samples_dict.items())])
+        single_sample_dict = {key: val[-1] for key, val in samples_dict.items()}
+        samples = np.transpose([i for _, i in sorted(single_sample_dict.items())])
 
         # pylint: disable=import-outside-toplevel
         if self.backend_name == "tf":
@@ -400,13 +417,15 @@ class LocalEngine(BaseEngine):
 
             if batches:
                 samples = [
-                    np.transpose([i[b] for _, i in sorted(samples_dict.items())])
+                    np.transpose([i[b] for _, i in sorted(single_sample_dict.items())])
                     for b in range(batches)
                 ]
 
-            return convert_to_tensor(samples)
+            samples_dict = {k: [convert_to_tensor(i) for i in v] for k, v in samples_dict.items()}
+            return convert_to_tensor(samples), samples_dict
 
-        return samples
+        samples_dict = {k: [np.array(i) for i in v] for k, v in samples_dict.items()}
+        return samples, samples_dict
 
     # pylint:disable=too-many-branches
     def run(self, program, *, args=None, compile_options=None, **kwargs):
@@ -425,9 +444,6 @@ class LocalEngine(BaseEngine):
         Returns:
             Result: results of the computation
         """
-        # pylint: disable=import-outside-toplevel
-        from strawberryfields.tdm.tdmprogram import reshape_samples
-
         received_rolled_circuit = False
         if isinstance(program, TDMProgram):
             # priority order for the shots value should be kwargs > run_options > 1
@@ -478,7 +494,7 @@ class LocalEngine(BaseEngine):
 
         # check that post-selection and feed-forwarding is not used together with shots > 1
         for p in program_lst:
-            for c in p.circuit:
+            for c in p.circuit or []:
                 try:
                     if c.op.select and eng_run_options["shots"] > 1:
                         raise NotImplementedError(
@@ -496,26 +512,18 @@ class LocalEngine(BaseEngine):
             program, args=args, compile_options=compile_options, **eng_run_options
         )
 
-        if isinstance(program, TDMProgram):
-            if isinstance(result.all_samples, dict) and len(result.all_samples) > 0:
-                result._all_samples = reshape_samples(
-                    result.all_samples, program.measured_modes, program.N, program.timebins
-                )
-                # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
-                result._samples = np.array(list(result.all_samples.values())).transpose(1, 0, 2)
-            if received_rolled_circuit:
-                # if the tdm circuit is received in a rolled state, and unrolled
-                # for execution, roll it back again
-                program.roll()
-        modes = temp_run_options["modes"]
+        if isinstance(program, TDMProgram) and received_rolled_circuit:
+            # if the tdm circuit is received in a rolled state, and unrolled
+            # for execution, roll it back again
+            program.roll()
 
+        modes = temp_run_options["modes"]
         if modes is None or modes:
             # state object requested
             # session and feed_dict are needed by TF backend both during simulation (if program
             # contains measurements) and state object construction.
-            result._state = self.backend.state(**temp_run_options)
-            if self.backend_name == "bosonic":
-                result._ancilla_samples = self.backend.ancillae_samples_dict.copy()
+            result.state = self.backend.state(**temp_run_options)
+
         return result
 
 
@@ -525,7 +533,7 @@ class RemoteEngine:
 
     **Example:**
 
-    The following examples instantiate an engine with the default configuration, and
+    The following examples instantiate an engine with the default settings, and
     run both blocking and non-blocking jobs.
 
     Run a blocking job:
@@ -540,28 +548,31 @@ class RemoteEngine:
     >>> job = engine.run_async(program, shots=1)
     >>> job.status
     "queued"
-    >>> job.result
-    InvalidJobOperationError
-    >>> job.refresh()
+    >>> job.wait()
     >>> job.status
     "complete"
-    >>> job.result
-    [[0 1 0 2 1 0 0 0]]
+    >>> result = sf.Result(job.result)
+    >>> result.samples
+    array([[0 1 0 2 1 0 0 0]])
 
     Args:
         target (str): the target device
-        connection (strawberryfields.api.Connection): a connection to the remote job
-            execution platform
-        backend_options (Dict[str, Any]): keyword arguments for the backend
+        connection (xcc.Connection, optional): a connection to the Xanadu Cloud
+        backend_options (Dict[str, Any], optional): keyword arguments for the backend
     """
 
     POLLING_INTERVAL_SECONDS = 1
     DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
 
-    def __init__(self, target: str, connection: Connection = None, backend_options: dict = None):
+    def __init__(
+        self,
+        target: str,
+        connection: Optional[xcc.Connection] = None,
+        backend_options: Optional[Dict[str, Any]] = None,
+    ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
         self._spec = None
-        self._connection = connection or Connection()
+        self._connection = connection
         self._backend_options = backend_options or {}
         self.log = create_logger(__name__)
 
@@ -575,19 +586,44 @@ class RemoteEngine:
         return self._target
 
     @property
-    def connection(self) -> Connection:
-        """The connection object used by the engine.
+    def connection(self) -> xcc.Connection:
+        """The connection used by the engine. A new :class:`xcc.Connection` will
+        be created and returned each time this property is accessed if the
+        connection supplied to :meth:`~.RemoteEngine.__init__` was ``None``.
 
         Returns:
-            strawberryfields.api.Connection
+            xcc.Connection
         """
-        return self._connection
+        if self._connection is not None:
+            return self._connection
+
+        settings = xcc.Settings()
+
+        return xcc.Connection(
+            refresh_token=settings.REFRESH_TOKEN,
+            access_token=settings.ACCESS_TOKEN,
+            host=settings.HOST,
+            port=settings.PORT,
+            tls=settings.TLS,
+            headers={"User-Agent": f"StrawberryFields/{__version__}"},
+        )
 
     @property
-    def device_spec(self):
-        """The device specifications for target device"""
+    def device_spec(self) -> DeviceSpec:
+        """The specification of the target device.
+
+        Returns:
+            DeviceSpec: the device specification
+
+        Raises:
+            requests.exceptions.RequestException: if there was an issue fetching
+                the device specifications from the Xanadu Cloud
+        """
         if self._spec is None:
-            self._spec = self._connection.get_device_spec(self.target)
+            target = self.target
+            connection = self.connection
+            device = xcc.Device(target=target, connection=connection)
+            self._spec = DeviceSpec(spec=device.specification)
         return self._spec
 
     def run(
@@ -612,38 +648,54 @@ class RemoteEngine:
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
-            strawberryfields.api.Result, None: the job result if successful, and ``None`` otherwise
+            strawberryfields.Result, None: the job result if successful, and ``None`` otherwise
+
+        Raises:
+            requests.exceptions.RequestException: if there was an issue fetching
+                the device specifications from the Xanadu Cloud
+            FailedJobError: if the remote job fails on the server side ("cancelled" or "failed")
         """
         job = self.run_async(
             program, compile_options=compile_options, recompile=recompile, **kwargs
         )
         try:
             while True:
-                job.refresh()
-                if job.status == "complete":
-                    self.log.info("The remote job %s has been completed.", job.id)
-                    return job.result
+                # TODO: needed to refresh connection; remove once xcc.Connection
+                # is able to refresh config info dynamically
+                job._connection = self.connection
+                job.clear()
 
-                if job.status == "failed":
-                    message = (
-                        "The remote job {} failed due to an internal "
-                        "server error. Please try again. {}".format(job.id, job.meta)
-                    )
-                    self.log.error(message)
-
-                    raise FailedJobError(message)
-
+                if job.finished:
+                    break
                 time.sleep(self.POLLING_INTERVAL_SECONDS)
+
         except KeyboardInterrupt as e:
-            self._connection.cancel_job(job.id)
+            xcc.Job(id_=job.id, connection=self.connection).cancel()
             raise KeyboardInterrupt("The job has been cancelled.") from e
+
+        if job.status == "failed":
+            message = (
+                f"The remote job {job.id} failed due to an internal "
+                f"server error: {job.metadata}. Please try again."
+            )
+            self.log.error(message)
+            raise FailedJobError(message)
+
+        if job.status == "complete":
+            self.log.info(f"The remote job {job.id} has been completed.")
+            return Result(job.result)
+
+        message = f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
+        self.log.info(message)
+
+        raise FailedJobError(message)
 
     def run_async(
         self, program: Program, *, compile_options=None, recompile=False, **kwargs
-    ) -> Job:
+    ) -> xcc.Job:
         """Runs a non-blocking remote job.
 
-        In the non-blocking mode, a ``Job`` object is returned immediately, and the user can
+        In the non-blocking mode, a ``xcc.Job`` object is returned immediately, and the user can
         manually refresh the status and check for updated results of the job.
 
         Args:
@@ -657,16 +709,13 @@ class RemoteEngine:
                 argument is not provided, the shots are derived from the given ``program``.
 
         Returns:
-            strawberryfields.api.Job: the created remote job
+            xcc.Job: the created remote job
         """
         # get the specific chip to submit the program to
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
         device = self.device_spec
-        if isinstance(program, TDMProgram) and not device.layout_is_formatted():
-            device.fill_template(program)
-
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
         program_is_compiled = program.compile_info is not None
@@ -676,14 +725,15 @@ class RemoteEngine:
             # program was compiled but recompilation was not allowed by the
             # user
 
-            if (
+            if program.compile_info and (
                 program.compile_info[0].target != device.target
                 or program.compile_info[0]._spec != device._spec
             ):
+                compile_target = program.compile_info[0].target
                 # program was compiled for a different device
                 raise ValueError(
                     "Cannot use program compiled with "
-                    f"{program._compile_info[0].target} for target {self.target}. "
+                    f"{compile_target} for target {self.target}. "
                     'Pass the "recompile=True" keyword argument '
                     f"to compile with {compiler_name}."
                 )
@@ -714,19 +764,30 @@ class RemoteEngine:
             program = program.compile(device=device, compiler="Xstrict")
 
         # update the run options if provided
-        run_options = {}
-        run_options.update(program.run_options)
-        run_options.update(kwargs or {})
+        run_options = {**program.run_options, **kwargs}
 
         if "shots" not in run_options:
             raise ValueError("Number of shots must be specified.")
 
-        return self._connection.create_job(self.target, program, run_options)
+        # Serialize a Blackbird circuit for network transmission
+        bb = to_blackbird(program)
+        bb._target["options"] = run_options
+        circuit = bb.serialize()
+
+        connection = self.connection
+
+        job = xcc.Job.submit(
+            connection=connection,
+            name=program.name,
+            target=self.target,
+            circuit=circuit,
+            language=f"blackbird:{bb.version}",
+        )
+
+        return job
 
     def __repr__(self):
-        return "<{}: target={}, connection={}>".format(
-            self.__class__.__name__, self.target, self.connection
-        )
+        return f"<{self.__class__.__name__}: target={self.target}, connection={self._connection}>"
 
     def __str__(self):
         return self.__repr__()
@@ -748,6 +809,6 @@ class BosonicEngine(LocalEngine):
 
     def _run_program(self, prog, **kwargs):
         # Custom Bosonic run code
-        applied, samples_dict, all_samples = self.backend.run_prog(prog, **kwargs)
-        samples = self._combine_and_sort_samples(samples_dict)
-        return applied, samples, all_samples
+        applied, samples_dict = self.backend.run_prog(prog, **kwargs)
+        samples, samples_dict = self._combine_and_sort_samples(samples_dict)
+        return applied, samples, samples_dict

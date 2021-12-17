@@ -494,6 +494,26 @@ class Circuit:
         )
         self._update_state(new_state)
 
+    def mzgate(self, phi_in, phi_ex, mode1, mode2):
+        """
+        Apply a MZ-gate operator to the two specified modes.
+        """
+        phi_in = self._maybe_batch(phi_in)
+        phi_ex = self._maybe_batch(phi_ex)
+        self._check_incompatible_batches(phi_in, phi_ex)
+        new_state = ops.mzgate(
+            phi_in,
+            phi_ex,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
+            dtype=self._dtype,
+        )
+        self._update_state(new_state)
+
     def two_mode_squeeze(self, r, phi, mode1, mode2):
         """
         Apply a two-mode squeezing operator to the two specified modes.
@@ -554,6 +574,24 @@ class Circuit:
         )
         self._update_state(new_state)
 
+    def gaussian_gate(self, S, d, modes):
+        """
+        Apply the N-mode gaussian gates to the specified mode.
+        """
+        self._batched = len(d.shape) == 2
+        self._batch_size = d.shape[0] if self._batched else None
+        new_state = ops.gaussian_gate(
+            S,
+            d,
+            modes,
+            in_modes=self._state,
+            cutoff=self._cutoff_dim,
+            pure=self._state_is_pure,
+            batched=self._batched,
+            dtype=self._dtype,
+        )
+        self._update_state(new_state)
+
     def loss(self, T, mode):
         """
         Apply a loss channel  to the specified mode.
@@ -595,6 +633,8 @@ class Circuit:
         Returns:
             tuple[int]: The Fock number measurement results for each mode.
         """
+        # pylint: disable=unused-argument
+
         # allow integer (non-list) arguments
         # not part of the API, but provided for convenience
         if isinstance(modes, int):
@@ -843,14 +883,8 @@ class Circuit:
             # \psi_n(x) = 1/sqrt[2^n n!](\frac{m \omega}{\pi \hbar})^{1/4}
             #             \exp{-\frac{m \omega}{2\hbar} x^2} H_n(\sqrt{\frac{m \omega}{\pi}} x)
             # where H_n(x) is the (physicists) nth Hermite polynomial
-            if "max" in kwargs:
-                q_mag = kwargs["max"]
-            else:
-                q_mag = 10
-            if "num_bins" in kwargs:
-                num_bins = kwargs["num_bins"]
-            else:
-                num_bins = 100000
+            q_mag = kwargs.get("max", 10)
+            num_bins = kwargs.get("kwargs", 100000)
             if "q_tensor" in self._cache:
                 # use cached q_tensor
                 q_tensor = self._cache["q_tensor"]

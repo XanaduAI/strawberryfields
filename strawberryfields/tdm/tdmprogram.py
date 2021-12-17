@@ -28,6 +28,15 @@ from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
 
 
+def is_ptype(name: str) -> bool:
+    """Checks whether a variable name is a p-type variable.
+
+    p-type variables are used with TDM programs to represent a looped-over parameter, and
+    consist of the letter 'p' followed by an integer. For example, 'p0', 'p1', 'p42'.
+    """
+    return len(name) > 1 and name[0] == "p" and name[1:].isdigit()
+
+
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 
@@ -107,10 +116,10 @@ def _get_mode_order(num_of_values, modes, N):
     return mode_order[:num_of_values]
 
 
-def reshape_samples(all_samples, modes, N, timebins):
+def reshape_samples(samples_dict, modes, N, timebins):
     """Reshapes the samples dict so that they have the expected correct shape.
 
-    Corrects the :attr:`~.Results.all_samples` dictionary so that the measured modes are
+    Corrects the :attr:`~.Results.samples_dict` dictionary so that the measured modes are
     the ones defined to be measured in the circuit, instead of being spread over a larger
     number of modes due to the mode-shifting occurring in :class:`~.TDMProgram`.
 
@@ -155,7 +164,7 @@ def reshape_samples(all_samples, modes, N, timebins):
         }
 
     Args:
-        all_samples (dict[int, list]): the raw measured samples
+        samples_dict (dict[int, list]): the raw measured samples
         modes (Sequence[int]): the modes that are measured in the circuit
         N (Sequence[int]): the number of concurrent modes per belt/spatial modes
         timebins (int): the number of timebins/temporal modes in the program per shot
@@ -165,12 +174,12 @@ def reshape_samples(all_samples, modes, N, timebins):
             mode and the values have shape ``(shots, timebins)``
     """
     # calculate the total number of samples and the order in which they were measured
-    num_of_values = len([i for j in all_samples.values() for i in j])
+    num_of_values = len([i for j in samples_dict.values() for i in j])
     mode_order = _get_mode_order(num_of_values, modes, N)
     idx_tracker = {i: 0 for i in mode_order}
 
-    # iterate backwards through all_samples and add them into the correct mode
-    new_samples = dict()
+    # iterate backwards through `samples_dict` and add them into the correct mode
+    new_samples = {}
     timebin_idx = 0
     for i, mode in enumerate(mode_order):
         mode_idx = modes[i % len(N)]
@@ -179,7 +188,7 @@ def reshape_samples(all_samples, modes, N, timebins):
             # create an entry for the new mode with a nested list for each timebin
             new_samples[mode_idx] = [[] for _ in range(timebins)]
 
-        sample = all_samples[mode][idx_tracker[mode]][0]
+        sample = samples_dict[mode][idx_tracker[mode]][0]
         idx_tracker[mode] += 1
         new_samples[mode_idx][timebin_idx].append(sample)
 
@@ -324,7 +333,7 @@ class TDMProgram(Program):
     The engine automatically takes this mode shifting into account; returned samples
     will always be transformed to match the modes specified during construction:
 
-    >>> print(results.all_samples)
+    >>> print(results.samples_dict)
     {0: [array([1.26208025]), array([1.53910032]), array([-1.29648336]),
     array([0.75743215]), array([-0.17850101]), array([-1.44751996])]}
 
@@ -437,12 +446,14 @@ class TDMProgram(Program):
 
     # pylint: disable=too-many-branches
     def compile(self, *, device=None, compiler=None):
-        """Compile the time-domain program given a Strawberry Fields photonic hardware device specification.
+        """Compile the time-domain program given a Strawberry Fields photonic hardware device
+        specification.
 
-        Currently, the compilation is simply a check that the program matches the device.
+        The compilation checks that the program matches the device and sets the compile information
+        and the program target to the correct device target.
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+            device (~strawberryfields.DeviceSpec): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
@@ -513,7 +524,7 @@ class TDMProgram(Program):
                     program_param = self.rolled_circuit[i].op.p[k]
 
                     # make sure that hardcoded parameters in the device layout are correct
-                    if not isinstance(param_name, str):
+                    if not isinstance(param_name, str) and not par_is_symbolic(param_name):
                         if not program_param == param_name:
                             raise CircuitError(
                                 "Program cannot be used with the device '{}' "
@@ -525,7 +536,14 @@ class TDMProgram(Program):
                         continue
 
                     # Obtain the relevant parameter range from the device
-                    param_range = device.gate_parameters[param_name]
+                    param_range = device.gate_parameters.get(str(param_name))
+                    if param_range is None:
+                        raise CircuitError(
+                            "Program cannot be used with the device '{}' "
+                            "due to parameter '{}' not found in device specification.".format(
+                                device.target, param_name
+                            )
+                        )
                     if par_is_symbolic(program_param):
                         # If it is a symbolic value go and lookup its corresponding list in self.tdm_params
                         local_p_vals = self.parameters.get(program_param.name, [])
@@ -550,6 +568,8 @@ class TDMProgram(Program):
                                     device.target, program_param, param_range
                                 )
                             )
+            self._compile_info = (device, "TDM")
+            self._target = device.target
             return self
 
         raise CircuitError("TDM programs cannot be compiled without a valid device specification.")
@@ -677,7 +697,7 @@ class TDMProgram(Program):
         for _ in range(shots):
             # save previous mode index of a command to be able to check when modes
             # are looped back to the start (not allowed when space-unrolling)
-            previous_mode_index = dict()
+            previous_mode_index = {}
 
             for cmd in self.rolled_circuit:
                 previous_mode_index[cmd] = 0

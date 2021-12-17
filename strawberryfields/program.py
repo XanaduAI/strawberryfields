@@ -499,7 +499,7 @@ class Program:
         """Check that the number of modes in the program is valid for the given device.
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+            device (~strawberryfields.DeviceSpec): Device specification object to use.
                 ``device.modes`` must be an integer, containing the allowed number of modes
                 for the target.
         """
@@ -518,7 +518,7 @@ class Program:
         measurements according to the device specification.
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): Device specification object to use.
+            device (~strawberryfields.DeviceSpec): Device specification object to use.
                 ``device.modes`` must be a dictionary, containing the maximum number of allowed
                 measurements for the specified target.
 
@@ -526,13 +526,18 @@ class Program:
         num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
 
         try:
-            max_pnr = device.modes["max"]["pnr"]
-            max_homodyne = device.modes["max"]["homodyne"]
-            max_heterodyne = device.modes["max"]["heterodyne"]
+            max_pnr = device.modes["pnr_max"]
+            max_homodyne = device.modes["homodyne_max"]
+            max_heterodyne = device.modes["heterodyne_max"]
         except (KeyError, TypeError) as e:
+            device_modes = device.modes
+            if isinstance(device.modes, dict):
+                device_modes = set(device.modes.keys())
+
             raise KeyError(
-                "Device specification must contain an entry for the maximum allowed number "
-                "of measurments. Have you specified the correct target?"
+                "Expected keys for the maximum allowed number of PNR ('pnr_max'), homodyne "
+                "('homodyne_max'), and heterodyne ('heterodyne_max') measurements. Got keys "
+                f"{device_modes}"
             ) from e
 
         for c in self.circuit:
@@ -594,17 +599,19 @@ class Program:
         >>> prog2 = prog.compile(device=device, compiler="Xcov")
 
         Args:
-            device (~strawberryfields.api.DeviceSpec): device specification object to use for
+            device (~strawberryfields.DeviceSpec): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DevicSpec`.
+                the hardware :class:`~.DeviceSpec`.
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
                 The default is False.
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
                 connected. The default is True.
+            shots (int): Number of times the program measurement evaluation is repeated. Passed
+                along to the compiled program's ``run_options``.
 
         Returns:
             Program: compiled program
@@ -627,15 +634,7 @@ class Program:
 
             if compiler is None:
                 # get the default compiler from the device spec
-                compiler_name = device.default_compiler
-
-                if compiler_name is not None:
-                    compiler = compiler_db[device.default_compiler]()
-                else:
-                    raise CircuitError(
-                        f"The device '{target}' does not specify a compiler. A compiler "
-                        "must be manually provided when calling Program.compile()."
-                    )
+                compiler = compiler_db[device.default_compiler]()
             else:
                 compiler = _get_compiler(compiler)
 

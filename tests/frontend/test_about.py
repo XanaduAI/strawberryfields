@@ -34,11 +34,8 @@ def test_about(capfd):
     sf_version_match = re.search(r"Strawberry Fields version:\s+([\S]+)\n", out).group(1)
     assert sf_version_match == sf.version()
 
-    assert "Numpy version" in out
-    assert "Scipy version" in out
-    assert "The Walrus version" in out
-    assert "Blackbird version" in out
-
+    for pkg in ("Numpy", "Scipy", "The Walrus", "Blackbird", "XCC"):
+        assert f"{pkg} version" in out
 
 
 def test_cite(capfd):

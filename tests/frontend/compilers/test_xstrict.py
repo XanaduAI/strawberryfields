@@ -47,7 +47,9 @@ class TestCompilation:
         prog = X8_spec.create_program(**params)
         prog.circuit[0].op.__class__ = sf.ops.CXgate
 
-        with pytest.raises(sf.program_utils.CircuitError, match="CXgate cannot be used with the compiler"):
+        with pytest.raises(
+            sf.program_utils.CircuitError, match="CXgate cannot be used with the compiler"
+        ):
             prog.compile(device=X8_spec, compiler="Xstrict")
 
     def test_invalid_topology(self, tol):

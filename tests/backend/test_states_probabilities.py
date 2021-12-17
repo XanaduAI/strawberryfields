@@ -15,11 +15,14 @@ r"""Unit tests for the states.py fock probabilities methods"""
 import pytest
 
 import numpy as np
-import tensorflow as tf
 from scipy.special import factorial as fac
 
-from strawberryfields import backends
-from strawberryfields import utils
+try:
+    import tensorflow as tf
+except ImportError:
+    import unittest.mock as mock
+
+    tf = mock.Mock()
 
 
 MAG_ALPHAS = np.linspace(0, 0.8, 3)
@@ -67,6 +70,7 @@ class TestFockProbabilities:
             prob_n = state.fock_prob([n, cutoff // 2])
             assert np.allclose(prob_n, ref_probs[n], atol=tol, rtol=0)
 
+
 @pytest.mark.backends("fock", "tf", "gaussian")
 @pytest.mark.parametrize("a", MAG_ALPHAS)
 @pytest.mark.parametrize("phi", PHASE_ALPHAS)
@@ -108,9 +112,7 @@ class TestAllFockProbs:
 
         n = np.arange(cutoff)
         ref_state1 = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
-        ref_state2 = (
-            np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(fac(n))
-        )
+        ref_state2 = np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(fac(n))
 
         ref_state = np.outer(ref_state1, ref_state2)
         ref_probs = np.abs(np.reshape(ref_state ** 2, -1))
@@ -119,7 +121,7 @@ class TestAllFockProbs:
             ref_probs = np.tile(ref_probs, batch_size)
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
-        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha)+np.pi, 1)
+        backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha) + np.pi, 1)
         state = backend.state()
 
         for n in range(cutoff):
