@@ -2,6 +2,18 @@
 
 <h3>New features since last release</h3>
 
+* Rectangular GKP states are now supported.
+  [(#668)](https://github.com/XanaduAI/strawberryfields/pull/668)
+
+  For example,
+  
+  ```python
+   prog = sf.Program(1)
+   
+   with prog.context as q:
+       sf.ops.GKP(shape="rectangular", alpha=2) | q[0]
+  ```
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
@@ -11,6 +23,8 @@
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+J. Eli Bourassa
 
 # Release 0.21.0 (current release)
 
