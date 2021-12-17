@@ -292,7 +292,7 @@ class FockBackend(BaseFock):
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)
 
     def prepare_gkp(
-        self, state, epsilon, ampl_cutoff, representation="real", shape="square", mode=None
+        self, state, epsilon, ampl_cutoff, representation="real", shape="square", alpha=1, mode=None
     ):
         r"""Prepares the Fock representation of a finite energy GKP state.
 
@@ -308,6 +308,7 @@ class FockBackend(BaseFock):
             amplcutoff (float): this determines how many terms to keep
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
+            alpha (float): peak spacing in q is given by sqrt(alpha * pi)
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -319,8 +320,15 @@ class FockBackend(BaseFock):
         if representation == "complex":
             raise NotImplementedError("The complex description of GKP is not implemented")
 
-        if shape != "square":
-            raise NotImplementedError("Only square GKP are implemented for now")
+        if shape not in ["square", "rectangular"]:
+            raise NotImplementedError("Only square and rectangular GKP are implemented.")
+
+        if shape == "square":
+            if alpha != 1:
+                raise ValueError(
+                    "For square GKPs, alpha must be 1. For alpha not equal to "
+                    + "1, use shape='rectangular'."
+                )
 
         theta, phi = state[0], state[1]
-        self.circuit.prepare_gkp(theta, phi, epsilon, ampl_cutoff, self._remap_modes(mode))
+        self.circuit.prepare_gkp(theta, phi, epsilon, ampl_cutoff, alpha, self._remap_modes(mode))

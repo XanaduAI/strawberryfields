@@ -535,7 +535,9 @@ class BosonicBackend(BaseBosonic):
 
         return weights, means, cov
 
-    def prepare_gkp(self, state, epsilon, ampl_cutoff, representation="real", shape="square"):
+    def prepare_gkp(
+        self, state, epsilon, ampl_cutoff, representation="real", shape="square", alpha=1
+    ):
         r"""Prepares the arrays of weights, means and covs for a finite energy GKP state.
 
         GKP states are qubits, with the qubit state defined by:
@@ -550,6 +552,7 @@ class BosonicBackend(BaseBosonic):
             ampl_cutoff (float): this determines how many terms to keep
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
+            alpha (float): peak spacing in q is given by sqrt(alpha * pi)
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -561,12 +564,19 @@ class BosonicBackend(BaseBosonic):
         if representation == "complex":
             raise NotImplementedError("The complex description of GKP is not implemented")
 
-        if shape != "square":
-            raise NotImplementedError("Only square GKP are implemented for now")
+        if shape not in ["square", "rectangular"]:
+            raise NotImplementedError("Only square and rectangular GKP are implemented.")
+
+        if shape == "square":
+            if alpha != 1:
+                raise ValueError(
+                    "For square GKPs, alpha must be 1. For alpha not equal to "
+                    + "1, use shape='rectangular'."
+                )
 
         theta, phi = state[0], state[1]
 
-        def coeff(peak_loc):
+        def coeff(peak_loc, alpha):
             """Returns the value of the weight for a given peak.
 
             Args:
@@ -605,7 +615,7 @@ class BosonicBackend(BaseBosonic):
             prefactor = np.exp(
                 -np.pi
                 * 0.25
-                * (l ** 2 + m ** 2)
+                * ((l * alpha) ** 2 + (m / alpha) ** 2)
                 * (1 - np.exp(-2 * epsilon))
                 / (1 + np.exp(-2 * epsilon))
             )
@@ -644,7 +654,7 @@ class BosonicBackend(BaseBosonic):
         )
 
         # Calculate the weights for each peak
-        weights = coeff(means)
+        weights = coeff(means, np.sqrt(alpha))
         filt = abs(weights) > ampl_cutoff
         weights = weights[filt]
 
@@ -652,7 +662,11 @@ class BosonicBackend(BaseBosonic):
         # Apply finite energy effect to means
         means = means[filt]
 
+        means[:, 0] *= np.sqrt(alpha)
+        means[:, 1] /= np.sqrt(alpha)
+
         means *= 0.5 * damping * np.sqrt(np.pi * self.circuit.hbar)
+
         # Covariances all the same
         covs = (
             0.5
