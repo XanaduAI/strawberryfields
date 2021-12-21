@@ -557,7 +557,7 @@ class BosonicBackend(BaseBosonic):
             ampl_cutoff (float): this determines how many terms to keep
             representation (str): ``'real'`` or ``'complex'`` reprsentation
             shape (str): shape of the lattice; default 'square'
-            alpha (float): peak spacing in q is given by sqrt(alpha * pi)
+            alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
 
         Returns:
             tuple: arrays of the weights, means and covariances for the state
@@ -586,6 +586,7 @@ class BosonicBackend(BaseBosonic):
 
             Args:
                 peak_loc (array): location of the ideal peak in phase space
+                alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
 
             Returns:
                 float: weight of the peak
@@ -620,7 +621,7 @@ class BosonicBackend(BaseBosonic):
             prefactor = np.exp(
                 -np.pi
                 * 0.25
-                * ((l * alpha) ** 2 + (m / alpha) ** 2)
+                * ((l * np.sqrt(alpha)) ** 2 + (m / np.sqrt(alpha)) ** 2)
                 * (1 - np.exp(-2 * epsilon))
                 / (1 + np.exp(-2 * epsilon))
             )
@@ -659,7 +660,7 @@ class BosonicBackend(BaseBosonic):
         )
 
         # Calculate the weights for each peak
-        weights = coeff(means, np.sqrt(alpha))
+        weights = coeff(means, alpha)
         filt = abs(weights) > ampl_cutoff
         weights = weights[filt]
 

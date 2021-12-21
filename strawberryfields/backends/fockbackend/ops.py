@@ -524,7 +524,7 @@ def gkp_displacements(t, k, epsilon, alpha):
         t (array): the teeth of GKP computational basis
         k (int): a computational basis state label, can be either 0 or 1
         epsilon (float): finite energy parameter of the state
-        alpha (float): peak spacing in q is given by sqrt(alpha * pi)
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
 
     Returns:
         array: the displacements
@@ -541,7 +541,7 @@ def gkp_coeffs(t, k, epsilon, alpha):
         t (array): the teeth of GKP computational basis
         k (int): a computational basis state label, can be either 0 or 1
         epsilon (float): finite energy parameter of the state
-        alpha (float): peak spacing in q is given by sqrt(alpha * pi)
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
 
     Returns:
         array: the coefficients
@@ -558,7 +558,7 @@ def rect_gkp_basis_state(i, epsilon, ampl_cutoff, alpha, cutoff):
         i (int): a computational basis state label, can be either 0 or 1
         epsilon (float): finite energy parameter of the state
         ampl_cutoff (float): this determines how many terms to keep in the Hilbert space expansion
-        alpha (float): peak spacing in q is given by sqrt(alpha * pi)
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
         cutoff (int): Fock space truncation
 
     Returns
@@ -585,7 +585,7 @@ def rect_gkp_state(theta, phi, epsilon, ampl_cutoff, alpha, cutoff):
         phi (float): the longitude with respect to the x-axis in the Bloch sphere
         epsilon (float): finite energy parameter of the state
         ampl_cutoff (float): this determines how many terms to keep
-        alpha (float): peak spacing in q is given by sqrt(alpha * pi)
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
         cutoff (int): Fock space truncation
 
     Returns:

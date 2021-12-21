@@ -949,7 +949,7 @@ class GKP(Preparation):
         cutoff (float): this determines how many terms to keep
         representation (str): ``'real'`` or ``'complex'`` reprsentation
         shape (str): shape of the lattice; default ``'square'``
-        alpha (float): peak spacing in q is given by sqrt(alpha * pi)
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
     """
 
     def __init__(
