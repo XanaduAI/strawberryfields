@@ -130,7 +130,10 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):
         import plotly.graph_objects as go
     except ImportError:
         raise ImportError(plotly_error)
-
+    
+    if (get_ipython().__class__.__name__ != 'ZMQInteractiveShell'):
+        plotly.io.renderers.default = "browser" 
+    
     l = nx.kamada_kawai_layout(g)
 
     g_nodes = go.Scatter(
