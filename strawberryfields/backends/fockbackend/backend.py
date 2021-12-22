@@ -330,7 +330,7 @@ class FockBackend(BaseFock):
             if alpha != 1:
                 raise ValueError(
                     "For square GKPs, alpha must be 1. For alpha not equal to "
-                    + '1, use shape="rectangular".'
+                    + "1, use shape='rectangular'."
                 )
 
         theta, phi = state[0], state[1]
