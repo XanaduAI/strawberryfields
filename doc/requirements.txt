@@ -17,3 +17,4 @@ sphinxcontrib-bibtex==0.4.2
 tensorflow==2.6.1
 thewalrus>=0.17.0
 toml
+mistune==0.8.4

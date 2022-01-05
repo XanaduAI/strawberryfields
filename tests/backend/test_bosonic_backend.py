@@ -662,9 +662,9 @@ class TestBosonicPrograms:
         assert samples_dict == {}
 
         # Check ancilla samples exist for the second mode
-        ancilla_samples = backend.ancillae_samples_dict
-        assert 1 in ancilla_samples.keys()
-        assert len(ancilla_samples[1]) == 2
+        ancillae_samples = backend.ancillae_samples_dict
+        assert 1 in ancillae_samples.keys()
+        assert len(ancillae_samples[1]) == 2
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)

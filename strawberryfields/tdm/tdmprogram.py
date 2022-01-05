@@ -28,6 +28,15 @@ from strawberryfields.parameters import par_is_symbolic
 from strawberryfields.program_utils import CircuitError
 
 
+def is_ptype(name: str) -> bool:
+    """Checks whether a variable name is a p-type variable.
+
+    p-type variables are used with TDM programs to represent a looped-over parameter, and
+    consist of the letter 'p' followed by an integer. For example, 'p0', 'p1', 'p42'.
+    """
+    return len(name) > 1 and name[0] == "p" and name[1:].isdigit()
+
+
 def shift_by(l, n):
     """Convenience function to shift a list by a number of steps.
 

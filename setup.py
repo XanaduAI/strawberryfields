@@ -11,9 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import sys
-
 from setuptools import setup, find_packages
 
 
@@ -31,9 +28,10 @@ requirements = [
     "requests>=2.22.0",
     "scipy>=1.0.0",
     "sympy>=1.5",
-    "thewalrus>=0.17.0",
+    "thewalrus>=0.18.0",
     "toml",
     "urllib3>=1.25.3",
+    "quantum-xir>=0.1.1",
     "xanadu-cloud-client>=0.1.1",
 ]
 
@@ -49,8 +47,8 @@ info = {
                                           "apps/data/sample_data/*"]},
     "include_package_data": True,
     "description": "Open source library for continuous-variable quantum computation",
-    "long_description": open("README.rst", encoding="utf-8").read(),
-    "long_description_content_type": "text/x-rst",
+    "long_description": open("README.md", encoding="utf-8").read(),
+    "long_description_content_type": "text/markdown",
     "provides": ["strawberryfields"],
     "install_requires": requirements,
     "command_options": {
