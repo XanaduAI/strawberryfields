@@ -10,11 +10,18 @@
 
 <h3>Bug fixes</h3>
 
+* `program.compile` now raises an error if the device specification contains gate parameters but no
+  circuit layout. Without a layout, the gate parameters cannot be validated against the device
+  specification.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson
 
 # Release 0.21.0 (current release)
 
@@ -60,11 +67,6 @@ This release contains contributions from (in alphabetical order):
 * The `TDMProgram.compile_info` and `TDMProgram.target` fields are now set when
   a `TDMProgram` is compiled using the "TDM" compiler.
   [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
-
-* `program.compile` now raises an error if the device specification contains gate parameters but no
-  circuit layout. Without a layout, the gate parameters cannot be validated against the device
-  specification.
-  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
 * Updates `Program.assert_max_number_of_measurements` to expect the maximum number
   of measurements from the device specification as a flat dictionary entry instead
