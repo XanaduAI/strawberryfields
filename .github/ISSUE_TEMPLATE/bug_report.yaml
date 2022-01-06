@@ -11,7 +11,7 @@ body:
         Before posting a bug report
       description: |
         Search existing GitHub issues to make sure the issue does not already exist:
-        https://github.com/XanaduAI/starwberryfields/issues
+        https://github.com/XanaduAI/strawberryfields/issues
       options:
         - label: I have searched exisisting GitHub issues to make sure the issue does not already exist.
           required: true
