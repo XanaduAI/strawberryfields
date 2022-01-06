@@ -131,17 +131,17 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):
     except ImportError:
         raise ImportError(plotly_error)
     
-try:
-    in_notebook = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
-except NameError:
-    in_notebook = False
-    
-if not in_notebook:
     try:
-        import plotly.io as pio
-    except ImportError:
-        raise ImportError(plotly_error) from None
-    pio.renderers.default = "browser" 
+        in_notebook = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
+    except NameError:
+        in_notebook = False
+
+    if not in_notebook:
+        try:
+            import plotly.io as pio
+        except ImportError:
+            raise ImportError(plotly_error) from None
+        pio.renderers.default = "browser" 
     
     l = nx.kamada_kawai_layout(g)
 
