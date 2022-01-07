@@ -141,7 +141,7 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):
             import plotly.io as pio
         except ImportError:
             raise ImportError(plotly_error) from None
-        pio.renderers.default = "browser" 
+        pio.renderers.default = "browser"
     
     l = nx.kamada_kawai_layout(g)
 
