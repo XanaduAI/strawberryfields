@@ -10,4 +10,3 @@ sf.plot
 
 .. automodapi:: strawberryfields.plot
     :no-heading:
-    :skip: copy, deepcopy
