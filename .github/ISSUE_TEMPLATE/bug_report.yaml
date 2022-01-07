@@ -60,7 +60,7 @@ body:
     id: source-code-and-tracebacks
     attributes:
       value: |
-        ## source code and tracebacks
+        # Source code and tracebacks
 
         Any additional code snippets and error tracebacks related to the issue?
   - type: textarea
