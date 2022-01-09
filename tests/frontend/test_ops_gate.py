@@ -174,12 +174,22 @@ class TestGKPBasics:
     @pytest.mark.parametrize("ampl", [0, 0.001])
     @pytest.mark.parametrize("eps", [0, 0.001])
     @pytest.mark.parametrize("r", ["real", "complex"])
-    @pytest.mark.parametrize("s", ["square"])
-    def test_gkp_str_representation(self, state, ampl, eps, r, s):
+    @pytest.mark.parametrize("s", ["square", "rectangular"])
+    @pytest.mark.parametrize("alph", [0.8, 1.1])
+    def test_gkp_str_representation(self, state, ampl, eps, r, s, alph):
         """Test the string representation of the GKP operation"""
         assert (
-            str(ops.GKP(state=state, ampl_cutoff=ampl, epsilon=eps, representation=r, shape=s))
-            == f"GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s})"
+            str(
+                ops.GKP(
+                    state=state,
+                    ampl_cutoff=ampl,
+                    epsilon=eps,
+                    representation=r,
+                    shape=s,
+                    alpha=alph,
+                )
+            )
+            == f"GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s}, {str(alph)})"
         )
 
 

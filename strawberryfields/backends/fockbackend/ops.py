@@ -515,7 +515,7 @@ def hermiteVals(q_mag, num_bins, m_omega_over_hbar, trunc):
     return q_tensor, Hvals
 
 
-def gkp_displacements(t, k, epsilon):
+def gkp_displacements(t, k, epsilon, alpha):
     """
     Helper function to generate the displacements parameters associated with the teeth of
     GKP computational basis state k.
@@ -524,14 +524,15 @@ def gkp_displacements(t, k, epsilon):
         t (array): the teeth of GKP computational basis
         k (int): a computational basis state label, can be either 0 or 1
         epsilon (float): finite energy parameter of the state
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
 
     Returns:
         array: the displacements
     """
-    return np.sqrt(0.5 * np.pi) * (2 * t + k) / np.cosh(epsilon)
+    return np.sqrt(0.5 * np.pi * alpha) * (2 * t + k) / np.cosh(epsilon)
 
 
-def gkp_coeffs(t, k, epsilon):
+def gkp_coeffs(t, k, epsilon, alpha):
     """
     Helper function to generate the coefficient parameters associated with the teeth of
     GKP computational basis state k.
@@ -540,22 +541,24 @@ def gkp_coeffs(t, k, epsilon):
         t (array): the teeth of GKP computational basis
         k (int): a computational basis state label, can be either 0 or 1
         epsilon (float): finite energy parameter of the state
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
 
     Returns:
         array: the coefficients
     """
-    return np.exp(-0.5 * np.pi * np.tanh(epsilon) * (k + 2 * t) ** 2)
+    return np.exp(-0.5 * np.pi * alpha * np.tanh(epsilon) * (k + 2 * t) ** 2)
 
 
 @functools.lru_cache()
-def square_gkp_basis_state(i, epsilon, ampl_cutoff, cutoff):
+def rect_gkp_basis_state(i, epsilon, ampl_cutoff, alpha, cutoff):
     """
-    Generate the Fock expansion of a (subnormalized) computational GKP basis state. Normalization occurs in the ``square_gkp_state`` method.
+    Generate the Fock expansion of a (subnormalized) computational GKP basis state. Normalization occurs in the ``rect_gkp_state`` method.
 
     Args:
         i (int): a computational basis state label, can be either 0 or 1
         epsilon (float): finite energy parameter of the state
         ampl_cutoff (float): this determines how many terms to keep in the Hilbert space expansion
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
         cutoff (int): Fock space truncation
 
     Returns
@@ -563,16 +566,16 @@ def square_gkp_basis_state(i, epsilon, ampl_cutoff, cutoff):
 
     """
     z_max = int(np.ceil(np.sqrt(-0.25 / np.pi * np.log(ampl_cutoff) / np.tanh(epsilon))))
-    coeffs = [gkp_coeffs(t, i, epsilon) for t in range(-z_max, z_max + 1)]
+    coeffs = [gkp_coeffs(t, i, epsilon, alpha) for t in range(-z_max, z_max + 1)]
     r = -0.5 * np.log(np.tanh(epsilon))
-    alphas = [gkp_displacements(t, i, epsilon) for t in range(-z_max, z_max + 1)]
-    num_kets = len(alphas)
-    ket = [coeffs[j] * displacedSqueezed(alphas[j], 0, r, 0, cutoff) for j in range(num_kets)]
+    disps = [gkp_displacements(t, i, epsilon, alpha) for t in range(-z_max, z_max + 1)]
+    num_kets = len(disps)
+    ket = [coeffs[j] * displacedSqueezed(disps[j], 0, r, 0, cutoff) for j in range(num_kets)]
     return sum(ket)
 
 
 @functools.lru_cache()
-def square_gkp_state(theta, phi, epsilon, ampl_cutoff, cutoff):
+def rect_gkp_state(theta, phi, epsilon, ampl_cutoff, alpha, cutoff):
     r"""
     Generate the Fock expansion of an abitrary GKP state parametrized as
     :math:`|\psi\rangle = \cos{\tfrac{\theta}{2}} \vert 0 \rangle_{\rm gkp} + e^{-i \phi} \sin{\tfrac{\theta}{2}} \vert 1 \rangle_{\rm gkp}`.
@@ -582,6 +585,7 @@ def square_gkp_state(theta, phi, epsilon, ampl_cutoff, cutoff):
         phi (float): the longitude with respect to the x-axis in the Bloch sphere
         epsilon (float): finite energy parameter of the state
         ampl_cutoff (float): this determines how many terms to keep
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
         cutoff (int): Fock space truncation
 
     Returns:
@@ -589,8 +593,8 @@ def square_gkp_state(theta, phi, epsilon, ampl_cutoff, cutoff):
     """
     qubit_coeff0 = np.cos(theta / 2)
     qubit_coeff1 = np.sin(theta / 2) * np.exp(-1j * phi)
-    ket0 = square_gkp_basis_state(0, epsilon, ampl_cutoff, cutoff)
-    ket1 = square_gkp_basis_state(1, epsilon, ampl_cutoff, cutoff)
+    ket0 = rect_gkp_basis_state(0, epsilon, ampl_cutoff, alpha, cutoff)
+    ket1 = rect_gkp_basis_state(1, epsilon, ampl_cutoff, alpha, cutoff)
     ket = qubit_coeff0 * ket0 + qubit_coeff1 * ket1
     ket /= np.linalg.norm(ket)
     return ket

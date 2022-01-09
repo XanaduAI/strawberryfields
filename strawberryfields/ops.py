@@ -949,14 +949,21 @@ class GKP(Preparation):
         cutoff (float): this determines how many terms to keep
         representation (str): ``'real'`` or ``'complex'`` reprsentation
         shape (str): shape of the lattice; default ``'square'``
+        alpha (float): peak spacing in q is given by sqrt(alpha * pi * hbar)
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", shape="square"
+        self,
+        state=None,
+        epsilon=0.2,
+        ampl_cutoff=1e-12,
+        representation="real",
+        shape="square",
+        alpha=1,
     ):
         if state is None:
             state = [0, 0]
-        super().__init__([state, epsilon, ampl_cutoff, representation, shape])
+        super().__init__([state, epsilon, ampl_cutoff, representation, shape, alpha])
 
     def _apply(self, reg, backend, **kwargs):
         backend.prepare_gkp(*self.p, mode=reg[0])
