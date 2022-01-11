@@ -289,7 +289,9 @@ def points(
         mode="markers",
         hoverinfo="text",
         marker=dict(
-            color=VERY_LIGHT_GREY, size=point_size, line=dict(color="black", width=point_size / 20),
+            color=VERY_LIGHT_GREY,
+            size=point_size,
+            line=dict(color="black", width=point_size / 20),
         ),
     )
 
@@ -309,7 +311,9 @@ def points(
             mode="markers",
             hoverinfo="text",
             marker=dict(
-                color=RED, size=point_size, line=dict(color="black", width=point_size / 20),
+                color=RED,
+                size=point_size,
+                line=dict(color="black", width=point_size / 20),
             ),
         )
 
@@ -379,7 +383,11 @@ def spectrum(
     )
 
     layout = go.Layout(
-        yaxis=dict(title={"text": "Counts", "font": text_font}, **axis_style, rangemode="tozero",),
+        yaxis=dict(
+            title={"text": "Counts", "font": text_font},
+            **axis_style,
+            rangemode="tozero",
+        ),
         xaxis=dict(
             title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font},
             **axis_style,

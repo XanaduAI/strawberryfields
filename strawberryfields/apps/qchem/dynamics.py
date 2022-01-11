@@ -196,7 +196,12 @@ def sample_fock(
 
 
 def sample_tmsv(
-    r: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
+    r: list,
+    t: float,
+    Ul: np.ndarray,
+    w: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
 ) -> list:
     r"""Generate samples for simulating vibrational quantum dynamics with a two-mode squeezed
     vacuum input state.
@@ -273,7 +278,12 @@ def sample_tmsv(
 
 
 def sample_coherent(
-    alpha: list, t: float, Ul: np.ndarray, w: np.ndarray, n_samples: int, loss: float = 0.0,
+    alpha: list,
+    t: float,
+    Ul: np.ndarray,
+    w: np.ndarray,
+    n_samples: int,
+    loss: float = 0.0,
 ) -> list:
     r"""Generate samples for simulating vibrational quantum dynamics with an input coherent state.
 
