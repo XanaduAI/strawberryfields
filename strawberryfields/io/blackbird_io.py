@@ -238,9 +238,7 @@ def to_blackbird(prog: Program, version: str = "1.0") -> blackbird.BlackbirdProg
     if isinstance(prog, TDMProgram):
         bb._type["name"] = "tdm"
         bb._type["options"].update(
-            {
-                "temporal_modes": prog.timebins,
-            }
+            {"temporal_modes": prog.timebins,}
         )
         bb._var.update(
             {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}

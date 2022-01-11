@@ -91,10 +91,7 @@ class Xunitary(Compiler):
     }
 
     decompositions = {
-        "BipartiteGraphEmbed": {
-            "mesh": "rectangular_symmetric",
-            "drop_identity": False,
-        },
+        "BipartiteGraphEmbed": {"mesh": "rectangular_symmetric", "drop_identity": False,},
     }
 
     def compile(self, seq, registers):

@@ -716,10 +716,7 @@ class BosonicModes:
             imag_covs = covs_quad[imag_means_ind]
             # Construct prefactor
             imag_exp_arg = np.einsum(
-                "...j,...jk,...k",
-                imag_means,
-                np.linalg.inv(imag_covs),
-                imag_means,
+                "...j,...jk,...k", imag_means, np.linalg.inv(imag_covs), imag_means,
             )
             imag_prefactor = np.exp(0.5 * imag_exp_arg)
             # Multiply weights by prefactor
@@ -748,10 +745,7 @@ class BosonicModes:
                 # Calculate arguments for the Gaussian functions used to calculate
                 # the exact probability distribution at the sampled point
                 exp_arg = np.einsum(
-                    "...j,...jk,...k",
-                    (diff_sample),
-                    np.linalg.inv(covs_quad),
-                    (diff_sample),
+                    "...j,...jk,...k", (diff_sample), np.linalg.inv(covs_quad), (diff_sample),
                 )
 
                 # Make a copy to calculate the exponential arguments of the

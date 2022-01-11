@@ -848,10 +848,7 @@ class BaseFockState(BaseState):
 
         # determine modes with quadratic expectation values
         nonzero = np.concatenate(
-            [
-                np.mod(A.nonzero()[0], self._modes),
-                np.mod(linear_coeff.nonzero()[0], self._modes),
-            ]
+            [np.mod(A.nonzero()[0], self._modes), np.mod(linear_coeff.nonzero()[0], self._modes),]
         )
         ex_modes = list(set(nonzero))
         num_modes = len(ex_modes)
@@ -1317,12 +1314,7 @@ class BaseGaussianState(BaseState):
 
         if self._pure:
             return twq.state_vector(
-                mu,
-                cov,
-                hbar=self._hbar,
-                normalize=True,
-                cutoff=cutoff,
-                check_purity=False,
+                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False,
             )
 
         return None  # pragma: no cover
@@ -1348,12 +1340,7 @@ class BaseGaussianState(BaseState):
 
         if self.is_pure:
             psi = twq.state_vector(
-                mu,
-                cov,
-                hbar=self._hbar,
-                normalize=True,
-                cutoff=cutoff,
-                check_purity=False,
+                mu, cov, hbar=self._hbar, normalize=True, cutoff=cutoff, check_purity=False,
             )
             rho = np.outer(psi, psi.conj())
             return rho
@@ -1788,20 +1775,11 @@ class BaseBosonicState(BaseState):
         """
         weights, mus, covs = self.reduced_bosonic([mode])
         cov_trace = np.matrix.trace(covs, axis1=1, axis2=2)
-        mean_dots = np.einsum(
-            "...j,...j",
-            mus,
-            mus,
-        )
+        mean_dots = np.einsum("...j,...j", mus, mus,)
         mean = np.sum(weights * (cov_trace + mean_dots)) / (2 * self._hbar) - 0.5
 
         cov_sq_trace = np.matrix.trace(covs @ covs, axis1=1, axis2=2)
-        mean_cov_dots = np.einsum(
-            "...j,...jk,...k",
-            mus,
-            covs,
-            mus,
-        )
+        mean_cov_dots = np.einsum("...j,...jk,...k", mus, covs, mus,)
         var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar ** 2) - 0.25
         var += np.sum(weights * ((cov_trace + mean_dots) / (2 * self._hbar) - 0.5) ** 2)
         var -= mean ** 2

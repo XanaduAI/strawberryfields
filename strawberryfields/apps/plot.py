@@ -95,9 +95,7 @@ graph_node_size = 14
 subgraph_node_size = 16
 
 
-def graph(
-    g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)
-):  # pragma: no cover
+def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):  # pragma: no cover
     """Creates a plot of the input graph.
     This function can plot the input graph only, or the graph with a specified subgraph highlighted.
     Graphs are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1.
@@ -173,9 +171,7 @@ def graph(
             **_node_coords(s, l),
             mode="markers",
             hoverinfo="text",
-            marker=dict(
-                color=subgraph_node_colour, size=subgraph_node_size, line_width=2
-            ),
+            marker=dict(color=subgraph_node_colour, size=subgraph_node_size, line_width=2),
         )
 
         s_nodes.text = [str(i) for i in s.nodes()]
@@ -293,9 +289,7 @@ def points(
         mode="markers",
         hoverinfo="text",
         marker=dict(
-            color=VERY_LIGHT_GREY,
-            size=point_size,
-            line=dict(color="black", width=point_size / 20),
+            color=VERY_LIGHT_GREY, size=point_size, line=dict(color="black", width=point_size / 20),
         ),
     )
 
@@ -315,9 +309,7 @@ def points(
             mode="markers",
             hoverinfo="text",
             marker=dict(
-                color=RED,
-                size=point_size,
-                line=dict(color="black", width=point_size / 20),
+                color=RED, size=point_size, line=dict(color="black", width=point_size / 20),
             ),
         )
 
@@ -387,11 +379,7 @@ def spectrum(
     )
 
     layout = go.Layout(
-        yaxis=dict(
-            title={"text": "Counts", "font": text_font},
-            **axis_style,
-            rangemode="tozero",
-        ),
+        yaxis=dict(title={"text": "Counts", "font": text_font}, **axis_style, rangemode="tozero",),
         xaxis=dict(
             title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font},
             **axis_style,
@@ -403,9 +391,7 @@ def spectrum(
         showlegend=False,
     )
 
-    bars = go.Bar(
-        x=h[1].tolist(), y=h[0].tolist(), width=bar_width, marker=dict(color=GREY)
-    )
+    bars = go.Bar(x=h[1].tolist(), y=h[0].tolist(), width=bar_width, marker=dict(color=GREY))
 
     line = go.Scatter(x=X, y=L, mode="lines", line=dict(color=GREEN, width=line_width))
 

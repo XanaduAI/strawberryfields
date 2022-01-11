@@ -78,18 +78,10 @@ def generate_wigner_chart(state, mode, xvec, pvec, contours=True):
                 "x": [],
                 "y": [],
                 "z": [],
-                "contours": {
-                    "z": {},
-                },
+                "contours": {"z": {},},
             }
         ],
-        "layout": {
-            "scene": {
-                "xaxis": {},
-                "yaxis": {},
-                "zaxis": {},
-            }
-        },
+        "layout": {"scene": {"xaxis": {}, "yaxis": {}, "zaxis": {},}},
     }
 
     chart["data"][0]["type"] = "surface"
@@ -275,16 +267,8 @@ linechart_default = {
         "margin": {"l": 100, "r": 100, "b": 100, "t": 100, "pad": 4},
         "paper_bgcolor": "white",
         "plot_bgcolor": "white",
-        "xaxis": {
-            "gridcolor": textcolor,
-            "autorange": True,
-            "title": "Quadrature value",
-        },
-        "yaxis": {
-            "gridcolor": textcolor,
-            "autorange": True,
-            "title": "Probability",
-        },
+        "xaxis": {"gridcolor": textcolor, "autorange": True, "title": "Quadrature value",},
+        "yaxis": {"gridcolor": textcolor, "autorange": True, "title": "Probability",},
     },
     "config": {
         "modeBarButtonsToRemove": ["lasso2d", "select2d", "toggleSpikelines"],

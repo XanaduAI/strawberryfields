@@ -67,10 +67,8 @@ class FockStateTF(BaseFockState):
         super().__init__(state_data, num_modes, pure, cutoff_dim, mode_names)
         self._batched = batched
         self._dtype = dtype
-        self._str = (
-            "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}, dtype={}>".format(
-                self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar, self._dtype
-            )
+        self._str = "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}, dtype={}>".format(
+            self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar, self._dtype
         )
 
     def trace(self, **kwargs):

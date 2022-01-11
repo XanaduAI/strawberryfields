@@ -510,11 +510,7 @@ class BosonicBackend(BaseBosonic):
 
         # computing the means array
         means = np.concatenate(
-            (
-                np.reshape(x_means, (-1, 1)),
-                np.reshape(p_means, (-1, 1)),
-            ),
-            axis=1,
+            (np.reshape(x_means, (-1, 1)), np.reshape(p_means, (-1, 1)),), axis=1,
         )
         means *= num_mean / denom_mean
         means_real = np.sqrt(2 * hbar) * np.array([[a, 0], [-a, 0]], dtype=float)
@@ -593,16 +589,14 @@ class BosonicBackend(BaseBosonic):
             t -= np.logical_and(l % 4 % 2 == 1, m % 4 == 2) * np.sin(theta) * np.cos(phi)
             t -= (
                 np.logical_or(
-                    np.logical_and(l % 4 == 3, m % 4 == 3),
-                    np.logical_and(l % 4 == 1, m % 4 == 1),
+                    np.logical_and(l % 4 == 3, m % 4 == 3), np.logical_and(l % 4 == 1, m % 4 == 1),
                 )
                 * np.sin(theta)
                 * np.sin(phi)
             )
             t += (
                 np.logical_or(
-                    np.logical_and(l % 4 == 3, m % 4 == 1),
-                    np.logical_and(l % 4 == 1, m % 4 == 3),
+                    np.logical_and(l % 4 == 3, m % 4 == 1), np.logical_and(l % 4 == 1, m % 4 == 3),
                 )
                 * np.sin(theta)
                 * np.sin(phi)
@@ -633,8 +627,7 @@ class BosonicBackend(BaseBosonic):
 
         # Create set of means before finite energy effects
         means_gen = it.tee(
-            it.starmap(lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)),
-            2,
+            it.starmap(lambda l, m: l + 1j * m, it.product(range(-z_max, z_max + 1), repeat=2)), 2,
         )
         means = np.concatenate(
             (
