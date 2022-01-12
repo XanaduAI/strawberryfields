@@ -5,12 +5,16 @@
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
+* Makes it possible to show the graphs when not running as a notebook.
+  [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
 
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Hossein Seifoory
 
 # Release 0.21.0 (current release)
 
