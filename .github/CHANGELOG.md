@@ -5,7 +5,7 @@
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
-* Makes it possible to show the graphs when not running as a notebook.
+* It's now possible to show graphs using the plot apps layer when not run in notebooks.
   [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
 
 <h3>Documentation</h3>
