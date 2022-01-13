@@ -605,7 +605,7 @@ class TestValidation:
     def test_run_optimizations(self):
         """Test that circuit is optimized when optimize is True"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
 
             interactive = True
@@ -627,7 +627,7 @@ class TestValidation:
             ops.Rgate(0.4) | q[0]
 
         new_prog = prog.compile(
-            compiler=DummyCircuit(),
+            compiler=DummyCompiler(),
             optimize=True,
         )
         assert new_prog.circuit[0].__str__() == "Rgate(0.7) | (q[0])"
@@ -653,7 +653,7 @@ class TestValidation:
             },
         }
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
 
             interactive = True
@@ -669,7 +669,7 @@ class TestValidation:
         with pytest.raises(ValueError, match="has invalid value"):
             new_prog = prog.compile(
                 device=spec,
-                compiler=DummyCircuit(),
+                compiler=DummyCompiler(),
             )
 
     def test_missing_layout(self):
@@ -700,10 +700,11 @@ class TestValidation:
         with pytest.raises(ValueError, match="missing a circuit layout"):
             new_prog = prog.compile(
                 device=spec,
-                compiler=DummyCircuit(),
+                compiler=DummyCompiler(),
             )
 
-    def test_missing_gate_parameters(self):
+    @pytest.mark.parametrize("gate_params", [None, {}])
+    def test_missing_gate_parameters(self, gate_params):
         """Test that an error is raised if the device spec is missing gate parameters when compiled"""
         mock_layout = textwrap.dedent(
             """\
@@ -719,7 +720,7 @@ class TestValidation:
             "layout": mock_layout,
             "modes": 2,
             "compiler": ["DummyCompiler"],
-            "gate_parameters": None,  # no gate_parameters, so any value is valid
+            "gate_parameters": gate_params,  # no gate_parameters, so any value is valid
         }
 
         class DummyCompiler(Compiler):
@@ -737,11 +738,11 @@ class TestValidation:
 
         new_prog = prog.compile(
             device=spec,
-            compiler=DummyCircuit(),
+            compiler=DummyCompiler(),
         )
 
         assert len(new_prog) == 1
-        assert spec.gate_parameters is None
+        assert spec.gate_parameters == gate_params
 
         # test gates are correct
         circuit = new_prog.circuit
@@ -751,7 +752,7 @@ class TestValidation:
         """Test that no decompositions take
         place if the circuit spec doesn't support it."""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit spec with no decompositions"""
 
             modes = None
@@ -768,7 +769,7 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
             ops.MZgate(0.1, 0.6) | [q[0], q[1]]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # check compiled program only has three gates
         assert len(new_prog) == 3
@@ -783,7 +784,7 @@ class TestValidation:
         """Test that S2gate decomposition take
         place if the circuit spec requests it."""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -797,7 +798,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # check compiled program now has 5 gates
         # the S2gate should decompose into two BS and two Sgates
@@ -815,7 +816,7 @@ class TestValidation:
         """Test that decompositions take
         place if the circuit spec requests it."""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -829,7 +830,7 @@ class TestValidation:
             ops.MZgate(0.6, 0.7) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # check compiled program now has 5 gates
         # the MZgate should decompose into two BS and two Rgates
@@ -847,7 +848,7 @@ class TestValidation:
         """Test that an exception is raised if the circuit spec
         requests a decomposition that doesn't exist"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -862,7 +863,7 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
 
         with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
-            new_prog = prog.compile(compiler=DummyCircuit())
+            new_prog = prog.compile(compiler=DummyCompiler())
 
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
@@ -928,7 +929,7 @@ class TestValidation:
     def test_topology_validation(self):
         """Test compilation properly matches the circuit spec topology"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -960,7 +961,7 @@ class TestValidation:
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # no exception should be raised; topology correctly validated
         assert len(new_prog) == 5
@@ -968,7 +969,7 @@ class TestValidation:
     def test_invalid_topology(self):
         """Test compilation raises exception if toplogy not matched"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -1002,7 +1003,7 @@ class TestValidation:
             ops.MeasureFock() | q[0]
 
         with pytest.raises(program.CircuitError, match="incompatible topology"):
-            new_prog = prog.compile(compiler=DummyCircuit())
+            new_prog = prog.compile(compiler=DummyCompiler())
 
 
 class TestGBS:
