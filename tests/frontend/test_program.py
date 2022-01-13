@@ -684,7 +684,7 @@ class TestValidation:
             },
         }
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
 
             interactive = True
@@ -722,7 +722,7 @@ class TestValidation:
             "gate_parameters": None,  # no gate_parameters, so any value is valid
         }
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
 
             interactive = True

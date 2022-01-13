@@ -89,7 +89,7 @@ class DeviceSpec:
         >>> spec.gate_parameters
         {'squeezing_amplitude_0': x=0, x=1, 'phase_0': x=0, 0≤x≤6.283185307179586}
         """
-        if not self._spec["gate_parameters"]:
+        if self._spec["gate_parameters"] is None:
             return None
 
         gate_parameters = {}
