@@ -667,7 +667,7 @@ class TestValidation:
             ops.S2gate(1.5) | q  # invalid value 1.5
 
         with pytest.raises(ValueError, match="has invalid value"):
-            new_prog = prog.compile(
+            prog.compile(
                 device=spec,
                 compiler=DummyCompiler(),
             )

@@ -166,3 +166,26 @@ class TestDeviceSpec:
             ValueError, match=r"missing the following keys: \['gate_parameters', 'layout'\]"
         ):
             DeviceSpec(spec=invalid_spec)
+
+    @pytest.mark.parametrize("params", [
+        {"phase_0": 1.23},
+        {"phase_0": 0},
+        {"phase_0": 6.29999},
+    ])
+    def test_valid_parameters(self, params):
+        """Test that valid parameters pass the validate_parameters validation"""
+        DeviceSpec(spec=device_dict).validate_parameters(**params)
+
+    def test_invalid_parameter(self):
+        """Test that invalid parameter names raise an error in validate_parameters"""
+        with pytest.raises(
+            ValueError, match=r"not a valid parameter for this device"
+        ):
+            DeviceSpec(spec=device_dict).validate_parameters(phase_42=0)
+
+    def test_invalid_parameters_value(self):
+        """Test that invalid parameter values raise an error in validate_parameters"""
+        with pytest.raises(
+            ValueError, match=r"has invalid value"
+        ):
+            DeviceSpec(spec=device_dict).validate_parameters(phase_0=123)
