@@ -167,25 +167,45 @@ class TestDeviceSpec:
         ):
             DeviceSpec(spec=invalid_spec)
 
-    @pytest.mark.parametrize("params", [
-        {"phase_0": 1.23},
-        {"phase_0": 0},
-        {"phase_0": 6.29999},
-    ])
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"phase_0": 1.23},
+            {"phase_0": 0},
+            {"phase_0": 6.29999},
+        ],
+    )
     def test_valid_parameters(self, params):
         """Test that valid parameters pass the validate_parameters validation"""
         DeviceSpec(spec=device_dict).validate_parameters(**params)
 
     def test_invalid_parameter(self):
         """Test that invalid parameter names raise an error in validate_parameters"""
-        with pytest.raises(
-            ValueError, match=r"not a valid parameter for this device"
-        ):
+        with pytest.raises(ValueError, match=r"not a valid parameter for this device"):
             DeviceSpec(spec=device_dict).validate_parameters(phase_42=0)
 
     def test_invalid_parameters_value(self):
         """Test that invalid parameter values raise an error in validate_parameters"""
-        with pytest.raises(
-            ValueError, match=r"has invalid value"
-        ):
+        with pytest.raises(ValueError, match=r"has invalid value"):
             DeviceSpec(spec=device_dict).validate_parameters(phase_0=123)
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"phase_0": 1.23},
+            {"phase_0": 0},
+            {"phase_0": 6.29999},
+            {"phase_0": 123},
+            {"phase_42": 123},
+        ],
+    )
+    def test_gate_parameters_none(self, params):
+        """Test that any parameters a valid when gate_parameters is None"""
+        device_dict = {
+            "target": "abc",
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["Xcov"],
+            "gate_parameters": None,
+        }
+        DeviceSpec(spec=device_dict).validate_parameters(**params)
