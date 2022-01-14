@@ -109,7 +109,7 @@ class DeviceSpec:
         Raises:
             ValueError: if an invalid parameter is passed
         """
-        if not self.gate_parameters:
+        if self.gate_parameters is None:
             return
 
         # check that all provided parameters are valid
