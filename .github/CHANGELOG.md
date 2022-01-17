@@ -2,11 +2,20 @@
 
 <h3>New features since last release</h3>
 
+* `DeviceSpec.layout` and `DeviceSpec.gate_parameters` may now return `None`. This can happen
+  when a remote simulator device is used.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
 * It's now possible to show graphs using the plot apps layer when not run in notebooks.
   [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
+
+* `program.compile` now raises an error if the device specification contains gate parameters but no
+  circuit layout. Without a layout, the gate parameters cannot be validated against the device
+  specification.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
 <h3>Documentation</h3>
 
@@ -14,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Hossein Seifoory
+Theodor Isacsson, Hossein Seifoory
 
 # Release 0.21.0 (current release)
 
@@ -496,7 +505,7 @@ Quesada, Antal Száva, Yuan Yao.
   modes = 4
   cutoff_dim = 6
 
-  # prepare an intial state with 4 photons in as many modes
+  # prepare an initial state with 4 photons in as many modes
   initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
   initial_state[1, 1, 1, 1] = 1
 
@@ -588,7 +597,7 @@ Quesada, Antal Száva, Yuan Yao.
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
-* Speed improvements are addded to ``gaussian_unitary`` compiler.
+* Speed improvements are added to ``gaussian_unitary`` compiler.
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
 * Adds native support in the Fock backend for the MZgate.
