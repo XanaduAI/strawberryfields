@@ -121,6 +121,24 @@ class TestDeviceSpec:
         assert prog.circuit
         assert [str(cmd) for cmd in prog.circuit] == circuit
 
+    def test_create_program_no_layout(self):
+        """Test that the program creation raises an error if the device spec contains no layout"""
+
+        params = {"phase_0": 1.23}
+        device_dict_no_layout = {
+            "target": "abc",
+            "layout": None,
+            "modes": 2,
+            "compiler": ["Xcov"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+                "phase_0": [0, [0, 6.3]],
+                "phase_1": [[0.5, 1.4]],
+            },
+        }
+        with pytest.raises(ValueError, match="missing a circuit layout"):
+            DeviceSpec(spec=device_dict_no_layout).create_program(**params)
+
     @pytest.mark.parametrize(
         "params", [{"phase_0": 7.5}, {"phase_1": 0.4}, {"squeezing_amplitude_0": 0.5}]
     )
@@ -148,3 +166,46 @@ class TestDeviceSpec:
             ValueError, match=r"missing the following keys: \['gate_parameters', 'layout'\]"
         ):
             DeviceSpec(spec=invalid_spec)
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"phase_0": 1.23},
+            {"phase_0": 0},
+            {"phase_0": 6.29999},
+        ],
+    )
+    def test_valid_parameters(self, params):
+        """Test that valid parameters pass the validate_parameters validation"""
+        DeviceSpec(spec=device_dict).validate_parameters(**params)
+
+    def test_invalid_parameter(self):
+        """Test that invalid parameter names raise an error in validate_parameters"""
+        with pytest.raises(ValueError, match=r"not a valid parameter for this device"):
+            DeviceSpec(spec=device_dict).validate_parameters(phase_42=0)
+
+    def test_invalid_parameters_value(self):
+        """Test that invalid parameter values raise an error in validate_parameters"""
+        with pytest.raises(ValueError, match=r"has invalid value"):
+            DeviceSpec(spec=device_dict).validate_parameters(phase_0=123)
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"phase_0": 1.23},
+            {"phase_0": 0},
+            {"phase_0": 6.29999},
+            {"phase_0": 123},
+            {"phase_42": 123},
+        ],
+    )
+    def test_gate_parameters_none(self, params):
+        """Test that any parameters a valid when gate_parameters is None"""
+        device_dict = {
+            "target": "abc",
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["Xcov"],
+            "gate_parameters": None,
+        }
+        DeviceSpec(spec=device_dict).validate_parameters(**params)

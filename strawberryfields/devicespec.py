@@ -15,7 +15,7 @@
 This module contains a class that represents the specifications of
 a device available via the API.
 """
-from typing import Sequence, Mapping, Any
+from typing import Sequence, Mapping, Any, Optional
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
@@ -52,7 +52,7 @@ class DeviceSpec:
         return self._spec["target"]
 
     @property
-    def layout(self) -> str:
+    def layout(self) -> Optional[str]:
         """str: Returns a string containing the Blackbird circuit layout."""
         return self._spec["layout"]
 
@@ -78,7 +78,7 @@ class DeviceSpec:
         return "Xunitary"
 
     @property
-    def gate_parameters(self) -> Mapping[str, Ranges]:
+    def gate_parameters(self) -> Optional[Mapping[str, Ranges]]:
         """dict[str, strawberryfields.compilers.Ranges]: A dictionary of gate parameters
         and allowed ranges.
 
@@ -89,8 +89,10 @@ class DeviceSpec:
         >>> spec.gate_parameters
         {'squeezing_amplitude_0': x=0, x=1, 'phase_0': x=0, 0≤x≤6.283185307179586}
         """
-        gate_parameters = {}
+        if self._spec["gate_parameters"] is None:
+            return None
 
+        gate_parameters = {}
         for gate_name, param_ranges in self._spec["gate_parameters"].items():
             # convert gate parameter allowed ranges to Range objects
             range_list = [[i] if not isinstance(i, Sequence) else i for i in param_ranges]
@@ -107,6 +109,9 @@ class DeviceSpec:
         Raises:
             ValueError: if an invalid parameter is passed
         """
+        if self.gate_parameters is None:
+            return
+
         # check that all provided parameters are valid
         for p, v in parameters.items():
             if p in self.gate_parameters and v not in self.gate_parameters[p]:
@@ -141,19 +146,23 @@ class DeviceSpec:
         Returns:
             strawberryfields.program.Program: program compiled to the device
         """
+        if not self.layout:
+            raise ValueError("Cannot create program. Specification is missing a circuit layout.")
+
         try:
             bb = blackbird.loads(self.layout)
         except BlackbirdSyntaxError as e:
             raise BlackbirdSyntaxError("Layout is not formatted correctly.") from e
         self.validate_parameters(**parameters)
 
-        # determine parameter value if not provided
-        extra_params = set(self.gate_parameters) - set(parameters)
+        if self.gate_parameters:
+            # determine parameter value if not provided
+            extra_params = set(self.gate_parameters) - set(parameters)
 
-        for p in extra_params:
-            # Set parameter value as the first allowed
-            # value in the gate parameters dictionary.
-            parameters[p] = self.gate_parameters[p].ranges[0].x
+            for p in extra_params:
+                # Set parameter value as the first allowed
+                # value in the gate parameters dictionary.
+                parameters[p] = self.gate_parameters[p].ranges[0].x
 
         # evaluate the blackbird template
         bb = bb(**parameters)
