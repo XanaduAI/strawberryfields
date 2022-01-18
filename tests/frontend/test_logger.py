@@ -120,7 +120,7 @@ class TestLoggerIntegration:
     """Tests that the SF logger integrates well with user defined logging
     configurations."""
 
-    def test_custom_configuration_without_sf_logger(self, tmpdir, caplog):
+    def test_custom_configuration_without_sf_logger(self, tmpdir):
         """Tests that if there was no SF logger created, custom logging
         configurations work as expected and no configuration details were set
         incorrectly."""
@@ -134,17 +134,17 @@ class TestLoggerIntegration:
         assert "A log entry." in test_file.read()
 
     @pytest.mark.parametrize("module", modules_contain_logging)
-    def test_default_sf_logger(self, module, capsys):
+    def test_default_sf_logger(self, module):
         """Tests that stderr is set for the SF logger by default as stream if
         there were not other configurations made."""
-        level = logging.DEBUG
 
         logger = create_logger(module.__name__)
         assert len(logger.handlers) == 1
-        assert logger.handlers[0].stream.name == "<stderr>"
+        # checks if stream is stderr (stream name for stderr is 8 or 9, whereas stdout 6 or 7)
+        assert logger.handlers[0].stream.fileno() in [8, 9]
 
     @pytest.mark.parametrize("module", modules_contain_logging)
-    def test_custom_logger_before_sf_logger_with_higher_level(self, module, tmpdir, caplog):
+    def test_custom_logger_before_sf_logger_with_higher_level(self, module):
         """Tests that a custom logger created before an SF logger will define
         the level for logging as expected and the SF logger does not overwrite
         the user configuration.
@@ -158,10 +158,10 @@ class TestLoggerIntegration:
         custom_level = logging.DEBUG
         sf_level = logging.WARNING
 
-        logger = logging.getLogger(module.__name__)
+        logger = logging.getLogger()
         logging.basicConfig(level=custom_level)
 
-        sf_logger = create_logger(module.__name__, level=sf_level)
+        _ = create_logger(module.__name__, level=sf_level)
 
         assert logging_handler_defined(logger)
         assert logger.getEffectiveLevel() == custom_level
