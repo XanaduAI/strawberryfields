@@ -15,7 +15,7 @@
   specification.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
   
-* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now ϕ=0 instead of ϕ=π/2) for the phase shift of the beam     splitters.
+* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0` instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
 <h3>Documentation</h3>
