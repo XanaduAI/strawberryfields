@@ -45,12 +45,11 @@ https://github.com/pallets/flask/blob/master/tests/test_logging.py
 """
 
 import logging
-
 import pytest
-
 import strawberryfields.engine as engine
-
 from strawberryfields.logger import logging_handler_defined, default_handler, create_logger
+
+pytestmark = pytest.mark.frontend
 
 modules_contain_logging = [engine]
 
