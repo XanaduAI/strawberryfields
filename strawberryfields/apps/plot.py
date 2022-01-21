@@ -13,6 +13,7 @@
 # limitations under the License.
 r"""
 Tools for visualizing graphs, subgraphs, point processes, and vibronic spectra.
+
 Visualization requires installation of the Plotly library, which is not a dependency of
 Strawberry Fields. Plotly can be installed using ``pip install plotly`` or by visiting their
 `installation instructions <https://plot.ly/python/getting-started/#installation>`__.
@@ -26,11 +27,13 @@ import numpy as np
 
 def _node_coords(g: nx.Graph, l: dict) -> Tuple:
     """Converts coordinates for the graph nodes for plotting purposes.
+
     Args:
         g (nx.Graph): input graph
         l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
             generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
             reference/drawing.html#module-networkx.drawing.layout>`__
+
     Returns:
          dict[str, list]: lists of x and y coordinates accessed as keys of a dictionary
     """
@@ -46,11 +49,13 @@ def _node_coords(g: nx.Graph, l: dict) -> Tuple:
 
 def _edge_coords(g: nx.Graph, l: dict) -> dict:
     """Converts coordinates for the graph edges for plotting purposes.
+
     Args:
         g (nx.Graph): input graph
         l (dict[int, float]): Dictionary of nodes and their respective coordinates. Can be
             generated using a NetworkX `layout <https://networkx.github.io/documentation/latest/
             reference/drawing.html#module-networkx.drawing.layout>`__
+
     Returns:
          dict[str, list]: lists of x and y coordinates for the beginning and end of each edge.
          ``None`` is placed as a separator between pairs of nodes/edges.
@@ -97,21 +102,27 @@ subgraph_node_size = 16
 
 def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):  # pragma: no cover
     """Creates a plot of the input graph.
+
     This function can plot the input graph only, or the graph with a specified subgraph highlighted.
     Graphs are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1.
+
     **Example usage:**
+
     >>> graph = nx.complete_graph(10)
     >>> fig = plot.graph(graph, [0, 1, 2, 3])
     >>> fig.show()
+
     .. image:: ../../_static/complete_graph.png
        :width: 40%
        :align: center
        :target: javascript:void(0);
+
     Args:
         g (nx.Graph): input graph
         s (list): optional list of nodes comprising the subgraph to highlight
         plot_size (int): size of the plot in pixels, given as a pair of integers ``(x_size,
             y_size)``
+
     Returns:
          Figure: figure for graph and optionally highlighted subgraph
     """
@@ -120,6 +131,7 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):
         import plotly.io as pio
     except ImportError:
         raise ImportError(plotly_error)
+
     try:
         in_notebook = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
     except NameError:
@@ -186,20 +198,26 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):
 
 def subgraph(s: nx.Graph, plot_size: Tuple = (500, 500)):  # pragma: no cover
     """Creates a plot of the input subgraph.
+
     Subgraphs are plotted using the Kamada-Kawai layout with an aspect ratio of 1:1.
+
     **Example usage:**
+
     >>> graph = nx.complete_graph(10)
     >>> subgraph = graph.subgraph([0, 1, 2, 3])
     >>> fig = plot.subgraph(subgraph)
     >>> fig.show()
+
     .. image:: ../../_static/complete_subgraph.png
        :width: 40%
        :align: center
        :target: javascript:void(0);
+
     Args:
         s (nx.Graph): input subgraph
         plot_size (int): size of the plot in pixels, given as a pair of integers ``(x_size,
             y_size)``
+
     Returns:
          Figure: figure for subgraph
     """
@@ -250,20 +268,25 @@ def points(
 ):  # pragma: no cover
     """Creates a plot of two-dimensional points given their input coordinates. Sampled
     points can be optionally highlighted among all points.
+
     **Example usage:**
+
     >>> R = np.random.normal(0, 1, (50, 2))
     >>> sample = [1] * 10 + [0] * 40  # select first ten points
     >>> plot.points(R, sample).show()
+
     .. image:: ../../_static/normal_pp.png
        :width: 40%
        :align: center
        :target: javascript:void(0);
+
     Args:
         R (np.array): Coordinate matrix. Rows of this array are the coordinates of the points.
         sample (list[int]): optional subset of sampled points to be highlighted
         plot_size (int): size of the plot in pixels, given as a pair of integers ``(x_size,
             y_size)``
         point_size (int): size of the points, proportional to its radius
+
     Returns:
          Figure: figure of points with optionally highlighted sample
     """
@@ -289,9 +312,7 @@ def points(
         mode="markers",
         hoverinfo="text",
         marker=dict(
-            color=VERY_LIGHT_GREY,
-            size=point_size,
-            line=dict(color="black", width=point_size / 20),
+            color=VERY_LIGHT_GREY, size=point_size, line=dict(color="black", width=point_size / 20)
         ),
     )
 
@@ -311,9 +332,7 @@ def points(
             mode="markers",
             hoverinfo="text",
             marker=dict(
-                color=RED,
-                size=point_size,
-                line=dict(color="black", width=point_size / 20),
+                color=RED, size=point_size, line=dict(color="black", width=point_size / 20)
             ),
         )
 
@@ -331,20 +350,25 @@ def spectrum(
     energies: list, gamma: float = 100.0, xmin: float = None, xmax: float = None
 ):  # pragma: no cover
     """Plots a vibronic spectrum based on input sampled energies.
+
     **Example usage:**
+
     >>> formic = data.Formic()
     >>> e = qchem.vibronic.energies(formic, formic.w, formic.wp)
     >>> full_spectrum = plot.spectrum(e, xmin=-1000, xmax=8000)
     >>> full_spectrum.show()
+
     .. image:: ../../_static/formic_spectrum.png
        :width: 50%
        :align: center
        :target: javascript:void(0);
+
     Args:
         energies (list[float]): a list of sampled energies
         gamma (float): parameter specifying the width of the Lorentzian function
         xmin (float): minimum limit of the x axis
         xmax (float): maximum limit of the x axis
+
     Returns:
          Figure: spectrum in the form of a histogram of energies with a Lorentzian-like curve
     """
@@ -383,11 +407,7 @@ def spectrum(
     )
 
     layout = go.Layout(
-        yaxis=dict(
-            title={"text": "Counts", "font": text_font},
-            **axis_style,
-            rangemode="tozero",
-        ),
+        yaxis=dict(title={"text": "Counts", "font": text_font}, **axis_style, rangemode="tozero"),
         xaxis=dict(
             title={"text": "Energy (cm<sup>-1</sup>)", "font": text_font},
             **axis_style,
