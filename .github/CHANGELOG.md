@@ -14,6 +14,9 @@
   circuit layout. Without a layout, the gate parameters cannot be validated against the device
   specification.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+  
+* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0` instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
+  [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
 <h3>Documentation</h3>
 
@@ -21,7 +24,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson
+Theodor Isacsson, Jon Schlipf
 
 # Release 0.21.0 (current release)
 

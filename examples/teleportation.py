@@ -29,7 +29,7 @@ with prog.context as q:
     Squeezed(2) | q[2]
 
     # apply gates
-    BS = BSgate(pi / 4, pi)
+    BS = BSgate(pi / 4, 0)
     BS | (q[1], q[2])
     BS | (q[0], q[1])
 
