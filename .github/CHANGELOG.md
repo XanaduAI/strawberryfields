@@ -9,6 +9,7 @@
 <h3>Breaking Changes</h3>
 
 <h3>Bug fixes</h3>
+
 * It's now possible to show graphs using the plot apps layer when not run in notebooks.
   [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
 
@@ -16,6 +17,9 @@
   circuit layout. Without a layout, the gate parameters cannot be validated against the device
   specification.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+  
+* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0` instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
+  [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
 <h3>Documentation</h3>
 
@@ -23,7 +27,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Hossein Seifoory
+Theodor Isacsson, Jon Schlipf, Hossein Seifoory
 
 # Release 0.21.0 (current release)
 
