@@ -10,6 +10,9 @@
 
 <h3>Bug fixes</h3>
 
+* It's now possible to show graphs using the plot apps layer when not run in notebooks.
+  [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
+
 * `program.compile` now raises an error if the device specification contains gate parameters but no
   circuit layout. Without a layout, the gate parameters cannot be validated against the device
   specification.
@@ -24,7 +27,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Jon Schlipf
+Theodor Isacsson, Jon Schlipf, Hossein Seifoory
 
 # Release 0.21.0 (current release)
 
