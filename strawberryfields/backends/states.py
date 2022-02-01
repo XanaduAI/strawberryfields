@@ -654,7 +654,7 @@ class BaseFockState(BaseState):
         n = np.arange(self._cutoff)
         probs = np.diagonal(self.reduced_dm(mode))
         mean = np.sum(n * probs).real
-        var = np.sum(n ** 2 * probs).real - mean ** 2
+        var = np.sum(n**2 * probs).real - mean**2
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
@@ -794,7 +794,7 @@ class BaseFockState(BaseState):
         rho = self.reduced_dm(mode)
 
         mean = np.trace(np.dot(xphi, rho)).real
-        var = np.trace(np.dot(xphisq, rho)).real - mean ** 2
+        var = np.trace(np.dot(xphisq, rho)).real - mean**2
 
         return mean, var
 
@@ -935,7 +935,7 @@ class BaseFockState(BaseState):
         mean = np.einsum(ind, poly_op, rho).real
 
         # calculate variance Tr(Op^2 @ rho) - Tr(Op @ rho)^2
-        var = np.einsum(ind, poly_op_sq, rho).real - mean ** 2
+        var = np.einsum(ind, poly_op_sq, rho).real - mean**2
 
         return mean, var
 
@@ -971,7 +971,7 @@ class BaseFockState(BaseState):
         cutoff = self._cutoff
         values = np.arange(cutoff)
         mean = self.diagonal_expectation(modes, values)
-        var = self.diagonal_expectation(modes, values ** 2) - mean ** 2
+        var = self.diagonal_expectation(modes, values**2) - mean**2
         return mean, var
 
     def parity_expectation(self, modes):
@@ -1295,7 +1295,7 @@ class BaseGaussianState(BaseState):
 
         mean = twq.photon_number_expectation(mu, cov, modes, hbar=self._hbar).real
         mean2 = twq.photon_number_squared_expectation(mu, cov, modes, hbar=self._hbar).real
-        var = mean2 - mean ** 2
+        var = mean2 - mean**2
 
         return mean, var
 
@@ -1363,7 +1363,7 @@ class BaseGaussianState(BaseState):
     def mean_photon(self, mode, **kwargs):
         mu, cov = self.reduced_gaussian([mode])
         mean = (np.trace(cov) + mu.T @ mu) / (2 * self._hbar) - 1 / 2
-        var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar ** 2) - 1 / 4
+        var = (np.trace(cov @ cov) + 2 * mu.T @ cov @ mu) / (2 * self._hbar**2) - 1 / 4
         return mean, var
 
     def fidelity(self, other_state, mode, **kwargs):
@@ -1528,7 +1528,7 @@ class BaseBosonicState(BaseState):
             prefactor = 1 / (np.sqrt(np.linalg.det((self._covs + self._covs[i]))))
             pur += np.sum((self._weights * weight_i * prefactor) * np.exp(-0.5 * exp_arg))
 
-        pur *= self._hbar ** self.num_modes
+        pur *= self._hbar**self.num_modes
         return pur
 
     def reduced_bosonic(self, modes):
@@ -1802,9 +1802,9 @@ class BaseBosonicState(BaseState):
             covs,
             mus,
         )
-        var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar ** 2) - 0.25
+        var = np.sum(weights * (cov_sq_trace + 2 * mean_cov_dots)) / (2 * self._hbar**2) - 0.25
         var += np.sum(weights * ((cov_trace + mean_dots) / (2 * self._hbar) - 0.5) ** 2)
-        var -= mean ** 2
+        var -= mean**2
         mean = np.real_if_close(mean)
         var = np.real_if_close(var)
 

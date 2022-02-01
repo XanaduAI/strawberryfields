@@ -203,7 +203,7 @@ class TestFockRepresentation:
             numer_state = s.dm()
         n = np.arange(cutoff)
         ref_state = (
-            np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha ** n / np.sqrt(factorial(n))
+            np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha**n / np.sqrt(factorial(n))
         )
         ref_state = np.outer(ref_state, np.conj(ref_state))
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)

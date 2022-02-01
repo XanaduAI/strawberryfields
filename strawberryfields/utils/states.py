@@ -119,7 +119,7 @@ def coherent_state(r, phi, basis="fock", fock_dim=5, hbar=2.0):
 
     if basis == "fock":
         state = np.array(
-            [np.exp(-0.5 * r ** 2) * a ** n / np.sqrt(fac(n)) for n in range(fock_dim)]
+            [np.exp(-0.5 * r**2) * a**n / np.sqrt(fac(n)) for n in range(fock_dim)]
         )
 
     elif basis == "gaussian":
@@ -172,7 +172,7 @@ def squeezed_state(r, p, basis="fock", fock_dim=5, hbar=2.0):
 
         def ket(n):
             """Squeezed state kets"""
-            return (np.sqrt(fac(2 * n)) / (2 ** n * fac(n))) * (-np.exp(1j * phi) * np.tanh(r)) ** n
+            return (np.sqrt(fac(2 * n)) / (2**n * fac(n))) * (-np.exp(1j * phi) * np.tanh(r)) ** n
 
         state = np.array([ket(n // 2) if n % 2 == 0 else 0.0 for n in range(fock_dim)])
         state *= np.sqrt(1 / np.cosh(r))
@@ -309,12 +309,12 @@ def cat_state(a, phi=0, p=0, fock_dim=5):
     theta = np.pi * p
 
     # normalisation constant
-    temp = np.exp(-0.5 * a ** 2)
-    N = temp / np.sqrt(2 * (1 + np.cos(theta) * temp ** 4))
+    temp = np.exp(-0.5 * a**2)
+    N = temp / np.sqrt(2 * (1 + np.cos(theta) * temp**4))
 
     # coherent states
     k = np.arange(fock_dim)
-    c1 = (alpha ** k) / np.sqrt(fac(k))
+    c1 = (alpha**k) / np.sqrt(fac(k))
     c2 = ((-alpha) ** k) / np.sqrt(fac(k))
 
     # add them up with a relative phase

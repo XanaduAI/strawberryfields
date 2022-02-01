@@ -385,15 +385,15 @@ class Circuit:
             n_modes = len(modes)
             if input_state_is_pure:
                 input_is_batched = len(state.shape) > n_modes or (
-                    len(state.shape) == 2 and state.shape[1] == self._cutoff_dim ** n_modes
+                    len(state.shape) == 2 and state.shape[1] == self._cutoff_dim**n_modes
                 )
             else:
                 input_is_batched = len(state.shape) % 2 == 1
 
             pure_shape = tuple([self._cutoff_dim] * n_modes)
             mixed_shape = tuple([self._cutoff_dim] * (2 * n_modes))
-            pure_shape_as_vector = tuple([self._cutoff_dim ** n_modes])
-            mixed_shape_as_matrix = tuple([self._cutoff_dim ** n_modes] * 2)
+            pure_shape_as_vector = tuple([self._cutoff_dim**n_modes])
+            mixed_shape_as_matrix = tuple([self._cutoff_dim**n_modes] * 2)
             if input_is_batched:
                 pure_shape = (self._batch_size,) + pure_shape
                 mixed_shape = (self._batch_size,) + mixed_shape
@@ -736,7 +736,7 @@ class Circuit:
                     reduced_state_reshuffled = tf.transpose(reduced_state, transpose_list)
                 else:
                     reduced_state_reshuffled = reduced_state
-                diag_indices = [self._cutoff_dim ** num_reduced_state_modes] * 2
+                diag_indices = [self._cutoff_dim**num_reduced_state_modes] * 2
                 if self._batched:
                     diag_indices = [self._batch_size] + diag_indices
                 diag_tensor = tf.reshape(reduced_state_reshuffled, diag_indices)
@@ -911,7 +911,7 @@ class Circuit:
             number_state_indices = list(product(range(self._cutoff_dim), repeat=2))
             terms = [
                 1
-                / np.sqrt(2 ** n * factorial(n) * 2 ** m * factorial(m))
+                / np.sqrt(2**n * factorial(n) * 2**m * factorial(m))
                 * hermite_polys[n]
                 * hermite_polys[m]
                 for n, m in number_state_indices
@@ -926,7 +926,7 @@ class Circuit:
             rho_dist = (
                 tf.cast(tf.reduce_sum(hermite_terms, axis=[1, 2]), tf.float64)
                 * (m_omega_over_hbar / np.pi) ** 0.5
-                * tf.exp(-(x ** 2))
+                * tf.exp(-(x**2))
                 * (q_tensor[1] - q_tensor[0])
             )  # Delta_q for normalization (only works if the bins are equally spaced)
 

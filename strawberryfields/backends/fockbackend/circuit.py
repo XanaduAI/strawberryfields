@@ -144,7 +144,7 @@ class Circuit:
         n = kwargs.get("n", self._num_modes)
 
         size = len(modes)
-        dim = self._trunc ** size
+        dim = self._trunc**size
         stshape = [self._trunc for i in range(size)]
 
         # Apply the following matrix transposition:
@@ -416,8 +416,8 @@ class Circuit:
         n_modes = len(modes)
         pure_shape = tuple([self._trunc] * n_modes)
         mixed_shape = tuple([self._trunc] * (2 * n_modes))
-        pure_shape_as_vector = tuple([self._trunc ** n_modes])
-        mixed_shape_as_matrix = tuple([self._trunc ** n_modes] * 2)
+        pure_shape_as_vector = tuple([self._trunc**n_modes])
+        mixed_shape_as_matrix = tuple([self._trunc**n_modes] * 2)
 
         # Do consistency checks
         if self._checks:
@@ -745,12 +745,12 @@ class Circuit:
             q_tensor, Hvals = ops.hermiteVals(q_mag, num_bins, m_omega_over_hbar, self._trunc)
             H_matrix = np.zeros((self._trunc, self._trunc, num_bins))
             for n, m in product(range(self._trunc), repeat=2):
-                H_matrix[n][m] = 1 / sqrt(2 ** n * bang(n) * 2 ** m * bang(m)) * Hvals[n] * Hvals[m]
+                H_matrix[n][m] = 1 / sqrt(2**n * bang(n) * 2**m * bang(m)) * Hvals[n] * Hvals[m]
             H_terms = np.expand_dims(reduced, -1) * np.expand_dims(H_matrix, 0)
             rho_dist = (
                 np.sum(H_terms, axis=(1, 2))
                 * (m_omega_over_hbar / pi) ** 0.5
-                * np.exp(-m_omega_over_hbar * q_tensor ** 2)
+                * np.exp(-m_omega_over_hbar * q_tensor**2)
                 * (q_tensor[1] - q_tensor[0])
             )  # Delta_q for normalization (only works if the bins are equally spaced)
 

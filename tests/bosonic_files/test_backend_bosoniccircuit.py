@@ -43,7 +43,7 @@ class TestBosonicModes:
         as vacuum, each with a given number of weights."""
         # Create a state over num_modes, each with num_weights
         example = circuit.BosonicModes(num_modes, num_weights)
-        tot_num_weights = num_weights ** num_modes
+        tot_num_weights = num_weights**num_modes
         num_quad = 2 * num_modes
 
         # Confirm number of modes
@@ -83,7 +83,7 @@ class TestBosonicModes:
         # Reset with number of weights and modes and perform the same check
         # as test_circuit_init
         example.reset(num_modes, num_weights)
-        tot_num_weights = num_weights ** num_modes
+        tot_num_weights = num_weights**num_modes
         num_quad = 2 * num_modes
         assert example.nlen == num_modes
         assert np.isclose(sum(example.get_weights()), 1)
@@ -108,7 +108,7 @@ class TestBosonicModes:
         example = circuit.BosonicModes(num_modes, num_weights)
         # Delete first mode and check active modes changed
         example.del_mode(0)
-        tot_weights = num_weights ** num_modes
+        tot_weights = num_weights**num_modes
         assert example.get_modes() == list(range(1, num_modes))
         # Check numbers of weights, means and covs
         assert np.isclose(sum(example.get_weights()), 1)
@@ -126,7 +126,7 @@ class TestBosonicModes:
 
         # Add new mode with new number of weights
         example.add_mode([num_weights_new])
-        tot_weights = (num_weights ** num_modes) * num_weights_new
+        tot_weights = (num_weights**num_modes) * num_weights_new
         # Check numbers of weights, means and covs
         assert example.get_modes() == list(range(num_modes + 1))
         assert np.isclose(sum(example.get_weights()), 1)
@@ -147,7 +147,7 @@ class TestBosonicModes:
 
         # Add new mode with new number of weights
         example.add_mode([num_weights_new])
-        tot_weights = (num_weights ** num_modes) * num_weights_new
+        tot_weights = (num_weights**num_modes) * num_weights_new
         # Check numbers of weights, means and covs
         assert example.get_modes() == list(range(1, num_modes + 1))
         assert np.isclose(sum(example.get_weights()), 1)
@@ -273,7 +273,7 @@ class TestBosonicModes:
         # Apply thermal loss to second mode and check the covariance is as expected
         example.thermal_loss(0, nbar, 1)
         assert np.allclose(
-            np.tile((2 * nbar + 1) * np.eye(2), (num_weights ** 3, 1, 1)),
+            np.tile((2 * nbar + 1) * np.eye(2), (num_weights**3, 1, 1)),
             example.get_covmat()[:, 2:4, 2:4],
         )
 
@@ -384,7 +384,7 @@ class TestBosonicModes:
         # Post select homodyne on one
         example.post_select_homodyne(0, r, phi=np.pi / 2)
         # Check other mode ended up in correlated state
-        mean_compare = np.tile(np.array([0, 0, 0, -r]), (num_weights ** 2, 1))
+        mean_compare = np.tile(np.array([0, 0, 0, -r]), (num_weights**2, 1))
         assert np.allclose(example.get_mean(), mean_compare)
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
@@ -400,8 +400,8 @@ class TestBosonicModes:
         # Post select heterodyne on one
         example.post_select_heterodyne(0, r)
         # Check other mode ended up in correlated state
-        mean_compare = np.tile(np.array([0, 0, -r, 0]), (num_weights ** 2, 1))
-        cov_compare = np.tile(np.eye(4), (num_weights ** 2, 1, 1))
+        mean_compare = np.tile(np.array([0, 0, -r, 0]), (num_weights**2, 1))
+        cov_compare = np.tile(np.eye(4), (num_weights**2, 1, 1))
         assert np.allclose(example.get_mean(), mean_compare)
         assert np.allclose(example.get_covmat(), cov_compare)
 

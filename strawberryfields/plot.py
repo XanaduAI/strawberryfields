@@ -221,7 +221,7 @@ def generate_fock_chart(state, modes, cutoff):
     n = np.arange(cutoff)
     mean = [np.sum(n * probs).real for probs in photon_dists]
 
-    xlabels = [fr"$|{i}\rangle$" for i in range(0, cutoff, 1)]
+    xlabels = [rf"$|{i}\rangle$" for i in range(0, cutoff, 1)]
 
     num_modes = len(modes)
     chart = deepcopy(barchart_default)

@@ -914,10 +914,10 @@ class Catstate(Preparation):
 
         # normalization constant
         temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
-        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
+        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp**4))
 
         # coherent states
-        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
+        c1 = (alpha**l) / np.sqrt(ssp.factorial(l))
         c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
 
         # add them up with a relative phase
@@ -1716,7 +1716,7 @@ class Pgate(Gate):
     def _decompose(self, reg, **kwargs):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
-        r = pf.acosh(pf.sqrt(1 + temp ** 2))
+        r = pf.acosh(pf.sqrt(1 + temp**2))
         theta = pf.atan(temp)
         phi = -np.pi / 2 * pf.sign(temp) - theta
         return [Command(Sgate(r, phi), reg), Command(Rgate(theta), reg)]

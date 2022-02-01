@@ -209,7 +209,7 @@ class TestToSubgraphs:
         ``quantum_samples``. Note that graph nodes are numbered in this test as [0, 1, 4, 9,
         ...] (i.e., squares of the usual list) as a simple mapping to explore that the optimised
         subgraph returned is still a valid subgraph."""
-        graph = nx.relabel_nodes(graph, lambda x: x ** 2)
+        graph = nx.relabel_nodes(graph, lambda x: x**2)
         graph_nodes = list(graph.nodes)
         subgraphs_mapped = [
             sorted([graph_nodes[i] for i in subgraph]) for subgraph in self.subgraphs
