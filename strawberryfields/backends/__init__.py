@@ -30,6 +30,7 @@ preserved between engine runs.
 
     FockBackend
     GaussianBackend
+    ~tfbackend.TFBackend
     BosonicBackend
 
 .. raw:: html
@@ -42,6 +43,7 @@ preserved between engine runs.
 
     BaseFockState
     BaseGaussianState
+    ~tfbackend.states.FockStateTF
     BaseBosonicState
 
 .. raw:: html
