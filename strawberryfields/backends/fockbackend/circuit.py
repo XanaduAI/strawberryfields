@@ -420,6 +420,7 @@ class Circuit:
         mixed_shape_as_matrix = tuple([self._trunc**n_modes] * 2)
 
         # Do consistency checks
+        # pylint: disable=consider-using-in
         if self._checks:
             if (
                 state.shape != pure_shape

@@ -141,7 +141,7 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         tuple[array, array, array, array]: atomic coordinates, atomic masses, normal mode
         frequencies, normal modes
     """
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
 
         r = []
         m = []
