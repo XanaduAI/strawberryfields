@@ -101,7 +101,7 @@ class TestChannelApplication:
         state = eng.run(prog).state
         mean_photon, var = state.mean_photon(0)
         assert np.allclose(mean_photon, nbar, atol=tol, rtol=0)
-        assert np.allclose(var, nbar ** 2 + nbar, atol=tol, rtol=0)
+        assert np.allclose(var, nbar**2 + nbar, atol=tol, rtol=0)
 
     @pytest.mark.backends("gaussian")
     @pytest.mark.parametrize("M", range(1, 5))

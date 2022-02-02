@@ -54,7 +54,7 @@ class TestRepresentationIndependent:
         backend = setup_backend(1)
 
         backend.prepare_thermal_state(nbar, 0)
-        ref_probs = np.array([nbar ** n / (nbar + 1) ** (n + 1) for n in range(cutoff)])
+        ref_probs = np.array([nbar**n / (nbar + 1) ** (n + 1) for n in range(cutoff)])
         state = backend.state()
         state_probs = np.array(
             [state.fock_prob([n]) for n in range(cutoff)]

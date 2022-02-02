@@ -271,7 +271,7 @@ def extract_unitary(prog, cutoff_dim: int, vectorize_modes: bool = False, backen
             reshape = np.reshape
         else:
             reshape = tf.reshape
-        return reshape(result, [cutoff_dim ** N, cutoff_dim ** N])
+        return reshape(result, [cutoff_dim**N, cutoff_dim**N])
 
     # here we rearrange the indices to go back to the order [in1, out1, in2, out2, etc...]
     if backend == "fock":
@@ -456,7 +456,7 @@ def extract_channel(
         # Finally we reshape the eigenvectors to form matrices, i.e., the Kraus operators and we make the first index
         # be the one that indexes the list of Kraus operators.
         result = np.einsum(
-            "abc->cab", rescaled_eigenvectors.reshape([cutoff_dim ** N, cutoff_dim ** N, -1])
+            "abc->cab", rescaled_eigenvectors.reshape([cutoff_dim**N, cutoff_dim**N, -1])
         )
 
         if not vectorize_modes:

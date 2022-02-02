@@ -33,7 +33,7 @@ def w_shape(num_modes, num_gauss):
     Returns:
         int: number of weights for all Gaussian peaks in phase space
     """
-    return num_gauss ** num_modes
+    return num_gauss**num_modes
 
 
 def m_shape(num_modes, num_gauss):
@@ -46,7 +46,7 @@ def m_shape(num_modes, num_gauss):
     Returns:
         tuple: (number of weights, number of quadratures)
     """
-    return (num_gauss ** num_modes, 2 * num_modes)
+    return (num_gauss**num_modes, 2 * num_modes)
 
 
 def c_shape(num_modes, num_gauss):
@@ -60,7 +60,7 @@ def c_shape(num_modes, num_gauss):
         tuple: (number of weights, number of quadratures, number of quadratures)
     """
     num_quad = 2 * num_modes
-    return (num_gauss ** num_modes, num_quad, num_quad)
+    return (num_gauss**num_modes, num_quad, num_quad)
 
 
 def to_xp(num_modes):
@@ -233,7 +233,7 @@ class BosonicModes:
         self.from_xp = from_xp(self.nlen)
 
         self.weights = np.ones(w_shape(self.nlen, num_weights), dtype=complex)
-        self.weights = self.weights / (num_weights ** self.nlen)
+        self.weights = self.weights / (num_weights**self.nlen)
 
         self.means = np.zeros(m_shape(self.nlen, num_weights), dtype=complex)
         id_covs = [np.identity(2 * self.nlen, dtype=complex) for i in range(len(self.weights))]
@@ -876,7 +876,7 @@ class BosonicModes:
         Returns:
             array: homodyne outcome
         """
-        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
+        covmat = self.hbar * np.diag(np.array([eps**2, 1.0 / eps**2])) / 2
         return self.measure_dyne(covmat, [mode], shots=shots)
 
     def heterodyne(self, mode, shots=1):
@@ -957,7 +957,7 @@ class BosonicModes:
         if self.active[mode] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist.")
         self.phase_shift(phi, mode)
-        covmat = self.hbar * np.diag(np.array([eps ** 2, 1.0 / eps ** 2])) / 2
+        covmat = self.hbar * np.diag(np.array([eps**2, 1.0 / eps**2])) / 2
         indices = [mode]
         vals = np.array([val, 0])
         self.post_select_generaldyne(covmat, indices, vals)

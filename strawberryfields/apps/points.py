@@ -80,7 +80,7 @@ def rbf_kernel(R: np.ndarray, sigma: float) -> np.ndarray:
     Returns:
         K (array): the RBF kernel matrix
     """
-    return np.exp(-((scipy.spatial.distance.cdist(R, R)) ** 2) / 2 / sigma ** 2)
+    return np.exp(-((scipy.spatial.distance.cdist(R, R)) ** 2) / 2 / sigma**2)
 
 
 def sample(K: np.ndarray, n_mean: float, n_samples: int) -> list:

@@ -104,7 +104,7 @@ class TestInitialStates:
         state = utils.coherent_state(r_d, phi_d, basis="fock", fock_dim=cutoff, hbar=hbar)
         n = np.arange(cutoff)
         alpha = r_d * np.exp(1j * phi_d)
-        expected = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("r, phi", zip(R, PHI))
@@ -199,7 +199,7 @@ class TestInitialStates:
 
         a = r_d * np.exp(1j * phi_d)
         n = np.arange(cutoff)
-        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n))
 
         assert np.allclose(state, expected, atol=tol, rtol=0)
 
@@ -236,7 +236,7 @@ class TestInitialStates:
         # that there's no overflow
         a = float(a)
         n = np.arange(cutoff)
-        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) + np.exp(
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n)) + np.exp(
             -0.5 * np.abs(-a) ** 2
         ) * (-a) ** n / np.sqrt(fac(n))
         expected /= np.linalg.norm(expected)
@@ -254,7 +254,7 @@ class TestInitialStates:
         # that there's no overflow
         a = float(a)
         n = np.arange(cutoff)
-        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n)) - np.exp(
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n)) - np.exp(
             -0.5 * np.abs(-a) ** 2
         ) * (-a) ** n / np.sqrt(fac(n))
         expected /= np.linalg.norm(expected)
@@ -377,7 +377,7 @@ class TestOperation:
         """Test the __call__ method of the operation class"""
 
         def f(x):
-            return x ** 2
+            return x**2
 
         op = utils.operation(ns=1)
         op(f)(0, 6, 3)
@@ -590,10 +590,10 @@ class TestEngineUtilityFunctions:
         """Test interleaved utility function"""
 
         II = utils.program_functions._interleaved_identities(n=2, cutoff_dim=3)
-        assert np.allclose(np.einsum("abab", II), 3 ** 2, atol=tol, rtol=0)
+        assert np.allclose(np.einsum("abab", II), 3**2, atol=tol, rtol=0)
 
         III = utils.program_functions._interleaved_identities(n=3, cutoff_dim=5)
-        assert np.allclose(np.einsum("abcabc", III), 5 ** 3, atol=tol, rtol=0)
+        assert np.allclose(np.einsum("abcabc", III), 5**3, atol=tol, rtol=0)
 
 
 # TODO: add unit tests for _engine_with_CJ_cmd_queue

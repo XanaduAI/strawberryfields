@@ -124,7 +124,7 @@ class TestFockBasisMultimode:
 
         # second we do a preparation from the corresponding matrix with shape [cutoff**2]*2
         backend.reset(pure=pure)
-        backend.prepare_dm_state(random_dm.reshape([cutoff ** 2] * 2), [0, 1])
+        backend.prepare_dm_state(random_dm.reshape([cutoff**2] * 2), [0, 1])
         state = backend.state(modes=[0, 1])
         multi_mode_preparation_from_matrix_dm = state.dm()
         multi_mode_preparation_from_matrix_probs = np.array(state.all_fock_probs())
@@ -192,8 +192,8 @@ class TestFockBasisMultimode:
         backend = setup_backend(4)
         N = 4
 
-        random_rho = np.random.normal(size=[cutoff ** 2] * 2) + 1j * np.random.normal(
-            size=[cutoff ** 2] * 2
+        random_rho = np.random.normal(size=[cutoff**2] * 2) + 1j * np.random.normal(
+            size=[cutoff**2] * 2
         )  # two mode random state
         random_rho = np.dot(random_rho.conj().T, random_rho)
         random_rho = random_rho / random_rho.trace()

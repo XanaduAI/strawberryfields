@@ -90,9 +90,9 @@ def duschinsky(
     """
     U = Lf.T @ Li
 
-    d = Lf.T * m ** 0.5 @ (ri - rf)
+    d = Lf.T * m**0.5 @ (ri - rf)
 
-    l0_inv = np.diag((h / (wf * 100.0 * c)) ** (-0.5) * 2.0 * pi) / 1.0e10 * m_u ** 0.5
+    l0_inv = np.diag((h / (wf * 100.0 * c)) ** (-0.5) * 2.0 * pi) / 1.0e10 * m_u**0.5
 
     delta = np.array(d @ l0_inv)
 
@@ -141,7 +141,7 @@ def read_gamess(file) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         tuple[array, array, array, array]: atomic coordinates, atomic masses, normal mode
         frequencies, normal modes
     """
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
 
         r = []
         m = []

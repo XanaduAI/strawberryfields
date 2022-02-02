@@ -689,8 +689,8 @@ class TestExtractChannelTwoMode:
     def test_extract_choi_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
         """Test that Choi channel extraction works for 2 mode vectorized"""
         prog, rho, initial_state = setup_two_mode_circuit
-        rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)
-        initial_state = np.einsum("abcd->acbd", initial_state).reshape(cutoff ** 2, cutoff ** 2)
+        rho = np.einsum("abcd->acbd", rho).reshape(cutoff**2, cutoff**2)
+        initial_state = np.einsum("abcd->acbd", initial_state).reshape(cutoff**2, cutoff**2)
 
         choi = utils.extract_channel(
             prog, cutoff_dim=cutoff, vectorize_modes=True, representation="choi"
@@ -702,8 +702,8 @@ class TestExtractChannelTwoMode:
     def test_extract_liouville_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
         """Test that Liouville channel extraction works for 2 mode vectorized"""
         prog, rho, initial_state = setup_two_mode_circuit
-        rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)
-        initial_state = np.einsum("abcd->acbd", initial_state).reshape(cutoff ** 2, cutoff ** 2)
+        rho = np.einsum("abcd->acbd", rho).reshape(cutoff**2, cutoff**2)
+        initial_state = np.einsum("abcd->acbd", initial_state).reshape(cutoff**2, cutoff**2)
 
         liouville = utils.extract_channel(
             prog, cutoff_dim=cutoff, vectorize_modes=True, representation="liouville"
@@ -715,8 +715,8 @@ class TestExtractChannelTwoMode:
     def test_extract_kraus_channel_vectorize(self, setup_two_mode_circuit, cutoff, tol):
         """Test that Kraus channel extraction works for 2 mode vectorized"""
         prog, rho, initial_state = setup_two_mode_circuit
-        rho = np.einsum("abcd->acbd", rho).reshape(cutoff ** 2, cutoff ** 2)
-        initial_state = np.einsum("abcd->acbd", initial_state).reshape(cutoff ** 2, cutoff ** 2)
+        rho = np.einsum("abcd->acbd", rho).reshape(cutoff**2, cutoff**2)
+        initial_state = np.einsum("abcd->acbd", initial_state).reshape(cutoff**2, cutoff**2)
 
         kraus = utils.extract_channel(
             prog, cutoff_dim=cutoff, vectorize_modes=True, representation="kraus"

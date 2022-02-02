@@ -345,7 +345,7 @@ class TestStochasticIntegrationPNR:
         A_diag = np.diag(vgbs.A(params))
         A_init_diag = np.diag(vgbs.A_init)
         # Differentiate Eq. (8) of https://arxiv.org/abs/2004.04770 and invert for the next line
-        dw_by_dn = (1 - A_diag ** 2) ** 2 / (2 * A_diag * A_init_diag)
+        dw_by_dn = (1 - A_diag**2) ** 2 / (2 * A_diag * A_init_diag)
         # Now use the chain rule
         dcost_by_dn = dcost_by_dtheta * dtheta_by_dw * dw_by_dn
 

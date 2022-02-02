@@ -232,7 +232,7 @@ class TestBosonicCatStates:
         norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha_complex) ** 2))
         psi = np.exp(-((x - disp) ** 2) / (2 * sf.hbar))
         psi += np.exp(-((x + disp) ** 2) / (2 * sf.hbar))
-        psi *= norm * np.exp(-alpha_complex.imag ** 2) / (np.pi * sf.hbar) ** 0.25
+        psi *= norm * np.exp(-alpha_complex.imag**2) / (np.pi * sf.hbar) ** 0.25
 
         assert np.allclose(marginal, abs(psi) ** 2)
 
