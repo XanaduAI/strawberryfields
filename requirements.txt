@@ -1,7 +1,7 @@
 appdirs==1.4.4
 networkx==2.6.3
 numba==0.53.1
-numpy==1.19.2
+numpy==1.21.0
 plotly==4.4.1
 python-dateutil==2.8.0
 quantum-blackbird==0.4.0
