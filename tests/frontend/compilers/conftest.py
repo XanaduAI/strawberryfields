@@ -16,7 +16,7 @@ import inspect
 import numpy as np
 import networkx as nx
 
-from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.device import Device
 from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import list_to_DAG
 
@@ -100,7 +100,7 @@ test_spec = {
 }
 
 
-X8_spec = DeviceSpec(spec=test_spec)
+X8_device = Device(spec=test_spec)
 
 
 def generate_X8_params(r, p):
