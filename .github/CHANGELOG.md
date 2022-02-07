@@ -2,11 +2,17 @@
 
 <h3>New features since last release</h3>
 
-* `DeviceSpec.layout` and `DeviceSpec.gate_parameters` may now return `None`. This can happen
+* `Device.layout` and `Device.gate_parameters` may now return `None`. This can happen
   when a remote simulator device is used.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
+* A `Device.certificate` method is added which returns the hardware device certificate.
+  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+
 <h3>Breaking Changes</h3>
+
+* `DeviceSpec` is renamed to `Device`.
+  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
 
 <h3>Bug fixes</h3>
 
@@ -17,7 +23,7 @@
   circuit layout. Without a layout, the gate parameters cannot be validated against the device
   specification.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
-  
+
 * The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0` instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
