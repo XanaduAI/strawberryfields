@@ -76,6 +76,7 @@ def device(connection, monkeypatch):
         "compiler": ["fock"],
         "gate_parameters": {},
     }
+    device.certificate = {}
 
     monkeypatch.setattr(sf.engine.xcc, "Connection", MagicMock())
     monkeypatch.setattr(sf.engine.xcc, "Device", mock_return(device))
