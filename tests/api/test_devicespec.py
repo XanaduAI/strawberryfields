@@ -46,6 +46,15 @@ device_dict = {
     },
 }
 
+device_certificate = {
+    "target": "X8_01",
+    "finished_at": "2022-02-07T15:29:48.080220+00:00",
+    "identity_unitary": {},
+    "shots_per_benchmark": 999999,
+    "anti_identity_unitary": {},
+    "laser_wavelength_meters": 42,
+}
+
 mock_layout_tdm = inspect.cleandoc(
     """
     name template_td2
@@ -88,12 +97,13 @@ class TestDevice:
 
     def test_initialization(self):
         """Test that the device spec class initializes correctly."""
-        device = Device(spec=device_dict)
+        device = Device(spec=device_dict, certificate=device_certificate)
 
         assert device.target == "abc"
         assert device.layout == device_dict["layout"]
         assert device.modes == device_dict["modes"]
         assert device.compiler == device_dict["compiler"]
+        assert device.certificate == device_certificate
 
     def test_gate_parameters(self):
         """Test that gate_parameters outputs the correctly parsed parameters"""
