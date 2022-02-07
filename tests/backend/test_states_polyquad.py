@@ -80,9 +80,9 @@ class TestSingleModePolyQuadratureExpectations:
             PDF = multivariate_normal.pdf(grid, mu, cov)
 
             Ex = simps(simps(poly * PDF, P[0]), X.T[0])
-            ExSq = simps(simps(poly ** 2 * PDF, P[0]), X.T[0])
+            ExSq = simps(simps(poly**2 * PDF, P[0]), X.T[0])
 
-            var = ExSq - Ex ** 2 + correction
+            var = ExSq - Ex**2 + correction
 
             return Ex, var
 
@@ -281,7 +281,7 @@ class TestSingleModePolyQuadratureExpectations:
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
 
-        mean_ex, var_ex = sample_normal_expectations(lambda X, P, XP: A[0, 0] * X ** 2)
+        mean_ex, var_ex = sample_normal_expectations(lambda X, P, XP: A[0, 0] * X**2)
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
@@ -302,7 +302,7 @@ class TestSingleModePolyQuadratureExpectations:
         state = backend.state()
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
 
-        mean_ex, var_ex = sample_normal_expectations(lambda X, P, XP: P ** 2)
+        mean_ex, var_ex = sample_normal_expectations(lambda X, P, XP: P**2)
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
@@ -386,7 +386,7 @@ class TestSingleModePolyQuadratureExpectations:
         mean, var = state.poly_quad_expectation(A, d, k, phi=qphi)
 
         mean_ex, var_ex = sample_normal_expectations(
-            lambda X, P, XP: c0 * X ** 2 + c1 * P ** 2 + c2 * XP + c3 * X + c4 * P + k,
+            lambda X, P, XP: c0 * X**2 + c1 * P**2 + c2 * XP + c3 * X + c4 * P + k,
             correction=-np.linalg.det(hbar * A[:, [0, 3]][[0, 3]]),
         )
 

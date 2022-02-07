@@ -128,8 +128,17 @@ def graph(g: nx.Graph, s: Optional[list] = None, plot_size: Tuple = (500, 500)):
     """
     try:
         import plotly.graph_objects as go
+        import plotly.io as pio
     except ImportError:
         raise ImportError(plotly_error)
+
+    try:
+        in_notebook = get_ipython().__class__.__name__ == "ZMQInteractiveShell"
+    except NameError:
+        in_notebook = False
+
+    if not in_notebook:
+        pio.renderers.default = "browser"
 
     l = nx.kamada_kawai_layout(g)
 

@@ -416,7 +416,7 @@ class BosonicBackend(BaseBosonic):
             return weights, means, covs
 
         # Normalization factor
-        norm = 1 / (2 * (1 + np.exp(-2 * a ** 2) * np.cos(phi)))
+        norm = 1 / (2 * (1 + np.exp(-2 * a**2) * np.cos(phi)))
         hbar = self.circuit.hbar
 
         if representation == "complex":
@@ -469,16 +469,16 @@ class BosonicBackend(BaseBosonic):
 
         # Normalization factor
         phi = np.pi * p
-        norm = 1 / (2 * (1 + np.exp(-2 * a ** 2) * np.cos(phi)))
+        norm = 1 / (2 * (1 + np.exp(-2 * a**2) * np.cos(phi)))
         hbar = self.circuit.hbar
 
         # Defining useful constants
-        E = np.pi ** 2 * D * hbar / (16 * a ** 2)
+        E = np.pi**2 * D * hbar / (16 * a**2)
         v = hbar / 2
         num_mean = 8 * a * np.sqrt(hbar) / (np.pi * D * np.sqrt(2))
-        denom_mean = 16 * a ** 2 / (np.pi ** 2 * D) + 2
-        coef_sigma = np.pi ** 2 * hbar / (8 * a ** 2 * (E + v))
-        prefac = np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi ** 2 * D) / (4 * a) / (np.sqrt(E + v))
+        denom_mean = 16 * a**2 / (np.pi**2 * D) + 2
+        coef_sigma = np.pi**2 * hbar / (8 * a**2 * (E + v))
+        prefac = np.sqrt(np.pi * hbar) * np.exp(0.25 * np.pi**2 * D) / (4 * a) / (np.sqrt(E + v))
         z_max = int(
             np.ceil(
                 2
@@ -499,8 +499,8 @@ class BosonicBackend(BaseBosonic):
         even_phases = (-1) ** ((term_inds % 4) // 2)
         odd_phases = (-1) ** (1 + ((term_inds + 2) % 4) // 2)
         weights = np.cos(phi) * even_terms * even_phases * np.exp(
-            -0.5 * coef_sigma * p_means ** 2
-        ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means ** 2)
+            -0.5 * coef_sigma * p_means**2
+        ) - np.sin(phi) * odd_terms * odd_phases * np.exp(-0.5 * coef_sigma * p_means**2)
         weights *= prefac
         weights_real = np.ones(2, dtype=float)
         weights = norm * np.concatenate((weights_real, weights))
@@ -610,7 +610,7 @@ class BosonicBackend(BaseBosonic):
             prefactor = np.exp(
                 -np.pi
                 * 0.25
-                * (l ** 2 + m ** 2)
+                * (l**2 + m**2)
                 * (1 - np.exp(-2 * epsilon))
                 / (1 + np.exp(-2 * epsilon))
             )
@@ -683,7 +683,7 @@ class BosonicBackend(BaseBosonic):
         Raises:
             ValueError: if :math:`1/r^2` is less than :math:`n`
         """
-        if 1 / r ** 2 < n:
+        if 1 / r**2 < n:
             raise ValueError(f"The parameter 1 / r ** 2={1 / r ** 2} is smaller than n={n}")
         # A simple function to calculate the parity
         parity = lambda n: 1 if n % 2 == 0 else -1
@@ -694,14 +694,14 @@ class BosonicBackend(BaseBosonic):
                 0.5
                 * self.circuit.hbar
                 * np.identity(2)
-                * (1 + (n - j) * r ** 2)
-                / (1 - (n - j) * r ** 2)
+                * (1 + (n - j) * r**2)
+                / (1 - (n - j) * r**2)
                 for j in range(n + 1)
             ]
         )
         weights = np.array(
             [
-                (1 - n * (r ** 2)) / (1 - (n - j) * (r ** 2)) * comb(n, j) * parity(j)
+                (1 - n * (r**2)) / (1 - (n - j) * (r**2)) * comb(n, j) * parity(j)
                 for j in range(n + 1)
             ],
             dtype=complex,

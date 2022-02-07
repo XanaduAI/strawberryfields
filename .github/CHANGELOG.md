@@ -1,4 +1,35 @@
-# Release 0.21.0 (development release)
+# Release 0.22.0 (development release)
+
+<h3>New features since last release</h3>
+
+* `DeviceSpec.layout` and `DeviceSpec.gate_parameters` may now return `None`. This can happen
+  when a remote simulator device is used.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+
+<h3>Breaking Changes</h3>
+
+<h3>Bug fixes</h3>
+
+* It's now possible to show graphs using the plot apps layer when not run in notebooks.
+  [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
+
+* `program.compile` now raises an error if the device specification contains gate parameters but no
+  circuit layout. Without a layout, the gate parameters cannot be validated against the device
+  specification.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+  
+* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0` instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
+  [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
+
+<h3>Documentation</h3>
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson, Jon Schlipf, Hossein Seifoory
+
+# Release 0.21.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -9,7 +40,33 @@
   has not previously been set.
   [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
 
-<h3>Breaking Changes</h3>
+* Functions are now available to convert between XIR and Strawberry Fields programs.
+  [(#643)](https://github.com/XanaduAI/strawberryfields/pull/643)
+
+  For example,
+
+  ```python
+  prog = sf.Program(3)
+  eng = sf.Engine("gaussian")
+
+  with prog.context as q:
+      ops.Sgate(0, 0) | q[0]
+      ops.Sgate(1, 0) | q[1]
+      ops.BSgate(0.45, 0.0) | (q[0], q[2])
+      ops.MeasureFock() | q[0]
+
+  xir_prog = sf.io.to_xir(prog)
+  ```
+
+  resulting in the following XIR script
+
+  ```pycon
+  >>> print(xir_prog.serialize())
+  Sgate(0, 0) | [0];
+  Sgate(1, 0) | [1];
+  BSgate(0.45, 0.0) | [0, 2];
+  MeasureFock | [0];
+  ```
 
 <h3>Bug fixes</h3>
 
@@ -53,7 +110,7 @@ This release contains contributions from (in alphabetical order):
 
 Theodor Isacsson
 
-# Release 0.20.0 (current release)
+# Release 0.20.0
 
 <h3>New features since last release</h3>
 
@@ -452,7 +509,7 @@ Quesada, Antal Száva, Yuan Yao.
   modes = 4
   cutoff_dim = 6
 
-  # prepare an intial state with 4 photons in as many modes
+  # prepare an initial state with 4 photons in as many modes
   initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
   initial_state[1, 1, 1, 1] = 1
 
@@ -544,7 +601,7 @@ Quesada, Antal Száva, Yuan Yao.
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
-* Speed improvements are addded to ``gaussian_unitary`` compiler.
+* Speed improvements are added to ``gaussian_unitary`` compiler.
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
 * Adds native support in the Fock backend for the MZgate.

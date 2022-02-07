@@ -107,7 +107,7 @@ def gbs_params(
     else:
         t = np.zeros(len(w))
 
-    U2, s, U1 = np.linalg.svd(np.diag(wp ** 0.5) @ Ud @ np.diag(w ** -0.5))
+    U2, s, U1 = np.linalg.svd(np.diag(wp**0.5) @ Ud @ np.diag(w**-0.5))
     alpha = delta / np.sqrt(2)
 
     return t, U1, np.log(s), U2, alpha

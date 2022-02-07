@@ -97,7 +97,7 @@ def abssqr(z):
     r"""
     Given :math:`z` returns :math:`|z|^2`.
     """
-    return z.real ** 2 + z.imag ** 2
+    return z.real**2 + z.imag**2
 
 
 def dagger(mat):
@@ -277,7 +277,7 @@ def kerr(kappa, trunc):
     The Kerr interaction :math:`K(\kappa)`.
     """
     n = np.arange(trunc)
-    ret = np.diag(np.exp(1j * kappa * n ** 2))
+    ret = np.diag(np.exp(1j * kappa * n**2))
     return ret
 
 
@@ -397,7 +397,7 @@ def coherentState(r, phi, trunc):
 
     def entry(n):
         """coherent summation term"""
-        return alpha ** n / sqrt(fac(n))
+        return alpha**n / sqrt(fac(n))
 
     return exp(-abssqr(alpha) / 2) * array([entry(n) for n in range(trunc)])
 
@@ -410,7 +410,7 @@ def squeezedState(r, theta, trunc):
 
     def entry(n):
         """squeezed summation term"""
-        return (sqrt(fac(2 * n)) / (2 ** n * fac(n))) * (-exp(1j * theta) * tanh(r)) ** n
+        return (sqrt(fac(2 * n)) / (2**n * fac(n))) * (-exp(1j * theta) * tanh(r)) ** n
 
     vec = array([entry(n // 2) if n % 2 == 0 else 0.0 + 0.0j for n in range(trunc)])
     return sqrt(1 / cosh(r)) * vec
@@ -455,7 +455,7 @@ def thermalState(nbar, trunc):
         st = fockState(0, trunc)
         state = np.outer(st, st.conjugate())
     else:
-        coeff = np.array([nbar ** n / (nbar + 1) ** (n + 1) for n in range(trunc)])
+        coeff = np.array([nbar**n / (nbar + 1) ** (n + 1) for n in range(trunc)])
         state = np.diag(coeff)
 
     return state

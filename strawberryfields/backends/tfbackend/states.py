@@ -84,7 +84,7 @@ class FockStateTF(BaseFockState):
         if not self.batched:
             s = tf.expand_dims(s, 0)  # insert fake batch dimension
         if self.is_pure:
-            flat_state = tf.reshape(s, [-1, self.cutoff_dim ** self.num_modes])
+            flat_state = tf.reshape(s, [-1, self.cutoff_dim**self.num_modes])
             tr = tf.reduce_sum(flat_state * tf.math.conj(flat_state), 1)
         else:
             # hack because tensorflow einsum doesn't allow partial trace
@@ -121,7 +121,7 @@ class FockStateTF(BaseFockState):
         # put batch dimension at end to match behaviour of tf.gather_nd
         if self.is_pure:
             flat_idx = np.ravel_multi_index(n, [self.cutoff_dim] * self.num_modes)
-            flat_state = tf.reshape(state, [-1, self.cutoff_dim ** self.num_modes])
+            flat_state = tf.reshape(state, [-1, self.cutoff_dim**self.num_modes])
             prob = tf.abs(flat_state[:, flat_idx]) ** 2
         else:
             doubled_n = [n[i // 2] for i in range(len(n) * 2)]
@@ -198,7 +198,7 @@ class FockStateTF(BaseFockState):
         other_state = tf.cast(other_state, self.dtype)
         state_dm = tf.einsum("bi,bj->bij", tf.math.conj(other_state), other_state)
         flat_state_dm = tf.reshape(state_dm, [1, -1])
-        flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
+        flat_rho = tf.reshape(rho, [-1, self.cutoff_dim**2])
 
         f = tf.math.real(
             tf.reduce_sum(flat_rho * flat_state_dm, axis=1)
@@ -246,11 +246,11 @@ class FockStateTF(BaseFockState):
             eqn, *multi_cohs_list
         )  # tensor product of specified coherent states
         flat_multi_cohs = np.reshape(
-            multi_cohs_vec, [1, self.cutoff_dim ** self.num_modes]
+            multi_cohs_vec, [1, self.cutoff_dim**self.num_modes]
         )  # flattened tensor product; shape is: [1, cutoff_dim * num_modes]
 
         if self.is_pure:
-            flat_state = tf.reshape(s, [-1, self.cutoff_dim ** self.num_modes])
+            flat_state = tf.reshape(s, [-1, self.cutoff_dim**self.num_modes])
             ovlap = tf.reduce_sum(flat_multi_cohs.conj() * flat_state, axis=1)
             f = tf.abs(ovlap) ** 2
         else:
@@ -380,9 +380,9 @@ class FockStateTF(BaseFockState):
         if not self.batched:
             rho = tf.expand_dims(rho, 0)  # add fake batch dimension
 
-        flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
-        flat_quad = tf.reshape(quad, [1, self.cutoff_dim ** 2])
-        flat_quad2 = tf.reshape(quad2, [1, self.cutoff_dim ** 2])
+        flat_rho = tf.reshape(rho, [-1, self.cutoff_dim**2])
+        flat_quad = tf.reshape(quad, [1, self.cutoff_dim**2])
+        flat_quad2 = tf.reshape(quad2, [1, self.cutoff_dim**2])
 
         e = tf.math.real(
             tf.reduce_sum(flat_rho * flat_quad, axis=1)
@@ -390,7 +390,7 @@ class FockStateTF(BaseFockState):
         e2 = tf.math.real(
             tf.reduce_sum(flat_rho * flat_quad2, axis=1)
         )  # implements a batched tr(rho * x ** 2)
-        v = e2 - e ** 2
+        v = e2 - e**2
 
         if not self.batched:
             e = tf.squeeze(e, 0)  # drop fake batch dimension
@@ -417,17 +417,17 @@ class FockStateTF(BaseFockState):
             rho = tf.expand_dims(rho, 0)  # add fake batch dimension
 
         n = np.diag(np.arange(self.cutoff_dim))
-        flat_n = np.reshape(n, [1, self.cutoff_dim ** 2])
+        flat_n = np.reshape(n, [1, self.cutoff_dim**2])
 
-        flat_rho = tf.reshape(rho, [-1, self.cutoff_dim ** 2])
+        flat_rho = tf.reshape(rho, [-1, self.cutoff_dim**2])
 
         nbar = tf.math.real(
             tf.reduce_sum(flat_rho * flat_n, axis=1)
         )  # implements a batched tr(rho * n)
         nbarSq = tf.math.real(
-            tf.reduce_sum(flat_rho * flat_n ** 2, axis=1)
+            tf.reduce_sum(flat_rho * flat_n**2, axis=1)
         )  # implements a batched tr(rho * n^2)
-        var = nbarSq - nbar ** 2
+        var = nbarSq - nbar**2
         if not self.batched:
             nbar = tf.squeeze(nbar, 0)  # drop fake batch dimension
             var = tf.squeeze(var, 0)  # drop fake batch dimension

@@ -41,7 +41,7 @@ class TestFockProbabilities:
 
         alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
@@ -59,7 +59,7 @@ class TestFockProbabilities:
 
         alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
@@ -84,7 +84,7 @@ class TestAllFockProbs:
 
         alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
@@ -111,11 +111,11 @@ class TestAllFockProbs:
         alpha = a * np.exp(1j * phi)
 
         n = np.arange(cutoff)
-        ref_state1 = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state1 = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_state2 = np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(fac(n))
 
         ref_state = np.outer(ref_state1, ref_state2)
-        ref_probs = np.abs(np.reshape(ref_state ** 2, -1))
+        ref_probs = np.abs(np.reshape(ref_state**2, -1))
 
         if batch_size is not None:
             ref_probs = np.tile(ref_probs, batch_size)

@@ -207,7 +207,7 @@ def test_two_mode_gate_expand(M, tol):
     """test _apply_symp_two_mode_gate applies correctly"""
     S = np.random.random((2 * M, 2 * M))
     r = np.random.random(2 * M)
-    S_G = interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2)))
+    S_G = interferometer(0.5**0.5 * np.fft.fft(np.eye(2)))
 
     S1, r1 = _apply_symp_two_mode_gate(S_G, S.copy(), r.copy(), 1, 3)
 

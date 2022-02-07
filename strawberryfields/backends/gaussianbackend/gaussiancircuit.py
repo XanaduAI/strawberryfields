@@ -365,20 +365,17 @@ class GaussianModes:
         rows = np.reshape(modes, [-1, 1])
         cols = np.reshape(modes, [1, -1])
 
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate(
-                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
-                    ),
-                    np.concatenate(
-                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
-                    ),
+        sigmaq = np.concatenate(
+            (
+                np.concatenate(
+                    (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
                 ),
-                axis=0,
-            )
-            + np.identity(2 * len(modes))
-        )
+                np.concatenate(
+                    (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
+                ),
+            ),
+            axis=0,
+        ) + np.identity(2 * len(modes))
         return sigmaq
 
     def fidelity_coherent(self, alpha, modes=None):
@@ -406,16 +403,13 @@ class GaussianModes:
     def Amat(self):
         """Constructs the A matrix from Hamilton's paper"""
         ######### this needs to be conjugated
-        sigmaq = (
-            np.concatenate(
-                (
-                    np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
-                    np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
-                ),
-                axis=0,
-            )
-            + np.identity(2 * self.nlen)
-        )
+        sigmaq = np.concatenate(
+            (
+                np.concatenate((np.transpose(self.nmat), self.mmat), axis=1),
+                np.concatenate((np.transpose(np.conjugate(self.mmat)), self.nmat), axis=1),
+            ),
+            axis=0,
+        ) + np.identity(2 * self.nlen)
         return np.dot(Xmat(self.nlen), np.identity(2 * self.nlen) - np.linalg.inv(sigmaq))
 
     def loss(self, T, k):
@@ -489,7 +483,7 @@ class GaussianModes:
     def homodyne(self, n, shots=1, eps=0.0002):
         """Performs a homodyne measurement by calling measure dyne an giving it the
         covariance matrix of a squeezed state whose x quadrature has variance eps**2"""
-        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
+        covmat = np.diag(np.array([eps**2, 1.0 / eps**2]))
         res = self.measure_dyne(covmat, [n], shots=shots)
 
         return res
@@ -498,7 +492,7 @@ class GaussianModes:
         """Performs a homodyne measurement but postelecting on the value vals for mode n"""
         if self.active[n] is None:
             raise ValueError("Cannot apply homodyne measurement, mode does not exist")
-        covmat = np.diag(np.array([eps ** 2, 1.0 / eps ** 2]))
+        covmat = np.diag(np.array([eps**2, 1.0 / eps**2]))
         indices = [n]
         expind = np.concatenate((2 * np.array(indices), 2 * np.array(indices) + 1))
         mp = self.scovmat()

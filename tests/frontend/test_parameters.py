@@ -46,7 +46,7 @@ def binary_arithmetic(pp, qq, p, q):
     assert par_evaluate(pp - qq) == pytest.approx(p - q)
     assert par_evaluate(pp * qq) == pytest.approx(p * q)
     assert par_evaluate(pp / qq) == pytest.approx(p / q)
-    assert par_evaluate(pp ** qq) == pytest.approx(p ** q)
+    assert par_evaluate(pp**qq) == pytest.approx(p**q)
 
 
 class TestParameter:
@@ -75,7 +75,7 @@ class TestParameter:
         assert par_is_symbolic(p - r)
         assert par_is_symbolic(p * r)
         assert par_is_symbolic(p / r)
-        assert par_is_symbolic(p ** r)
+        assert par_is_symbolic(p**r)
         assert par_is_symbolic(p - p)  # no simplification
 
         # object array with symbols
@@ -111,7 +111,7 @@ class TestParameter:
         assert par_regref_deps(s * p) == R0
         assert par_regref_deps(x * p) == R0
         assert par_regref_deps(p + q) == R
-        assert par_regref_deps(s * p + q ** x) == R
+        assert par_regref_deps(s * p + q**x) == R
 
     def test_par_str(self):
         """String representations of parameters."""
@@ -139,7 +139,7 @@ class TestParameter:
         assert str(d) == "{x}"
         assert str(0.1234567 * d) == "0.1234567*{x}"
         assert str(np.array([0, 1, -3, 0.987654]) * d) == "[0 1.0*{x} -3.0*{x} 0.987654*{x}]"
-        assert str(pf.exp(1 + c) / d ** 2) == "exp(q1 + 1)/{x}**2"
+        assert str(pf.exp(1 + c) / d**2) == "exp(q1 + 1)/{x}**2"
 
     def test_par_functions_with_arrays(self):
         """Parameter functions with array arguments."""
