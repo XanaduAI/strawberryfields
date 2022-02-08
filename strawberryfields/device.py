@@ -35,12 +35,10 @@ class Device:
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
 
-        certificate (dict, optional): dictionary representing the device certificate
+        cert (dict, optional): dictionary representing the device certificate
     """
 
-    def __init__(
-        self, spec: Mapping[str, Any], cert: Optional[Mapping[str, Any]] = None
-    ) -> None:
+    def __init__(self, spec: Mapping[str, Any], cert: Optional[Mapping[str, Any]] = None) -> None:
         missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
         if missing_keys:
             raise ValueError(
@@ -48,7 +46,7 @@ class Device:
             )
 
         self._spec = spec
-        self._certificate = certificate
+        self._certificate = cert
 
     @property
     def target(self) -> str:

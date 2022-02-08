@@ -621,7 +621,7 @@ class RemoteEngine:
         """
         if self._device is None:
             device = xcc.Device(target=self.target, connection=self.connection)
-            self._device = Device(spec=device.specification, certificate=device.certificate)
+            self._device = Device(spec=device.specification, cert=device.certificate)
         return self._device
 
     def run(
