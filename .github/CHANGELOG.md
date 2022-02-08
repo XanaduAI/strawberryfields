@@ -7,12 +7,12 @@
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
 * A `Device.certificate` method is added which returns the hardware device certificate.
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
 
 <h3>Breaking Changes</h3>
 
 * `DeviceSpec` is renamed to `Device`.
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
 
 <h3>Bug fixes</h3>
 

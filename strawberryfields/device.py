@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module contains a class that represents a device available via the API.
+This module contains a class that represents a device on the Xanadu Cloud.
 """
 from typing import Sequence, Mapping, Any, Optional
 
@@ -35,11 +35,11 @@ class Device:
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
 
-        certificate (dict): the certificate of the device
+        certificate (dict, optional): dictionary representing the device certificate
     """
 
     def __init__(
-        self, spec: Mapping[str, Any], certificate: Optional[Mapping[str, Any]] = None
+        self, spec: Mapping[str, Any], cert: Optional[Mapping[str, Any]] = None
     ) -> None:
         missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
         if missing_keys:

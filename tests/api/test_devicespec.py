@@ -97,7 +97,7 @@ class TestDevice:
 
     def test_initialization(self):
         """Test that the device spec class initializes correctly."""
-        device = Device(spec=device_dict, certificate=device_certificate)
+        device = Device(spec=device_spec, certificate=device_certificate)
 
         assert device.target == "abc"
         assert device.layout == device_dict["layout"]
