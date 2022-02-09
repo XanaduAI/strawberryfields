@@ -610,14 +610,14 @@ class RemoteEngine:
 
     @property
     def device(self) -> Device:
-        """The specification of the target device.
+        """The representation of the target device.
 
         Returns:
-            ~strawberryfields.Device: the device specification
+            .strawberryfields.Device: the target device representation
 
         Raises:
             requests.exceptions.RequestException: if there was an issue fetching
-                the device specifications from the Xanadu Cloud
+                the device specifications or the device certificate from the Xanadu Cloud
         """
         if self._device is None:
             device = xcc.Device(target=self.target, connection=self.connection)
