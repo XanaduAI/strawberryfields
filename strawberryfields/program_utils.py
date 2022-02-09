@@ -173,7 +173,10 @@ class RegRef:
         NOTE: Affects the hashability of RegRefs, see also :meth:`__hash__`.
         """
         if other.__class__ != self.__class__:
-            print("---------------          regref.__eq__: compared reqref to ", other.__class__)
+            print(
+                "---------------          regref.__eq__: compared reqref to ",
+                other.__class__,
+            )
             return False
         return self.ind == other.ind and self.active == other.active
 

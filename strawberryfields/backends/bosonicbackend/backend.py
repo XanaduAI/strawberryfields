@@ -261,7 +261,11 @@ class BosonicBackend(BaseBosonic):
                     # directly by asking preparation methods below for
                     # the right weights, means, covs.
                     else:
-                        weights, means, covs = np.array([1], dtype=complex), vac_means, vac_covs
+                        weights, means, covs = (
+                            np.array([1], dtype=complex),
+                            vac_means,
+                            vac_covs,
+                        )
 
                     init_weights[reg] = weights
                     init_means[reg] = means
@@ -283,7 +287,11 @@ class BosonicBackend(BaseBosonic):
         # If there are any Gaussian state preparations, these will be handled
         # by the run_prog method
         for i in set(range(nmodes)).difference(reg_list):
-            init_weights[i], init_means[i], init_covs[i] = np.array([1]), vac_means, vac_covs
+            init_weights[i], init_means[i], init_covs[i] = (
+                np.array([1]),
+                vac_means,
+                vac_covs,
+            )
 
         # Find all possible combinations of means and combs of the
         # Gaussians between the modes.
@@ -639,10 +647,12 @@ class BosonicBackend(BaseBosonic):
         means = np.concatenate(
             (
                 np.reshape(
-                    np.fromiter(means_gen[0], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                    np.fromiter(means_gen[0], complex, count=(2 * z_max + 1) ** 2),
+                    (-1, 1),
                 ).real,
                 np.reshape(
-                    np.fromiter(means_gen[1], complex, count=(2 * z_max + 1) ** 2), (-1, 1)
+                    np.fromiter(means_gen[1], complex, count=(2 * z_max + 1) ** 2),
+                    (-1, 1),
                 ).imag,
             ),
             axis=1,
@@ -838,7 +848,10 @@ class BosonicBackend(BaseBosonic):
         # This next check is a hack if the user has deleted all the modes
         if len(modes) == 0:
             return BaseBosonicState(
-                (np.array([[]]), np.array([[]]), np.array([])), len(modes), 0, mode_names=mode_names
+                (np.array([[]]), np.array([[]]), np.array([])),
+                len(modes),
+                0,
+                mode_names=mode_names,
             )
 
         mode_ind = np.sort(np.append(2 * np.array(modes), 2 * np.array(modes) + 1))

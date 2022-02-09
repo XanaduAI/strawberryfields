@@ -23,7 +23,11 @@ from thewalrus.quantum import Amat
 import strawberryfields as sf
 from strawberryfields.parameters import par_evaluate, FreeParameter
 from strawberryfields import decompositions as dec
-from strawberryfields.utils import random_interferometer, random_symplectic, random_covariance
+from strawberryfields.utils import (
+    random_interferometer,
+    random_symplectic,
+    random_covariance,
+)
 from strawberryfields import ops
 
 

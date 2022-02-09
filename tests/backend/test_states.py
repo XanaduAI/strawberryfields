@@ -539,7 +539,10 @@ class TestParityExpectation:
         state = backend.state()
 
         assert np.allclose(
-            state.parity_expectation([0]), np.exp(-2 * (np.abs(r) ** 2)), atol=tol, rtol=0
+            state.parity_expectation([0]),
+            np.exp(-2 * (np.abs(r) ** 2)),
+            atol=tol,
+            rtol=0,
         )
 
     def test_squeezed(self, setup_backend, tol, batch_size):

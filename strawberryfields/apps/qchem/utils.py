@@ -23,7 +23,12 @@ from thewalrus import quantum
 
 
 def duschinsky(
-    Li: np.ndarray, Lf: np.ndarray, ri: np.ndarray, rf: np.ndarray, wf: np.ndarray, m: np.ndarray
+    Li: np.ndarray,
+    Lf: np.ndarray,
+    ri: np.ndarray,
+    rf: np.ndarray,
+    wf: np.ndarray,
+    m: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""Generate the Duschinsky rotation matrix :math:`U` and displacement vector :math:`\delta`.
 

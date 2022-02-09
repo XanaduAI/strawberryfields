@@ -204,7 +204,10 @@ class GaussianUnitary(Compiler):
                     )
                 elif name == "Sgate":
                     Snet, rnet = _apply_symp_one_mode_gate(
-                        squeezing(params[0], params[1]), Snet, rnet, dict_indices[modes[0]]
+                        squeezing(params[0], params[1]),
+                        Snet,
+                        rnet,
+                        dict_indices[modes[0]],
                     )
                 elif name == "S2gate":
                     Snet, rnet = _apply_symp_two_mode_gate(
@@ -230,7 +233,9 @@ class GaussianUnitary(Compiler):
                         )
                     else:
                         S = expand(
-                            interferometer(U), [dict_indices[mode] for mode in modes], nmodes
+                            interferometer(U),
+                            [dict_indices[mode] for mode in modes],
+                            nmodes,
                         )
                         Snet = S @ Snet
                         rnet = S @ rnet
@@ -243,7 +248,11 @@ class GaussianUnitary(Compiler):
                         )
                     elif S_G.shape == (4, 4):
                         Snet, rnet = _apply_symp_two_mode_gate(
-                            S_G, Snet, rnet, dict_indices[modes[0]], dict_indices[modes[1]]
+                            S_G,
+                            Snet,
+                            rnet,
+                            dict_indices[modes[0]],
+                            dict_indices[modes[1]],
                         )
                     else:
                         S = expand(S_G, [dict_indices[mode] for mode in modes], nmodes)
@@ -274,7 +283,10 @@ class GaussianUnitary(Compiler):
                     exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
                     delta = (params[0] - params[1]) / 2
                     U = exp_sigma * np.array(
-                        [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
+                        [
+                            [np.sin(delta), np.cos(delta)],
+                            [np.cos(delta), -np.sin(delta)],
+                        ]
                     )
                     Snet, rnet = _apply_symp_two_mode_gate(
                         interferometer(U),

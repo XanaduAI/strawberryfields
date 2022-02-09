@@ -84,7 +84,8 @@ class TestTDMErrorRaising:
         eng = sf.Engine("gaussian")
 
         with pytest.raises(
-            NotImplementedError, match="Lists of TDM programs are not currently supported"
+            NotImplementedError,
+            match="Lists of TDM programs are not currently supported",
         ):
             eng.run([prog, prog])
 
@@ -204,7 +205,9 @@ class TestSingleLoopNullifier:
         # We will check that the sum of all the p is equal to zero
         val_nullifier_P = np.var([np.sum(p[0]) for p in reshaped_samples_P], axis=0)
         assert np.allclose(
-            val_nullifier_P, 0.5 * sf.hbar * n * np.exp(-2 * sq_r), rtol=5 / np.sqrt(shots)
+            val_nullifier_P,
+            0.5 * sf.hbar * n * np.exp(-2 * sq_r),
+            rtol=5 / np.sqrt(shots),
         )
 
     def test_one_dimensional_cluster(self):

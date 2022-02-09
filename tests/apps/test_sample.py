@@ -222,7 +222,13 @@ def test_modes_from_counts():
     """Test if the function ``strawberryfields.apps.sample.modes_from_counts`` returns the correct
     mode samples when input a set of photon count samples."""
 
-    counts = [[0, 0, 0, 0], [1.0, 0.0, 0.0, 2.0], [1, 1, 1, 0], [1, 2, 1, 0], [0, 1, 0, 2, 4]]
+    counts = [
+        [0, 0, 0, 0],
+        [1.0, 0.0, 0.0, 2.0],
+        [1, 1, 1, 0],
+        [1, 2, 1, 0],
+        [0, 1, 0, 2, 4],
+    ]
 
     modes = [[], [0, 3, 3], [0, 1, 2], [0, 1, 1, 2], [1, 3, 3, 4, 4, 4, 4]]
 
@@ -262,13 +268,23 @@ class TestWawMatrix:
 
     adjs = [
         np.array(
-            [[0, 1, 0, 1, 1], [1, 0, 0, 1, 1], [0, 0, 0, 1, 0], [1, 1, 1, 0, 1], [1, 1, 0, 1, 0]]
+            [
+                [0, 1, 0, 1, 1],
+                [1, 0, 0, 1, 1],
+                [0, 0, 0, 1, 0],
+                [1, 1, 1, 0, 1],
+                [1, 1, 0, 1, 0],
+            ]
         ),
         np.array([[0, 1, 0, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 1, 0]]),
         np.array([[0, 1, 2], [1, 0, 0.5], [2, 0.5, 0]]),
     ]
 
-    wvecs = [np.array([1, 1, 3, 1, 0.5]), np.array([1, -2, 3, -4]), np.array([0, 0.5, 4])]
+    wvecs = [
+        np.array([1, 1, 3, 1, 0.5]),
+        np.array([1, -2, 3, -4]),
+        np.array([0, 0.5, 4]),
+    ]
 
     resc_adjs = [
         np.array(

@@ -202,7 +202,8 @@ class Circuit:
             if diag:
                 mat_diag = matview.diagonal().reshape(-1, 1)
                 ret[i] = np.multiply(
-                    mat_diag, np.multiply(view[i].reshape((dim, dim)), mat_diag.conj().T)
+                    mat_diag,
+                    np.multiply(view[i].reshape((dim, dim)), mat_diag.conj().T),
                 ).reshape(stshape + stshape)
             else:
                 ret[i] = np.dot(
@@ -656,7 +657,12 @@ class Circuit:
 
             # project out postselected modes
             self._state = ops.project_reset(
-                selected, select_values, self._state, self._pure, self._num_modes, self._trunc
+                selected,
+                select_values,
+                self._state,
+                self._pure,
+                self._num_modes,
+                self._trunc,
             )
 
             if self.norm() == 0:
@@ -787,7 +793,8 @@ class Circuit:
         eigenstate = self.apply_gate_BLAS(composed, [0], state=inf_squeezed_vac, pure=True, n=1)
 
         vac_state = np.array(
-            [1.0 + 0.0j if i == 0 else 0.0 + 0.0j for i in range(self._trunc)], dtype=ops.def_type
+            [1.0 + 0.0j if i == 0 else 0.0 + 0.0j for i in range(self._trunc)],
+            dtype=ops.def_type,
         )
         projector = np.outer(vac_state, eigenstate.conj())
 
@@ -805,7 +812,10 @@ class Circuit:
         """
 
         if self._pure:
-            self.prepare(ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc), mode)
+            self.prepare(
+                ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc),
+                mode,
+            )
         else:
             st = ops.square_gkp_state(theta, phi, epsilon, ampl_cutoff, self._trunc)
             self.prepare(np.outer(st, st.conjugate()), mode)

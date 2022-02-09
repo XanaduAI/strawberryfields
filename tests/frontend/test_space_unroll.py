@@ -102,7 +102,10 @@ def test_no_entanglement_between_padding_and_computational_modes(delays, modes):
     """Test that the U matrix is the identity if there is no beamsplitter mixing and no rotations"""
     delays = list(delays)
     angles = np.concatenate(
-        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+        [
+            generate_valid_bs_sequence(delays, modes),
+            generate_valid_r_sequence(delays, modes),
+        ]
     )
     d = len(delays)
     n, N = get_mode_indices(delays)
@@ -138,7 +141,10 @@ def test_is_permutation_when_angle_pi_on_two(delays, modes):
     delays = list(delays)
     net = modes + sum(delays)
     angles = np.concatenate(
-        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+        [
+            generate_valid_bs_sequence(delays, modes),
+            generate_valid_r_sequence(delays, modes),
+        ]
     )
     angles[0] = np.pi / 2 * np.random.randint(2, size=net)
     angles[1] = np.pi / 2 * np.random.randint(2, size=net)
@@ -167,7 +173,10 @@ def test_cov_is_pure():
     delays = [1, 6, 36]
     modes = 216
     angles = np.concatenate(
-        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+        [
+            generate_valid_bs_sequence(delays, modes),
+            generate_valid_r_sequence(delays, modes),
+        ]
     )
     net = modes + sum(delays)
     d = len(delays)
@@ -198,7 +207,10 @@ def test_space_unrolling():
     delays = [1, 6, 36]
     modes = 216
     angles = np.concatenate(
-        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+        [
+            generate_valid_bs_sequence(delays, modes),
+            generate_valid_r_sequence(delays, modes),
+        ]
     )
 
     d = len(delays)
@@ -238,7 +250,10 @@ def test_rolling_space_unrolled():
     delays = [1, 6, 36]
     modes = 216
     angles = np.concatenate(
-        [generate_valid_bs_sequence(delays, modes), generate_valid_r_sequence(delays, modes)]
+        [
+            generate_valid_bs_sequence(delays, modes),
+            generate_valid_r_sequence(delays, modes),
+        ]
     )
 
     d = len(delays)

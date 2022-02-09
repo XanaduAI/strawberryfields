@@ -297,7 +297,10 @@ class TestRandomMatrices:
 
         idm = np.identity(modes)
         omega = np.concatenate(
-            (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)),
+            (
+                np.concatenate((0 * idm, idm), axis=1),
+                np.concatenate((-idm, 0 * idm), axis=1),
+            ),
             axis=0,
         )
 
@@ -334,7 +337,10 @@ class TestRandomMatrices:
 
         idm = np.identity(modes)
         omega = np.concatenate(
-            (np.concatenate((0 * idm, idm), axis=1), np.concatenate((-idm, 0 * idm), axis=1)),
+            (
+                np.concatenate((0 * idm, idm), axis=1),
+                np.concatenate((-idm, 0 * idm), axis=1),
+            ),
             axis=0,
         )
 

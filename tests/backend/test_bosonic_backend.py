@@ -51,7 +51,15 @@ class TestParameterChecker:
         params = []
         assert not bosonic.parameter_checker(params)
 
-        params = [1, "real", 3.0, [4 + 1j, 5], [[3.5, 4.8, "complex"]], np.array([7, 9]), range(3)]
+        params = [
+            1,
+            "real",
+            3.0,
+            [4 + 1j, 5],
+            [[3.5, 4.8, "complex"]],
+            np.array([7, 9]),
+            range(3),
+        ]
         assert not bosonic.parameter_checker(params)
 
         params = [1, "real", symbolic_param]

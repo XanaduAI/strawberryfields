@@ -166,7 +166,12 @@ def create_example_fock_chart(state, modes, cutoff):
         "data": data,
         "layout": layout,
         "config": {
-            "modeBarButtonsToRemove": ["zoom2d", "lasso2d", "select2d", "toggleSpikelines"],
+            "modeBarButtonsToRemove": [
+                "zoom2d",
+                "lasso2d",
+                "select2d",
+                "toggleSpikelines",
+            ],
             "displaylogo": False,
         },
     }

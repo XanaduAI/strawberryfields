@@ -107,7 +107,8 @@ def _vectorize(tensor):
         )
 
     transposed = np.einsum(
-        tensor, [int(n) for n in np.arange(dims).reshape((2, dims // 2)).T.reshape([-1])]
+        tensor,
+        [int(n) for n in np.arange(dims).reshape((2, dims // 2)).T.reshape([-1])],
     )
     vectorized = np.reshape(transposed, [shape[0] ** (dims // 4)] * 4)
     transposed_back = np.einsum("abcd -> acbd", vectorized)
@@ -456,7 +457,8 @@ def extract_channel(
         # Finally we reshape the eigenvectors to form matrices, i.e., the Kraus operators and we make the first index
         # be the one that indexes the list of Kraus operators.
         result = np.einsum(
-            "abc->cab", rescaled_eigenvectors.reshape([cutoff_dim ** N, cutoff_dim ** N, -1])
+            "abc->cab",
+            rescaled_eigenvectors.reshape([cutoff_dim ** N, cutoff_dim ** N, -1]),
         )
 
         if not vectorize_modes:

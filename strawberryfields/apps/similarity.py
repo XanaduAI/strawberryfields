@@ -453,7 +453,11 @@ def prob_event_exact(
 
 
 def prob_orbit_mc(
-    graph: nx.Graph, orbit: list, n_mean: float = 5, samples: int = 1000, loss: float = 0.0
+    graph: nx.Graph,
+    orbit: list,
+    n_mean: float = 5,
+    samples: int = 1000,
+    loss: float = 0.0,
 ) -> float:
     r"""Gives a Monte Carlo estimate of the probability of a given orbit for the input graph.
 

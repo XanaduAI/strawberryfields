@@ -471,10 +471,16 @@ class TestBosonicMultimode:
         # test Gaussian state is correct
         state = backend.state([1, 3])
         assert np.allclose(
-            state.means(), np.array([means[from_xp(2)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([means[from_xp(2)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.covs(), np.array([cov[from_xp(2), :][:, from_xp(2)]]) * hbar / 2, atol=tol, rtol=0
+            state.covs(),
+            np.array([cov[from_xp(2), :][:, from_xp(2)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
         )
 
         # test that displaced squeezed states are unchanged
@@ -485,7 +491,10 @@ class TestBosonicMultimode:
             state = backend.state([i])
             assert np.allclose(state.means(), np.array([ex_means[from_xp(1)]]), atol=tol, rtol=0)
             assert np.allclose(
-                state.covs(), np.array([ex_V[from_xp(1), :][:, from_xp(1)]]), atol=tol, rtol=0
+                state.covs(),
+                np.array([ex_V[from_xp(1), :][:, from_xp(1)]]),
+                atol=tol,
+                rtol=0,
             )
 
     def test_full_mode_squeezed_state(self, setup_backend, batch_size, pure, tol, hbar):
@@ -503,10 +512,16 @@ class TestBosonicMultimode:
         # test Gaussian state is correct
         state = backend.state()
         assert np.allclose(
-            state.means(), np.array([means[from_xp(4)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([means[from_xp(4)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.covs(), np.array([cov[from_xp(4), :][:, from_xp(4)]]) * hbar / 2, atol=tol, rtol=0
+            state.covs(),
+            np.array([cov[from_xp(4), :][:, from_xp(4)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
         )
 
     def test_multimode_gaussian_random_state(self, setup_backend, batch_size, pure, tol, hbar):
@@ -525,10 +540,16 @@ class TestBosonicMultimode:
         # test Gaussian state is correct
         state = backend.state()
         assert np.allclose(
-            state.means(), np.array([means[from_xp(N)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([means[from_xp(N)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.covs(), np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2, atol=tol, rtol=0
+            state.covs(),
+            np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
         )
 
     def test_multimode_gaussian_random_state_with_replacement(
@@ -594,7 +615,10 @@ class TestBosonicMultimode:
         ex_cov[rows, cols] = cov2[rows2, cols2]
 
         assert np.allclose(
-            state.means(), np.array([ex_means[from_xp(4)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([ex_means[from_xp(4)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
             state.covs(),

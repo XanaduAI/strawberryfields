@@ -25,16 +25,34 @@ from strawberryfields.apps.train import cost, embed, param
 
 pytestmark = pytest.mark.apps
 
-test_data = [[0, 0, 0, 0], [0, 2, 2, 2], [0, 0, 0, 2], [0, 0, 2, 2], [0, 2, 2, 0], [0, 0, 0, 4]]
+test_data = [
+    [0, 0, 0, 0],
+    [0, 2, 2, 2],
+    [0, 0, 0, 2],
+    [0, 0, 2, 2],
+    [0, 2, 2, 0],
+    [0, 0, 0, 4],
+]
 n_means_data = np.mean(test_data, axis=0)
 test_data = [[t[:d] for t in test_data] for d in range(2, 5)]
 n_means_gbs = [[1, 1], [2 / 3, 2 / 3, 2 / 3], [1 / 2, 1 / 2, 1 / 2, 1 / 2]]
 test_sum_log_probs = [6.931471805599451, 12.644620176064302, 22.377710881470353]
 
-test_data_th = [[0, 0, 0, 0], [0, 1, 1, 1], [0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 0], [0, 0, 0, 1]]
+test_data_th = [
+    [0, 0, 0, 0],
+    [0, 1, 1, 1],
+    [0, 0, 0, 1],
+    [0, 0, 1, 1],
+    [0, 1, 1, 0],
+    [0, 0, 0, 1],
+]
 n_means_data_th = np.mean(test_data_th, axis=0)
 test_data_th = [[t[:d] for t in test_data_th] for d in range(2, 5)]
-n_means_gbs_th = [[1 / 2, 1 / 2], [1 / 3, 1 / 3, 1 / 3, 1 / 3], [1 / 4, 1 / 4, 1 / 4, 1 / 4]]
+n_means_gbs_th = [
+    [1 / 2, 1 / 2],
+    [1 / 3, 1 / 3, 1 / 3, 1 / 3],
+    [1 / 4, 1 / 4, 1 / 4, 1 / 4],
+]
 test_sum_log_probs_th = [1.386294361119879, 1.6218604324326575, 2.287080906458072]
 
 params_fixed = [0, 0, 0, 0]

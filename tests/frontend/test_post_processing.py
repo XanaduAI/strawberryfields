@@ -119,7 +119,11 @@ homodyne_samples = [
     (np.array([[1.23]]), 1.23, 0),
     (np.array([[1.23], [12.32], [0.3222], [0]]), 3.46805, 26.3224074075),
     (np.array([[12.32, 0.32]]), 3.9424, 0),
-    (np.array([[1.23, 0], [12.32, 0.32], [0.3222, 6.34], [0, 3.543]]), 1.496287, 2.689959501507),
+    (
+        np.array([[1.23, 0], [12.32, 0.32], [0.3222, 6.34], [0, 3.543]]),
+        1.496287,
+        2.689959501507,
+    ),
 ]
 
 
@@ -128,7 +132,8 @@ class TestQuadratureExpectation:
     samples."""
 
     @pytest.mark.parametrize(
-        "samples, expval", [(samples, expval) for samples, expval, _ in homodyne_samples]
+        "samples, expval",
+        [(samples, expval) for samples, expval, _ in homodyne_samples],
     )
     def test_quadrature_expval(self, samples, expval):
         """Checking the expectation value of pre-defined homodyne samples."""
@@ -200,7 +205,8 @@ class TestInputValidation:
         input samples is incorrect."""
         modes = [0, 1]
         with pytest.raises(
-            ValueError, match="Samples needs to be represented as a two dimensional NumPy array."
+            ValueError,
+            match="Samples needs to be represented as a two dimensional NumPy array.",
         ):
             _check_samples(samples)
 

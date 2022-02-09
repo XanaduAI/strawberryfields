@@ -604,7 +604,10 @@ class TestFeatureVectorOrbits:
                 lambda _graph, orbit, n_mean, loss: 0.5 * (1.0 / sum(orbit)),
             )
             graph = nx.complete_graph(8)
-            assert similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]]) == [0.25, 0.125]
+            assert similarity.feature_vector_orbits(graph, [[1, 1], [2, 1, 1]]) == [
+                0.25,
+                0.125,
+            ]
 
     def test_known_result(self):
         """Tests if the probability for known cases is correctly
@@ -692,7 +695,11 @@ class TestFeatureVectorEvents:
                 lambda _graph, photons, max_count, n_mean, loss: 0.5 * (1.0 / photons),
             )
             g = nx.complete_graph(8)
-            assert similarity.feature_vector_events(g, [2, 4, 8], 1) == [0.25, 0.125, 0.0625]
+            assert similarity.feature_vector_events(g, [2, 4, 8], 1) == [
+                0.25,
+                0.125,
+                0.0625,
+            ]
 
     def test_known_result(self):
         """Tests if the probability for known cases is correctly

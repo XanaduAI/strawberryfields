@@ -46,8 +46,12 @@ from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import mzgate as mzgate_tw
 from thewalrus.fock_gradients import grad_mzgate as grad_mzgate_tw
 from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
-from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
-from thewalrus._hermite_multidimensional import hermite_multidimensional as gaussian_gate_tw
+from thewalrus.fock_gradients import (
+    grad_two_mode_squeezing as grad_two_mode_squeezing_tw,
+)
+from thewalrus._hermite_multidimensional import (
+    hermite_multidimensional as gaussian_gate_tw,
+)
 from thewalrus._hermite_multidimensional import (
     grad_hermite_multidimensional as grad_gaussian_gate_tw,
 )
@@ -504,7 +508,13 @@ def choi_trick(S, d, dtype=tf.complex128):
     A_mat = X @ (tf.eye(4 * m, dtype=dtype) - tf.linalg.inv(sigma_Q))
     choi_r = tf.cast(tf.math.asinh(1.0), dtype=dtype)
     E = tf.linalg.diag(
-        tf.concat([tf.ones([m], dtype=dtype), tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r)], 0)
+        tf.concat(
+            [
+                tf.ones([m], dtype=dtype),
+                tf.ones([m], dtype=dtype) / tf.math.tanh(choi_r),
+            ],
+            0,
+        )
     )
     R = -tf.math.conj(E @ A_mat[: 2 * m, : 2 * m] @ E)
     y = tf.concat(
@@ -539,7 +549,8 @@ def single_gaussian_gate_matrix(R, y, C, cutoff, dtype=tf.complex128):
         )
         dL_dC_conj = tf.reduce_sum(dL_dG_conj * tf.math.conj(dG_dC))
         dL_dy_conj = tf.reduce_sum(
-            dL_dG_conj[..., None] * tf.math.conj(dG_dy), axis=list(range(len(dL_dG_conj.shape)))
+            dL_dG_conj[..., None] * tf.math.conj(dG_dy),
+            axis=list(range(len(dL_dG_conj.shape))),
         )
         dL_dR_conj = tf.reduce_sum(
             dL_dG_conj[..., None, None] * tf.math.conj(dG_dR),
@@ -559,7 +570,10 @@ def update_symplectic(S, dS, lr):
     Jmat = sympmat(S.shape[1] // 2)
     Z = np.matmul(np.transpose(S), dS)
     Y = 0.5 * (Z + np.linalg.multi_dot([Jmat, Z.T, Jmat]))
-    S.assign(S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))), read_value=False)
+    S.assign(
+        S @ expm(-lr * np.transpose(Y)) @ expm(-lr * (Y - np.transpose(Y))),
+        read_value=False,
+    )
 
 
 def gaussian_gate_matrix(S, d, cutoff: int, batched=False, dtype=tf.complex128):
@@ -632,7 +646,15 @@ def squeezed_vacuum(r, theta, cutoff, pure=True, batched=False, dtype=tf.complex
 
 
 def displaced_squeezed(
-    r_d, phi_d, r_s, phi_s, cutoff, pure=True, batched=False, eps=1e-12, dtype=tf.complex64
+    r_d,
+    phi_d,
+    r_s,
+    phi_s,
+    cutoff,
+    pure=True,
+    batched=False,
+    eps=1e-12,
+    dtype=tf.complex64,
 ):
     """creates a single mode input displaced squeezed state"""
     alpha = tf.cast(r_d, dtype) * tf.exp(1j * tf.cast(phi_d, dtype))
@@ -1090,7 +1112,15 @@ def cubic_phase(
 
 
 def beamsplitter(
-    theta, phi, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+    theta,
+    phi,
+    mode1,
+    mode2,
+    in_modes,
+    cutoff,
+    pure=True,
+    batched=False,
+    dtype=tf.complex64,
 ):
     """returns beamsplitter unitary matrix on specified input modes"""
     theta = tf.cast(theta, dtype)
@@ -1101,7 +1131,15 @@ def beamsplitter(
 
 
 def mzgate(
-    phi_in, phi_ex, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+    phi_in,
+    phi_ex,
+    mode1,
+    mode2,
+    in_modes,
+    cutoff,
+    pure=True,
+    batched=False,
+    dtype=tf.complex64,
 ):
     """returns mzgate unitary matrix on specified input modes"""
     phi_in = tf.cast(phi_in, dtype)
@@ -1112,7 +1150,15 @@ def mzgate(
 
 
 def two_mode_squeeze(
-    r, theta, mode1, mode2, in_modes, cutoff, pure=True, batched=False, dtype=tf.complex64
+    r,
+    theta,
+    mode1,
+    mode2,
+    in_modes,
+    cutoff,
+    pure=True,
+    batched=False,
+    dtype=tf.complex64,
 ):
     """returns two mode squeeze unitary matrix on specified input modes"""
     matrix = two_mode_squeezer_matrix(r, theta, cutoff, batched, dtype)

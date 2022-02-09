@@ -8,7 +8,7 @@ from strawberryfields.ops import *
 eng = sf.Engine(backend="gaussian")
 gaussian_cloning = sf.Program(4)
 
-alpha = 0.7+1.2j
+alpha = 0.7 + 1.2j
 r = np.abs(alpha)
 phi = np.angle(alpha)
 
@@ -17,7 +17,7 @@ with gaussian_cloning.context as q:
     Coherent(r, phi) | q[0]
 
     # 50-50 beamsplitter
-    BS = BSgate(pi/4, 0)
+    BS = BSgate(pi / 4, 0)
 
     # symmetric Gaussian cloning scheme
     BS | (q[0], q[1])
@@ -37,7 +37,7 @@ with gaussian_cloning.context as q:
 results = eng.run(gaussian_cloning, modes=[0, 3])
 
 # return the cloning fidelity
-fidelity = sqrt(results.state.fidelity_coherent([0.7+1.2j, 0.7+1.2j]))
+fidelity = sqrt(results.state.fidelity_coherent([0.7 + 1.2j, 0.7 + 1.2j]))
 # return the cloned displacement
 alpha = results.state.displacement()
 
@@ -49,7 +49,7 @@ a = np.empty([reps], dtype=np.complex128)
 for i in range(reps):
     eng.reset()
     results = eng.run(gaussian_cloning, modes=[0])
-    f[i] = results.state.fidelity_coherent([0.7+1.2j])
+    f[i] = results.state.fidelity_coherent([0.7 + 1.2j])
     a[i] = results.state.displacement()
 
 print("Fidelity of cloned state:", np.mean(f))

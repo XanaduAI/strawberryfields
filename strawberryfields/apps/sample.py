@@ -107,11 +107,17 @@ import networkx as nx
 import numpy as np
 
 import strawberryfields as sf
-from strawberryfields.apps.qchem.vibronic import sample as vibronic  # pylint: disable=unused-import
+from strawberryfields.apps.qchem.vibronic import (
+    sample as vibronic,
+)  # pylint: disable=unused-import
 
 
 def sample(
-    A: np.ndarray, n_mean: float, n_samples: int = 1, threshold: bool = True, loss: float = 0.0
+    A: np.ndarray,
+    n_mean: float,
+    n_samples: int = 1,
+    threshold: bool = True,
+    loss: float = 0.0,
 ) -> list:
     r"""Generate simulated samples from GBS encoded with a symmetric matrix :math:`A`.
 

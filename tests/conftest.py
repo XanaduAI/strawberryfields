@@ -139,7 +139,9 @@ def backend(monkeypatch):
         m.setattr(dummy_backend, "rotation", lambda r, modes: None)
         m.setattr(dummy_backend, "beamsplitter", lambda t, r, m1, m2: None)
         m.setattr(
-            dummy_backend, "measure_homodyne", lambda phi, modes, select, shots: np.array([[5]])
+            dummy_backend,
+            "measure_homodyne",
+            lambda phi, modes, select, shots: np.array([[5]]),
         )
         m.setattr(dummy_backend, "state", lambda modes, shots: None)
         m.setattr(dummy_backend, "reset", lambda: None)

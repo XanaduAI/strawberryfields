@@ -295,7 +295,13 @@ class FockBackend(BaseFock):
         return self.circuit.measure_fock(self._remap_modes(modes), select=select)
 
     def prepare_gkp(
-        self, state, epsilon, ampl_cutoff, representation="real", shape="square", mode=None
+        self,
+        state,
+        epsilon,
+        ampl_cutoff,
+        representation="real",
+        shape="square",
+        mode=None,
     ):
         r"""Prepares the Fock representation of a finite energy GKP state.
 

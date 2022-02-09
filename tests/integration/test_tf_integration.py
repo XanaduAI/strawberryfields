@@ -22,7 +22,17 @@ from scipy.special import factorial
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
-from strawberryfields.ops import Dgate, Sgate, MeasureX, Thermal, BSgate, MZgate, Ket, S2gate, Fock
+from strawberryfields.ops import (
+    Dgate,
+    Sgate,
+    MeasureX,
+    Thermal,
+    BSgate,
+    MZgate,
+    Ket,
+    S2gate,
+    Fock,
+)
 
 
 # this test file is only supported by the TF backend
@@ -609,7 +619,10 @@ class TestGradient:
 
         r_grad, phi_grad = tape.gradient(prob11, [r, phi])
         assert np.allclose(
-            r_grad, 2 * (np.sinh(R) - np.sinh(R) ** 3) / np.cosh(R) ** 5, atol=tol, rtol=0
+            r_grad,
+            2 * (np.sinh(R) - np.sinh(R) ** 3) / np.cosh(R) ** 5,
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
 

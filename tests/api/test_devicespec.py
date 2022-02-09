@@ -130,7 +130,8 @@ class TestDeviceSpec:
             DeviceSpec(spec=device_dict).create_program(**params)
 
     @pytest.mark.parametrize(
-        "params", [{"invalid_type": 7.5}, {"phase_42": 0.4}, {"squeezing_amplitude_1": 0.5}]
+        "params",
+        [{"invalid_type": 7.5}, {"phase_42": 0.4}, {"squeezing_amplitude_1": 0.5}],
     )
     def test_unknown_parameter(self, params):
         """Test that error is raised when an unknown parameter is supplied"""
@@ -145,6 +146,7 @@ class TestDeviceSpec:
             "compiler": ["Xcov"],
         }
         with pytest.raises(
-            ValueError, match=r"missing the following keys: \['gate_parameters', 'layout'\]"
+            ValueError,
+            match=r"missing the following keys: \['gate_parameters', 'layout'\]",
         ):
             DeviceSpec(spec=invalid_spec)

@@ -506,7 +506,10 @@ class LocalEngine(BaseEngine):
         if isinstance(program, TDMProgram):
             if isinstance(result.samples_dict, dict) and result.samples_dict:
                 samples_dict = reshape_samples(
-                    result.samples_dict, program.measured_modes, program.N, program.timebins
+                    result.samples_dict,
+                    program.measured_modes,
+                    program.N,
+                    program.timebins,
                 )
                 # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
                 result._result = {

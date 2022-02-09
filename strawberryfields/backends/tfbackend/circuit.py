@@ -552,7 +552,13 @@ class Circuit:
         k = tf.cast(kappa, self._dtype)
         k = self._maybe_batch(k)
         new_state = ops.cross_kerr_interaction(
-            k, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            k,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
         )
         self._update_state(new_state)
 
@@ -721,7 +727,10 @@ class Circuit:
                     if m not in modes:
                         new_mode_idx = m - removed_ctr
                         reduced_state = ops.partial_trace(
-                            reduced_state, new_mode_idx, red_state_is_pure, self._batched
+                            reduced_state,
+                            new_mode_idx,
+                            red_state_is_pure,
+                            self._batched,
                         )
                         red_state_is_pure = False
                         removed_ctr += 1
@@ -771,7 +780,11 @@ class Circuit:
                 else:
                     f = fock_state[idx]
                 conditional_state = ops.conditional_state(
-                    conditional_state, f, mode, self._state_is_pure, batched=self._batched
+                    conditional_state,
+                    f,
+                    mode,
+                    self._state_is_pure,
+                    batched=self._batched,
                 )
 
             if self._state_is_pure:
@@ -875,7 +888,13 @@ class Circuit:
             # rotate to homodyne basis
             # pylint: disable=invalid-unary-operand-type
             reduced_state = ops.phase_shifter(
-                -phi, 0, reduced_state, self._cutoff_dim, False, self._batched, self._dtype
+                -phi,
+                0,
+                reduced_state,
+                self._cutoff_dim,
+                False,
+                self._batched,
+                self._dtype,
             )
 
             # create pdf for homodyne measurement
@@ -917,7 +936,9 @@ class Circuit:
                 for n, m in number_state_indices
             ]
             hermite_matrix = tf.scatter_nd(
-                number_state_indices, terms, [self._cutoff_dim, self._cutoff_dim, num_bins]
+                number_state_indices,
+                terms,
+                [self._cutoff_dim, self._cutoff_dim, num_bins],
             )
             hermite_terms = tf.multiply(
                 tf.expand_dims(reduced_state, -1),
@@ -969,11 +990,21 @@ class Circuit:
                 self._dtype,
             )
             homodyne_eigenstate = ops.phase_shifter(
-                phi, 0, quad_eigenstate, self._cutoff_dim, True, self._batched, self._dtype
+                phi,
+                0,
+                quad_eigenstate,
+                self._cutoff_dim,
+                True,
+                self._batched,
+                self._dtype,
             )
 
             conditional_state = ops.conditional_state(
-                self._state, homodyne_eigenstate, mode, self._state_is_pure, batched=self._batched
+                self._state,
+                homodyne_eigenstate,
+                mode,
+                self._state_is_pure,
+                batched=self._batched,
             )
 
             # normalize

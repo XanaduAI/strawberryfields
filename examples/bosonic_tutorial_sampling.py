@@ -52,12 +52,24 @@ cat_samples_p = eng.run(prog_cat_p, shots=2000).samples[:, 0]
 fig, axs = plt.subplots(1, 2, figsize=(10, 4))
 fig.suptitle(r"$|0^{\alpha}\rangle_{cat}$, $\alpha=2$", fontsize=18)
 
-axs[0].hist(cat_samples_x / scale, bins=100, density=True, label="Samples", color="cornflowerblue")
+axs[0].hist(
+    cat_samples_x / scale,
+    bins=100,
+    density=True,
+    label="Samples",
+    color="cornflowerblue",
+)
 axs[0].plot(quad / scale, cat_prob_x * scale, "--", label="Ideal", color="tab:red")
 axs[0].set_xlabel(r"q (units of $\sqrt{\hbar}$)", fontsize=15)
 axs[0].set_ylabel("pdf(q)", fontsize=15)
 
-axs[1].hist(cat_samples_p / scale, bins=100, density=True, label="Samples", color="cornflowerblue")
+axs[1].hist(
+    cat_samples_p / scale,
+    bins=100,
+    density=True,
+    label="Samples",
+    color="cornflowerblue",
+)
 axs[1].plot(quad / scale, cat_prob_p * scale, "--", label="Ideal", color="tab:red")
 axs[1].set_xlabel(r"p (units of $\sqrt{\hbar}$)", fontsize=15)
 axs[1].set_ylabel("pdf(p)", fontsize=15)
@@ -101,12 +113,24 @@ gkp_samples_p = eng.run(prog_gkp_p, shots=2000).samples[:, 0]
 fig, axs = plt.subplots(1, 2, figsize=(10, 4))
 fig.suptitle(r"$|0^\epsilon\rangle_{GKP}$, $\epsilon=0.1$ (10 dB)", fontsize=18)
 
-axs[0].hist(gkp_samples_x / scale, bins=100, density=True, label="Samples", color="cornflowerblue")
+axs[0].hist(
+    gkp_samples_x / scale,
+    bins=100,
+    density=True,
+    label="Samples",
+    color="cornflowerblue",
+)
 axs[0].plot(quad / scale, gkp_prob_x * scale, "--", label="Ideal", color="tab:red")
 axs[0].set_xlabel(r"q (units of $\sqrt{\pi\hbar}$)", fontsize=15)
 axs[0].set_ylabel("pdf(q)", fontsize=15)
 
-axs[1].hist(gkp_samples_p / scale, bins=100, density=True, label="Samples", color="cornflowerblue")
+axs[1].hist(
+    gkp_samples_p / scale,
+    bins=100,
+    density=True,
+    label="Samples",
+    color="cornflowerblue",
+)
 axs[1].plot(quad / scale, gkp_prob_p * scale, "--", label="Ideal", color="tab:red")
 axs[1].set_xlabel(r"p (units of $\sqrt{\pi\hbar}$)", fontsize=15)
 axs[1].set_ylabel("pdf(p)", fontsize=15)

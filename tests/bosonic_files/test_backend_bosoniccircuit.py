@@ -114,7 +114,11 @@ class TestBosonicModes:
         assert np.isclose(sum(example.get_weights()), 1)
         assert example.get_weights().shape == (tot_weights,)
         assert example.get_mean().shape == (tot_weights, 2 * (num_modes))
-        assert example.get_covmat().shape == (tot_weights, 2 * (num_modes), 2 * (num_modes))
+        assert example.get_covmat().shape == (
+            tot_weights,
+            2 * (num_modes),
+            2 * (num_modes),
+        )
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
@@ -132,7 +136,11 @@ class TestBosonicModes:
         assert np.isclose(sum(example.get_weights()), 1)
         assert example.get_weights().shape == (tot_weights,)
         assert example.get_mean().shape == (tot_weights, 2 * (num_modes + 1))
-        assert example.get_covmat().shape == (tot_weights, 2 * (num_modes + 1), 2 * (num_modes + 1))
+        assert example.get_covmat().shape == (
+            tot_weights,
+            2 * (num_modes + 1),
+            2 * (num_modes + 1),
+        )
 
     @pytest.mark.parametrize("num_weights", NUM_WEIGHTS_VALS)
     @pytest.mark.parametrize("num_modes", NUM_MODES_VALS)
@@ -153,7 +161,11 @@ class TestBosonicModes:
         assert np.isclose(sum(example.get_weights()), 1)
         assert example.get_weights().shape == (tot_weights,)
         assert example.get_mean().shape == (tot_weights, 2 * (num_modes + 1))
-        assert example.get_covmat().shape == (tot_weights, 2 * (num_modes + 1), 2 * (num_modes + 1))
+        assert example.get_covmat().shape == (
+            tot_weights,
+            2 * (num_modes + 1),
+            2 * (num_modes + 1),
+        )
 
     @pytest.mark.parametrize("phi", PHI_VALS)
     @pytest.mark.parametrize("r", R_VALS)
@@ -303,7 +315,8 @@ class TestBosonicModes:
         assert np.allclose(example.get_covmat()[:, 0:2, 0:2], example.get_covmat()[:, 2:4, 2:4])
         assert np.allclose(example.get_mean()[:, 0:2], example.get_mean()[:, 2:4])
         assert np.allclose(
-            example.get_covmat_xp()[:, 0::2, 0::2], example.get_covmat_xp()[:, 1::2, 1::2]
+            example.get_covmat_xp()[:, 0::2, 0::2],
+            example.get_covmat_xp()[:, 1::2, 1::2],
         )
         assert np.allclose(example.get_mean_xp()[:, 0::2], example.get_mean_xp()[:, 1::2])
 

@@ -48,7 +48,8 @@ class TestCompilation:
         prog.circuit[0].op.__class__ = sf.ops.CXgate
 
         with pytest.raises(
-            sf.program_utils.CircuitError, match="CXgate cannot be used with the compiler"
+            sf.program_utils.CircuitError,
+            match="CXgate cannot be used with the compiler",
         ):
             prog.compile(device=X8_spec, compiler="Xstrict")
 

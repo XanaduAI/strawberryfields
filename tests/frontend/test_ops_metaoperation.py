@@ -110,7 +110,8 @@ class TestProgramGateInteraction:
         """No new modes can be created in a locked Program."""
         prog.lock()
         with pytest.raises(
-            CircuitError, match="The Program is locked, no new subsystems can be created"
+            CircuitError,
+            match="The Program is locked, no new subsystems can be created",
         ):
             ops.New(1)
 
@@ -118,7 +119,8 @@ class TestProgramGateInteraction:
         """No modes can be deleted in a locked Program."""
         prog.lock()
         with pytest.raises(
-            CircuitError, match="The Program is locked, no more Commands can be appended to it"
+            CircuitError,
+            match="The Program is locked, no more Commands can be appended to it",
         ):
             ops.Del | 0
 

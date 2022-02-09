@@ -153,7 +153,8 @@ class TestSampleFock:
     def test_complex_unitary(self, d):
         """Test if function raises a ``ValueError`` when a complex unitary is given."""
         with pytest.raises(
-            ValueError, match="The normal mode to local mode transformation matrix must be real"
+            ValueError,
+            match="The normal mode to local mode transformation matrix must be real",
         ):
             in_state, t, U, w, ns, cf = d
             dynamics.sample_fock(in_state, t, 1.0j * U, w, ns, cf)
@@ -217,7 +218,8 @@ class TestSampleCoherent:
     def test_complex_unitary(self, c):
         """Test if function raises a ``ValueError`` when a complex unitary is given."""
         with pytest.raises(
-            ValueError, match="The normal mode to local mode transformation matrix must be real"
+            ValueError,
+            match="The normal mode to local mode transformation matrix must be real",
         ):
             alpha, t, U, w, ns = c
             dynamics.sample_coherent(alpha, t, 1.0j * U, w, ns)
@@ -346,7 +348,8 @@ class TestSampleTMSV:
     def test_complex_unitary(self, tmsv):
         """Test if function raises a ``ValueError`` when a complex unitary is given."""
         with pytest.raises(
-            ValueError, match="The normal mode to local mode transformation matrix must be real"
+            ValueError,
+            match="The normal mode to local mode transformation matrix must be real",
         ):
             r, t, U, w, ns = tmsv
             dynamics.sample_tmsv(r, t, 1.0j * U, w, ns)

@@ -345,7 +345,12 @@ class TestSFToBlackbirdConversion:
             ops.Zgate(3 * pf.log(-alpha)) | q[1]
 
         bb = io.to_blackbird(prog)
-        assert bb.operations[0] == {"op": "Sgate", "modes": [0], "args": ["{r}", 0.0], "kwargs": {}}
+        assert bb.operations[0] == {
+            "op": "Sgate",
+            "modes": [0],
+            "args": ["{r}", 0.0],
+            "kwargs": {},
+        }
         assert bb.operations[1] == {
             "op": "Zgate",
             "modes": [1],
@@ -364,14 +369,24 @@ class TestSFToBlackbirdConversion:
 
         bb = io.to_blackbird(prog)
 
-        assert bb.operations[0] == {"kwargs": {}, "args": [0.7, 0], "op": "Sgate", "modes": [1]}
+        assert bb.operations[0] == {
+            "kwargs": {},
+            "args": [0.7, 0],
+            "op": "Sgate",
+            "modes": [1],
+        }
         assert bb.operations[1] == {
             "kwargs": {},
             "args": ["p0", 0.0],
             "op": "BSgate",
             "modes": [0, 1],
         }
-        assert bb.operations[2] == {"kwargs": {}, "args": ["p1"], "op": "Rgate", "modes": [1]}
+        assert bb.operations[2] == {
+            "kwargs": {},
+            "args": ["p1"],
+            "op": "Rgate",
+            "modes": [1],
+        }
         assert bb.operations[3] == {
             "kwargs": {},
             "args": ["p2"],
@@ -789,7 +804,10 @@ class TestGenerateCode:
         prog = sf.TDMProgram(N=[2, 3])
         eng = sf.Engine("gaussian")
 
-        with prog.context([np.pi, 3 * np.pi / 2, 0], [1, 0.5, np.pi], [0, 0, 0]) as (p, q):
+        with prog.context([np.pi, 3 * np.pi / 2, 0], [1, 0.5, np.pi], [0, 0, 0]) as (
+            p,
+            q,
+        ):
             ops.Sgate(0.123, np.pi / 4) | q[2]
             ops.BSgate(p[0]) | (q[1], q[2])
             ops.Rgate(p[1]) | q[2]

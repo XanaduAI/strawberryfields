@@ -372,7 +372,8 @@ class TestParameterTFIntegration:
         assert applied_cmds[0].op.p[1] == np.pi / 2
 
     @pytest.mark.parametrize(
-        "gate", [sf.ops.Dgate, sf.ops.Coherent, sf.ops.DisplacedSqueezed, sf.ops.Catstate]
+        "gate",
+        [sf.ops.Dgate, sf.ops.Coherent, sf.ops.DisplacedSqueezed, sf.ops.Catstate],
     )
     def test_complex_symbolic_tf(self, gate):
         """Test that passing a TF Variable to gates that previously accepted

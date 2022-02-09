@@ -723,7 +723,14 @@ class TestValidation:
             remote = False
             local = True
             interactive = True
-            primitives = {"S2gate", "Interferometer", "BSgate", "Sgate", "MZgate", "Rgate"}
+            primitives = {
+                "S2gate",
+                "Interferometer",
+                "BSgate",
+                "Sgate",
+                "MZgate",
+                "Rgate",
+            }
             decompositions = {"MZgate": {}}
 
         prog = sf.Program(3)

@@ -168,7 +168,10 @@ class Xunitary(Compiler):
                     phi = phi_new
 
                 i, j = mode
-                B.insert(indices[0], Command(ops.S2gate(r, phi), [registers[i], registers[j]]))
+                B.insert(
+                    indices[0],
+                    Command(ops.S2gate(r, phi), [registers[i], registers[j]]),
+                )
 
         meas_seq = [C[-1]]
         seq = GaussianUnitary().compile(C[:-1], registers)

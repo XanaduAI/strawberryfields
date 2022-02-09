@@ -307,7 +307,19 @@ class TestResize:
     @pytest.mark.parametrize("dim", [7, 8])
     @pytest.mark.parametrize(
         "min_size,max_size",
-        [(1, 4), (1, 5), (2, 6), (1, 6), (4, 6), (1, 2), (1, 1), (3, 3), (5, 5), (1, 3), (3, 6)],
+        [
+            (1, 4),
+            (1, 5),
+            (2, 6),
+            (1, 6),
+            (4, 6),
+            (1, 2),
+            (1, 1),
+            (3, 3),
+            (5, 5),
+            (1, 3),
+            (3, 6),
+        ],
     )
     def test_full_range(self, dim, min_size, max_size):
         """Test if function correctly resizes to full range of requested sizes"""
@@ -404,7 +416,11 @@ class TestResize:
 
         choice_elem = functools.partial(self.choice, element=elem)
 
-        ideal = {dim - 2: s, dim - 1: s + [dim - 2 + elem], dim - 3: list(set(s) - {elem})}
+        ideal = {
+            dim - 2: s,
+            dim - 1: s + [dim - 2 + elem],
+            dim - 3: list(set(s) - {elem}),
+        }
         with monkeypatch.context() as m:
             m.setattr(np.random, "choice", choice_elem)
             resized = subgraph.resize(s, g, min_size, max_size, node_select=w)

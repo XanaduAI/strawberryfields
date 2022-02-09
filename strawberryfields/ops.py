@@ -952,7 +952,12 @@ class GKP(Preparation):
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", shape="square"
+        self,
+        state=None,
+        epsilon=0.2,
+        ampl_cutoff=1e-12,
+        representation="real",
+        shape="square",
     ):
         if state is None:
             state = [0, 0]
@@ -1415,6 +1420,7 @@ class ThermalLossChannel(Channel):
         p = par_evaluate(self.p)
         backend.thermal_loss(p[0], p[1], *reg)
 
+
 class PhaseNoise(Channel):
     r"""DON'T TAKE THIS SERIOUSLY, I'M JUST TRYING TO HAVE FUN"""
 
@@ -1424,6 +1430,7 @@ class PhaseNoise(Channel):
     def _apply(self, reg, backend, **kwargs):
         p = par_evaluate(self.p)
         backend.phase_noise(p[0], *reg)
+
 
 class MSgate(Channel):
     r"""Phase space measurement-based squeezing gate.

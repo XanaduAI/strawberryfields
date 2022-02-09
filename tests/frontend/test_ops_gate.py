@@ -178,7 +178,15 @@ class TestGKPBasics:
     def test_gkp_str_representation(self, state, ampl, eps, r, s):
         """Test the string representation of the GKP operation"""
         assert (
-            str(ops.GKP(state=state, ampl_cutoff=ampl, epsilon=eps, representation=r, shape=s))
+            str(
+                ops.GKP(
+                    state=state,
+                    ampl_cutoff=ampl,
+                    epsilon=eps,
+                    representation=r,
+                    shape=s,
+                )
+            )
             == f"GKP({str(state)}, {str(eps)}, {str(ampl)}, {r}, {s})"
         )
 

@@ -50,7 +50,11 @@ import pytest
 
 import strawberryfields.engine as engine
 
-from strawberryfields.logger import logging_handler_defined, default_handler, create_logger
+from strawberryfields.logger import (
+    logging_handler_defined,
+    default_handler,
+    create_logger,
+)
 
 modules_contain_logging = [engine]
 

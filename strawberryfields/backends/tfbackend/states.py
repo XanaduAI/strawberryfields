@@ -69,7 +69,12 @@ class FockStateTF(BaseFockState):
         self._dtype = dtype
         self._str = (
             "<FockStateTF: num_modes={}, cutoff={}, pure={}, batched={}, hbar={}, dtype={}>".format(
-                self.num_modes, self.cutoff_dim, self._pure, self._batched, self._hbar, self._dtype
+                self.num_modes,
+                self.cutoff_dim,
+                self._pure,
+                self._batched,
+                self._hbar,
+                self._dtype,
             )
         )
 

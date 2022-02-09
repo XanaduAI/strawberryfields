@@ -369,10 +369,12 @@ class GaussianModes:
             np.concatenate(
                 (
                     np.concatenate(
-                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])), axis=1
+                        (self.nmat[rows, cols], np.conjugate(self.mmat[rows, cols])),
+                        axis=1,
                     ),
                     np.concatenate(
-                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])), axis=1
+                        (self.mmat[rows, cols], np.conjugate(self.nmat[rows, cols])),
+                        axis=1,
                     ),
                 ),
                 axis=0,
@@ -448,13 +450,13 @@ class GaussianModes:
     def phase_noise(self, sigma, k):
 
         self.nmat[k][k] -= 0
-        self.mmat[k][k] -= 2*sigma**2 * self.mmat[k][k]
+        self.mmat[k][k] -= 2 * sigma ** 2 * self.mmat[k][k]
 
         for l in np.delete(np.arange(self.nlen), k):
-            self.nmat[k][l] -= 0.5*sigma**2 * self.nmat[k][l]
-            self.mmat[k][l] -= 0.5*sigma**2 * self.mmat[k][l]
-            self.nmat[l][k] -= 0.5*sigma**2 * self.nmat[l][k]
-            self.mmat[l][k] -= 0.5*sigma**2 * self.mmat[l][k]
+            self.nmat[k][l] -= 0.5 * sigma ** 2 * self.nmat[k][l]
+            self.mmat[k][l] -= 0.5 * sigma ** 2 * self.mmat[k][l]
+            self.nmat[l][k] -= 0.5 * sigma ** 2 * self.nmat[l][k]
+            self.mmat[l][k] -= 0.5 * sigma ** 2 * self.mmat[l][k]
 
     def init_thermal(self, population, mode):
         """Initializes a state of mode in a thermal state with the given population"""

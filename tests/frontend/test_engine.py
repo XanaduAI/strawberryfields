@@ -367,7 +367,8 @@ class TestMultipleShotsErrors:
     def test_batching_error(self, meng, prog):
         """Check that correct error is raised with batching and shots > 1."""
         with pytest.raises(
-            NotImplementedError, match="Batching cannot be used together with multiple shots."
+            NotImplementedError,
+            match="Batching cannot be used together with multiple shots.",
         ):
             meng.run(prog, **{"shots": 2})
 
@@ -379,7 +380,8 @@ class TestMultipleShotsErrors:
             ops.MeasureFock(select=0) | q[0]
 
         with pytest.raises(
-            NotImplementedError, match="Post-selection cannot be used together with multiple shots."
+            NotImplementedError,
+            match="Post-selection cannot be used together with multiple shots.",
         ):
             meng.run(prog, **{"shots": 2})
 

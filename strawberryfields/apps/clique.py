@@ -75,7 +75,10 @@ import numpy as np
 
 
 def search(
-    clique: list, graph: nx.Graph, iterations, node_select: Union[str, np.ndarray, list] = "uniform"
+    clique: list,
+    graph: nx.Graph,
+    iterations,
+    node_select: Union[str, np.ndarray, list] = "uniform",
 ) -> list:
     """Local search algorithm for identifying large cliques.
 
@@ -296,7 +299,9 @@ def swap(
 
 
 def shrink(
-    subgraph: list, graph: nx.Graph, node_select: Union[str, np.ndarray, list] = "uniform"
+    subgraph: list,
+    graph: nx.Graph,
+    node_select: Union[str, np.ndarray, list] = "uniform",
 ) -> list:
     """Shrinks an input subgraph until it forms a clique.
 

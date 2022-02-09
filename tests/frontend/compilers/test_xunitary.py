@@ -509,7 +509,8 @@ class TestXCompilation:
         prog = sf.Program(1)
 
         with pytest.raises(
-            CircuitError, match="The X series only supports programs with an even number of modes."
+            CircuitError,
+            match="The X series only supports programs with an even number of modes.",
         ):
             res = prog.compile(compiler="Xunitary")
 

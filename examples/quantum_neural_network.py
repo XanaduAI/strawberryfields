@@ -116,7 +116,8 @@ def init_weights(modes, layers, active_sd=0.0001, passive_sd=0.1):
     k_weights = tf.random.normal(shape=[layers, modes], stddev=active_sd)
 
     weights = tf.concat(
-        [int1_weights, s_weights, int2_weights, dr_weights, dp_weights, k_weights], axis=1
+        [int1_weights, s_weights, int2_weights, dr_weights, dp_weights, k_weights],
+        axis=1,
     )
     weights = tf.Variable(weights)
 
