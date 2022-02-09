@@ -215,7 +215,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["DummyCompiler"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -226,7 +226,7 @@ class TestProgram:
             program.CircuitError,
             match="program contains 3 modes, but the device 'abc' only supports a 2-mode program",
         ):
-            prog.assert_number_of_modes(spec)
+            prog.assert_number_of_modes(device)
 
     @pytest.mark.parametrize(
         "measure_op, measure_name",
@@ -250,7 +250,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -258,7 +258,7 @@ class TestProgram:
                 measure_op | reg
 
         with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
-            prog.assert_max_number_of_measurements(spec)
+            prog.assert_max_number_of_measurements(device)
 
     def test_keyerror_assert_max_number_of_measurements(self):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
@@ -271,7 +271,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -280,7 +280,7 @@ class TestProgram:
 
         match = "Expected keys for the maximum allowed number of PNR"
         with pytest.raises(KeyError, match=match):
-            prog.assert_max_number_of_measurements(spec)
+            prog.assert_max_number_of_measurements(device)
 
     def test_assert_max_number_of_measurements_wrong_entry(self):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
@@ -292,7 +292,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -300,7 +300,7 @@ class TestProgram:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(KeyError, match="Expected keys for the maximum allowed number of PNR"):
-            prog.assert_max_number_of_measurements(spec)
+            prog.assert_max_number_of_measurements(device)
 
     def test_has_post_selection(self):
         """Check that the ``has_post_selection`` property behaves as expected when it uses
@@ -547,7 +547,7 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -558,7 +558,7 @@ class TestValidation:
             program.CircuitError,
             match="program contains 3 modes, but the device 'simulon_gaussian' only supports a 2-mode program",
         ):
-            new_prog = prog.compile(device=spec, compiler=DummyCompiler())
+            new_prog = prog.compile(device=device, compiler=DummyCompiler())
 
     # TODO: move this test into an integration tests folder (a similar test for the
     # `prog.assert_number_of_measurements` method can be found above), named `test_assert_number_of_measurements`.
@@ -592,7 +592,7 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -600,7 +600,7 @@ class TestValidation:
                 measure_op | reg
 
         with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
-            prog.compile(device=spec, compiler=DummyCompiler())
+            prog.compile(device=device, compiler=DummyCompiler())
 
     def test_run_optimizations(self):
         """Test that circuit is optimized when optimize is True"""
@@ -619,7 +619,6 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -660,7 +659,7 @@ class TestValidation:
             primitives = {"S2gate"}
             decompositions = set()
 
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(2)
         with prog.context as q:
@@ -668,7 +667,7 @@ class TestValidation:
 
         with pytest.raises(ValueError, match="has invalid value"):
             prog.compile(
-                device=spec,
+                device=device,
                 compiler=DummyCompiler(),
             )
 
@@ -691,7 +690,7 @@ class TestValidation:
             primitives = {"S2gate"}
             decompositions = set()
 
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(2)
         with prog.context as q:
@@ -699,7 +698,7 @@ class TestValidation:
 
         with pytest.raises(ValueError, match="missing a circuit layout"):
             new_prog = prog.compile(
-                device=spec,
+                device=device,
                 compiler=DummyCompiler(),
             )
 
@@ -730,19 +729,19 @@ class TestValidation:
             primitives = {"S2gate"}
             decompositions = set()
 
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(2)
         with prog.context as q:
             ops.S2gate(123) | q
 
         new_prog = prog.compile(
-            device=spec,
+            device=device,
             compiler=DummyCompiler(),
         )
 
         assert len(new_prog) == 1
-        assert spec.gate_parameters == gate_params
+        assert device.gate_parameters == gate_params
 
         # test gates are correct
         circuit = new_prog.circuit

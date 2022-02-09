@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module contains a class that represents the specifications of
-a device available via the API.
+This module contains a class that represents a device on the Xanadu Cloud.
 """
 from typing import Sequence, Mapping, Any, Optional
 
@@ -24,8 +23,8 @@ from strawberryfields.io import to_program
 from strawberryfields.compilers import Ranges
 
 
-class DeviceSpec:
-    """The specifications for a specific remote device.
+class Device:
+    """The representation of a specific remote device.
 
     Args:
         spec (dict): dictionary representing the raw device specification.
@@ -35,9 +34,11 @@ class DeviceSpec:
             - modes (int): number of modes supported by the target
             - compiler (list): list of supported compilers
             - gate_parameters (dict): parameters for the circuit gates
+
+        cert (dict, optional): dictionary representing the device certificate
     """
 
-    def __init__(self, spec: Mapping[str, Any]) -> None:
+    def __init__(self, spec: Mapping[str, Any], cert: Optional[Mapping[str, Any]] = None) -> None:
         missing_keys = {"target", "layout", "modes", "compiler", "gate_parameters"} - spec.keys()
         if missing_keys:
             raise ValueError(
@@ -45,6 +46,7 @@ class DeviceSpec:
             )
 
         self._spec = spec
+        self._certificate = cert
 
     @property
     def target(self) -> str:
@@ -53,12 +55,12 @@ class DeviceSpec:
 
     @property
     def layout(self) -> Optional[str]:
-        """str: Returns a string containing the Blackbird circuit layout."""
+        """str: A string containing the Blackbird circuit layout."""
         return self._spec["layout"]
 
     @property
     def modes(self) -> int:
-        """int: Number of modes supported by the device."""
+        """int: The number of modes supported by the device."""
         return self._spec["modes"]
 
     @property
@@ -100,8 +102,14 @@ class DeviceSpec:
 
         return gate_parameters
 
+    @property
+    def certificate(self) -> Optional[Mapping[str, Any]]:
+        """dict[str, Any]: A device certificate containing the current operating
+        conditions of the device."""
+        return self._certificate
+
     def validate_parameters(self, **parameters: complex) -> None:
-        """Validate gate parameters against the device spec.
+        """Validate the gate parameters against the device specification.
 
         Gate parameters should be passed as keyword arguments, with names
         corresponding to those present in the Blackbird circuit layout.

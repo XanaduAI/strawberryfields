@@ -25,7 +25,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.tdm import tdmprogram
 from strawberryfields.tdm.tdmprogram import move_vac_modes, reshape_samples
-from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.device import Device
 
 pytestmark = pytest.mark.frontend
 
@@ -502,7 +502,7 @@ device_spec = {
     },
 }
 device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
-device = DeviceSpec(device_spec)
+device = Device(device_spec)
 
 
 class TestTDMcompiler:
@@ -600,7 +600,7 @@ class TestTDMcompiler:
         with pytest.raises(CircuitError, match="due to incompatible parameter."):
             prog.compile(device=device, compiler="TD2")
 
-    def test_tdm_parameters_not_in_devicespec(self):
+    def test_tdm_parameters_not_in_device_spec(self):
         """Test the correct error is raised when the tdm circuit symbolic parameters are not found
         in the device specification"""
         spec = copy.deepcopy(device_spec)
@@ -612,7 +612,7 @@ class TestTDMcompiler:
             0.5643, [np.pi / 4, 0] * c, [0, np.pi / 2] * c, [0, 0, np.pi / 2, np.pi / 2]
         )
         with pytest.raises(CircuitError, match="not found in device specification"):
-            prog.compile(device=DeviceSpec(spec), compiler="TDM")
+            prog.compile(device=Device(spec), compiler="TDM")
 
     def test_tdm_inconsistent_temporal_modes(self):
         """Test the correct error is raised when the tdm circuit has too many temporal modes"""
@@ -631,7 +631,7 @@ class TestTDMcompiler:
         device_spec1["modes"][
             "concurrent"
         ] = 100  # Note that singleloop_program has only two concurrent modes
-        device1 = DeviceSpec(device_spec1)
+        device1 = Device(device_spec1)
         c = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -647,7 +647,7 @@ class TestTDMcompiler:
         device_spec1["modes"][
             "spatial"
         ] = 100  # Note that singleloop_program has only one spatial mode
-        device1 = DeviceSpec(device_spec1)
+        device1 = Device(device_spec1)
         c = 1
         sq_r = 0.5643
         alpha = [0.5, 0] * c
@@ -786,7 +786,7 @@ class TestTDMValidation:
                 "p3": [3],
             },
         }
-        return DeviceSpec(device_spec)
+        return Device(device_spec)
 
     @staticmethod
     def compile_test_program(device, args=(-1, 1, 2, 3)):
