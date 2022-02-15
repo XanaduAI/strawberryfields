@@ -9,7 +9,7 @@
 * A `Device.certificate` method is added which returns the hardware device certificate.
   [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
 
-* Setting `shots=None` on the engine or program run options will not execute any measurements applied on the circuit. [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
+* Setting `shots=None` in the engine or program run options will not execute any measurements applied on the circuit. [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
 
 <h3>Breaking Changes</h3>
 
