@@ -702,7 +702,8 @@ class TestEngineTDMProgramInteraction:
         results = eng.run(prog)
         assert len(results.samples) == 1
 
-    def test_shots_run_options(self):
+    @pytest.mark.parametrize("shots,len_samples", [(None, 0), (5, 5)])
+    def test_shots_run_options(self, shots, len_samples):
         """Test that run_options takes precedence over default"""
         prog = sf.TDMProgram(2)
         eng = sf.Engine("gaussian")
@@ -711,11 +712,12 @@ class TestEngineTDMProgramInteraction:
             ops.Sgate(p[0]) | q[0]
             ops.MeasureHomodyne(p[1]) | q[0]
 
-        prog.run_options = {"shots": 5}
+        prog.run_options = {"shots": shots}
         results = eng.run(prog)
-        assert len(results.samples) == 5
+        assert len(results.samples) == len_samples
 
-    def test_shots_passed(self):
+    @pytest.mark.parametrize("shots,len_samples", [(None, 0), (2, 2)])
+    def test_shots_passed(self, shots, len_samples):
         """Test that shots supplied via eng.run takes precedence over
         run_options and that run_options isn't changed"""
         prog = sf.TDMProgram(2)
@@ -726,8 +728,8 @@ class TestEngineTDMProgramInteraction:
             ops.MeasureHomodyne(p[1]) | q[0]
 
         prog.run_options = {"shots": 5}
-        results = eng.run(prog, shots=2)
-        assert len(results.samples) == 2
+        results = eng.run(prog, shots=shots)
+        assert len(results.samples) == len_samples
         assert prog.run_options["shots"] == 5
 
     def test_shots_with_timebins_non_multiple_of_concurrent_modes(self):
