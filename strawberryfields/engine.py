@@ -451,12 +451,14 @@ class LocalEngine(BaseEngine):
             # if a tdm program is input in a rolled state, then unroll it
             if not program.is_unrolled:
                 received_rolled_circuit = True
-                program.unroll(shots=shots)
+                # if shots = None, then set shots=1 here only to unroll the program
+                program.unroll(shots=shots if shots is not None else 1)
 
             # Shots >1 for a TDM program simply corresponds to creating
             # multiple copies of the program, and appending them to run sequentially.
-            # As a result, we set the backend shots to 1 for the Gaussian backend.
-            kwargs["shots"] = 1
+            # As a result, we set the backend shots to 1 for the Gaussian backend
+            # unless shots was set to `None`.
+            kwargs["shots"] = 1 if shots else None
 
         args = args or {}
         compile_options = compile_options or {}

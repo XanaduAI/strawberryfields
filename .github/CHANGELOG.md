@@ -9,6 +9,8 @@
 * A `Device.certificate` method is added which returns the hardware device certificate.
   [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
 
+* Setting `shots=None` in the engine or program run options will not execute any measurements applied on the circuit. [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
+
 <h3>Breaking Changes</h3>
 
 * `DeviceSpec` is renamed to `Device`.
@@ -33,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson, Jon Schlipf, Hossein Seifoory
+Sebastian Duque, Theodor Isacsson, Jon Schlipf, Hossein Seifoory
 
 # Release 0.21.0 (current release)
 
