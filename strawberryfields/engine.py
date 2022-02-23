@@ -25,7 +25,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import xcc
 
-from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.device import Device
 from strawberryfields.result import Result
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
@@ -451,12 +451,14 @@ class LocalEngine(BaseEngine):
             # if a tdm program is input in a rolled state, then unroll it
             if not program.is_unrolled:
                 received_rolled_circuit = True
-                program.unroll(shots=shots)
+                # if shots = None, then set shots=1 here only to unroll the program
+                program.unroll(shots=shots if shots is not None else 1)
 
             # Shots >1 for a TDM program simply corresponds to creating
             # multiple copies of the program, and appending them to run sequentially.
-            # As a result, we set the backend shots to 1 for the Gaussian backend.
-            kwargs["shots"] = 1
+            # As a result, we set the backend shots to 1 for the Gaussian backend
+            # unless shots was set to `None`.
+            kwargs["shots"] = 1 if shots else None
 
         args = args or {}
         compile_options = compile_options or {}
@@ -571,7 +573,7 @@ class RemoteEngine:
         backend_options: Optional[Dict[str, Any]] = None,
     ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
-        self._spec = None
+        self._device = None
         self._connection = connection
         self._backend_options = backend_options or {}
         self.log = create_logger(__name__)
@@ -609,22 +611,20 @@ class RemoteEngine:
         )
 
     @property
-    def device_spec(self) -> DeviceSpec:
-        """The specification of the target device.
+    def device(self) -> Device:
+        """The representation of the target device.
 
         Returns:
-            DeviceSpec: the device specification
+            .strawberryfields.Device: the target device representation
 
         Raises:
             requests.exceptions.RequestException: if there was an issue fetching
-                the device specifications from the Xanadu Cloud
+                the device specifications or the device certificate from the Xanadu Cloud
         """
-        if self._spec is None:
-            target = self.target
-            connection = self.connection
-            device = xcc.Device(target=target, connection=connection)
-            self._spec = DeviceSpec(spec=device.specification)
-        return self._spec
+        if self._device is None:
+            device = xcc.Device(target=self.target, connection=self.connection)
+            self._device = Device(spec=device.specification, cert=device.certificate)
+        return self._device
 
     def run(
         self, program: Program, *, compile_options=None, recompile=False, **kwargs
@@ -715,7 +715,7 @@ class RemoteEngine:
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
-        device = self.device_spec
+        device = self.device
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
         program_is_compiled = program.compile_info is not None

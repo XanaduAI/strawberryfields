@@ -453,11 +453,11 @@ class TDMProgram(Program):
         and the program target to the correct device target.
 
         Args:
-            device (~strawberryfields.DeviceSpec): device specification object to use for
+            device (~strawberryfields.Device): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DeviceSpec`. If no compiler is passed, the default TDM
+                the hardware :class:`~.Device`. If no compiler is passed, the default TDM
                 compiler is used. Currently, the only other allowed compilers are "gaussian" and
                 "passive".
 

@@ -499,7 +499,7 @@ class Program:
         """Check that the number of modes in the program is valid for the given device.
 
         Args:
-            device (~strawberryfields.DeviceSpec): Device specification object to use.
+            device (~strawberryfields.Device): Device specification object to use.
                 ``device.modes`` must be an integer, containing the allowed number of modes
                 for the target.
         """
@@ -518,7 +518,7 @@ class Program:
         measurements according to the device specification.
 
         Args:
-            device (~strawberryfields.DeviceSpec): Device specification object to use.
+            device (~strawberryfields.Device): Device specification object to use.
                 ``device.modes`` must be a dictionary, containing the maximum number of allowed
                 measurements for the specified target.
 
@@ -590,7 +590,7 @@ class Program:
 
         >>> prog2 = prog.compile(compiler="gbs")
 
-        For a hardware device a :class:`~.DeviceSpec` object, and optionally a specified compile strategy,
+        For a hardware device a :class:`~.Device` object, and optionally a specified compile strategy,
         must be supplied. If no compile strategy is supplied the default compiler from the device
         specification is used.
 
@@ -599,11 +599,11 @@ class Program:
         >>> prog2 = prog.compile(device=device, compiler="Xcov")
 
         Args:
-            device (~strawberryfields.DeviceSpec): device specification object to use for
+            device (~strawberryfields.Device): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DeviceSpec`.
+                the hardware :class:`~.Device`.
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.

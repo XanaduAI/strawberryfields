@@ -316,6 +316,12 @@ class Measurement(Operation):
             shots (int): Number of independent evaluations to perform.
                 Only applies to Measurements.
         """
+        # Do not apply any measurement operation in the circuit
+        # if `shots` is set to None
+        _shots = kwargs.get("shots", 1)
+        if _shots is None:
+            return None
+
         values = super().apply(reg, backend, **kwargs)
 
         # store the results in the register reference objects

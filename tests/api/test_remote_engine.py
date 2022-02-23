@@ -23,7 +23,7 @@ import pytest
 import xcc
 
 import strawberryfields as sf
-from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.device import Device
 from strawberryfields.result import Result
 from strawberryfields.engine import RemoteEngine
 
@@ -76,6 +76,7 @@ def device(connection, monkeypatch):
         "compiler": ["fock"],
         "gate_parameters": {},
     }
+    device.certificate = {}
 
     monkeypatch.setattr(sf.engine.xcc, "Connection", MagicMock())
     monkeypatch.setattr(sf.engine.xcc, "Device", mock_return(device))
@@ -153,7 +154,7 @@ class TestRemoteEngine:
         """
         engine = RemoteEngine("X8")
 
-        prog = prog.compile(device=engine.device_spec, shots=15)
+        prog = prog.compile(device=engine.device, shots=15)
         assert prog.run_options == {"shots": 15}
 
         engine.run_async(prog)
@@ -185,7 +186,7 @@ class TestRemoteEngineIntegration:
         assert infolog.records[-1].message == want_message
 
         # Check that the program is compiled to match the chip template.
-        expected = prog.compile(device=engine.device_spec).circuit
+        expected = prog.compile(device=engine.device).circuit
         res = program.circuit
 
         for cmd1, cmd2 in zip(res, expected):
@@ -205,7 +206,7 @@ class TestRemoteEngineIntegration:
         engine = RemoteEngine("X8")
         engine.run_async(prog, shots=10)
 
-        assert engine.device_spec.default_compiler == "Xunitary"
+        assert engine.device.default_compiler == "Xunitary"
 
         want_message = "Compiling program for device X8_01 using compiler Xunitary."
         assert infolog.records[-1].message == want_message
@@ -216,7 +217,7 @@ class TestRemoteEngineIntegration:
         """
         device.specification["compiler"] = []
 
-        # Setting compile_info with a dummy devicespec and compiler name
+        # Setting compile_info with a dummy device spec and compiler name
         dummy_spec = {
             "target": "DummyDevice",
             "modes": 2,
@@ -224,8 +225,8 @@ class TestRemoteEngineIntegration:
             "gate_parameters": None,
             "compiler": [None],
         }
-        X8_spec = DeviceSpec(spec=dummy_spec)
-        prog._compile_info = (X8_spec, "dummy_compiler")
+        X8_device = Device(spec=dummy_spec)
+        prog._compile_info = (X8_device, "dummy_compiler")
 
         engine = sf.RemoteEngine("X8")
         with pytest.raises(ValueError, match="Cannot use program compiled"):
@@ -265,8 +266,8 @@ class TestRemoteEngineIntegration:
             "gate_parameters": None,
             "compiler": [None],
         }
-        X8_spec = DeviceSpec(spec=dummy_spec)
-        prog._compile_info = (X8_spec, "fake_compiler")
+        X8_device = Device(spec=dummy_spec)
+        prog._compile_info = (X8_device, "fake_compiler")
 
         engine = sf.RemoteEngine("X8")
         engine.run_async(prog, shots=10, compile_options=None, recompile=True)
@@ -281,7 +282,7 @@ class TestRemoteEngineIntegration:
         device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8")
-        device = engine.device_spec
+        device = engine.device
 
         prog._compile_info = (device, device.compiler)
 
@@ -300,7 +301,7 @@ class TestRemoteEngineIntegration:
         device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8")
-        device = engine.device_spec
+        device = engine.device
 
         prog._compile_info = (device, device.compiler)
 
@@ -323,7 +324,7 @@ class TestRemoteEngineIntegration:
         device.specification["compiler"] = ["Xunitary"]
 
         engine = sf.RemoteEngine("X8_01")
-        device = engine.device_spec
+        device = engine.device
 
         prog._compile_info = (device, device.compiler)
 
