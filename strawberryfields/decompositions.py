@@ -1142,7 +1142,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
         global_phase = np.angle(det)
 
     # Decompose the matrix
-    parameters_no_modes = _sun_parameters(SU)
+    parameters_no_modes = _sun_parameters(SU, rtol, atol)
 
     # Add the info about which modes each transformation is on
     param_idx = 0
@@ -1154,7 +1154,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
     return parameters, global_phase
 
 
-def _sun_parameters(U):
+def _sun_parameters(U, rtol=1e-12, atol=1e-12):
     r"""Compute the set of parameters of the :math:`\mathrm{SU}(2)` transforms in the
     factorization scheme.
 
@@ -1177,13 +1177,13 @@ def _sun_parameters(U):
     if U.shape == (3, 3):
         return _su3_parameters(U)
 
-    staircase_transformation, new_U = _build_staircase(U)
+    staircase_transformation, new_U = _build_staircase(U, rtol, atol)
     Unm1 = new_U[1:, 1:]
-    return staircase_transformation + _sun_parameters(Unm1)
+    return staircase_transformation + _sun_parameters(Unm1, rtol, atol)
 
 
 # pylint: disable=too-many-branches
-def _build_staircase(U):
+def _build_staircase(U, rtol=1e-12, atol=1e-12):
     r"""Take a matrix in :math:`\mathrm{SU}(n)` and find the staircase of :math:`\mathrm{SU}(n)`
     transformations which turns it into an :math:`\mathrm{SU}(n-1)` transformation on all but
     the first mode.
@@ -1204,15 +1204,15 @@ def _build_staircase(U):
     # There are a number of special cases to consider which occur when the
     # left-most column contains all 0s except for one entry.
     moduli = [np.abs(U[x, 0]) for x in range(n)]
-    if np.allclose(sorted(moduli), [0.0] * (n - 1) + [1]):
+    if np.allclose(sorted(moduli), [0.0] * (n - 1) + [1], rtol, atol):
         # In the special case where the top-most entry is a 1, or within some
         # small tolerance of it, we basically already have an SU(n-1) transformation
         # in there so just fill with empty parameters
-        if np.isclose(running_prod[0, 0], 1):
+        if np.isclose(running_prod[0, 0], 1, rtol, atol):
             transformations = [[0.0, 0.0, 0.0]] * (n - 1)
         # Another special case is when the top left entry has modulus 1 (or close
         # to it). Now we need to add a separate phase shift as well.
-        elif np.isclose(np.abs(running_prod[0, 0]), 1):
+        elif np.isclose(np.abs(running_prod[0, 0]), 1, rtol, atol):
             # "Phase shift" by applying an SU(2) transformation to cancel out the
             # top-most phase. Do nothing to everything else.
             phase_su2 = np.array([[np.conj(running_prod[0, 0]), 0], [0, running_prod[0, 0]]])
@@ -1225,12 +1225,12 @@ def _build_staircase(U):
             # If the non-zero entry is lower down, permute until it
             # reaches the top and then apply a phase transformation.
             for rot_idx in range(n - 1, 0, -1):
-                if running_prod[rot_idx, 0] != 0:
+                if not np.isclose(running_prod[rot_idx, 0], 0, rtol, atol):
                     permmat = np.array([[0, -1], [1, 0]])
 
-                    full_permmat = np.asarray(np.identity(n)) + 0j
+                    full_permmat = np.identity(n, dtype=complex)
                     full_permmat[rot_idx - 1 : rot_idx + 1, rot_idx - 1 : rot_idx + 1] = permmat
-                    temp_product = full_permmat * running_prod
+                    temp_product = full_permmat @ running_prod
 
                     if rot_idx == 1:  # If we're at the top, add the phase too
                         phase_su2 = np.array(
@@ -1240,10 +1240,10 @@ def _build_staircase(U):
 
                     transformations.append(_su2_parameters(permmat.conj().T))
 
-                    full_trans = np.asarray(np.identity(n)) + 0j
+                    full_trans = np.identity(n, dtype=complex)
                     full_trans[rot_idx - 1 : rot_idx + 1, rot_idx - 1 : rot_idx + 1] = permmat
 
-                    running_prod = full_trans * running_prod
+                    running_prod = full_trans @ running_prod
 
                 else:  # Otherwise do nothing between these modes
                     transformations.append([0, 0, 0])
@@ -1254,8 +1254,8 @@ def _build_staircase(U):
 
             # Initially we work with the inverses in order to "0 out" entries
             # from the left; later we'll get the parameters from the "true" matrices.
-            Rij_inv = np.asarray(np.identity(2)) + 0j
-            full_Rij_inv = np.asarray(np.identity(n)) + 0j
+            Rij_inv = np.identity(2, dtype=complex)
+            full_Rij_inv = np.identity(n, dtype=complex)
 
             if rot_idx != n - 2:
                 # The denominator of the transformation is the difference of
