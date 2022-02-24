@@ -843,8 +843,9 @@ class TestSUnFactorization:
             parameters (list(tuple)): sequence of tranformation parameters with the
                 form ("i,j", [a, b, g]) where i,j are the indices of the modes and
                 a,b,g the SU(2) transformation parameters.
+
         Returns:
-            U (array[complex]): the reconstructed SU(n) matrix
+            array[complex]: the reconstructed SU(n) matrix
         """
         U = np.identity(n, dtype=complex)
 

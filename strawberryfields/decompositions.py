@@ -1085,6 +1085,7 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
         U (array): unitary matrix
         rtol (float): relative tolerance used when checking if the matrix is unitary
         atol (float): absolute tolerance used when checking if the matrix is unitary
+
     Returns:
         tuple[list[tuple,list], float]: Returns a list of operations with elements in
         the form ``(i,i+1), [a, b, g]`` where the ``(i,i+1)`` indicates the modes of an
@@ -1160,19 +1161,19 @@ def _sun_parameters(U, rtol=1e-12, atol=1e-12):
 
     Args:
         U (array): unitary matrix
+
     Returns:
         list: a list of parameters ``[a, b, g]`` of an :math:`\mathrm{SU}(2)` operation
 
     .. details::
 
     This is a recursive process. The first step is to produce a
-    "staircase" of transformations on adjacent modes ``(d-1, d), (d-2, d-1), \dots``
+    "staircase" of transformations on adjacent modes :math:`(d-1, d), (d-2, d-1), \dots`
     so that what's left is an :math:`\mathrm{SU}(n-1)` transformation embedded in the lower
     portion of the original system.
     This is performed recursively down to the case of :math:`\mathrm{SU}(3)` where the
     Rowe et al algorithm :cite:`rowe1999representations` is used to get the rest of the
     transformation.
-
     """
     if U.shape == (3, 3):
         return _su3_parameters(U)
@@ -1190,6 +1191,7 @@ def _build_staircase(U, rtol=1e-12, atol=1e-12):
 
     Args:
         U (array): unitary matrix
+
     Returns:
         list: Returns the list of parameters in the order in which they appear
             graphically, e.g. for :math:`\mathrm{SU}(5)` will return parameters for a staircase
@@ -1289,10 +1291,11 @@ def _build_staircase(U, rtol=1e-12, atol=1e-12):
 
 
 def _su2_parameters(U, tol=1e-11):
-    r"""Compute and return the parameters `[a, b, g]` of an :math:`\mathrm{SU}(2)` matrix.
+    r"""Compute and return the parameters ``[a, b, g]`` of an :math:`\mathrm{SU}(2)` matrix.
 
     Args:
         U (array): unitary matrix of shape ``(2,2)`` with :math:`\det U = 1`
+
     Returns:
         list: a list of parameters ``[a, b, g]`` of the :math:`\mathrm{SU}(2)` matrix
 
@@ -1338,18 +1341,19 @@ def _su3_parameters(U):
 
     Args:
         U (array): unitary matrix of shape ``(3,3)`` with :math:`\det U = 1`
+
     Returns:
         list[list]: a list containing three entries of the form ``[a, b, g]``, where every
-            entry has the parameters of an :math:`\mathrm{SU}(2)` matrix.
+        entry has the parameters of an :math:`\mathrm{SU}(2)` matrix.
 
     .. details::
 
-    Uses the factorization on :cite:`rowe1999representations` to factorize an
-    :math:`\mathrm{SU}(3)` transformation into 3 :math:`\mathrm{SU}(2)` transformations.
-    Parameters for each :math:`\mathrm{SU}(3)` transformation are returned as a list
-    :math:`[\alpha, \beta, \gamma]` (three-parameter transformation) or
-    :math:`[\alpha, \beta, \alpha]` (two-parameter transformation) where the matrices
-    are to be parametrized as
+        Uses the factorization on :cite:`rowe1999representations` to factorize an
+        :math:`\mathrm{SU}(3)` transformation into 3 :math:`\mathrm{SU}(2)` transformations.
+        Parameters for each :math:`\mathrm{SU}(3)` transformation are returned as a list
+        :math:`[\alpha, \beta, \gamma]` (three-parameter transformation) or
+        :math:`[\alpha, \beta, \alpha]` (two-parameter transformation) where the matrices
+        are to be parametrized as
 
     .. math::
 
@@ -1365,6 +1369,7 @@ def _su3_parameters(U):
     The resultant matrix is expressed as
 
     .. math::
+
         U = SU_{23}(\alpha_1, \beta_1, \gamma_1)
         SU_{12}(\alpha_2, \beta_2, \alpha_2)
         SU_{23}(\alpha_3, \beta_3, \gamma_3).
