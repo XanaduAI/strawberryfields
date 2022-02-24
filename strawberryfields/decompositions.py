@@ -1083,12 +1083,12 @@ def sun_compact(U, rtol=1e-12, atol=1e-12):
 
     Args:
         U (array): unitary matrix
-        rtol (float): relative tolerance used when checking if the matrix unitary
-        atol (float): absolute tolerance used when checking if the matrix unitary
+        rtol (float): relative tolerance used when checking if the matrix is unitary
+        atol (float): absolute tolerance used when checking if the matrix is unitary
     Returns:
         tuple[list[tuple,list], float]: Returns a list of operations with elements in
-        the form ``(i,i+1), [a, b, g]`` where the ``i`` indicate the mode of an
-        :math:`\mathrm{SU}(2)` transformation and ``[a, b, g]`` are its parameters.
+        the form ``(i,i+1), [a, b, g]`` where the ``(i,i+1)`` indicates the modes of an
+        :math:`\mathrm{SU}(2)` transformation and ``[a, b, g]`` are the transformation parameters.
 
     .. details::
 
@@ -1203,7 +1203,7 @@ def _build_staircase(U, rtol=1e-12, atol=1e-12):
 
     # There are a number of special cases to consider which occur when the
     # left-most column contains all 0s except for one entry.
-    moduli = [np.abs(U[x, 0]) for x in range(n)]
+    moduli = np.abs(U[:, 0])
     if np.allclose(sorted(moduli), [0.0] * (n - 1) + [1], rtol, atol):
         # In the special case where the top-most entry is a 1, or within some
         # small tolerance of it, we basically already have an SU(n-1) transformation
@@ -1215,10 +1215,10 @@ def _build_staircase(U, rtol=1e-12, atol=1e-12):
         elif np.isclose(np.abs(running_prod[0, 0]), 1, rtol, atol):
             # "Phase shift" by applying an SU(2) transformation to cancel out the
             # top-most phase. Do nothing to everything else.
-            phase_su2 = np.array([[np.conj(running_prod[0, 0]), 0], [0, running_prod[0, 0]]])
+            phase_su2 = np.array([[running_prod[0, 0].conjugate(), 0], [0, running_prod[0, 0]]])
             transformations = [[0.0, 0.0, 0.0]] * (n - 2) + [_su2_parameters(phase_su2.conj().T)]
 
-            full_phase_su2 = np.asarray(np.identity(n)) + 0j
+            full_phase_su2 = np.identity(n, dtype=complex)
             full_phase_su2[0:2, 0:2] = phase_su2
             running_prod = full_phase_su2 @ running_prod
         else:
@@ -1234,7 +1234,7 @@ def _build_staircase(U, rtol=1e-12, atol=1e-12):
 
                     if rot_idx == 1:  # If we're at the top, add the phase too
                         phase_su2 = np.array(
-                            [[np.conj(temp_product[0, 0]), 0], [0, temp_product[0, 0]]]
+                            [[temp_product[0, 0].conjugate(), 0], [0, temp_product[0, 0]]]
                         )
                         permmat = phase_su2 @ permmat
 
