@@ -932,13 +932,20 @@ class TestSUnFactorization:
 
         assert np.allclose(U_reconstructed, U)
 
-    def test_u3_embeded(self, tol):
-        """test factorization of U(3) transformations embeded on U(4) transformation"""
+    @pytest.mark.parametrize("permutation", [np.array([0,1,2,3,4]), np.array([3,1,0,2,1])])
+    def test_u4_embeded(self, permutation, tol):
+        """test factorization of U(4) transformations embeded on U(5) transformation"""
 
-        # Embed SU(3) on n=4 matrix
-        U = np.zeros((4, 4), dtype=complex)
+        # Embed U(4) on n=5 matrix
+        U = np.zeros((5, 5), dtype=complex)
         U[0, 0] = np.exp(1j * np.pi * np.random.rand())
-        U[1:, 1:] = random_interferometer(3)
+        U4 = random_interferometer(4)
+        U[1:, 1:] = U4
+        detU = np.linalg.det(U4)
+
+        # make SU and permute rows
+        SU = U/(detU**(1/4))
+        SU = SU[:, permutation]
 
         factorization_params, _ = dec.sun_compact(U, tol)
         _, first_params = factorization_params[0]
