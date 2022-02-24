@@ -933,13 +933,15 @@ class TestSUnFactorization:
         assert np.allclose(U_reconstructed, U)
 
     @pytest.mark.parametrize("phase", np.linspace(0, 2 * np.pi, 5))
-    @pytest.mark.parametrize("n,permutation", [
-        (3, np.array([0, 1, 2])),
-        (4, np.array([0, 1, 2, 3])),
-        (4, np.array([2, 3, 0, 1])),
-        (5, np.array([0, 1, 2, 3, 4])),
-        (5, np.array([3, 1, 0, 2, 4]))
-        ]
+    @pytest.mark.parametrize(
+        "n,permutation",
+        [
+            (3, np.array([0, 1, 2])),
+            (4, np.array([0, 1, 2, 3])),
+            (4, np.array([2, 3, 0, 1])),
+            (5, np.array([0, 1, 2, 3, 4])),
+            (5, np.array([3, 1, 0, 2, 4])),
+        ],
     )
     def test_embeded_unitary(self, n, permutation, phase, tol):
         """test factorization of U(n-1) transformations embeded on U(n) transformation"""
@@ -947,7 +949,7 @@ class TestSUnFactorization:
         # Embed U(4) on n=5 matrix
         U = np.zeros((n, n), dtype=complex)
         U[0, 0] = np.exp(1j * phase)
-        U4 = random_interferometer(n-1)
+        U4 = random_interferometer(n - 1)
         U[1:, 1:] = U4
 
         # permute rows
