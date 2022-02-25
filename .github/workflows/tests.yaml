@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      SYMPY_USE_CACHE: "no"
       OPTIONS: ${{ matrix.options }}
       BATCHED: ${{ matrix.batched }}
 
