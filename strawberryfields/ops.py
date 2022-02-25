@@ -2488,6 +2488,33 @@ def _triangular_compact_cmds(reg, phases):
     return cmds
 
 
+def _sun_compact_cmds(reg, parameters, global_phase):
+    cmds = []
+    n = len(reg)
+
+    if global_phase is not None:
+        cmds += [Command(Rgate(global_phase / n), mode) for mode in reg]
+
+    for modes, params in parameters:
+
+        md1, md2 = modes[0], modes[1]
+        a, b, g = params[0], params[1], params[2]
+
+        if md2 != md1 + 1:
+            raise ValueError(
+                f"Mode combination {md1},{md2} is invalid.\n"
+                + "Currently only transformations on adjacent modes are implemented."
+            )
+
+        cmds += [Command(Rgate(a / 2), reg[md1]), Command(Rgate(-a / 2), reg[md2])]
+        cmds.append(Command(BSgate(b / 2, 0), (reg[md1], reg[md2])))
+        cmds += [Command(Rgate(g / 2), reg[md1]), Command(Rgate(-g / 2), reg[md2])]
+
+    # note cmds have to be reversed as they are build in matrix multiplication order,
+    # which is in opposite order to gate application
+    return cmds[::-1]
+
+
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
@@ -2603,6 +2630,7 @@ class Interferometer(Decomposition):
             "triangular",
             "rectangular_compact",
             "triangular_compact",
+            "sun_compact",
         }
 
         if mesh not in allowed_meshes:
@@ -2627,6 +2655,10 @@ class Interferometer(Decomposition):
         elif mesh == "triangular_compact":
             phases = dec.triangular_compact(self.p[0], rtol=tol, atol=tol)
             cmds = _triangular_compact_cmds(reg, phases)
+
+        elif mesh == "sun_compact":
+            parameters, global_phase = dec.sun_compact(self.p[0], rtol=tol, atol=tol)
+            cmds = _sun_compact_cmds(reg, parameters, global_phase)
 
         elif not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)
