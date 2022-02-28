@@ -25,9 +25,9 @@ from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 try:
     import tensorflow as tf
 except:
-    backends = ["fock", "tf"]
-else:
     backends = ["fock"]
+else:
+    backends = ["fock", "tf"]
 
 # make test deterministic
 np.random.seed(42)
