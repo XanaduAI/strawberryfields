@@ -19,6 +19,7 @@ jobs:
       SYMPY_USE_CACHE: "no"
       OPTIONS: ${{ matrix.options }}
       BATCHED: ${{ matrix.batched }}
+      SKIP_DEPENDENCIES: "tensorflow|tensorboard"
 
     strategy:
       matrix:
@@ -29,6 +30,7 @@ jobs:
             - {BATCHED: 1, OPTIONS: "tf and pure"}
             - {BATCHED: 1, OPTIONS: "tf and mixed"}
             - {BATCHED: 0, OPTIONS: "bosonic"}
+            - {BATCHED: 0, OPTIONS: "not tf"}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -46,6 +48,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          [ "$OPTIONS" = "not tf" ] && gawk -i inplace '!/('$SKIP_DEPENDENCIES')/' requirements-ci.txt
           python3 -m pip install --upgrade pip
           pip install -r requirements-ci.txt
           pip install wheel codecov pytest pytest-cov pytest-randomly pytest-mock pytest-logger --upgrade
