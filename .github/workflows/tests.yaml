@@ -19,7 +19,7 @@ jobs:
       SYMPY_USE_CACHE: "no"
       OPTIONS: ${{ matrix.options }}
       BATCHED: ${{ matrix.batched }}
-      SKIP_DEPENDENCIES: "tensorflow|tensorboard"
+      TF_DEPENDENCIES: "tensorflow|tensorboard"
 
     strategy:
       matrix:
@@ -48,7 +48,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          [ "$OPTIONS" = "not tf" ] && gawk -i inplace '!/('$SKIP_DEPENDENCIES')/' requirements-ci.txt
+          [ "$OPTIONS" = "not tf" ] && gawk -i inplace '!/('$TF_DEPENDENCIES')/' requirements-ci.txt
           python3 -m pip install --upgrade pip
           pip install -r requirements-ci.txt
           pip install wheel codecov pytest pytest-cov pytest-randomly pytest-mock pytest-logger --upgrade
