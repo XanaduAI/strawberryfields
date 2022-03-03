@@ -16,8 +16,9 @@ import pytest
 
 import strawberryfields as sf
 from strawberryfields import ops
+from strawberryfields.program_utils import program_equivalence
 
-from conftest import program_equivalence, X8_device, generate_X8_params
+from conftest import X8_device, generate_X8_params
 
 pytestmark = pytest.mark.frontend
 

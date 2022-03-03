@@ -62,6 +62,86 @@ def permute_gates():
 class TestProgram:
     """Tests the Program class."""
 
+    def test_eq_same_prog(self, prog):
+        """Same program equivalence."""
+        assert prog == prog
+
+        with prog.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        assert prog == prog
+
+    def test_eq(self):
+        """Identical, but different, programs."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        assert prog_1 == prog_2
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        assert prog_1 == prog_2
+
+    def test_eq_different_gates(self):
+        """Programs with different circuits differ."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.MeasureFock() | q[1]
+
+        assert prog_1 != prog_2
+
+    def test_eq_different_params(self):
+        """Programs with different parameters differ."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(1) | q[0]  # different parameter
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        assert prog_1 != prog_2
+
+    def test_eq_symmetric_bsgate(self):
+        """Mode order doesn't matter in programs with symmetric beamsplitter."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])  # symmetric beamsplitter
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[0])  # symmetric beamsplitter
+            ops.MeasureFock() | q[1]
+
+        assert prog_1 == prog_2
+
     def test_with_block(self, prog):
         """Gate application using a with block."""
         # command queue is empty
