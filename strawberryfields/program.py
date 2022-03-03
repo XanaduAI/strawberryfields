@@ -62,7 +62,7 @@ import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 import strawberryfields.program_utils as pu
 
-from .program_utils import Command, RegRef, CircuitError, RegRefError
+from .program_utils import Command, RegRef, CircuitError, RegRefError, program_equivalence
 from .parameters import FreeParameter, ParameterError
 
 
@@ -202,6 +202,10 @@ class Program:
             int: number of Commands in the program
         """
         return len(self.circuit)
+
+    def __eq__(self, program):
+        """Equality operator for programs."""
+        return program_equivalence(self, program)
 
     def print(self, print_fn=print):
         """Print the program contents using Blackbird syntax.
