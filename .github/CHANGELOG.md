@@ -17,8 +17,12 @@
   Strawberry Fields programs for equivalence.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
-* The equality operator is implemented for `strawberryfields.Program` which uses the
-  `program_equivalence` utility function.
+* An equality operator is implemented for `strawberryfields.Program`, checking that the exact same
+  gates and respective parameters, are applied in order.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+* A `Progra.equivalence` convenience method is added which calls the `program_equivalence`
+  utility function.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
 <h3>Breaking Changes</h3>
