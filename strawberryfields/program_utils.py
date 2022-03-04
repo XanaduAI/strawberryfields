@@ -432,6 +432,10 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
     # Maybe we can do this in future, but this is a subgraph
     # isomorphism problem and much harder.
 
+    # if the same program is passed twice, return ``True``
+    if prog1 is prog2:
+        return True
+
     DAG1 = list_to_DAG(prog1.circuit)
     DAG2 = list_to_DAG(prog2.circuit)
 
