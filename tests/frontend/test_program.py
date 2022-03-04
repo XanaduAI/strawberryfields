@@ -62,23 +62,14 @@ def permute_gates():
 class TestProgram:
     """Tests the Program class."""
 
-    def test_eq_same_prog(self, prog):
-        """Same program equivalence."""
-        assert prog == prog
-
-        with prog.context as q:
-            ops.Fock(2) | q[0]
-            ops.BSgate() | (q[0], q[1])
-            ops.MeasureFock() | q[1]
-
-        assert prog == prog
-
-    def test_eq(self):
-        """Identical, but different, programs."""
+    def test_eq_operator(self):
+        """Equality operator check."""
         prog_1 = sf.Program(2)
         prog_2 = sf.Program(2)
 
+        # should be equivalent
         assert prog_1 == prog_2
+        assert prog_2 == prog_1
 
         with prog_1.context as q:
             ops.Fock(2) | q[0]
@@ -90,9 +81,89 @@ class TestProgram:
             ops.BSgate() | (q[0], q[1])
             ops.MeasureFock() | q[1]
 
+        # should be equal
         assert prog_1 == prog_2
+        assert prog_2 == prog_1
 
-    def test_eq_different_gates(self):
+    def test_neq_operator(self):
+        """Not-equal operator check."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Sgate(4.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should NOT be equal
+        assert prog_1 != prog_2
+        assert prog_2 != prog_1
+
+    def test_neq_operator_equivalent(self):
+        """Not-equal operator check with equivalent circuit."""
+        prog_1 = sf.Program(3)
+        prog_2 = sf.Program(3)
+
+        with prog_1.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.Sgate(0.2) | q[2]
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.Sgate(0.2) | q[2]  # moved up one step
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should NOT be equal
+        assert prog_1 != prog_2
+        assert prog_2 != prog_1
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence(self, compare_params):
+        """Identical, but different, programs are equal."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2)
+        assert prog_2.equivalence(prog_1)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert prog_2.equivalence(prog_1, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_same_prog(self, prog, compare_params):
+        """Same program equivalence."""
+        assert prog.equivalence(prog)
+
+        with prog.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog.equivalence(prog, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_different_gates(self, compare_params):
         """Programs with different circuits differ."""
         prog_1 = sf.Program(2)
         prog_2 = sf.Program(2)
@@ -106,9 +177,12 @@ class TestProgram:
             ops.Fock(2) | q[0]
             ops.MeasureFock() | q[1]
 
-        assert prog_1 != prog_2
+        # should NOT be equivalent
+        assert not prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert not prog_2.equivalence(prog_1, compare_params=compare_params)
 
-    def test_eq_different_params(self):
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_different_params(self, compare_params):
         """Programs with different parameters differ."""
         prog_1 = sf.Program(2)
         prog_2 = sf.Program(2)
@@ -123,9 +197,17 @@ class TestProgram:
             ops.BSgate() | (q[0], q[1])
             ops.MeasureFock() | q[1]
 
-        assert prog_1 != prog_2
+        if compare_params:
+            # should NOT be equivalent
+            assert not prog_1.equivalence(prog_2, compare_params=compare_params)
+            assert not prog_2.equivalence(prog_1, compare_params=compare_params)
+        else:
+            # should be equivalent
+            assert prog_1.equivalence(prog_2, compare_params=compare_params)
+            assert prog_2.equivalence(prog_1, compare_params=compare_params)
 
-    def test_eq_symmetric_bsgate(self):
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_eq_symmetric_bsgate(self, compare_params):
         """Mode order doesn't matter in programs with symmetric beamsplitter."""
         prog_1 = sf.Program(2)
         prog_2 = sf.Program(2)
@@ -140,7 +222,31 @@ class TestProgram:
             ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[0])  # symmetric beamsplitter
             ops.MeasureFock() | q[1]
 
-        assert prog_1 == prog_2
+        # should be equivalent
+        assert prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert prog_2.equivalence(prog_1, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_neq_operator_equivalent(self, compare_params):
+        """Programs with differnet, but equivalent, circuits."""
+        prog_1 = sf.Program(3)
+        prog_2 = sf.Program(3)
+
+        with prog_1.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.Sgate(0.2) | q[2]
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.Sgate(0.2) | q[2]  # moved up one step, but still equivalent
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert prog_2.equivalence(prog_1, compare_params=compare_params)
 
     def test_with_block(self, prog):
         """Gate application using a with block."""
