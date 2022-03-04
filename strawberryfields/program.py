@@ -213,6 +213,18 @@ class Program:
             parameters are identically applied. For a more thorough check, use the
             ``Program.equivalence()`` method instead.
         """
+        # is the targets differ, the programs are not equal
+        if self.target != prog.target:
+            return False
+
+        # if the registers differ, the programs are not equal
+        if self.register != prog.register:
+            return False
+
+        # NOTE: If two programs have been compiled by different compilers (or only one has been
+        # compiled), they are still considered to be equal, even if their targets differ. Similarly,
+        # two programs with different names can still be considered equal.
+
         for self_cmd, prog_cmd in zip(self.circuit, prog.circuit):
             names_eq = self_cmd.op.__class__ == prog_cmd.op.__class__
             param_eq = all(p1 == p2 for p1, p2 in zip(self_cmd.op.p, prog_cmd.op.p))
