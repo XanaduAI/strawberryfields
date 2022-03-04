@@ -203,9 +203,53 @@ class Program:
         """
         return len(self.circuit)
 
-    def __eq__(self, program):
-        """Equality operator for programs."""
-        return program_equivalence(self, program)
+    def __eq__(self, prog):
+        """Equality operator for programs.
+
+        .. note::
+
+            This operation does not account for logically equivalent programs where the order
+            of operations or modes do not matter. It simply checks that the operations and
+            parameters are identically applied. For a more thorough check, use the
+            ``Program.equivalence()`` method instead.
+        """
+        for self_cmd, prog_cmd in zip(self.circuit, prog.circuit):
+            names_eq = self_cmd.op.__class__ == prog_cmd.op.__class__
+            param_eq = all(p1 == p2 for p1, p2 in zip(self_cmd.op.p, prog_cmd.op.p))
+            modes_eq = all(m1 == m2 for m1, m2 in zip(self_cmd.reg, prog_cmd.reg))
+
+            if not all((names_eq, param_eq, modes_eq)):
+                return False
+
+        return True
+
+    def equivalence(self, prog, **kwargs):
+        """Checks if two programs are equivalent.
+
+        This function converts the program lists into directed acyclic graphs,
+        and runs the NetworkX `is_isomorphic` graph function in order
+        to determine if the two programs are equivalent.
+
+        .. note::
+
+            This method is a convenience method, wrapping the `program_equivalence`
+            function in the program utils module.
+
+        Args:
+            prog (strawberryfields.program.Program): quantum program to check equivalence with
+
+        Keyword args:
+            compare_params (bool): Set to ``False`` to turn of comparing program parameters;
+                equivalency will only take into account the operation order.
+            atol (float): the absolute tolerance parameter for checking quantum operation
+                parameter equality
+            rtol (float): the relative tolerance parameter for checking quantum operation
+                parameter equality
+
+        Returns:
+            bool: returns ``True`` if two quantum programs are equivalent
+        """
+        return program_equivalence(self, prog, **kwargs)
 
     def print(self, print_fn=print):
         """Print the program contents using Blackbird syntax.
