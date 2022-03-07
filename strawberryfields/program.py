@@ -239,12 +239,12 @@ class Program:
         """Checks if two programs are equivalent.
 
         This function converts the program lists into directed acyclic graphs,
-        and runs the NetworkX `is_isomorphic` graph function in order
+        and runs the NetworkX ``is_isomorphic`` graph function in order
         to determine if the two programs are equivalent.
 
         .. note::
 
-            This method is a convenience method, wrapping the `program_equivalence`
+            This method is a convenience method, wrapping the :func:`.program_equivalence`
             function in the program utils module.
 
         Args:

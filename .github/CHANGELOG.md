@@ -21,7 +21,7 @@
   gates and respective parameters, are applied in order.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
-* A `Progra.equivalence` convenience method is added which calls the `program_equivalence`
+* A `Program.equivalence` convenience method is added which calls the `program_equivalence`
   utility function.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
