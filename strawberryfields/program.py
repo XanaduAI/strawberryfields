@@ -129,6 +129,13 @@ class Program:
 
     The currently active register references can be accessed using the :meth:`~Program.register` method.
 
+    .. note::
+
+            The ``Program`` equality operation (e.g., ``prog_1 == prog_2``) does not account for
+            logically equivalent programs where the order of operations or modes do not matter. It
+            simply checks that the operations and parameters are identically applied. For a more
+            thorough check, use the ``Program.equivalence()`` method instead.
+
     Args:
         num_subsystems (int, Program): Initial number of modes (subsystems) in the quantum register.
             Alternatively, another Program instance from which to inherit the register state.
@@ -204,15 +211,7 @@ class Program:
         return len(self.circuit)
 
     def __eq__(self, prog):
-        """Equality operator for programs.
-
-        .. note::
-
-            This operation does not account for logically equivalent programs where the order
-            of operations or modes do not matter. It simply checks that the operations and
-            parameters are identically applied. For a more thorough check, use the
-            ``Program.equivalence()`` method instead.
-        """
+        """Equality operator for programs."""
         # is the targets differ, the programs are not equal
         if self.target != prog.target:
             return False
