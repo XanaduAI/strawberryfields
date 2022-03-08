@@ -14,6 +14,7 @@
 """
 This module contains a class that represents a device on the Xanadu Cloud.
 """
+import re
 from typing import Sequence, Mapping, Any, Optional
 
 import blackbird
@@ -45,8 +46,27 @@ class Device:
                 f"Device specification is missing the following keys: {sorted(missing_keys)}"
             )
 
-        self._spec = spec
+        self._spec = self.assert_spec(spec)
         self._certificate = cert
+
+    @staticmethod
+    def assert_spec(spec: Mapping[str, Any]):
+        """Check that the target in the specification is equal to the layout target.
+
+        Returns:
+            Dict: dictionary representing the raw device specification."""
+        layout = spec["layout"]
+        target = spec["target"]
+        groups = re.findall(r"target (\w+)", layout or "")
+        if len(groups) <= 1:
+            if len(groups) == 1 and target != groups[0]:
+                raise ValueError(
+                    f"Target in specification '{target}' differs from the "
+                    f"target in layout '{groups[0]}'."
+                )
+            return spec
+
+        raise ValueError(f"Layout must have a single target; found {len(groups)}.")
 
     @property
     def target(self) -> str:
@@ -175,6 +195,5 @@ class Device:
         # evaluate the blackbird template
         bb = bb(**parameters)
         prog = to_program(bb)
-        prog.compile(compiler=self.default_compiler)
 
         return prog
