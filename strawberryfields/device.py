@@ -195,5 +195,6 @@ class Device:
         # evaluate the blackbird template
         bb = bb(**parameters)
         prog = to_program(bb)
+        prog.compile(compiler=self.default_compiler)
 
         return prog
