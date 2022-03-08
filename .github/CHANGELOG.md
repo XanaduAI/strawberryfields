@@ -9,7 +9,21 @@
 * A `Device.certificate` method is added which returns the hardware device certificate.
   [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
 
-* Setting `shots=None` in the engine or program run options will not execute any measurements applied on the circuit. [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
+* Setting `shots=None` in the engine or program run options will not execute any measurements
+  applied on the circuit.
+  [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
+
+* There's a `program_equivalence` function in `strawberryfields/program_utils.py` which checks
+  Strawberry Fields programs for equivalence.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+* An equality operator is implemented for `strawberryfields.Program`, checking that the exact same
+  gates and respective parameters, are applied in order.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+* A `Program.equivalence` convenience method is added which calls the `program_equivalence`
+  utility function.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
 <h3>Breaking Changes</h3>
 
@@ -26,7 +40,8 @@
   specification.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
-* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0` instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
+* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0`
+  instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
 <h3>Documentation</h3>

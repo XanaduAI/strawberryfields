@@ -19,8 +19,9 @@ within the :class:`~.Program` class.
 from collections.abc import Sequence
 
 import networkx as nx
+import numpy as np
 
-from .parameters import MeasuredParameter
+from .parameters import MeasuredParameter, par_evaluate
 
 
 __all__ = [
@@ -397,3 +398,93 @@ def optimize_circuit(seq):
     # convert the circuit back into a list (via a DAG)
     DAG = grid_to_DAG(grid)
     return DAG_to_list(DAG)
+
+
+def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
+    r"""Checks if two programs are equivalent.
+
+    This function converts the program lists into directed acyclic graphs,
+    and runs the NetworkX `is_isomorphic` graph function in order
+    to determine if the two programs are equivalent.
+
+    .. note::
+
+        When checking for parameter equality between two parameters
+        :math:`a` and :math:`b`, we use the following formula:
+
+        .. math:: |a - b| \leq (\texttt{atol} + \texttt{rtol}\times|b|)
+
+    Args:
+        prog1 (strawberryfields.program.Program): quantum program
+        prog2 (strawberryfields.program.Program): quantum program
+        compare_params (bool): Set to ``False`` to turn of comparing program parameters;
+            equivalency will only take into account the operation order.
+        atol (float): the absolute tolerance parameter for checking quantum operation
+            parameter equality
+        rtol (float): the relative tolerance parameter for checking quantum operation
+            parameter equality
+
+    Returns:
+        bool: returns ``True`` if two quantum programs are equivalent
+    """
+    # TODO: at the moment, we do not check for whether an empty
+    # wire will match an operation with trivial parameters.
+    # Maybe we can do this in future, but this is a subgraph
+    # isomorphism problem and much harder.
+
+    # if the same program is passed twice, return ``True``
+    if prog1 is prog2:
+        return True
+
+    DAG1 = list_to_DAG(prog1.circuit)
+    DAG2 = list_to_DAG(prog2.circuit)
+
+    circuit = []
+    for G in (DAG1, DAG2):
+        # relabel the DAG nodes to integers
+        circuit.append(nx.convert_node_labels_to_integers(G))
+
+        # ``CXgate`` and ``BSgate`` are not symmetric with respect to permuting the order of the two
+        # modes it acts on; i.e., the order of the wires matter
+        wire_mapping = {}
+        for i, n in enumerate(G.nodes()):
+            # not a ``CXgate`` or a ``BSgate``, order of wires doesn't matter
+            wire_mapping[i] = 0
+
+            if n.op.__class__.__name__ == "CXgate":
+                # if the ``CXgate`` parameter is not 0, order matters
+                if not np.allclose(n.op.p[0], 0):
+                    wire_mapping[i] = [j.ind for j in n.reg]
+
+            elif n.op.__class__.__name__ == "BSgate":
+                # if the beamsplitter is not symmetric, order matters
+                bs_params = [j % np.pi for j in par_evaluate(n.op.p)]
+                if not np.allclose(bs_params, [np.pi / 4, np.pi / 2]):
+                    wire_mapping[i] = [j.ind for j in n.reg]
+
+        # add node attributes to store the operation wires
+        nx.set_node_attributes(circuit[-1], wire_mapping, name="w")
+
+        # add node attributes to store the operation parameters
+        if compare_params:
+            parameter_mapping = {i: par_evaluate(n.op.p) for i, n in enumerate(G.nodes())}
+            nx.set_node_attributes(circuit[-1], parameter_mapping, name="p")
+
+        # add node attributes to store the operation name
+        name_mapping = {i: n.op.__class__.__name__ for i, n in enumerate(G.nodes())}
+        nx.set_node_attributes(circuit[-1], name_mapping, name="name")
+
+    def node_match(n1, n2):
+        """Returns True if both nodes have the same name and
+        same parameters, within a certain tolerance"""
+        name_match = n1["name"] == n2["name"]
+        wire_match = n1["w"] == n2["w"]
+
+        if compare_params:
+            p_match = np.allclose(n1["p"], n2["p"], atol=atol, rtol=rtol)
+            return name_match and p_match and wire_match
+
+        return name_match and wire_match
+
+    # check if circuits are equivalent
+    return nx.is_isomorphic(circuit[0], circuit[1], node_match)
