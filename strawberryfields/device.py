@@ -54,7 +54,7 @@ class Device:
         """Check that the target in the specification is equal to the layout target.
 
         Returns:
-            Dict: dictionary representing the raw device specification."""
+            dict: dictionary representing the raw device specification."""
         layout = spec["layout"]
         target = spec["target"]
         groups = re.findall(r"target (\w+)", layout or "")
