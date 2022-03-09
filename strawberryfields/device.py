@@ -46,17 +46,19 @@ class Device:
                 f"Device specification is missing the following keys: {sorted(missing_keys)}"
             )
 
-        self._spec = self.assert_spec(spec)
+        self._spec = self.validate_target(spec)
         self._certificate = cert
 
     @staticmethod
-    def assert_spec(spec: Mapping[str, Any]):
+    def validate_target(spec: Mapping[str, Any]):
         """Check that the target in the specification is equal to the layout target.
 
         Returns:
-            Dict: dictionary representing the raw device specification."""
+            Dict: dictionary representing the raw device specification.
+        """
         layout = spec["layout"]
         target = spec["target"]
+
         groups = re.findall(r"target (\w+)", layout or "")
         if len(groups) <= 1:
             if len(groups) == 1 and target != groups[0]:
