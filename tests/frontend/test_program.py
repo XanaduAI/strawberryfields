@@ -227,7 +227,7 @@ class TestProgram:
         assert prog_2.equivalence(prog_1, compare_params=compare_params)
 
     @pytest.mark.parametrize("compare_params", [True, False])
-    def test_neq_operator_equivalent(self, compare_params):
+    def test_equivalence_different_circuits(self, compare_params):
         """Programs with differnet, but equivalent, circuits."""
         prog_1 = sf.Program(3)
         prog_2 = sf.Program(3)
