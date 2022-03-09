@@ -546,7 +546,9 @@ class Program:
             Program: a copy of the Program
         """
         self.lock()
-        p = copy.copy(self)  # shares RegRefs with the source
+        p = copy.deepcopy(self)
+        p.reg_refs = self.reg_refs  # shares RegRefs with the source
+
         # link to the original source Program
         if self.source is None:
             p.source = self

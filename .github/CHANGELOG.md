@@ -44,6 +44,10 @@
   instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
+* `Program.compile()` returns a deep copy of the program, instead of a shallow copy, while still keeping
+  the same register references.
+  [(#675)](https://github.com/XanaduAI/strawberryfields/pull/675)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
