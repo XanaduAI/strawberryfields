@@ -59,7 +59,7 @@ class Device:
         layout = spec["layout"]
         target = spec["target"]
 
-        groups = re.findall(r"target (\w+)", layout or "")
+        groups = re.findall(r"\b(?=\w)target (\w+)", layout or "")
         if len(groups) <= 1:
             if len(groups) == 1 and target != groups[0]:
                 raise ValueError(
