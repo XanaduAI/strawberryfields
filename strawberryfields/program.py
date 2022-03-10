@@ -553,7 +553,7 @@ class Program:
             # should share the same register references. Program.circuit potentially
             # contains FreeParameters/MeasuredParameters, which contain RegRefs.
             if name not in ("circuit", "reg_refs", "init_reg_refs"):
-                setattr(name, val, copy.deepcopy(val))
+                setattr(p, name, copy.deepcopy(val))
 
         # link to the original source Program
         if self.source is None:
