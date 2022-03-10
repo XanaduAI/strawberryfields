@@ -546,8 +546,14 @@ class Program:
             Program: a copy of the Program
         """
         self.lock()
-        p = copy.deepcopy(self)
-        p.reg_refs = self.reg_refs  # shares RegRefs with the source
+        p = copy.copy(self)
+
+        for name, val in self.__dict__.items():
+            # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
+            # should share the same register references. Program.circuit potentially
+            # contains FreeParameters/MeasuredParameters, which contain RegRefs.
+            if name not in ("circuit", "reg_refs", "init_reg_refs"):
+                setattr(name, val, copy.deepcopy(val))
 
         # link to the original source Program
         if self.source is None:
