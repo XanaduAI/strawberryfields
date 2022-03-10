@@ -228,7 +228,7 @@ class TestProgram:
 
     @pytest.mark.parametrize("compare_params", [True, False])
     def test_equivalence_different_circuits(self, compare_params):
-        """Programs with differnet, but equivalent, circuits."""
+        """Programs with different, but equivalent, circuits."""
         prog_1 = sf.Program(3)
         prog_2 = sf.Program(3)
 
