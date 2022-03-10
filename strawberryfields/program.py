@@ -54,7 +54,7 @@ import warnings
 import networkx as nx
 
 import blackbird as bb
-from blackbird.utils import match_template
+from blackbird.utils import match_template, TemplateError
 
 import strawberryfields as sf
 
@@ -728,8 +728,8 @@ class Program:
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled._target = target
-        compiled._compile_info = (device, compiler.short_name)
+        compiled._target = target  # pylint: disable=protected-access
+        compiled._compile_info = (device, compiler.short_name)  # pylint: disable=protected-access
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -747,11 +747,15 @@ class Program:
                     "circuit layout."
                 )
             bb_device = bb.loads(device.layout)
+            # if there is no target in the layout, set the device target in the Blackbird program
+            if bb_device.target["name"] is None:
+                bb_device._target["name"] = device.target  # pylint: disable=protected-access
+
             bb_compiled = sf.io.to_blackbird(compiled)
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
-            except bb.utils.TemplateError as e:
+            except TemplateError as e:
                 raise CircuitError(
                     "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(compiler.short_name)
