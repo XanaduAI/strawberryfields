@@ -25,6 +25,10 @@
   utility function.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
+* A `Device.validate_target` static method is added which checks that the target in the layout is the same as
+  the target field in the specification. This check is also performed at `Device` initialization.
+  [(#687)](https://github.com/XanaduAI/strawberryfields/pull/687)
+
 <h3>Breaking Changes</h3>
 
 * `DeviceSpec` is renamed to `Device`.
