@@ -30,9 +30,6 @@ from strawberryfields import ops
 pytestmark = pytest.mark.frontend
 
 
-# make the test file deterministic
-np.random.seed(42)
-
 interferometer_meshes = [
     "rectangular",
     "rectangular_phase_end",

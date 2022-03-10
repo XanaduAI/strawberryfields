@@ -29,9 +29,6 @@ from strawberryfields.device import Device
 
 pytestmark = pytest.mark.frontend
 
-# make test deterministic
-np.random.seed(42)
-
 
 def singleloop(r, alpha, phi, theta, shots, shift="default"):
     """Single-loop program.
@@ -92,15 +89,12 @@ class TestTDMErrorRaising:
 def test_shift_by_specified_amount():
     """Checks that shifting by 1 is equivalent to shift='end' for a program
     with one spatial mode"""
-    np.random.seed(42)
     sq_r = 1.0
     shots = 1
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
-    np.random.seed(42)
     x = singleloop(sq_r, alpha, phi, theta, shots)
-    np.random.seed(42)
     y = singleloop(sq_r, alpha, phi, theta, shots, shift=1)
     assert np.allclose(x, y)
 
@@ -132,7 +126,6 @@ class TestSingleLoopNullifier:
     def test_epr(self):
         """Generates an EPR state and checks that the correct correlations (noise reductions) are observed
         from the samples"""
-        np.random.seed(42)
         vac_modes = 1
         sq_r = 5.0
         c = 2
@@ -175,7 +168,6 @@ class TestSingleLoopNullifier:
         See Eq. 5 of https://advances.sciencemag.org/content/5/5/eaaw4530
         """
         # Set up the circuit
-        np.random.seed(42)
         vac_modes = 1
         n = 4
         shots = 100
@@ -211,7 +203,6 @@ class TestSingleLoopNullifier:
         """Test that the nullifier have the correct value in the experiment described in
         See Eq. 10 of https://advances.sciencemag.org/content/5/5/eaaw4530
         """
-        np.random.seed(42)
         vac_modes = 1
         n = 20
         shots = 100
@@ -240,7 +231,6 @@ def test_one_dimensional_cluster_tokyo():
     One-dimensional temporal-mode cluster state as demonstrated in
     https://aip.scitation.org/doi/pdf/10.1063/1.4962732
     """
-    np.random.seed(42)
     sq_r = 5
 
     n = 10  # for an n-mode cluster state
@@ -286,7 +276,6 @@ def test_two_dimensional_cluster_denmark():
     """
     Two-dimensional temporal-mode cluster state as demonstrated in https://arxiv.org/pdf/1906.08709
     """
-    np.random.seed(42)
     sq_r = 3
     delay1 = 1  # number of timebins in the short delay line
     delay2 = 12  # number of timebins in the long delay line

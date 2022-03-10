@@ -22,7 +22,6 @@ import numpy as np
 MAG_ALPHAS = np.linspace(0, 0.8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 NBARS = np.linspace(0, 5, 7)
-SEED = 143
 
 
 class TestRepresentationIndependent:
@@ -89,7 +88,6 @@ class TestFockRepresentation:
 
     def test_prepare_ket_state(self, setup_backend, cutoff, tol):
         """Tests if a ket state with arbitrary parameters is correctly prepared."""
-        np.random.seed(SEED)
         random_ket = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
         random_ket = random_ket / np.linalg.norm(random_ket)
         backend = setup_backend(1)
@@ -106,7 +104,6 @@ class TestFockRepresentation:
         if batch_size is None:
             pytest.skip("Test skipped if no batching")
 
-        np.random.seed(SEED)
         random_kets = np.array(
             [
                 (lambda ket: ket / np.linalg.norm(ket))(
@@ -135,7 +132,6 @@ class TestFockRepresentation:
     def test_prepare_rank_two_dm_state(self, setup_backend, cutoff, tol):
         """Tests if rank two dm states with arbitrary parameters are correctly prepared."""
 
-        np.random.seed(SEED)
         random_ket1 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
         random_ket1 = random_ket1 / np.linalg.norm(random_ket1)
         random_ket2 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
@@ -168,7 +164,6 @@ class TestFockRepresentation:
     def test_prepare_random_dm_state(self, setup_backend, batch_size, pure, cutoff, tol):
         """Tests if a random dm state is correctly prepared."""
 
-        np.random.seed(SEED)
         random_rho = np.random.normal(size=[cutoff, cutoff]) + 1j * np.random.normal(
             size=[cutoff, cutoff]
         )

@@ -31,7 +31,6 @@ from thewalrus.symplectic import two_mode_squeezing, expand
 
 pytestmark = pytest.mark.frontend
 
-np.random.seed(42)
 
 SQ_AMPLITUDE = 1
 """float: the allowed squeezing amplitude"""

@@ -27,8 +27,6 @@ from strawberryfields.parameters import ParameterError, FreeParameter
 from strawberryfields.compilers.compiler import Compiler
 
 
-# make test deterministic
-np.random.seed(42)
 A = np.random.random()
 
 

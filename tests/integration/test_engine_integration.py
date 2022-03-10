@@ -37,8 +37,6 @@ else:
     ]
 
 
-# make test deterministic
-np.random.seed(42)
 a = 0.1234
 b = -0.543
 c = 0.312

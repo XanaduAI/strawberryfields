@@ -29,8 +29,7 @@ except:
 else:
     backends = ["fock", "tf"]
 
-# make test deterministic
-np.random.seed(42)
+
 A = 0.1234
 B = -0.543
 
