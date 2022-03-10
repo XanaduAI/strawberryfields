@@ -543,11 +543,13 @@ class TestProgram:
             ops.MeasureFock() | q[1]
 
         prog_copy = prog._linked_copy()
+
+        # registers should be the same
         for i, regref in prog_copy.reg_refs.items():
             assert regref is prog.reg_refs[i]
 
         for i, cmd in enumerate(prog_copy.circuit):
-            assert cmd is not prog.circuit[i]
+            assert cmd is prog.circuit[i]
 
         assert prog_copy.source is prog
 

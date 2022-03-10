@@ -518,11 +518,12 @@ def test_linked_copy():
     assert prog_copy.circuit
     assert prog.circuit
 
+    # registers should be the same
     for i, regref in prog_copy.reg_refs.items():
         assert regref is prog.reg_refs[i]
 
     for i, cmd in enumerate(prog_copy.circuit):
-        assert cmd is not prog.circuit[i]
+        assert cmd is prog.circuit[i]
 
     # tdm_params should be equal, but not the same
     assert prog_copy.tdm_params is not prog.tdm_params
