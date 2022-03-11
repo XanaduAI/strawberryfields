@@ -48,6 +48,10 @@
   instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
 
+* `Program.compile()` returns a deep copy of the program attributes, except for the circuit and
+  the register references.
+  [(#688)](https://github.com/XanaduAI/strawberryfields/pull/688)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
