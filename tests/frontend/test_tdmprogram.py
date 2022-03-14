@@ -94,7 +94,9 @@ def test_shift_by_specified_amount():
     alpha = [0] * 4
     phi = [0] * 4
     theta = [0] * 4
+    np.random.seed(42)
     x = singleloop(sq_r, alpha, phi, theta, shots)
+    np.random.seed(42)
     y = singleloop(sq_r, alpha, phi, theta, shots, shift=1)
     assert np.allclose(x, y)
 
