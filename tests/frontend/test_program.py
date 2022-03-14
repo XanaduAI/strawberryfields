@@ -225,8 +225,8 @@ class TestProgram:
         assert prog_2.equivalence(prog_1, compare_params=compare_params)
 
     @pytest.mark.parametrize("compare_params", [True, False])
-    def test_neq_operator_equivalent(self, compare_params):
-        """Programs with differnet, but equivalent, circuits."""
+    def test_equivalence_different_circuits(self, compare_params):
+        """Programs with different, but equivalent, circuits."""
         prog_1 = sf.Program(3)
         prog_2 = sf.Program(3)
 
@@ -531,6 +531,25 @@ class TestProgram:
         assert prog_1.has_post_selection is False
         assert prog_2.has_feed_forward is False
         assert prog_2.has_post_selection is False
+
+    def test_linked_copy(self, prog):
+        """Check that the ``_linked_copy`` method copies a program correctly."""
+
+        with prog.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        prog_copy = prog._linked_copy()
+
+        # registers should be the same
+        for i, regref in prog_copy.reg_refs.items():
+            assert regref is prog.reg_refs[i]
+
+        for i, cmd in enumerate(prog_copy.circuit):
+            assert cmd is prog.circuit[i]
+
+        assert prog_copy.source is prog
 
 
 class TestRegRefs:

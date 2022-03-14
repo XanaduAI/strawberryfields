@@ -5,6 +5,10 @@
 * `Device.layout` and `Device.gate_parameters` may now return `None`. This can happen
   when a remote simulator device is used.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+  
+* A new interferemoter decomposition method is implemented following the proposal of the paper
+  [_Simple factorization of unitary transformations_](https://doi.org/10.1103/PhysRevA.97.022328).
+  [(#665)](https://github.com/XanaduAI/strawberryfields/pull/665)
 
 * A `Device.certificate` method is added which returns the hardware device certificate.
   [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
@@ -47,6 +51,10 @@
 * The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0`
   instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
+
+* `Program.compile()` returns a deep copy of the program attributes, except for the circuit and
+  the register references.
+  [(#688)](https://github.com/XanaduAI/strawberryfields/pull/688)
 
 <h3>Documentation</h3>
 
