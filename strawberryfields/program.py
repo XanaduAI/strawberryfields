@@ -54,7 +54,7 @@ import warnings
 import networkx as nx
 
 import blackbird as bb
-from blackbird.utils import match_template
+from blackbird.utils import match_template, TemplateError
 
 import strawberryfields as sf
 
@@ -546,7 +546,15 @@ class Program:
             Program: a copy of the Program
         """
         self.lock()
-        p = copy.copy(self)  # shares RegRefs with the source
+        p = copy.copy(self)
+
+        for name, val in self.__dict__.items():
+            # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
+            # should share the same register references. Program.circuit potentially
+            # contains FreeParameters/MeasuredParameters, which contain RegRefs.
+            if name not in ("circuit", "reg_refs", "init_reg_refs"):
+                setattr(p, name, copy.deepcopy(val))
+
         # link to the original source Program
         if self.source is None:
             p.source = self
@@ -728,8 +736,8 @@ class Program:
         # create the compiled Program
         compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled._target = target
-        compiled._compile_info = (device, compiler.short_name)
+        compiled._target = target  # pylint: disable=protected-access
+        compiled._compile_info = (device, compiler.short_name)  # pylint: disable=protected-access
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -747,11 +755,15 @@ class Program:
                     "circuit layout."
                 )
             bb_device = bb.loads(device.layout)
+            # if there is no target in the layout, set the device target in the Blackbird program
+            if bb_device.target["name"] is None:
+                bb_device._target["name"] = device.target  # pylint: disable=protected-access
+
             bb_compiled = sf.io.to_blackbird(compiled)
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
-            except bb.utils.TemplateError as e:
+            except TemplateError as e:
                 raise CircuitError(
                     "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(compiler.short_name)

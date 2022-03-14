@@ -149,6 +149,36 @@ class TestDevice:
         with pytest.raises(ValueError, match="missing a circuit layout"):
             Device(spec=device_dict_no_layout).create_program(**params)
 
+    def test_different_targets(self):
+        """Test that different targets in layout and spec raises an error."""
+        layout_different_target = inspect.cleandoc(
+            """
+            name mock
+            version 1.0
+            target banana
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            MZgate({phase_0}, {phase_1}) | [0, 1]
+            MeasureFock() | [0, 1]
+            """
+        )
+        device_dict_different_target = {
+            "target": "pawpaw",
+            "layout": layout_different_target,
+            "modes": 2,
+            "compiler": ["Xcov"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+                "phase_0": [0, [0, 6.3]],
+                "phase_1": [[0.5, 1.4]],
+            },
+        }
+        with pytest.raises(
+            ValueError,
+            match="Target in specification 'pawpaw' differs from the target in layout 'banana'.",
+        ):
+            Device(spec=device_dict_different_target)
+
     @pytest.mark.parametrize(
         "params", [{"phase_0": 7.5}, {"phase_1": 0.4}, {"squeezing_amplitude_0": 0.5}]
     )

@@ -505,6 +505,33 @@ device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
 device = Device(device_spec)
 
 
+def test_linked_copy():
+    """Check that the ``_linked_copy`` method copies a TDM program correctly."""
+    sq_r = 0.5643
+    c = 2
+    alpha = [np.pi / 4, 0] * c
+    phi = [0, np.pi / 2] * c
+    theta = [0, 0, np.pi / 2, np.pi / 2]
+    prog = singleloop_program(sq_r, alpha, phi, theta)
+
+    prog_copy = prog._linked_copy()
+    assert prog_copy.circuit
+    assert prog.circuit
+
+    # registers should be the same
+    for i, regref in prog_copy.reg_refs.items():
+        assert regref is prog.reg_refs[i]
+
+    for i, cmd in enumerate(prog_copy.circuit):
+        assert cmd is prog.circuit[i]
+
+    # tdm_params should be equal, but not the same
+    assert prog_copy.tdm_params is not prog.tdm_params
+    assert prog_copy.tdm_params == prog.tdm_params
+
+    assert prog_copy.source is prog
+
+
 class TestTDMcompiler:
     """Test class for checking error messages from the compiler"""
 

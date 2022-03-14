@@ -29,6 +29,10 @@
   utility function.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
+* A `Device.validate_target` static method is added which checks that the target in the layout is the same as
+  the target field in the specification. This check is also performed at `Device` initialization.
+  [(#687)](https://github.com/XanaduAI/strawberryfields/pull/687)
+
 <h3>Breaking Changes</h3>
 
 * `DeviceSpec` is renamed to `Device`.
@@ -47,6 +51,10 @@
 * The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0`
   instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
   [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
+
+* `Program.compile()` returns a deep copy of the program attributes, except for the circuit and
+  the register references.
+  [(#688)](https://github.com/XanaduAI/strawberryfields/pull/688)
 
 <h3>Documentation</h3>
 
