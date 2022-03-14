@@ -5,7 +5,7 @@
 * `Device.layout` and `Device.gate_parameters` may now return `None`. This can happen
   when a remote simulator device is used.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
-  
+
 * A new interferemoter decomposition method is implemented following the proposal of the paper
   [_Simple factorization of unitary transformations_](https://doi.org/10.1103/PhysRevA.97.022328).
   [(#665)](https://github.com/XanaduAI/strawberryfields/pull/665)
@@ -32,6 +32,10 @@
 * A `Device.validate_target` static method is added which checks that the target in the layout is the same as
   the target field in the specification. This check is also performed at `Device` initialization.
   [(#687)](https://github.com/XanaduAI/strawberryfields/pull/687)
+
+* Tests are run in random order and the seed for numpy's and python's random number generators is
+  set by `pytest-randomly`.
+  [(#692)](https://github.com/XanaduAI/strawberryfields/pull/692)
 
 <h3>Breaking Changes</h3>
 
