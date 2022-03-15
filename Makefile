@@ -1,5 +1,5 @@
 PYTHON := $(shell which python3 2>/dev/null)
-TESTRUNNER := -m pytest tests -p no:warnings
+TESTRUNNER := -m pytest tests -p no:warnings --randomly-seed=42
 COVERAGE := --cov=strawberryfields --cov-report=html:coverage_html_report --cov-append
 
 .PHONY: help
