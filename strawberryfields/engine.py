@@ -564,7 +564,7 @@ class RemoteEngine:
     """
 
     POLLING_INTERVAL_SECONDS = 1
-    DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
+    DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_02"}
 
     def __init__(
         self,
