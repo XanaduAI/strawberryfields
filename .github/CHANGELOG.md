@@ -33,7 +33,7 @@
   the target field in the specification. This check is also performed at `Device` initialization.
   [(#687)](https://github.com/XanaduAI/strawberryfields/pull/687)
 
-* Tests are run in random order and the seed for numpy's and python's random number generators is
+* Tests are run in random order and the seed for NumPy's and Python's random number generators are
   set by `pytest-randomly`.
   [(#692)](https://github.com/XanaduAI/strawberryfields/pull/692)
 
