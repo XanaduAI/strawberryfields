@@ -251,7 +251,6 @@ class TestStochasticIntegrationPNR:
         sampling from single mode squeezed states whose photon number distribution is specified
         by the negative binomial."""
         ps = 1 / (1 + np.array(n_mean_by_mode))
-        np.random.seed(0)
         return np.array([2 * np.random.negative_binomial(0.5, p, n_samples) for p in ps]).T
 
     def h_setup(self, objectives):

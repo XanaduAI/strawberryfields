@@ -27,8 +27,6 @@ from thewalrus.symplectic import expand, interferometer
 
 pytestmark = pytest.mark.frontend
 
-np.random.seed(42)
-
 
 def random_params(size, sq_bound, disp_bound):
     """Returns random parameters of a Gaussian circuit

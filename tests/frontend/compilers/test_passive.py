@@ -31,8 +31,6 @@ from thewalrus.symplectic import interferometer
 
 pytestmark = pytest.mark.frontend
 
-np.random.seed(42)
-
 
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])

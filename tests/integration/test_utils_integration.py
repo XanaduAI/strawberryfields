@@ -37,7 +37,6 @@ from strawberryfields.backends.fockbackend.ops import beamsplitter as bs_U
 ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4) * 1j
 R = np.linspace(0, 0.21, 4)
 PHI = np.linspace(0, 1.43, 4)
-np.random.seed(42)
 
 
 # ===================================================================================

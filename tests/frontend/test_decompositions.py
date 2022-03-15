@@ -29,10 +29,6 @@ from strawberryfields.utils import random_interferometer as haar_measure
 N_SAMPLES = 10
 
 
-# fix the seed to make the test deterministic
-np.random.seed(42)
-
-
 def omega(n):
     """Returns the symplectic matrix for n modes"""
     idm = np.identity(n)

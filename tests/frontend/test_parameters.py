@@ -33,9 +33,6 @@ from strawberryfields.program_utils import RegRef
 pytestmark = pytest.mark.frontend
 
 
-# make test deterministic
-np.random.seed(32)
-
 SCALAR_TEST_VALUES = [3, 0.14, 4.2 + 0.5j]
 TEST_VALUES = SCALAR_TEST_VALUES + [np.array([0.1, 0.987654])]
 

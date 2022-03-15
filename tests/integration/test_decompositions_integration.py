@@ -33,9 +33,6 @@ from strawberryfields import ops
 from strawberryfields.utils import random_interferometer as haar_measure
 from strawberryfields.utils.program_functions import extract_unitary
 
-# make the test file deterministic
-np.random.seed(42)
-
 
 u1 = random_interferometer(3)
 u2 = random_interferometer(3)

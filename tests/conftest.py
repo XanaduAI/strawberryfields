@@ -20,8 +20,6 @@ import pytest
 
 import numpy as np
 
-np.random.seed(42)
-
 import strawberryfields as sf
 from strawberryfields.engine import LocalEngine
 from strawberryfields.program import Program

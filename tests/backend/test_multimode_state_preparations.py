@@ -21,9 +21,6 @@ import numpy as np
 from strawberryfields import ops
 from strawberryfields.utils import random_covariance, displaced_squeezed_state
 
-# make test deterministic
-np.random.seed(42)
-
 
 MAG_ALPHAS = np.linspace(0, 0.8, 3)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 3, endpoint=False)
