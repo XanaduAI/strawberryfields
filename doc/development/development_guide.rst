@@ -62,7 +62,7 @@ dependencies can be installed via ``pip``:
 
 .. code-block:: bash
 
-    pip install -r dev_requirements.txt
+    pip install -r requirements-dev.txt
 
 Software tests
 --------------
