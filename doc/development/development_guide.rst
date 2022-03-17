@@ -16,8 +16,6 @@ as well as the following Python packages:
 * `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >= 0.2.0
 * `The Walrus <https://the-walrus.readthedocs.io>`_ >= 0.7.0
 * `toml <https://pypi.org/project/toml/>`_
-* `appdirs <https://pypi.org/project/appdirs/>`_
-
 
 If you currently do not have Python 3 installed, we recommend
 `Anaconda for Python 3 <https://www.anaconda.com/download/>`_, a distributed version
@@ -70,7 +68,7 @@ Software tests
 --------------
 
 The Strawberry Fields test suite includes `pytest <https://docs.pytest.org/en/latest/>`_,
-`pytest-mocks <https://github.com/pytest-dev/pytest-mock/>`_, 
+`pytest-mocks <https://github.com/pytest-dev/pytest-mock/>`_,
 `pytest-randomly <https://github.com/pytest-dev/pytest-randomly>`_,
 and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ for coverage reports.
 

@@ -6,7 +6,7 @@
   when a remote simulator device is used.
   [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
 
-* A new interferemoter decomposition method is implemented following the proposal of the paper
+* A new interferometer decomposition method is implemented following the proposal of the paper
   [_Simple factorization of unitary transformations_](https://doi.org/10.1103/PhysRevA.97.022328).
   [(#665)](https://github.com/XanaduAI/strawberryfields/pull/665)
 
@@ -36,6 +36,8 @@
 * Tests are run in random order and the seed for NumPy's and Python's random number generators are
   set by `pytest-randomly`.
   [(#692)](https://github.com/XanaduAI/strawberryfields/pull/692)
+
+* Adds support for Python 3.10. [#](https://github.com/XanaduAI/strawberryfields/pull/)
 
 <h3>Breaking Changes</h3>
 

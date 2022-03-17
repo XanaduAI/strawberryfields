@@ -1,5 +1,4 @@
 docutils==0.16
-appdirs==1.4.4
 black==19.10b0
 ipykernel==6.7.0
 sphinx==2.2.2
