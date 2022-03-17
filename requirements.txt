@@ -9,7 +9,7 @@ scipy==1.8.0
 sympy==1.10
 tensorflow==2.8.0
 tensorboard==2.8.0
-git+https://github.com/XanaduAI/thewalrus@py310-support#thewalrus
+git+https://github.com/XanaduAI/thewalrus.git@py310-support#thewalrus
 toml==0.10.2
 typing-extensions==4.1.1
 urllib3==1.26.8
