@@ -37,7 +37,8 @@
   set by `pytest-randomly`.
   [(#692)](https://github.com/XanaduAI/strawberryfields/pull/692)
 
-* Adds support for Python 3.10. [#](https://github.com/XanaduAI/strawberryfields/pull/)
+* Adds support for Python 3.10.
+  [#695](https://github.com/XanaduAI/strawberryfields/pull/695)
 
 <h3>Breaking Changes</h3>
 
