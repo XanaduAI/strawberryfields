@@ -52,13 +52,14 @@
 
   results = eng.run(prog, shots=None)
 
+  # samples will output an empty list []
   print(results.samples)
-  # will output an empty list []
-  
-  # the resulting Gaussian state is accesible 
+
+  # the resulting Gaussian state is still accessible
   # via its vector of means and covariance matrix
   print(results.state.means())
   print(results.state.cov())
+  ```
 
 * There's a `program_equivalence` function in `strawberryfields/program_utils.py` which checks
   Strawberry Fields programs for equivalence.
