@@ -54,7 +54,11 @@
 
   print(results.samples)
   # will output an empty list []
-  ```
+  
+  # the resulting Gaussian state is accesible 
+  # via its vector of means and covariance matrix
+  print(results.state.means())
+  print(results.state.cov())
 
 * There's a `program_equivalence` function in `strawberryfields/program_utils.py` which checks
   Strawberry Fields programs for equivalence.
