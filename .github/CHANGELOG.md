@@ -68,7 +68,6 @@
   import strawberryfields as sf
   from strawberryfields import ops
 
-  # create a 3 mode quantum program
   prog_1 = sf.Program(1)
   prog_2 = sf.Program(1)
 
