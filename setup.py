@@ -19,7 +19,6 @@ with open("strawberryfields/_version.py") as f:
 
 
 requirements = [
-    "appdirs",
     "networkx>=2.0",
     "numba",
     "numpy>=1.17.4",
@@ -71,6 +70,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Physics",
 ]
