@@ -1,4 +1,4 @@
-# Release 0.22.0 (development release)
+# Release 0.22.0 (current release)
 
 <h3>New features since last release</h3>
 
@@ -10,12 +10,51 @@
   [_Simple factorization of unitary transformations_](https://doi.org/10.1103/PhysRevA.97.022328).
   [(#665)](https://github.com/XanaduAI/strawberryfields/pull/665)
 
+  ```python
+  import numpy as np
+
+  import strawberryfields as sf
+  from strawberryfields import ops
+
+  U = np.array([[-0.39302099+0.28732291j,  0.83734522+0.24866248j],
+                [ 0.00769051+0.87345344j, -0.3847068 +0.29836325j]])
+
+  prog = sf.Program(2)
+
+  with prog.context as q:
+      ops.Interferometer(U, mesh="sun_compact") | q
+  ```
+
 * A `Device.certificate` method is added which returns the hardware device certificate.
   [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
+
+  ```pycon
+  >>> import strawberryfields as sf
+  >>> eng = sf.RemoteEngine("X8")
+  >>> print(eng.device.certificate)
+  {'target': 'X8_01' ... }
+  ```
 
 * Setting `shots=None` in the engine or program run options will not execute any measurements
   applied on the circuit.
   [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
+
+  ```python
+  import strawberryfields as sf
+  from strawberryfields import ops
+
+  prog = sf.Program(1)
+  eng = sf.Engine("gaussian")
+
+  with prog.context as q:
+      ops.Sgate(0.5) | q[0]
+      ops.MeasureFock() | q
+
+  results = eng.run(prog, shots=None)
+
+  print(results.samples)
+  # will output an empty list []
+  ```
 
 * There's a `program_equivalence` function in `strawberryfields/program_utils.py` which checks
   Strawberry Fields programs for equivalence.
@@ -25,9 +64,43 @@
   gates and respective parameters, are applied in order.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
 
+  ```python
+  import strawberryfields as sf
+  from strawberryfields import ops
+
+  # create a 3 mode quantum program
+  prog_1 = sf.Program(1)
+  prog_2 = sf.Program(1)
+
+  with prog.context as q:
+      ops.Sgate(0.42) | q[0]
+      ops.MeasureFock() | q
+
+  with prog.context as q:
+      ops.Sgate(0.42) | q[0]
+      ops.MeasureFock() | q
+
+  assert prog_1 == prog_2
+  ```
+
 * A `Program.equivalence` convenience method is added which calls the `program_equivalence`
   utility function.
   [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+  ```python
+  prog_1 = sf.Program(1)
+  prog_2 = sf.Program(1)
+
+  with prog.context as q:
+      ops.Sgate(1.1) | q[0]
+      ops.MeasureFock() | q
+
+  with prog.context as q:
+      ops.Sgate(0.42) | q[0]
+      ops.MeasureFock() | q
+
+  assert prog_1.equivalence(prog_2, compare_params=False)
+  ```
 
 * A `Device.validate_target` static method is added which checks that the target in the layout is the same as
   the target field in the specification. This check is also performed at `Device` initialization.
@@ -42,8 +115,17 @@
 
 <h3>Breaking Changes</h3>
 
-* `DeviceSpec` is renamed to `Device`.
+* `DeviceSpec` is renamed to `Device`, which now also contains more than only the device specification.
   [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
+
+  ```pycon
+  >>> import strawberryfields as sf
+  >>> eng = sf.RemoteEngine("X8")
+  >>> isinstance(eng.device, sf.Device)
+  True
+  >>> print(eng.device.target)
+  X8_01
+  ```
 
 <h3>Bug fixes</h3>
 
@@ -63,15 +145,13 @@
   the register references.
   [(#688)](https://github.com/XanaduAI/strawberryfields/pull/688)
 
-<h3>Documentation</h3>
-
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
 Sebastian Duque, Theodor Isacsson, Jon Schlipf, Hossein Seifoory
 
-# Release 0.21.0 (current release)
+# Release 0.21.0
 
 <h3>New features since last release</h3>
 
