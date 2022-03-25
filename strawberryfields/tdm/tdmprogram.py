@@ -650,7 +650,7 @@ class TDMProgram(Program):
             self.circuit = self.space_unrolled_circuit
             return self
 
-        self._num_added_subsystems = self._timebins - self.init_num_subsystems
+        self._num_added_subsystems = self._timebins - self.init_num_subsystems + sum(self.N)
         if self._num_added_subsystems > 0:
             self._add_subsystems(self._num_added_subsystems)
 
