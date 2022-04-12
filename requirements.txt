@@ -14,4 +14,4 @@ toml==0.10.2
 typing-extensions==4.1.1
 urllib3==1.26.8
 quantum-xir==0.2.1
-xanadu-cloud-client==0.1.2
+xanadu-cloud-client==0.2.0
