@@ -92,25 +92,24 @@ Installation
     <script type="text/javascript">
         $(function(){
             let params = new URLSearchParams(window.location.search);
-            let version = params.get("version");
+            let cur_version = params.get("version");
 
-            if (version) {
+            if (cur_version) {
                 $("#version li a").removeClass("active");
                 $("#tab-version .tab-pane").removeClass("active");
-                $("a[href='#" + version + "']").addClass("active");
-                $("#" + version).show();
+                $("a[href='#" + cur_version + "']").addClass("active");
+                $("#" + cur_version).show();
             };
 
             $("#version .nav-item a").click(function (e) {
-                const old_version = version;
                 const new_version = this.hash.substr(1);
-                if (old_version != new_version) {
-                    $("#" + old_version).hide();
+                if (cur_version != new_version) {
+                    $("#" + cur_version).hide();
                     $("#" + new_version).show();
+
                     params.set("version", new_version);
-                    const newRelativePathQuery = window.location.pathname + "?" + params.toString();
-                    history.pushState(null, "", newRelativePathQuery);
-                    version = new_version;
+                    const new_rel_path_query = window.location.pathname + "?" + params.toString();
+                    history.pushState(null, "", new_rel_path_query);
                 };
             });
 
