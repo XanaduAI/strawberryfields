@@ -251,6 +251,8 @@ html_theme_options = {
     "navbar_name": "Strawberry Fields",
     "navbar_logo_colour": "#b13a59",
 
+    "navbar_home_link": "https://strawberryfields.ai",
+
     "navbar_left_links": [
         {
             "name": "Quantum Photonics",
