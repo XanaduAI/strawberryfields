@@ -368,10 +368,10 @@ class TDMProgram(Program):
         </a>
         <div class="collapse" id="tutorials">
 
-    .. customgalleryitem::
+    .. gallery-item::
         :tooltip: Simulate massive time-domain quantum systems
         :description: :doc:`demos/run_time_domain`
-        :figure: /_static/oneloop.svg
+        :figure: _static/oneloop.svg
 
     .. raw:: html
 
