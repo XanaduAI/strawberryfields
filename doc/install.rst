@@ -1,3 +1,5 @@
+:orphan:
+
 Installation
 ============
 
@@ -92,19 +94,19 @@ Installation
     <script type="text/javascript">
         $(function(){
             let params = new URLSearchParams(window.location.search);
-            let cur_version = params.get("version");
+            let current_version = params.get("version");
 
-            if (cur_version) {
+            if (current_version) {
                 $("#version li a").removeClass("active");
                 $("#tab-version .tab-pane").removeClass("active");
-                $("a[href='#" + cur_version + "']").addClass("active");
-                $("#" + cur_version).show();
+                $("a[href='#" + current_version + "']").addClass("active");
+                $("#" + current_version).show();
             };
 
             $("#version .nav-item a").click(function (e) {
                 const new_version = this.hash.substr(1);
-                if (cur_version != new_version) {
-                    $("#" + cur_version).hide();
+                if (current_version != new_version) {
+                    $("#" + current_version).hide();
                     $("#" + new_version).show();
 
                     params.set("version", new_version);
