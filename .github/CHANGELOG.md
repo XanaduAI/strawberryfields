@@ -10,9 +10,15 @@
 
 ### Documentation
 
+* The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  is now used to style the Sphinx documentation.
+  [(#701)](https://github.com/XanaduAI/strawberryfields/pull/701)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Mikhail Andrenkov
 
 ---
 
