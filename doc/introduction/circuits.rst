@@ -298,32 +298,26 @@ For more details and guides on creating and simulating photonic quantum
 circuits, see the following tutorials.
 
 .. gallery-item::
-    :tooltip: Building photonic quantum circuits
     :description: :doc:`demos/run_blackbird`
     :figure: _static/code.png
 
 .. gallery-item::
-    :tooltip: Quantum teleportation
     :description: :doc:`Basic tutorial: teleportation <demos/run_teleportation>`
     :figure: _static/teleport.png
 
 .. gallery-item::
-    :tooltip: Making photonic measurements
     :description: :doc:`Measurements and post-selection <demos/run_post_selection>`
     :figure: _static/bs_measure.png
 
 .. gallery-item::
-    :tooltip: Optimization and machine learning with TensorFlow
     :description: :doc:`demos/run_tutorial_machine_learning`
     :figure: _static/TF.png
 
 .. gallery-item::
-    :tooltip: Simulate massive time-domain quantum systems
     :description: :doc:`demos/run_time_domain`
     :figure: _static/oneloop.svg
 
 .. gallery-item::
-    :tooltip: Introduction to the bosonic backend
     :description: :doc:`demos/run_intro_bosonic`
     :figure: _static/cats.png
 
