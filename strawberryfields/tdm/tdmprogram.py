@@ -369,7 +369,6 @@ class TDMProgram(Program):
         <div class="collapse" id="tutorials">
 
     .. gallery-item::
-        :tooltip: Simulate massive time-domain quantum systems
         :description: :doc:`demos/run_time_domain`
         :figure: _static/oneloop.svg
 

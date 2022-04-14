@@ -248,7 +248,7 @@ html_theme = "xanadu"
 
 # xanadu theme options (see theme.conf for more information)
 html_theme_options = {
-    "navbar_name": "Strawberry Fields",
+    "navbar_wordmark_path": "_static/sf_wordmark.png",
     "navbar_logo_colour": "#b13a59",
 
     "navbar_home_link": "https://strawberryfields.ai",
