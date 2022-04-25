@@ -237,7 +237,7 @@ def move_vac_modes(samples, N, crop=False):
 
 
 def get_mode_indices(delays):
-    """Calculates the mode indices for use in a ``TDMProgram``
+    """Calculates the mode indices for use in a ``TDMProgram``.
 
     Args:
         delays (list[int]): List of loop delays. E.g. ``delays = [1, 6, 36]`` for TD3.
@@ -389,8 +389,8 @@ class TDMProgram(Program):
 
         super().__init__(num_subsystems=self._concurr_modes, name=name)
 
-        self.is_unrolled = False
-        self._is_space_unrolled = False
+        # store the number of shots used when unrolling the circuit (if unrolled; else `None`)
+        self._unrolled_shots = None
 
         self._timebins = 0
         self._spatial_modes = 0
@@ -590,77 +590,88 @@ class TDMProgram(Program):
     @property
     def parameters(self):
         """Return the parameters of the ``TDMProgram`` as a dictionary with the parameter
-        name as keys, and the parameter lists as values"""
+        name as keys, and the parameter lists as values."""
         return dict(zip([i.name for i in self.loop_vars], self.tdm_params))
 
+    @property
+    def is_unrolled(self):
+        """Whether the circuit is either unrolled or space-unrolled."""
+        return not (self.unrolled_circuit is None and self.space_unrolled_circuit is None)
+
     def roll(self):
-        """Represent the program in a compressed way without rolling the for loops"""
-        self.is_unrolled = False
+        """Represent the program in a compressed way without unrolling the for loops."""
+        self._unrolled_shots = None
         self.circuit = self.rolled_circuit
-        if self._is_space_unrolled:
+
+        if self.space_unrolled_circuit is not None:
             if self._num_added_subsystems > 0:
                 self._delete_subsystems(self.register[-self._num_added_subsystems :])
                 self.init_num_subsystems -= self._num_added_subsystems
                 self._num_added_subsystems = 0
 
-            self._is_space_unrolled = False
-        return self
+            self.space_unrolled_circuit = None
+        self.unrolled_circuit = None
 
     def unroll(self, shots=1):
-        """Construct program with the register shift
+        """Construct program with the register shift and store it in ``self.circuit``.
 
-        Calls the `_unroll_program` method which constructs the unrolled single-shot program,
+        Calls the ``_unroll_program`` method which constructs the unrolled single-shot program,
         storing it in `self.unrolled_circuit` when run for the first time, and returns the unrolled
         program.
 
         Args:
             shots (int): the number of times the circuit should be repeated
-
-        Returns:
-            Program: unrolled program
         """
-        self.is_unrolled = True
         if self.unrolled_circuit is not None:
-            self.circuit = self.unrolled_circuit
-            return self
+            if self._unrolled_shots == shots:
+                self.circuit = self.unrolled_circuit
+                return
+            else:
+                self._unrolled_shots = shots
+                self.roll()
 
-        if self._is_space_unrolled:
+        if self.space_unrolled_circuit is not None:
             raise ValueError(
                 "Program is space-unrolled and cannot be unrolled. Must be rolled (by calling the"
-                "`roll()` method) before unrolling."
+                "'roll()' method) before unrolling."
             )
 
-        return self._unroll_program(shots)
+        self._unroll_program(shots, space=False)
 
     def space_unroll(self, shots=1):
-        """Construct the space-unrolled program
+        """Construct the space-unrolled program and set it to ``self.circuit`.
 
-        Calls the `_unroll_program` method which constructs the space-unrolled single-shot program,
+        Calls the ``_unroll_program`` method which constructs the space-unrolled single-shot program,
         storing it in `self.space_unrolled_circuit` when run for the first time, and returns the
         space-unrolled program.
 
         Args:
             shots (int): the number of times the circuit should be repeated
-
-        Returns:
-            Program: unrolled program
         """
-        self.is_unrolled = True
-        if self.space_unrolled_circuit is not None:
+        if self.space_unrolled_circuit is not None and self._unrolled_shots == shots:
             self.circuit = self.space_unrolled_circuit
-            return self
+            return
+        else:
+            self._unrolled_shots = shots
+            self.roll()
 
-        self._num_added_subsystems = self._timebins - self.init_num_subsystems
+        vac_modes = self.concurr_modes - 1
+        self._num_added_subsystems = self.timebins - self.init_num_subsystems + vac_modes
         if self._num_added_subsystems > 0:
             self._add_subsystems(self._num_added_subsystems)
 
             self.init_num_subsystems += self._num_added_subsystems
 
-        self._is_space_unrolled = True
-        return self._unroll_program(shots)
+        if self.unrolled_circuit is not None:
+            raise ValueError(
+                "Program is unrolled and cannot be space-unrolled. Must be rolled (by calling the"
+                "`roll()` method) before space-unrolling."
+            )
 
-    def _unroll_program(self, shots):
-        """Construct the unrolled program either using space-unrolling or with register shift"""
+        self._unroll_program(shots, space=True)
+
+    def _unroll_program(self, shots, space):
+        """Construct the unrolled program either using space-unrolling or with register shift."""
         self.circuit = []
 
         q = self.register
@@ -708,12 +719,12 @@ class TDMProgram(Program):
                 for cmd in self.rolled_circuit:
                     modes = get_modes(cmd, q)
                     has_looped_back = any(m.ind < previous_mode_index[cmd] for m in modes)
-                    valid_application = not self._is_space_unrolled or not has_looped_back
+                    valid_application = not space or not has_looped_back
                     if valid_application:
                         self.apply_op(cmd, modes, i)
                         previous_mode_index[cmd] = min(m.ind for m in modes)
 
-                if self._is_space_unrolled:
+                if space:
                     q = shift_by(q, 1)
                 elif self.shift == "default":
                     # shift each spatial mode SEPARATELY by one step
@@ -726,15 +737,13 @@ class TDMProgram(Program):
                     q = shift_by(q, self.shift)  # shift at end of each time bin
 
         # Unrolling the circuit for the first time: storing a copy of the unrolled circuit
-        if self._is_space_unrolled:
+        if space:
             self.space_unrolled_circuit = self.circuit.copy()
         else:
             self.unrolled_circuit = self.circuit.copy()
 
-        return self
-
     def apply_op(self, cmd, modes, t):
-        """Apply a particular operation on register q at timestep t"""
+        """Apply a particular operation on register q at timestep t."""
         params = cmd.op.p.copy()
 
         for i, _ in enumerate(params):
