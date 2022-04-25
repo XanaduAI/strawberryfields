@@ -53,11 +53,6 @@ import numbers
 import warnings
 import networkx as nx
 
-import blackbird as bb
-from blackbird.utils import match_template, TemplateError
-
-import strawberryfields as sf
-
 import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 import strawberryfields.program_utils as pu
@@ -754,22 +749,8 @@ class Program:
                     "Gate parameters cannot be validated. Device specification is missing a "
                     "circuit layout."
                 )
-            bb_device = bb.loads(device.layout)
-            # if there is no target in the layout, set the device target in the Blackbird program
-            if bb_device.target["name"] is None:
-                bb_device._target["name"] = device.target  # pylint: disable=protected-access
 
-            bb_compiled = sf.io.to_blackbird(compiled)
-
-            try:
-                user_parameters = match_template(bb_device, bb_compiled)
-            except TemplateError as e:
-                raise CircuitError(
-                    "Program cannot be used with the compiler '{}' "
-                    "due to incompatible topology.".format(compiler.short_name)
-                ) from e
-
-            device.validate_parameters(**user_parameters)
+            pu.validate_blackbird_job(compiled)
 
         return compiled
 
