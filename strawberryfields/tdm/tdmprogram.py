@@ -639,7 +639,7 @@ class TDMProgram(Program):
         self._unroll_program(shots, space=False)
 
     def space_unroll(self, shots=1):
-        """Construct the space-unrolled program and set it to ``self.circuit`.
+        """Construct the space-unrolled program and set it to ``self.circuit``.
 
         Calls the ``_unroll_program`` method which constructs the space-unrolled single-shot program,
         storing it in `self.space_unrolled_circuit` when run for the first time, and returns the
