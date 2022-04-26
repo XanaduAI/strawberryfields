@@ -626,9 +626,8 @@ class TDMProgram(Program):
             if self._unrolled_shots == shots:
                 self.circuit = self.unrolled_circuit
                 return
-            else:
-                self._unrolled_shots = shots
-                self.roll()
+            self._unrolled_shots = shots
+            self.roll()
 
         if self.space_unrolled_circuit is not None:
             raise ValueError(
@@ -651,9 +650,8 @@ class TDMProgram(Program):
         if self.space_unrolled_circuit is not None and self._unrolled_shots == shots:
             self.circuit = self.space_unrolled_circuit
             return
-        else:
-            self._unrolled_shots = shots
-            self.roll()
+        self._unrolled_shots = shots
+        self.roll()
 
         vac_modes = self.concurr_modes - 1
         self._num_added_subsystems = self.timebins - self.init_num_subsystems + vac_modes
