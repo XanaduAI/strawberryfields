@@ -843,7 +843,6 @@ class TestUnrolling:
     def test_unroll(self):
         """Test unrolling program."""
         n = 2
-        shots = 2
 
         prog = tdmprogram.TDMProgram(N=2)
         with prog.context([0] * n, [0] * n, [0] * n) as (p, q):
@@ -858,10 +857,33 @@ class TestUnrolling:
         prog.unroll()
         assert len(prog.circuit) == n * prog_length
 
+        prog.roll()
+        assert len(prog.circuit) == prog_length
+
+    def test_unroll_shots(self):
+        """Test unrolling program several times using different number of shots."""
+        n = 2
+        shots = 2
+
+        prog = tdmprogram.TDMProgram(N=2)
+        with prog.context([0] * n, [0] * n, [0] * n) as (p, q):
+            ops.Sgate(0.5643, 0) | q[1]
+            ops.BSgate(p[0]) | (q[1], q[0])
+            ops.Rgate(p[1]) | q[1]
+            ops.MeasureHomodyne(p[2]) | q[0]
+
+        prog_length = len(prog.circuit)
+        assert prog_length == 4
+
         prog.unroll(shots=shots)
         assert len(prog.circuit) == n * shots * prog_length
 
-        # unroll once more with the same shots to cover caching
+        # unroll once more with the same number of shots to cover caching
+        prog.unroll(shots=shots)
+        assert len(prog.circuit) == n * shots * prog_length
+
+        # unroll once more with a different number of shots
+        shots = 3
         prog.unroll(shots=shots)
         assert len(prog.circuit) == n * shots * prog_length
 
