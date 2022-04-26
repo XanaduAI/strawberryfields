@@ -861,5 +861,9 @@ class TestUnrolling:
         prog.unroll(shots=shots)
         assert len(prog.circuit) == n * shots * prog_length
 
+        # unroll once more with the same shots to cover caching
+        prog.unroll(shots=shots)
+        assert len(prog.circuit) == n * shots * prog_length
+
         prog.roll()
         assert len(prog.circuit) == prog_length
