@@ -6,13 +6,27 @@
 
 ### Improvements
 
+* A locked program can now be (un)rolled, and automatically restores the lock if there.
+[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* Rolling and unrolling now only happens in place, and does no longer return the (un)rolled circuit.
+[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
 ### Bug fixes
+
+* Trying to unroll an already unrolled program with a different number of shots works as expected.
+[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* Fixed bug with vacuum modes missing.
+[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
 ### Documentation
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson
 
 ---
 
