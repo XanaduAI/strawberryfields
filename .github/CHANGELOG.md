@@ -7,7 +7,7 @@
 ### Improvements
 
 * A locked program can now be (un)rolled, and automatically restores the lock if there.
-[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+[(#703)](https://github.com/XanaduAI/strawberryfields/pull/703)
 
 * Rolling and unrolling now only happens in place, and does no longer return the (un)rolled circuit.
 [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
