@@ -622,6 +622,10 @@ class TDMProgram(Program):
         Args:
             shots (int): the number of times the circuit should be repeated
         """
+        _locked = self.locked
+        if self.locked:
+            self.locked = False
+
         if self.unrolled_circuit is not None:
             if self._unrolled_shots == shots:
                 self.circuit = self.unrolled_circuit
@@ -638,6 +642,7 @@ class TDMProgram(Program):
             )
 
         self._unroll_program(shots, space=False)
+        self.locked = _locked
 
     def space_unroll(self, shots=1):
         """Construct the space-unrolled program and set it to ``self.circuit``.
@@ -649,6 +654,10 @@ class TDMProgram(Program):
         Args:
             shots (int): the number of times the circuit should be repeated
         """
+        _locked = self.locked
+        if self.locked:
+            self.locked = False
+
         if self.space_unrolled_circuit is not None and self._unrolled_shots == shots:
             self.circuit = self.space_unrolled_circuit
             return
@@ -671,6 +680,7 @@ class TDMProgram(Program):
             )
 
         self._unroll_program(shots, space=True)
+        self.locked = _locked
 
     def _unroll_program(self, shots, space):
         """Construct the unrolled program either using space-unrolling or with register shift."""
