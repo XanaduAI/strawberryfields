@@ -889,3 +889,28 @@ class TestUnrolling:
 
         prog.roll()
         assert len(prog.circuit) == prog_length
+
+    @pytest.mark.parametrize(
+        "space_unrolled, start_locked", [[True, True], [True, False], [False, True], [False, False]]
+    )
+    def test_locking_when_unrolling(self, space_unrolled, start_locked):
+        """Test that a locked program can be (un)rolled with the locking intact."""
+        prog = tdmprogram.TDMProgram(N=2)
+
+        with prog.context([0, 0], [0, 0], [0, 0]) as (p, q):
+            ops.Sgate(0.5643, 0) | q[1]
+            ops.BSgate(p[0]) | (q[1], q[0])
+            ops.Rgate(p[1]) | q[1]
+            ops.MeasureHomodyne(p[2]) | q[0]
+
+        if start_locked:
+            prog.lock()
+
+        assert prog.locked == start_locked
+
+        if space_unrolled:
+            prog.space_unroll()
+        else:
+            prog.unroll()
+
+        assert prog.locked == start_locked
