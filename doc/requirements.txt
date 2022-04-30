@@ -4,6 +4,7 @@ ipykernel==6.7.0
 jinja2==3.0.3
 sphinx==2.2.2
 m2r2==0.3.1
+mistune==0.8.4
 numba==0.53.1
 networkx==2.6.3
 numpy==1.19.2
@@ -18,6 +19,4 @@ sphinxcontrib-bibtex==0.4.2
 tensorflow==2.6.3
 thewalrus==0.18.0
 toml==0.10.2
-mistune==0.8.4
-# TODO: Use the Xanadu-Sphinx-Theme package on PyPI once it has been released.
-git+https://github.com/XanaduAI/xanadu-sphinx-theme@phoenix#egg=xanadu_sphinx_theme
+xanadu-sphinx-theme==0.1.0
