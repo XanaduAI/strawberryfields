@@ -10,5 +10,5 @@ jobs:
     - uses: XanaduAI/sphinx-action@master
       with:
         docs-folder: "doc/"
-        pre-build-command: "apt install -y git graphviz && pip3 install -r requirements.txt && pip3 install ."
+        pre-build-command: "apt install -y graphviz && pip3 install -r requirements.txt && pip3 install ."
         build-command: "sphinx-build -b html . _build -W --keep-going"
