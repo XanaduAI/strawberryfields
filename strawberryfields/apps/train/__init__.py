@@ -81,10 +81,10 @@ function, gradients can be computed efficiently, leading to fast training.
 Related tutorials
 ^^^^^^^^^^^^^^^^^
 
-.. customgalleryitem::
+.. gallery-item::
     :tooltip: Training GBS
     :description: :doc:`apps/run_tutorial_training`
-    :figure: /_static/circulant.png
+    :figure: _static/circulant.png
 
 .. raw:: html
 

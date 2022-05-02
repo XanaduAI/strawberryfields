@@ -111,14 +111,13 @@ Tutorials
 For more details on submitting jobs to photonic hardware, check out the following
 tutorials.
 
-.. customgalleryitem::
-    :tooltip: Submit quantum jobs to the X8 photonic chip
+.. gallery-item::
     :description: :doc:`demos/tutorial_X8`
-    :figure: /_static/chip.png
+    :figure: _static/chip.png
 
-.. customgalleryitem::
-    :tooltip: Characterize the squeezing of the X8 chip
+.. gallery-item::
     :description: :doc:`demos/squeezer_tests`
+    :figure: _static/code.png
 
 .. raw:: html
 
