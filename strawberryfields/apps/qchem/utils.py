@@ -110,7 +110,7 @@ def read_gamess(
     calculation performed with the GAMESS quantum chemistry package. The output file must contain
     the results of a `RUNTYP=HESSIAN` calculation performed with GAMESS. We recommend checking the
     output of this function with the GAMESS results to assure that the GAMESS output file is parsed
-    correctly.
+    correctly. Please also check if the normal modes are mass-weighted.
 
     **Example usage:**
 
