@@ -106,7 +106,7 @@ def read_gamess(
     :cite:`schmidt1993general`.
 
     This function extracts the atomic coordinates (r), atomic masses (m), vibrational frequencies
-    (w), and normal modes (l) of a molecule from the output file of a vibrational frequency
+    (w), and normal modes (n) of a molecule from the output file of a vibrational frequency
     calculation performed with the GAMESS quantum chemistry package. The output file must contain
     the results of a `RUNTYP=HESSIAN` calculation performed with GAMESS. We recommend checking the
     output of this function with the GAMESS results to assure that the GAMESS output file is parsed
@@ -114,7 +114,7 @@ def read_gamess(
 
     **Example usage:**
 
-    >>> r, m, w, l = read_gamess('../BH_data.out')
+    >>> r, m, w, n = read_gamess('../BH_data.out')
     >>> r # atomic coordinates
     array([[0.0000000, 0.0000000, 0.0000000],
            [1.2536039, 0.0000000, 0.0000000]])
@@ -122,7 +122,7 @@ def read_gamess(
     array([11.00931,  1.00782])
     >>> w # vibrational frequencies
     array([19.74, 19.73, 0.00, 0.00, 0.00, 2320.32])
-    >>> l # normal modes
+    >>> n # normal modes
     array([[-0.0000000e+00, -7.5322000e-04, -8.7276210e-02,  0.0000000e+00,
          8.2280900e-03,  9.5339055e-01],
        [-0.0000000e+00, -8.7276210e-02,  7.5322000e-04,  0.0000000e+00,
@@ -149,7 +149,7 @@ def read_gamess(
         r = []
         m = []
         w = []
-        l = []
+        n = []
 
         for line in f:
 
@@ -175,7 +175,7 @@ def read_gamess(
                 d = []
                 for _ in range(len(r) * 3):
                     d.append(f.readline().rstrip().split()[-n_mode:])
-                l.append(np.array(d, float).T)
+                n.append(np.array(d, float).T)
 
     if not r:
         raise ValueError("No atomic coordinates found in the output file")
@@ -190,7 +190,7 @@ def read_gamess(
         np.concatenate(r).reshape(len(r), 3),
         np.concatenate(m),
         np.concatenate(w) * scale_factor,
-        np.concatenate(l),
+        np.concatenate(n),
     )
 
 
