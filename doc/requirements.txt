@@ -9,6 +9,7 @@ numba==0.53.1
 networkx==2.6.3
 numpy==1.19.2
 plotly==4.4.1
+protobuf<4.21.0  # remove when fix is released
 quantum-blackbird==0.4.0
 scipy==1.7.1
 scikit-learn==1.0.2
