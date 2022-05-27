@@ -552,7 +552,7 @@ class Program:
             # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
             # should share the same register references. Program.circuit potentially
             # contains FreeParameters/MeasuredParameters, which contain RegRefs.
-            if name not in ("circuit", "reg_refs", "init_reg_refs"):
+            if name not in ("circuit", "reg_refs", "init_reg_refs", "free_params"):
                 setattr(p, name, copy.deepcopy(val))
 
         # link to the original source Program
