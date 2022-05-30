@@ -562,34 +562,31 @@ class Program:
             p.source = self.source
         return p
 
-    def assert_number_of_modes(self, device):
+    def assert_modes(self, device):
         """Check that the number of modes in the program is valid for the given device.
 
+        .. note::
+
+            ``device.modes`` must be an integer with the allowed number of modes
+            for the target, or a dictionary containing the maximum number of allowed
+            measurements for the specified target.
+
         Args:
-            device (~strawberryfields.Device): Device specification object to use.
-                ``device.modes`` must be an integer, containing the allowed number of modes
-                for the target.
+            device (.strawberryfields.Device): device specification object to use
         """
         # Program subsystems may be created and destroyed during execution. The length
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
 
-        if modes_total > device.modes:
-            raise CircuitError(
-                f"This program contains {modes_total} modes, but the device '{device.target}' "
-                f"only supports a {device.modes}-mode program."
-            )
+        if isinstance(device.modes, int):
+            if modes_total > device.modes:
+                raise CircuitError(
+                    f"This program contains {modes_total} modes, but the device '{device.target}' "
+                    f"only supports a {device.modes}-mode program."
+                )
+            return
 
-    def assert_max_number_of_measurements(self, device):
-        """Check that the number of measurements in the circuit doesn't exceed the number of allowed
-        measurements according to the device specification.
-
-        Args:
-            device (~strawberryfields.Device): Device specification object to use.
-                ``device.modes`` must be a dictionary, containing the maximum number of allowed
-                measurements for the specified target.
-
-        """
+        # from here on `device.modes` is assumed to be a dictionary
         num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
 
         try:
@@ -706,14 +703,10 @@ class Program:
                 compiler = _get_compiler(compiler)
 
             if device.modes is not None:
-                if isinstance(device.modes, int):
-                    # check that the number of modes is correct, if device.modes
-                    # is provided as an integer
-                    self.assert_number_of_modes(device)
-                else:
-                    # check that the number of measurements is within the allowed
-                    # limits for each measurement type; device.modes will be a dictionary
-                    self.assert_max_number_of_measurements(device)
+                # check that the number of modes is correct, if device.modes is provided
+                # as an integer, or that the number of measurements is within the allowed
+                # limits for each measurement type, if `device.modes` is a dictionary
+                self.assert_modes(device)
 
         else:
             compiler = _get_compiler(compiler)
