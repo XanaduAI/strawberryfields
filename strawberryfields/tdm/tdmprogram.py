@@ -395,7 +395,7 @@ class TDMProgram(Program):
         self._spatial_modes = 0
         self._measured_modes = set()
 
-        self.rolled_circuit = None
+        self.rolled_circuit = []
         # `unrolled_circuit` contains the unrolled single-shot circuit, reusing previously measured
         # modes (doesn't work with Fock measurements)
         self.unrolled_circuit = None
@@ -599,6 +599,9 @@ class TDMProgram(Program):
 
     def roll(self):
         """Represent the program in a compressed way without unrolling the for loops."""
+        if not self.is_unrolled:
+            return
+
         self._unrolled_shots = None
         self.circuit = self.rolled_circuit
 
@@ -683,6 +686,11 @@ class TDMProgram(Program):
 
     def _unroll_program(self, shots, space):
         """Construct the unrolled program either using space-unrolling or with register shift."""
+        # self.circuit should always be rolled here, so we can store `self.rolled_circuit`
+        self.rolled_circuit = self.circuit
+        assert not self.is_unrolled
+
+        # reset the circuit which is to be recreated below
         self.circuit = []
 
         q = self.register
