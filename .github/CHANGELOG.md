@@ -14,7 +14,7 @@
 
 * `Program.assert_number_of_modes` and `Program.assert_max_number_of_measurements` are combined
   into a single `assert_modes` method.
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#709)](https://github.com/XanaduAI/strawberryfields/pull/709)
 
 ### Bug fixes
 
