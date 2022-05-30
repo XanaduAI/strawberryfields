@@ -390,7 +390,7 @@ class TestProgram:
         assert y.val is None
 
     def test_assert_number_of_modes(self):
-        """Check that the correct error is raised when calling `prog.assert_number_of_modes`
+        """Check that the correct error is raised when calling `prog.assert_modes`
         with the incorrect number of modes."""
         device_dict = {
             "target": "abc",
@@ -410,7 +410,7 @@ class TestProgram:
             program.CircuitError,
             match="program contains 3 modes, but the device 'abc' only supports a 2-mode program",
         ):
-            prog.assert_number_of_modes(device)
+            prog.assert_modes(device)
 
     @pytest.mark.parametrize(
         "measure_op, measure_name",
@@ -423,7 +423,7 @@ class TestProgram:
             (ops.MeasureHeterodyne(select=0), "heterodyne"),  # MeasureHeterodyne
         ],
     )
-    def test_assert_max_number_of_measurements(self, measure_op, measure_name):
+    def test_assert_modes_dict(self, measure_op, measure_name):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect number of measurements in the circuit."""
         # set maximum number of measurements to 2, and measure 3 in prog below
@@ -442,9 +442,9 @@ class TestProgram:
                 measure_op | reg
 
         with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
-            prog.assert_max_number_of_measurements(device)
+            prog.assert_modes(device)
 
-    def test_keyerror_assert_max_number_of_measurements(self):
+    def test_keyerror_assert_modes_dict(self):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with an incorrect device spec modes entry."""
         # set maximum number of measurements to 2, and measure 3 in prog below
@@ -464,14 +464,14 @@ class TestProgram:
 
         match = "Expected keys for the maximum allowed number of PNR"
         with pytest.raises(KeyError, match=match):
-            prog.assert_max_number_of_measurements(device)
+            prog.assert_modes(device)
 
-    def test_assert_max_number_of_measurements_wrong_entry(self):
+    def test_assert_modes_dict_wrong_entry(self):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect type of device spec mode entry."""
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": 2,
+            "modes": "pnr",
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],
@@ -484,7 +484,7 @@ class TestProgram:
             ops.S2gate(0.6) | [q[1], q[2]]
 
         with pytest.raises(KeyError, match="Expected keys for the maximum allowed number of PNR"):
-            prog.assert_max_number_of_measurements(device)
+            prog.assert_modes(device)
 
     def test_has_post_selection(self):
         """Check that the ``has_post_selection`` property behaves as expected when it uses
