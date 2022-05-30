@@ -20,6 +20,10 @@
 * Fixed bug with vacuum modes missing.
 [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
+* Store correct rolled circuit before unrolling (fixes issue when rolled circuit has changed due to
+  e.g., compilation).
+  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+
 ### Documentation
 
 * The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
