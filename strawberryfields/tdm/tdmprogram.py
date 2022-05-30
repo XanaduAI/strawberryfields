@@ -478,7 +478,7 @@ class TDMProgram(Program):
                 )
 
             if device.modes is not None:
-                self.assert_number_of_modes(device)
+                self.assert_modes(device)
 
             # First check: the gates are in the correct order
             program_gates = [cmd.op.__class__.__name__ for cmd in self.rolled_circuit]
@@ -771,7 +771,17 @@ class TDMProgram(Program):
 
         self.append(cmd.op.__class__(*params), modes)
 
-    def assert_number_of_modes(self, device):
+    def assert_modes(self, device):
+        """Check that the number of modes in the program is valid.
+
+        .. note::
+
+            ``device.modes`` must be a dictionary containing the maximum number of allowed
+            measurements for the specified target.
+
+        Args:
+            device (.strawberryfields.DeviceSpec): device specification object to use
+        """
         if self.timebins > device.modes["temporal_max"]:
             raise CircuitError(
                 f"This program contains {self.timebins} temporal modes, but the device '{device.target}' "

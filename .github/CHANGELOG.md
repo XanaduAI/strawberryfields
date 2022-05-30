@@ -7,18 +7,22 @@
 ### Improvements
 
 * A locked program can now be (un)rolled, and automatically restores the lock if there.
-[(#703)](https://github.com/XanaduAI/strawberryfields/pull/703)
+  [(#703)](https://github.com/XanaduAI/strawberryfields/pull/703)
 
 * Rolling and unrolling now only happens in place, and does no longer return the (un)rolled circuit.
-[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* `Program.assert_number_of_modes` and `Program.assert_max_number_of_measurements` are combined
+  into a single `assert_modes` method.
+  [(#709)](https://github.com/XanaduAI/strawberryfields/pull/709)
 
 ### Bug fixes
 
 * Trying to unroll an already unrolled program with a different number of shots works as expected.
-[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
 * Fixed bug with vacuum modes missing.
-[(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
 * Store correct rolled circuit before unrolling (fixes issue when rolled circuit has changed due to
   e.g., compilation).
