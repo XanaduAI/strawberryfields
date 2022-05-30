@@ -20,6 +20,9 @@
 * Fixed bug with vacuum modes missing.
 [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
+* Validating parameters now work with nested parameter arrays.
+  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+
 ### Documentation
 
 * The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
