@@ -17,7 +17,7 @@
   [(#709)](https://github.com/XanaduAI/strawberryfields/pull/709)
 
 * Job results can now be retrieved without converting integers to `np.int64` objects by setting
-  `integer_overflow_protection=False` (default `True`) when running a program via ``RemoteEngine.run()`.
+  `integer_overflow_protection=False` (default `True`) when running a program via `RemoteEngine.run()`.
   [(#712)](https://github.com/XanaduAI/strawberryfields/pull/712)
 
 ### Bug fixes
