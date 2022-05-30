@@ -59,7 +59,7 @@ def job(connection, monkeypatch):
     result = {"output": [np.array([[1, 2], [3, 4]])], "foo": [np.array([5, 6])]}
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
-    monkeypatch.setattr(xcc.Job, "result", result)
+    monkeypatch.setattr(xcc.Job, "get_result", mock_return(result))
     monkeypatch.setattr(xcc.Job, "clear", mock_return(None))
     monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
