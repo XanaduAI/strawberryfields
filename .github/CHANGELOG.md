@@ -12,6 +12,10 @@
 * Rolling and unrolling now only happens in place, and does no longer return the (un)rolled circuit.
 [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
+* Job results can now be retrieved without converting integers to `np.int64` objects by setting
+  `integer_overflow_protection=False` (default `True`) when running a program via ``RemoteEngine.run()`.
+  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+
 ### Bug fixes
 
 * Trying to unroll an already unrolled program with a different number of shots works as expected.
