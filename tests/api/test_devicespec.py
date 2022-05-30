@@ -214,7 +214,7 @@ class TestDevice:
             {"phase_0": 0},
             {"phase_0": 6.29999},
             {"phase_0": [6.29999, 0, 0.14]},
-            {"phase_0": [[0.1, 0,2], [[0.5]]]},
+            {"phase_0": [[0.1, 0, 2], [[0.5]]]},
         ],
     )
     def test_valid_parameters(self, params):
