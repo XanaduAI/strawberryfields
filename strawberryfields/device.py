@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2020-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 This module contains a class that represents a device on the Xanadu Cloud.
 """
 import re
-from typing import Sequence, Mapping, Any, Optional
+from typing import Generator, Iterable, Sequence, Mapping, Any, Optional
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
@@ -142,18 +142,35 @@ class Device:
         if self.gate_parameters is None:
             return
 
+        def _flatten(iterable: Iterable) -> Generator:
+            for it in iterable:
+                if isinstance(it, Iterable) and not isinstance(it, str):
+                    yield from _flatten(it)
+                else:
+                    yield it
+
         # check that all provided parameters are valid
         for p, v in parameters.items():
-            if p in self.gate_parameters and v not in self.gate_parameters[p]:
-                # parameter is present in the device specifications
-                # but the user has provided an invalid value
-                raise ValueError(
-                    f"{p} has invalid value {v}. Only {self.gate_parameters[p]} allowed."
-                )
+            if p in self.gate_parameters:
+                if isinstance(v, Iterable):
+                    for i in _flatten(v):
+                        if i not in self.gate_parameters[p]:
+                            raise ValueError(
+                                f"'{p}' has invalid value {i}. Only {self.gate_parameters[p]} allowed."
+                            )
+                else:
+                    if v not in self.gate_parameters[p]:
+                        # parameter is present in the device specifications
+                        # but the user has provided an invalid value
+                        raise ValueError(
+                            f"'{p}' has invalid value {v}. Only {self.gate_parameters[p]} allowed."
+                        )
 
-            if p not in self.gate_parameters:
-                raise ValueError(f"Parameter {p} not a valid parameter for this device")
+            else:
+                raise ValueError(f"Parameter '{p}' not a valid parameter for this device")
 
+    # NOTE: does not work with `TDMProgram` due to template array parameters being stored
+    # differently in Blackbird, e.g., an array `s` would be stored as s_0_0, s_0_1, etc.
     def create_program(self, **parameters: complex):
         """Create a Strawberry Fields program matching the low-level Blackbird
         layout of the device.
