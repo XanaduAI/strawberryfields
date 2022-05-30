@@ -26,7 +26,7 @@
 
 * Store correct rolled circuit before unrolling (fixes issue when rolled circuit has changed due to
   e.g., compilation).
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#710)](https://github.com/XanaduAI/strawberryfields/pull/710)
 
 ### Documentation
 
