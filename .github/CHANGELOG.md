@@ -21,7 +21,7 @@
 [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
 * Validating parameters now work with nested parameter arrays.
-  [(#XXX)](https://github.com/XanaduAI/strawberryfields/pull/XXX)
+  [(#711)](https://github.com/XanaduAI/strawberryfields/pull/711)
 
 ### Documentation
 
