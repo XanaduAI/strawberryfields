@@ -153,7 +153,7 @@ class Device:
         for p, v in parameters.items():
             if p not in self.gate_parameters:
                 raise ValueError(f"Parameter '{p}' not a valid parameter for this device")
-            
+
             if isinstance(v, Iterable):
                 for i in _flatten(v):
                     if i not in self.gate_parameters[p]:
