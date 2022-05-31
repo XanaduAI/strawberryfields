@@ -151,23 +151,21 @@ class Device:
 
         # check that all provided parameters are valid
         for p, v in parameters.items():
-            if p in self.gate_parameters:
-                if isinstance(v, Iterable):
-                    for i in _flatten(v):
-                        if i not in self.gate_parameters[p]:
-                            raise ValueError(
-                                f"'{p}' has invalid value {i}. Only {self.gate_parameters[p]} allowed."
-                            )
-                else:
-                    if v not in self.gate_parameters[p]:
-                        # parameter is present in the device specifications
-                        # but the user has provided an invalid value
-                        raise ValueError(
-                            f"'{p}' has invalid value {v}. Only {self.gate_parameters[p]} allowed."
-                        )
-
-            else:
+            if p not in self.gate_parameters:
                 raise ValueError(f"Parameter '{p}' not a valid parameter for this device")
+            
+            if isinstance(v, Iterable):
+                for i in _flatten(v):
+                    if i not in self.gate_parameters[p]:
+                        raise ValueError(
+                            f"'{p}' has invalid value {i}. Only {self.gate_parameters[p]} allowed."
+                        )
+            elif v not in self.gate_parameters[p]:
+                # parameter is present in the device specifications
+                # but the user has provided an invalid value
+                raise ValueError(
+                    f"'{p}' has invalid value {v}. Only {self.gate_parameters[p]} allowed."
+                )
 
     # NOTE: does not work with `TDMProgram` due to template array parameters being stored
     # differently in Blackbird, e.g., an array `s` would be stored as s_0_0, s_0_1, etc.
