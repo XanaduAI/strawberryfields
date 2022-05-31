@@ -646,6 +646,11 @@ class RemoteEngine:
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
+            integer_overflow_protection (Optional[bool]): Whether to enable the
+                conversion of integral job results into ``np.int64`` objects.
+                By default, integer overflow protection is enabled. For more
+                information, see `xcc.Job.get_result
+                <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html#xcc.Job.get_result>`_.
 
         Returns:
             strawberryfields.Result, None: the job result if successful, and ``None`` otherwise
@@ -683,7 +688,10 @@ class RemoteEngine:
 
         if job.status == "complete":
             self.log.info(f"The remote job {job.id} has been completed.")
-            return Result(job.result)
+
+            integer_overflow_protection = kwargs.get("integer_overflow_protection", True)
+            result = job.get_result(integer_overflow_protection=integer_overflow_protection)
+            return Result(result)
 
         message = f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
         self.log.info(message)
