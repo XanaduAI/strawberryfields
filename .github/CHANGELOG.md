@@ -28,6 +28,9 @@
 * Fixed bug with vacuum modes missing.
   [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
 
+* Validating parameters now work with nested parameter arrays.
+  [(#711)](https://github.com/XanaduAI/strawberryfields/pull/711)
+
 * Store correct rolled circuit before unrolling (fixes issue when rolled circuit has changed due to
   e.g., compilation).
   [(#710)](https://github.com/XanaduAI/strawberryfields/pull/710)
