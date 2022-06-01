@@ -112,7 +112,7 @@ For more details on submitting jobs to photonic hardware, check out the followin
 tutorials.
 
 .. gallery-item::
-    :description: :doc:`demos/tutorial_borealis_quickstart`
+    :description: `Borealis quickstart <https://strawberryfields.ai/photonics/demos/tutorial_borealis_quickstart.html>`__
     :figure: _static/borealis_3d.png
 
 .. gallery-item::
