@@ -51,8 +51,6 @@ def job(connection, monkeypatch):
             return True
         return False
 
-    _details = {"status": "open"}
-
     job = xcc.Job(id_="123", connection=connection)
     job._details = {"status": "open"}
 

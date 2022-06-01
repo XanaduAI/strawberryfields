@@ -204,12 +204,12 @@ class DummyResults:
 
 def dummy_run(self, program, args, compile_options=None, **eng_run_options):
     """A dummy run function, that when called returns a dummy
-    results object, with run options available as an attribute.
+    results object, with engine run options available as an attribute.
     This allows run_options to be returned and inspected after calling eng.run
     """
-    results = DummyResults()
-    results.run_options = eng_run_options
-    return results
+    results_with_eng_run_options = DummyResults()
+    results_with_eng_run_options.run_options = eng_run_options
+    return results_with_eng_run_options
 
 
 class TestEngineIntegration:
@@ -231,9 +231,9 @@ class TestEngineIntegration:
 
         with monkeypatch.context() as m:
             m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog)
+            results_with_eng_options = eng.run(prog)
 
-        assert results.run_options == {"shots": 100}
+        assert results_with_eng_options.run_options == {"modes": None, "shots": 100}
 
     def test_shots_overwritten(self, eng, monkeypatch):
         """Test if run_options are passed to eng.run, they
@@ -252,9 +252,9 @@ class TestEngineIntegration:
 
         with monkeypatch.context() as m:
             m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run(prog, shots=1000)
+            results_with_eng_run_options = eng.run(prog, shots=1000)
 
-        assert results.run_options == {"shots": 1000}
+        assert results_with_eng_run_options.run_options == {"modes": None, "shots": 1000}
 
     def test_program_sequence(self, eng, monkeypatch):
         """Test that program run_options are successively
@@ -284,6 +284,6 @@ class TestEngineIntegration:
 
         with monkeypatch.context() as m:
             m.setattr("strawberryfields.engine.BaseEngine._run", dummy_run)
-            results = eng.run([prog1, prog2])
+            results_with_eng_run_options = eng.run([prog1, prog2])
 
-        assert results.run_options == prog2.run_options
+        assert results_with_eng_run_options.run_options == {"modes": None, **prog2.run_options}

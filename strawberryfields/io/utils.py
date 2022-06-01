@@ -20,7 +20,7 @@ from numbers import Number
 import numpy as np
 
 from strawberryfields.program import Program
-from strawberryfields.tdm.tdmprogram import TDMProgram
+from strawberryfields.tdm import TDMProgram
 
 
 def generate_code(prog: Program, eng=None) -> str:

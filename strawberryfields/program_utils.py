@@ -488,3 +488,21 @@ def program_equivalence(prog1, prog2, compare_params=True, atol=1e-6, rtol=0):
 
     # check if circuits are equivalent
     return nx.is_isomorphic(circuit[0], circuit[1], node_match)
+
+
+def remove_loss(circuit):
+    """Removes any ``LossChannel`` operations from a circuit sequence.
+    Args:
+        circuit (list[Command]: circuit with ``LossChannels`` to be removed
+    Returns:
+        list[Command]: circuit where the ``LossChannels`` have been removed
+    """
+    # pylint: disable=import-outside-toplevel
+    from strawberryfields.ops import LossChannel
+
+    lossless_circuit = circuit.copy()
+    for cmd in circuit:
+        if isinstance(cmd.op, LossChannel):
+            lossless_circuit.remove(cmd)
+
+    return lossless_circuit

@@ -139,7 +139,8 @@ class GaussianBackend(BaseGaussian):
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            qs = self.circuit.homodyne(mode, **kwargs)[0, 0]
+            eps = kwargs.get("eps", 0.0002)
+            qs = self.circuit.homodyne(mode, shots, eps)[0, 0]
         else:
             val = select * 2 / sqrt(2 * self.circuit.hbar)
             qs = self.circuit.post_select_homodyne(mode, val, **kwargs)
@@ -147,7 +148,7 @@ class GaussianBackend(BaseGaussian):
         # `qs` will always be a single value since multiple shots is not supported
         return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
 
-    def measure_heterodyne(self, mode, shots=1, select=None):
+    def measure_heterodyne(self, mode, shots=1, select=None, **kwargs):
 
         if shots != 1:
             if select is not None:

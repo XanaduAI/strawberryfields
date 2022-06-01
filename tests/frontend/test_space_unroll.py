@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for space_unroll in tdmprogram.py"""
+r"""Unit tests for space_unroll in tdm/program.py"""
 
 import pytest
 import numpy as np
 import strawberryfields as sf
-from strawberryfields.tdm.tdmprogram import get_mode_indices
-from strawberryfields.ops import Sgate, Rgate, BSgate, LossChannel, MeasureFock
+from strawberryfields.tdm import get_mode_indices
+from strawberryfields.ops import Sgate, Rgate, BSgate
 from thewalrus.symplectic import reduced_state
 from thewalrus.quantum import is_pure_cov
 
