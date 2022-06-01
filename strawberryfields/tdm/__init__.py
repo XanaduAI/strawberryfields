@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,4 +15,18 @@
 """This package contains classes and functions for creating time-domain
 algorithms in Strawberry Fields."""
 
-from .tdmprogram import shift_by, input_check, reshape_samples, TDMProgram
+from .program import TDMProgram, reshape_samples, is_ptype, shift_by
+from .utils import (
+    borealis_gbs,
+    full_compile,
+    get_mode_indices,
+    loop_phase_from_device,
+    make_phases_compatible,
+    make_squeezing_compatible,
+    move_vac_modes,
+    vacuum_padding,
+    random_r,
+    random_bs,
+    to_args_list,
+    to_args_dict,
+)
