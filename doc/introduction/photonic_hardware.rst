@@ -112,6 +112,18 @@ For more details on submitting jobs to photonic hardware, check out the followin
 tutorials.
 
 .. gallery-item::
+    :description: :doc:`demos/tutorial_borealis_quickstart`
+    :figure: _static/borealis_3d.png
+
+.. gallery-item::
+    :description: :doc:`demos/tutorial_borealis_beginner`
+    :figure: _static/borealis_schematic_simple.png
+
+.. gallery-item::
+    :description: :doc:`demos/tutorial_borealis_beginner`
+    :figure: _static/borealis_schematic_advanced.png
+
+.. gallery-item::
     :description: :doc:`demos/tutorial_X8`
     :figure: _static/chip.png
 
