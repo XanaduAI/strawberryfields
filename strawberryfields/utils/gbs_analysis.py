@@ -8,12 +8,20 @@ import numpy as np
 
 # where ``t`` is the time it takes to compute a Hafnian of size ``n x n`` on a
 # particular computer.
+
+# c.f. references
+# - L.S. Madsen et al., "Quantum computational advantage with a programmable
+# photonic processor", Nature (2022).
+# - A. Deshpande et al., "Quantum computational advantage via high-dimensional
+#   Gaussian boson sampling", Science Adv. 8, eabi7894 (2022).
 c_niagara = 5.42e-15
 c_fugaku = c_niagara / 122.8
 
 
 def gbs_runtime(N_c, G, modes, c=c_fugaku):
-    """Simulation time of a GBS sample.
+    """Simulation time of a GBS sample (cf. L.S. Madsen et al.,
+    "Quantum computational advantage with a programmable photonic
+    processor", Nature (2022).)
 
     Args:
         N_c (int): number of nonzero detector outcomes
@@ -52,7 +60,9 @@ def ncg(sample):
 
 
 def gbs_sample_runtime(sample, c=c_fugaku, return_ncg=False):
-    """Simulation time of a GBS sample.
+    """Simulation time of a GBS sample (cf. L.S. Madsen et al.,
+    "Quantum computational advantage with a programmable photonic
+    processor", Nature (2022)")
 
     Args:
         sample (array[int]): a photon-number array of shape
