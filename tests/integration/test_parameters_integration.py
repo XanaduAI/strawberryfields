@@ -128,7 +128,8 @@ def test_parameters_with_operations(eng_prog_params, G):
         except pu.CircuitError as err:
             # record Compiler-forbidden op/backend combinations here
             warnings.warn(str(err))
-        eng.reset()
+        else:
+            eng.reset()
 
     sig = inspect.signature(G.__init__)
     n_args = len(sig.parameters) - 1  # number of parameters __init__ takes, minus self

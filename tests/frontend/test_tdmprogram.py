@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2020-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,21 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for tdmprogram.py"""
-import copy
+r"""Unit tests for tdm/program.py"""
 from collections.abc import Iterable
 
-import inspect
-from strawberryfields.program_utils import CircuitError
 import pytest
 import numpy as np
 
-import blackbird as bb
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.tdm import tdmprogram
-from strawberryfields.tdm.tdmprogram import move_vac_modes, reshape_samples
-from strawberryfields.device import Device
+from strawberryfields.tdm import (
+    TDMProgram,
+    move_vac_modes,
+    get_mode_indices,
+    random_bs,
+    random_r,
+    vacuum_padding,
+    to_args_list,
+)
 
 pytestmark = pytest.mark.frontend
 
@@ -43,7 +45,7 @@ def singleloop(r, alpha, phi, theta, shots, shift="default"):
     Returns:
         (list): homodyne samples from the single loop simulation
     """
-    prog = tdmprogram.TDMProgram(N=2)
+    prog = TDMProgram(N=2)
     with prog.context(alpha, phi, theta, shift=shift) as (p, q):
         ops.Sgate(r, 0) | q[1]
         ops.BSgate(p[0]) | (q[0], q[1])
@@ -53,6 +55,46 @@ def singleloop(r, alpha, phi, theta, shots, shift="default"):
     result = eng.run(prog, shots=shots)
 
     return result.samples
+
+
+def multiple_loops_program(delays, gate_args):
+    """Multiple loops program. This function automatically creates
+    a multiple loop program given a list of delays and the corresponding
+    gate arguments.
+
+    Args:
+        delays (list): a list with the given delay for each loop in the program
+        gate_args (list[array]): a list containing the parameters of the gates
+    """
+    n, N = get_mode_indices(delays)
+    prog = sf.TDMProgram(N)
+    with prog.context(*gate_args) as (p, q):
+        ops.Sgate(p[0]) | q[n[0]]
+        for i in range(len(delays)):
+            ops.Rgate(p[2 * i + 1]) | q[n[i]]
+            ops.BSgate(p[2 * i + 2], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+        ops.MeasureX | q[0]
+    return prog
+
+
+def random_gate_args(delays, num_modes):
+    """Helper function to return random gate args with padded with 0 for vacuum modes."""
+    random_gate_args = {
+        "Sgate": np.random.uniform(low=0, high=1, size=num_modes).tolist(),
+        "loops": {},
+    }
+    for idx in range(len(delays)):
+        random_gate_args["loops"][idx] = {
+            "Rgate": random_r(length=num_modes),
+            "BSgate": random_bs(length=num_modes),
+        }
+
+    # set the initial cross states of each BS
+    for idx in range(len(delays)):
+        random_gate_args["loops"][idx]["BSgate"][: delays[idx]] = [0] * delays[idx]
+
+    padded_gate_args = vacuum_padding(gate_args=random_gate_args, delays=delays)
+    return to_args_list(padded_gate_args), padded_gate_args["crop"]
 
 
 class TestTDMErrorRaising:
@@ -71,7 +113,7 @@ class TestTDMErrorRaising:
 
     def test_passing_list_of_tdmprograms(self):
         """Test that error is raised when passing a list containing TDM programs"""
-        prog = tdmprogram.TDMProgram(N=2)
+        prog = TDMProgram(N=2)
         with prog.context([1, 1], [1, 1], [1, 1]) as (p, q):
             ops.Sgate(0, 0) | q[1]
             ops.BSgate(p[0]) | (q[0], q[1])
@@ -84,6 +126,59 @@ class TestTDMErrorRaising:
             NotImplementedError, match="Lists of TDM programs are not currently supported"
         ):
             eng.run([prog, prog])
+
+    def test_cropping_tdmprogram_with_several_spatial_modes(self):
+        """Test that error is raised when cropping samples from a TDM program with more than
+        one spatial mode"""
+
+        prog = TDMProgram(N=[1, 2])
+        with prog.context([0, np.pi / 2], [0, np.pi / 2]) as (p, q):
+            ops.Sgate(4) | q[0]
+            ops.Sgate(4) | q[2]
+            ops.MeasureHomodyne(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[1]
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Cropping vacuum modes for programs with more than one spatial mode is not implemented.",
+        ):
+            prog.get_crop_value()
+
+    def test_delays_tdmprogram_with_nested_loops(self):
+        """Test that error is raised when calculating the delays of a TDM program with nested loops"""
+
+        gate_args = [random_bs(8), random_bs(8)]
+
+        # a program with nested delays
+        prog = TDMProgram(N=4)
+        with prog.context(*gate_args) as (p, q):
+            ops.Sgate(0.4, 0) | q[3]
+            ops.BSgate(p[0]) | (q[0], q[3])
+            ops.BSgate(p[1]) | (q[2], q[1])
+            ops.MeasureX | q[0]
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Calculating delays for programs with nested loops is not implemented.",
+        ):
+            prog.get_delays()
+
+    def test_delays_tdmprogram_with_several_spatial_modes(self):
+        """Test that error is raised when calculating the delays of a TDM program with more than
+        one spatial mode"""
+
+        prog = TDMProgram(N=[1, 2])
+        with prog.context([0, np.pi / 2], [0, np.pi / 2]) as (p, q):
+            ops.Sgate(4) | q[0]
+            ops.Sgate(4) | q[2]
+            ops.MeasureHomodyne(p[0]) | q[0]
+            ops.MeasureHomodyne(p[1]) | q[1]
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Calculating delays for programs with more than one spatial mode is not implemented.",
+        ):
+            prog.get_delays()
 
 
 def test_shift_by_specified_amount():
@@ -103,7 +198,7 @@ def test_shift_by_specified_amount():
 
 def test_str_tdm_method():
     """Testing the string method"""
-    prog = tdmprogram.TDMProgram(N=1)
+    prog = TDMProgram(N=1)
     assert prog.__str__() == "<TDMProgram: concurrent modes=1, time bins=0, spatial modes=0>"
 
 
@@ -120,6 +215,44 @@ def test_single_parameter_list_program():
 
     assert isinstance(prog.loop_vars, Iterable)
     assert prog.parameters == {"p0": [1, 2]}
+
+
+@pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+def test_delay_loops(delays):
+    """Test that program calculates correctly the delays present in the circuit for a
+    TDM program."""
+
+    gate_args, _ = random_gate_args(delays, num_modes=216)
+
+    n, N = get_mode_indices(delays)
+    prog = sf.TDMProgram(N=N)
+    with prog.context(*gate_args) as (p, q):
+        ops.Sgate(p[0]) | q[n[0]]
+        for i in range(len(delays)):
+            ops.Rgate(p[2 * i + 1]) | q[n[i]]
+            ops.BSgate(p[2 * i + 2], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+        ops.MeasureFock() | q[0]
+
+    assert prog.get_delays() == delays
+
+
+@pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+def test_crop_value(delays):
+    """Test that program calculates correctly the the number of vacuum modes arriving at the
+    detector before the first computational mode"""
+
+    gate_args, expected_crop_value = random_gate_args(delays, num_modes=216)
+
+    n, N = get_mode_indices(delays)
+    prog = sf.TDMProgram(N)
+    with prog.context(*gate_args) as (p, q):
+        ops.Sgate(p[0]) | q[n[0]]
+        for i in range(len(delays)):
+            ops.Rgate(p[2 * i + 1]) | q[n[i]]
+            ops.BSgate(p[2 * i + 2], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+        ops.MeasureFock() | q[0]
+
+    assert prog.get_crop_value() == expected_crop_value
 
 
 class TestSingleLoopNullifier:
@@ -242,7 +375,7 @@ def test_one_dimensional_cluster_tokyo():
     theta1 = [0] * int(n / 2) + [np.pi / 2] * int(n / 2)  # measurement angles for detector A
     theta2 = theta1  # measurement angles for detector B
 
-    prog = tdmprogram.TDMProgram(N=[1, 2])
+    prog = TDMProgram(N=[1, 2])
     with prog.context(theta1, theta2, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[2]
@@ -289,7 +422,7 @@ def test_two_dimensional_cluster_denmark():
     theta_B = theta_A  # measurement angles for detector B
 
     # 2D cluster
-    prog = tdmprogram.TDMProgram([1, delay2 + delay1 + 1])
+    prog = TDMProgram([1, delay2 + delay1 + 1])
     with prog.context(theta_A, theta_B, shift="default") as (p, q):
         ops.Sgate(sq_r, 0) | q[0]
         ops.Sgate(sq_r, 0) | q[delay2 + delay1 + 1]
@@ -375,7 +508,7 @@ def test_two_dimensional_cluster_tokyo():
     shots = 10
 
     # 2D cluster
-    prog = tdmprogram.TDMProgram(N)
+    prog = TDMProgram(N)
     with prog.context(theta_A, theta_B, theta_C, theta_D, shift="default") as (p, q):
 
         ops.Sgate(sq_r, 0) | q[0]
@@ -459,225 +592,8 @@ def test_two_dimensional_cluster_tokyo():
         assert np.allclose(nP2var, 2 * sf.hbar * np.exp(-2 * sq_r), rtol=5 / np.sqrt(ntot))
 
 
-def singleloop_program(r, alpha, phi, theta):
-    """Single delay loop with program.
-
-    Args:
-        r (float): squeezing parameter
-        alpha (Sequence[float]): beamsplitter angles
-        phi (Sequence[float]): rotation angles
-        theta (Sequence[float]): homodyne measurement angles
-    Returns:
-        (array): homodyne samples from the single loop simulation
-    """
-    prog = tdmprogram.TDMProgram(N=2)
-    with prog.context(alpha, phi, theta) as (p, q):
-        ops.Sgate(r, 0) | q[1]
-        ops.BSgate(p[0]) | (q[1], q[0])
-        ops.Rgate(p[1]) | q[1]
-        ops.MeasureHomodyne(p[2]) | q[0]
-    return prog
-
-
-target = "TD2"
-tm = 4
-device_spec = {
-    "target": target,
-    "layout": "name template_tdm\nversion 1.0\ntarget {target} (shots=1)\ntype tdm (temporal_modes={tm})\nfloat array p1[1, {tm}] =\n    {{bs_array}}\nfloat array p2[1, {tm}] =\n    {{r_array}}\nfloat array p3[1, {tm}] =\n    {{m_array}}\n\nSgate(0.5643) | 1\nBSgate(p1) | (1, 0)\nRgate(p2) | 1\nMeasureHomodyne(p3) | 0\n",
-    "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
-    "compiler": ["TD2"],
-    "gate_parameters": {
-        "p1": [0, [0, 6.283185307179586]],
-        "p2": [0, [0, 3.141592653589793], 3.141592653589793],
-        "p3": [0, [0, 6.283185307179586]],
-    },
-}
-device_spec["layout"] = device_spec["layout"].format(target=target, tm=tm)
-device = Device(device_spec)
-
-
-def test_linked_copy():
-    """Check that the ``_linked_copy`` method copies a TDM program correctly."""
-    sq_r = 0.5643
-    c = 2
-    alpha = [np.pi / 4, 0] * c
-    phi = [0, np.pi / 2] * c
-    theta = [0, 0, np.pi / 2, np.pi / 2]
-    prog = singleloop_program(sq_r, alpha, phi, theta)
-
-    prog_copy = prog._linked_copy()
-    assert prog_copy.circuit
-    assert prog.circuit
-
-    # registers should be the same
-    for i, regref in prog_copy.reg_refs.items():
-        assert regref is prog.reg_refs[i]
-
-    for i, cmd in enumerate(prog_copy.circuit):
-        assert cmd is prog.circuit[i]
-
-    # tdm_params should be equal, but not the same
-    assert prog_copy.tdm_params is not prog.tdm_params
-    assert prog_copy.tdm_params == prog.tdm_params
-
-    assert prog_copy.source is prog
-
-
-class TestTDMcompiler:
-    """Test class for checking error messages from the compiler"""
-
-    def test_tdm_wrong_layout(self):
-        """Test the correct error is raised when the tdm circuit gates don't match the device spec"""
-        sq_r = 0.5643
-        c = 2
-        alpha = [np.pi / 4, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta) as (p, q):
-            ops.Dgate(sq_r) | q[1]  # Here one should have an Sgate
-            ops.BSgate(p[0]) | (q[1], q[0])
-            ops.Rgate(p[1]) | q[1]
-            ops.MeasureHomodyne(p[2]) | q[0]
-        eng = sf.Engine("gaussian")
-        with pytest.raises(
-            CircuitError,
-            match="The gates or the order of gates used in the Program",
-        ):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_wrong_modes(self):
-        """Test the correct error is raised when the tdm circuit registers don't match the device spec"""
-        sq_r = 0.5643
-        c = 2
-        alpha = [np.pi / 4, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta) as (p, q):
-            ops.Sgate(sq_r) | q[1]
-            ops.BSgate(p[0]) | (q[0], q[1])  # The order should be (q[1], q[0])
-            ops.Rgate(p[1]) | q[1]
-            ops.MeasureHomodyne(p[2]) | q[0]
-        eng = sf.Engine("gaussian")
-        with pytest.raises(CircuitError, match="due to incompatible mode ordering."):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_wrong_parameters_explicit(self):
-        """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
-        sq_r = 2  # This squeezing is not in the allowed range of squeezing parameters
-        c = 2
-        alpha = [np.pi / 4, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_wrong_parameters_explicit_in_list(self):
-        """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
-        sq_r = 0.5643
-        c = 2
-        alpha = [
-            np.pi / 4,
-            27,
-        ] * c  # This beamsplitter phase is not in the allowed range of squeezing parameters
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_wrong_parameter_second_argument(self):
-        """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
-        sq_r = 0.5643
-        c = 2
-        alpha = [np.pi / 4, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, phi, theta) as (p, q):
-            ops.Sgate(sq_r, 0.4) | q[
-                1
-            ]  # Note that the Sgate has a second parameter that is non-zero
-            ops.BSgate(p[0]) | (q[1], q[0])
-            ops.Rgate(p[1]) | q[1]
-            ops.MeasureHomodyne(p[2]) | q[0]
-        eng = sf.Engine("gaussian")
-        with pytest.raises(CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_wrong_parameters_symbolic(self):
-        """Test the correct error is raised when the tdm circuit symbolic parameters are not within the allowed ranges"""
-        sq_r = 0.5643
-        c = 2
-        alpha = [137, 0] * c  # Note that alpha is outside the allowed range
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] + [np.pi / 2, np.pi / 2]
-        prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(CircuitError, match="due to incompatible parameter."):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_parameters_not_in_device_spec(self):
-        """Test the correct error is raised when the tdm circuit symbolic parameters are not found
-        in the device specification"""
-        spec = copy.deepcopy(device_spec)
-        # "p1" removed from device spec, but is still used in layout
-        del spec["gate_parameters"]["p1"]
-
-        c = 2
-        prog = singleloop_program(
-            0.5643, [np.pi / 4, 0] * c, [0, np.pi / 2] * c, [0, 0, np.pi / 2, np.pi / 2]
-        )
-        with pytest.raises(CircuitError, match="not found in device specification"):
-            prog.compile(device=Device(spec), compiler="TDM")
-
-    def test_tdm_inconsistent_temporal_modes(self):
-        """Test the correct error is raised when the tdm circuit has too many temporal modes"""
-        sq_r = 0.5643
-        c = 100  # Note that we are requesting more temporal modes (2*c = 200) than what is allowed.
-        alpha = [0.5, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(CircuitError, match="temporal modes, but the device"):
-            prog.compile(device=device, compiler="TD2")
-
-    def test_tdm_inconsistent_concurrent_modes(self):
-        """Test the correct error is raised when the tdm circuit has too many concurrent modes"""
-        device_spec1 = copy.deepcopy(device_spec)
-        device_spec1["modes"][
-            "concurrent"
-        ] = 100  # Note that singleloop_program has only two concurrent modes
-        device1 = Device(device_spec1)
-        c = 1
-        sq_r = 0.5643
-        alpha = [0.5, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(CircuitError, match="concurrent modes, but the device"):
-            prog.compile(device=device1, compiler="TD2")
-
-    def test_tdm_inconsistent_spatial_modes(self):
-        """Test the correct error is raised when the tdm circuit has too many spatial modes"""
-        device_spec1 = copy.deepcopy(device_spec)
-        device_spec1["modes"][
-            "spatial"
-        ] = 100  # Note that singleloop_program has only one spatial mode
-        device1 = Device(device_spec1)
-        c = 1
-        sq_r = 0.5643
-        alpha = [0.5, 0] * c
-        phi = [0, np.pi / 2] * c
-        theta = [0, 0] * c
-        prog = singleloop_program(sq_r, alpha, phi, theta)
-        with pytest.raises(CircuitError, match="spatial modes, but the device"):
-            prog.compile(device=device1, compiler="TD2")
-
-
 class TestTDMProgramFunctions:
-    """Test functions in the ``tdmprogram`` module"""
+    """Test functions in the ``tdm.program`` module"""
 
     @pytest.mark.parametrize(
         "N, crop, expected",
@@ -768,73 +684,127 @@ class TestEngineTDMProgramInteraction:
 
         assert np.allclose(samples, expected, atol=4)
 
+    @pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+    def test_crop_default(self, delays):
+        """Test that ``crop=False`` by default implies all samples from the program are returned (including vacuum modes)"""
 
-class TestTDMValidation:
-    """Test the validation of TDMProgram against the device specs"""
+        computational_modes = 100
+        gate_args, vacuum_modes = random_gate_args(delays, computational_modes)
+        prog = multiple_loops_program(delays, gate_args)
 
-    @pytest.fixture(scope="class")
-    def device(self):
-        target = "TD2"
-        tm = 4
-        layout = f"""
-            name template_tdm
-            version 1.0
-            target {target} (shots=1)
-            type tdm (temporal_modes=2)
-            float array p0[1, {tm}] =
-                {{rs_array}}
-            float array p1[1, {tm}] =
-                {{r_array}}
-            float array p2[1, {tm}] =
-                {{bs_array}}
-            float array p3[1, {tm}] =
-                {{m_array}}
-            Sgate(p0) | 1
-            Rgate(p1) | 0
-            BSgate(p2, 0) | (0, 1)
-            MeasureHomodyne(p3) | 0
-        """
-        device_spec = {
-            "target": target,
-            "layout": inspect.cleandoc(layout),
-            "modes": {"concurrent": 2, "spatial": 1, "temporal_max": 100},
-            "compiler": [target],
-            "gate_parameters": {
-                "p0": [-1],
-                "p1": [1],
-                "p2": [2],
-                "p3": [3],
-            },
-        }
-        return Device(device_spec)
+        eng = sf.Engine("gaussian")
+        results = eng.run(prog, shots=1)
+        samples = results.samples
+        samples_dict = results.samples_dict
 
-    @staticmethod
-    def compile_test_program(device, args=(-1, 1, 2, 3)):
-        """Compiles a test program with the given gate arguments."""
-        alpha = [args[1]]
-        beta = [args[2]]
-        gamma = [args[3]]
-        prog = tdmprogram.TDMProgram(N=2)
-        with prog.context(alpha, beta, gamma) as (p, q):
-            ops.Sgate(args[0]) | q[1]  # Note that the Sgate has a second parameter that is non-zero
-            ops.Rgate(p[0]) | q[0]
-            ops.BSgate(p[1]) | (q[0], q[1])
-            ops.MeasureHomodyne(p[2]) | q[0]
-        prog.compile(device=device, compiler=device.compiler)
+        num_modes = computational_modes + vacuum_modes
+        assert samples.shape == (1, 1, num_modes)  # `(shots, spatial modes, timebins)`
+        assert samples_dict[0].shape == (1, num_modes)
 
-    def test_validation_correct_args(self, device):
-        """Test that no error is raised when the tdm circuit explicit parameters within the allowed ranges"""
-        self.compile_test_program(device, args=(-1, 1, 2, 3))
+    @pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+    def test_crop_run_options(self, delays):
+        """Test that run_options takes precedence over default, meaning only samples from
+        computational modes are returned"""
 
-    @pytest.mark.parametrize("incorrect_index", list(range(4)))
-    def test_validation_incorrect_args(self, device, incorrect_index):
-        """Test the correct error is raised when the tdm circuit explicit parameters are not within the allowed ranges"""
-        args = [-1, 1, 2, 3]
-        args[incorrect_index] = -999
-        with pytest.raises(
-            CircuitError, match="Parameter has value '-999' while its valid range is "
+        computational_modes = 100
+        gate_args, _ = random_gate_args(delays, computational_modes)
+        prog = multiple_loops_program(delays, gate_args)
+
+        eng = sf.Engine("gaussian")
+        prog.run_options = {"crop": True}
+        results = eng.run(prog)
+        samples = results.samples
+        samples_dict = results.samples_dict
+
+        assert samples.shape == (1, 1, computational_modes)  # `(shots, spatial modes, timebins)`
+        assert samples_dict[0].shape == (1, computational_modes)
+
+    @pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+    def test_crop_passed(self, delays):
+        """Test that eng.run takes precedence over run_options, meaning only samples from
+        computational modes are returned"""
+
+        computational_modes = 100
+        gate_args, _ = random_gate_args(delays, computational_modes)
+        prog = multiple_loops_program(delays, gate_args)
+
+        eng = sf.Engine("gaussian")
+        prog.run_options = {"crop": False}
+        results = eng.run(prog, crop=True)
+        samples = results.samples
+        samples_dict = results.samples_dict
+
+        assert samples.shape == (1, 1, computational_modes)  # `(shots, spatial modes, timebins)`
+        assert samples_dict[0].shape == (1, computational_modes)
+
+    @pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+    @pytest.mark.parametrize("shots", [None, 1, 2, 3])
+    @pytest.mark.parametrize("crop", [False, True])
+    def test_crop_and_shots_passed(self, delays, shots, crop):
+        """Test that shots and crop parameters produce correct results."""
+
+        computational_modes = 40
+        gate_args, vacuum_modes = random_gate_args(delays, computational_modes)
+        prog = multiple_loops_program(delays, gate_args)
+
+        eng = sf.Engine("gaussian")
+        results = eng.run(prog, crop=crop, shots=shots)
+        samples = results.samples
+        samples_dict = results.samples_dict
+
+        if shots:
+            num_modes = computational_modes if crop else computational_modes + vacuum_modes
+            assert samples.shape == (shots, 1, num_modes)  # `(shots, spatial modes, timebins)`
+            assert samples_dict[0].shape == (shots, num_modes)
+        else:
+            assert samples.size == 0  # if shots is None samples array should be empty
+            assert samples_dict == {}
+
+    @pytest.mark.parametrize("delays", ([3], [2, 4], [8, 5], [1, 6, 36], [6, 1, 4]))
+    @pytest.mark.parametrize("crop", [False, True])
+    @pytest.mark.parametrize("space_unroll", [False, True])
+    def test_space_unroll_crops_state(self, delays, crop, space_unroll):
+        """Tests vacuum modes are cropped from the state when the program is space unrolled."""
+
+        computational_modes = 40
+        gate_args, vacuum_modes = random_gate_args(delays, computational_modes)
+        prog = multiple_loops_program(delays, gate_args)
+        if space_unroll:
+            prog.space_unroll()
+
+        eng = sf.Engine("gaussian")
+        results = eng.run(prog, crop=crop, shots=None)
+        state = results.state
+
+        if space_unroll and crop:
+            # when the circuit is space unrolled and cropped the state
+            # should contain computational modes only
+            assert state.num_modes == computational_modes
+        elif space_unroll:
+            # when the circuit is space unrolled only the state should contain all modes
+            assert state.num_modes == computational_modes + vacuum_modes
+        else:
+            # when the circuit is not space unrolled the state should contain only concurrent modes
+            assert state.num_modes == prog.concurr_modes
+
+    def test_crop_warning(self):
+        """Tests warning is raised when cropping is requested for a circuit that has not been space unrolled."""
+
+        crop = True
+        space_unroll = False
+
+        delays = [1, 6, 36]
+        gate_args, vacuum_modes = random_gate_args(delays, num_modes=40)
+        prog = multiple_loops_program(delays, gate_args)
+        if space_unroll:
+            prog.space_unroll()
+
+        eng = sf.Engine("gaussian")
+
+        with pytest.warns(
+            UserWarning, match=r"Cropping the state is only possible for space unrolled circuits *"
         ):
-            self.compile_test_program(device, args=args)
+            eng.run(prog, crop=crop, shots=None)
 
 
 class TestUnrolling:
@@ -844,7 +814,7 @@ class TestUnrolling:
         """Test unrolling program."""
         n = 2
 
-        prog = tdmprogram.TDMProgram(N=2)
+        prog = sf.TDMProgram(N=2)
         with prog.context([0] * n, [0] * n, [0] * n) as (p, q):
             ops.Sgate(0.5643, 0) | q[1]
             ops.BSgate(p[0]) | (q[1], q[0])
@@ -865,7 +835,7 @@ class TestUnrolling:
         n = 2
         shots = 2
 
-        prog = tdmprogram.TDMProgram(N=2)
+        prog = sf.TDMProgram(N=2)
         with prog.context([0] * n, [0] * n, [0] * n) as (p, q):
             ops.Sgate(0.5643, 0) | q[1]
             ops.BSgate(p[0]) | (q[1], q[0])
@@ -895,7 +865,7 @@ class TestUnrolling:
     )
     def test_locking_when_unrolling(self, space_unrolled, start_locked):
         """Test that a locked program can be (un)rolled with the locking intact."""
-        prog = tdmprogram.TDMProgram(N=2)
+        prog = sf.TDMProgram(N=2)
 
         with prog.context([0, 0], [0, 0], [0, 0]) as (p, q):
             ops.Sgate(0.5643, 0) | q[1]
