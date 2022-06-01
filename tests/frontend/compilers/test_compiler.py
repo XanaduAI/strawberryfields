@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the CircuitSpec class"""
-import textwrap
-
 import pytest
+import sympy
+import inspect
 
 from strawberryfields.compilers.compiler import Compiler
+from strawberryfields.program_utils import CircuitError
 
 
 pytestmark = pytest.mark.frontend
@@ -34,19 +35,19 @@ class TestAbstractCircuitSpec:
         directed acyclic graph.
         """
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """Dummy circuit used to instantiate
             the abstract base class"""
 
             modes = 0
             remote = False
             local = True
-            interactive = True
-            primitives = set()
-            decompositions = set()
+            interactive: bool = True
+            primitives: set = set()
+            decompositions: set = set()
 
-            circuit = textwrap.dedent(
-                """\
+            circuit: str = inspect.cleandoc(
+                """
                 name test
                 version 0.0
 
@@ -58,7 +59,7 @@ class TestAbstractCircuitSpec:
                 """
             )
 
-        dummy = DummyCircuit()
+        dummy = DummyCompiler()
         top = dummy.graph
 
         circuit = top.nodes().data()
@@ -80,22 +81,22 @@ class TestAbstractCircuitSpec:
     def test_template_topology_construction(self):
         """If a circuit spec includes a Blackbird template,
         the topology property should return the equivalent
-        directed acyclic graph, with all parameters set to zero.
+        directed acyclic graph.
         """
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """Dummy circuit used to instantiate
             the abstract base class"""
 
             modes = 0
             remote = False
             local = True
-            interactive = True
-            primitives = set()
-            decompositions = set()
+            interactive: bool = True
+            primitives: set = set()
+            decompositions: set = set()
 
-            circuit = textwrap.dedent(
-                """\
+            circuit: str = inspect.cleandoc(
+                """
                 name test
                 version 0.0
 
@@ -107,7 +108,7 @@ class TestAbstractCircuitSpec:
                 """
             )
 
-        dummy = DummyCircuit()
+        dummy = DummyCompiler()
         top = dummy.graph
 
         circuit = top.nodes().data()
@@ -123,10 +124,93 @@ class TestAbstractCircuitSpec:
         assert circuit[4]["name"] == "MeasureFock"
 
         # check arguments
-        assert circuit[0]["args"] == [0, 0]
+        assert isinstance(circuit[0]["args"][0], sympy.Symbol)
+        assert circuit[0]["args"][1] == 0
         assert circuit[1]["args"] == [-7.123]
-        assert circuit[2]["args"] == [0]
+        assert isinstance(circuit[2]["args"][0], sympy.Symbol)
 
         # check topology/edges between nodes
         edges = {(i, j) for i, j, d in top.edges().data()}
         assert edges == {(0, 2), (1, 2), (2, 3)}
+
+    def test_init_circuit(self):
+        """Test initializing the circuit layout in a compiler."""
+
+        class DummyCompiler(Compiler):
+            """Dummy circuit used to instantiate
+            the abstract base class"""
+
+            modes = 0
+            remote = False
+            local = True
+            interactive: bool = True
+            primitives: set = set()
+            decompositions: set = set()
+
+        dummy = DummyCompiler()
+
+        circuit = inspect.cleandoc(
+            """
+            name test
+            version 0.0
+
+            Sgate({sq}, 0) | 0
+            Dgate(-7.123) | 1
+            BSgate({theta}) | 0, 1
+            MeasureFock() | 0
+            MeasureFock() | 2
+            """
+        )
+
+        # circuit layout is None if not set
+        assert dummy.circuit is None
+
+        # initialize circuit layout and assert that it is set
+        dummy.init_circuit(circuit)
+        assert dummy.circuit == circuit
+
+        # initialize again to make sure it works
+        dummy.init_circuit(circuit)
+        assert dummy.circuit == circuit
+
+        # creating a different circuit layout and attempt to initialize it should raise an error
+        circuit = inspect.cleandoc(
+            """
+            name test
+            version 0.0
+
+            Sgate({sq}, 0) | 1
+            Dgate(-7.123) | 0
+            BSgate({theta}) | 0, 1
+            MeasureFock() | 1
+            """
+        )
+        with pytest.raises(CircuitError, match="Circuit already set in compiler"):
+            dummy.init_circuit(circuit)
+
+        # resetting the circuit layout and then initializing it should work
+        dummy.reset_circuit()
+        dummy.init_circuit(circuit)
+        assert dummy.circuit == circuit
+
+    def test_init_circuit_wrong_type(self):
+        """Test initializing a circuit layout that is not a string in a compiler."""
+
+        class DummyCompiler(Compiler):
+            """Dummy circuit used to instantiate
+            the abstract base class"""
+
+            modes = 0
+            remote = False
+            local = True
+            interactive: bool = True
+            primitives: set = set()
+            decompositions: set = set()
+
+        dummy = DummyCompiler()
+        assert dummy.circuit is None
+
+        with pytest.raises(
+            TypeError, match="Layout must be a string representing the Blackbird circuit."
+        ):
+            dummy.init_circuit(layout=42)
