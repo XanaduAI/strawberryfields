@@ -811,7 +811,7 @@ class RemoteEngine:
             self.log.info(msg)
             program = program.compile(device=device, **compile_options)
 
-        else:
+        elif program.compile_info[1][0] == "X":
             # validating program
             msg = (
                 f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
