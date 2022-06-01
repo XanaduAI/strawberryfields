@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,14 @@ import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 import strawberryfields.program_utils as pu
 
-from .program_utils import Command, RegRef, CircuitError, RegRefError, program_equivalence
+from .program_utils import (
+    Command,
+    RegRef,
+    CircuitError,
+    RegRefError,
+    program_equivalence,
+    remove_loss,
+)
 from .parameters import FreeParameter, ParameterError
 
 
@@ -70,7 +77,7 @@ from .parameters import FreeParameter, ParameterError
 __all__ = []
 
 
-ALLOWED_RUN_OPTIONS = ["shots"]
+ALLOWED_RUN_OPTIONS = ["shots", "crop"]
 
 
 class Program:
@@ -552,7 +559,7 @@ class Program:
             # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
             # should share the same register references. Program.circuit potentially
             # contains FreeParameters/MeasuredParameters, which contain RegRefs.
-            if name not in ("circuit", "reg_refs", "init_reg_refs"):
+            if name not in ("circuit", "reg_refs", "init_reg_refs", "free_params"):
                 setattr(p, name, copy.deepcopy(val))
 
         # link to the original source Program
@@ -708,6 +715,10 @@ class Program:
                 # limits for each measurement type, if `device.modes` is a dictionary
                 self.assert_modes(device)
 
+            # if a device layout exist and the device default compiler is the same as
+            # the requested compiler, initialize the circuit in the compiler class
+            if device.layout and device.default_compiler == compiler.short_name:
+                compiler.init_circuit(device.layout)
         else:
             compiler = _get_compiler(compiler)
             target = compiler.short_name
@@ -724,13 +735,17 @@ class Program:
         if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
+        compiled = self._linked_copy()
+
         seq = compiler.compile(seq, self.register)
 
         # create the compiled Program
-        compiled = self._linked_copy()
         compiled.circuit = seq
         compiled._target = target  # pylint: disable=protected-access
         compiled._compile_info = (device, compiler.short_name)  # pylint: disable=protected-access
+
+        # parameters are updated if necessary due to compiler changes
+        compiler.update_params(compiled, device)
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -739,6 +754,12 @@ class Program:
         # set backend options of the program
         backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
         compiled.backend_options.update(backend_options)
+
+        if kwargs.get("realistic_loss", False):
+            try:
+                compiler.add_loss(compiled, device)
+            except NotImplementedError:
+                warnings.warn(f"Compiler {compiler} does not support adding realistic loss.")
 
         # if device spec has allowed gate parameters, validate the applied gate parameters
         if device and device.gate_parameters:
@@ -752,7 +773,9 @@ class Program:
             if bb_device.target["name"] is None:
                 bb_device._target["name"] = device.target  # pylint: disable=protected-access
 
-            bb_compiled = sf.io.to_blackbird(compiled)
+            lossless_compiled = compiled._linked_copy()
+            lossless_compiled.circuit = remove_loss(compiled.circuit)
+            bb_compiled = sf.io.to_blackbird(lossless_compiled)
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
