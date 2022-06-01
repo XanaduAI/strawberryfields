@@ -16,7 +16,8 @@ This package defines and implements several utility functions and language
 extensions that complement StrawberryFields.
 """
 from .decorators import *
+from .gbs_analysis import *
+from .post_processing import *
+from .program_functions import *
 from .random_numbers_matrices import *
 from .states import *
-from .program_functions import *
-from .post_processing import *
