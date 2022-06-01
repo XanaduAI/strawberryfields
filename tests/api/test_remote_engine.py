@@ -282,7 +282,7 @@ class TestRemoteEngineIntegration:
         engine = sf.RemoteEngine("X8")
         device = engine.device
 
-        prog._compile_info = (device, device.compiler)
+        prog._compile_info = (device, device.compiler[0])
 
         compile_options = {"compiler": "Xunitary"}
         engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
@@ -301,7 +301,7 @@ class TestRemoteEngineIntegration:
         engine = sf.RemoteEngine("X8")
         device = engine.device
 
-        prog._compile_info = (device, device.compiler)
+        prog._compile_info = (device, device.compiler[0])
 
         compile_options = {"compiler": "Xunitary"}
         engine.run(prog, shots=10, compile_options=compile_options, recompile=True)
@@ -324,7 +324,7 @@ class TestRemoteEngineIntegration:
         engine = sf.RemoteEngine("X8_01")
         device = engine.device
 
-        prog._compile_info = (device, device.compiler)
+        prog._compile_info = (device, device.compiler[0])
 
         engine.run_async(prog, shots=10)
 
