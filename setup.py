@@ -31,7 +31,7 @@ requirements = [
     "toml",
     "urllib3>=1.25.3",
     "quantum-xir>=0.1.1",
-    "xanadu-cloud-client>=0.2.0",
+    "xanadu-cloud-client>=0.2.1",
 ]
 
 info = {
