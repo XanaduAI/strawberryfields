@@ -1,6 +1,6 @@
-# Release 0.23.0
+# Release 0.23.0 (current release)
 
-### New features
+<h3>New features since last release</h3>
 
 * Program Xanadu's new  Borealis hardware device via Strawberry Fields and Xanadu Cloud.
   [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
@@ -62,7 +62,7 @@
   simulations.
   [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
 
-### Improvements
+<h3>Improvements</h3>
 
 * A locked program can now be (un)rolled, and automatically restores the lock if
   previously in place.
@@ -93,7 +93,7 @@
   subclass compilers with loss-additions (e.g., to add realistic loss to a circuit) and program parameter updates.
   [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
 
-### Bug fixes
+<h3>Bug fixes</h3>
 
 * Trying to unroll an already unrolled program with a different number of shots
   works as expected.
@@ -109,7 +109,7 @@
   has changed due to e.g., compilation).
   [(#710)](https://github.com/XanaduAI/strawberryfields/pull/710)
 
-### Documentation
+<h3>Documentation</h3>
 
 * The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
   is now used to style the Sphinx documentation.
@@ -118,7 +118,7 @@
 * The documentation on Gaussian circuit operations is fixed so that it's properly rendered.
   [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
 
-### Contributors
+<h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
@@ -128,7 +128,7 @@ Mikhail Andrenkov, Sebastian Duque, Luke Helt, Theodor Isacsson, Josh Izaac, Fab
 
 ---
 
-# Release 0.22.0 (current release)
+# Release 0.22.0
 
 <h3>New features since last release</h3>
 
