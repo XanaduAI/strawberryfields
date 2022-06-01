@@ -116,11 +116,11 @@ tutorials.
     :figure: _static/borealis_3d.png
 
 .. gallery-item::
-    :description: :doc:`demos/tutorial_borealis_beginner`
+    :description: `Operating Borealis --- Beginner <https://strawberryfields.ai/photonics/demos/tutorial_borealis_beginner.html>`__
     :figure: _static/borealis_schematic_simple.png
 
 .. gallery-item::
-    :description: :doc:`demos/tutorial_borealis_beginner`
+    :description: `Operating Borealis --- Advanced <https://strawberryfields.ai/photonics/demos/tutorial_borealis_beginner.html>`__
     :figure: _static/borealis_schematic_advanced.png
 
 .. gallery-item::
