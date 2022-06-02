@@ -64,7 +64,7 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
 Further details on the :class:`xcc.Job` class can be found in the
 `Xanadu Cloud Client documentation <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_.
 
-Alternatively, if you have your quantum program available as a Blackbird script,
+Alternatively, if you have your :mod:`compiled <~.compilers>` quantum program available as a Blackbird script,
 you can submit the Blackbird script file to be executed remotely using
 the Xanadu Cloud Client command line interface:
 
