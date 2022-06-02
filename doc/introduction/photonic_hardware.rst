@@ -7,8 +7,8 @@ photonic hardware or to be run on a cloud simulator via the Xanadu Cloud.
 .. warning::
 
     An API key is required to communicate with the hardware locally.
-    Set up a `Xanadu Cloud <https://cloud.xanadu.ai>`__ account for free, and generate 
-    your `cloud API key <https://strawberryfields.ai/photonics/demos/tutorial_X8.html#configuring-your-credentials>`__. 
+    Set up a `Xanadu Cloud <https://cloud.xanadu.ai>`__ account for free, and generate
+    your `cloud API key <https://strawberryfields.ai/photonics/demos/tutorial_X8.html#configuring-your-credentials>`__.
 
 Configuring your account
 ------------------------
@@ -64,9 +64,10 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
 Further details on the :class:`xcc.Job` class can be found in the
 `Xanadu Cloud Client documentation <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_.
 
-Alternatively, if you have your :mod:`compiled <~.compilers>` quantum program available as a Blackbird script,
-you can submit the Blackbird script file to be executed remotely using
-the Xanadu Cloud Client command line interface:
+Alternatively, if you have your `compiled <strawberryfields.compilers>`__
+quantum program available as a Blackbird script, you can submit the Blackbird
+script file to be executed remotely using the Xanadu Cloud Client command line
+interface:
 
 .. code-block:: console
 
