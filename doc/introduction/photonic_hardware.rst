@@ -6,9 +6,9 @@ photonic hardware or to be run on a cloud simulator via the Xanadu Cloud.
 
 .. warning::
 
-    An API key is required to access the Xanadu Cloud platform. If you do not
-    have a Xanadu Cloud API key, you can request hardware access `via the sign
-    up form on the Xanadu website <https://xanadu.ai/access>`__.
+    An API key is required to communicate with the hardware locally.
+    Set up a `Xanadu Cloud <cloud.xanadu.ai>` account for free, and generate 
+    your `cloud API key <https://strawberryfields.ai/photonics/demos/tutorial_X8.html#configuring-your-credentials>`__. 
 
 Configuring your account
 ------------------------
