@@ -529,3 +529,21 @@ def validate_blackbird_job(compiled):
     device.validate_parameters(**user_parameters)
 
     return user_parameters
+
+
+def remove_loss(circuit):
+    """Removes any ``LossChannel`` operations from a circuit sequence.
+    Args:
+        circuit (list[Command]: circuit with ``LossChannels`` to be removed
+    Returns:
+        list[Command]: circuit where the ``LossChannels`` have been removed
+    """
+    # pylint: disable=import-outside-toplevel
+    from strawberryfields.ops import LossChannel
+
+    lossless_circuit = circuit.copy()
+    for cmd in circuit:
+        if isinstance(cmd.op, LossChannel):
+            lossless_circuit.remove(cmd)
+
+    return lossless_circuit

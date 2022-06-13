@@ -31,22 +31,24 @@ class GaussianModes:
 
     def __init__(self, num_subsystems):
         r"""The class is initialized by providing an integer indicating the number of modes
-        Unlike the "standard" covariance matrix for the Wigner function that uses symmetric ordering
-        as defined in e.g.
-        [1] Gaussian quantum information
-        Christian Weedbrook, Stefano Pirandola, Raúl García-Patrón, Nicolas J. Cerf, Timothy C. Ralph, Jeffrey H. Shapiro, and Seth Lloyd
-        Rev. Mod. Phys. 84, 621 – Published 1 May 2012
-        we define covariance matrices in terms of the following two quantities:
-        $$
-        N_{i,j} =\langle a_i^\dagger a_j \rangle
-        M_{i,j} = \langle a_i a_j \rangle
-        $$
-        Note that the matrix $N$ is hermitian and the matrix M is symmetric.
-        The mean displacements are stored as expectation values of the destruction operator $\alpha_i  = \langle a_i \rangle$
-        We also provide functions that give the symmetric ordered covariance matrices and the mean displacement for the quadrature
-        operators $q = a+a^\dagger$ and $p = i(a^\dagger -a)$. Note that with these conventions $[q,p]=2 i$.
-        For vacuum one has $N_{i,j}=M_{i,j}=alpha_i =0$,
-        The quantities $N,M,\alpha$ are stored in the variable nmat, mmat, mean respectively
+        Unlike the "standard" covariance matrix for the Wigner function which uses symmetric
+        ordering as defined in :cite:`gqi2012` we define covariance matrices in terms of the
+        following two quantities:
+
+        .. math::
+            N_{i,j} =\langle a_i^\dagger a_j \rangle\\
+            M_{i,j} = \langle a_i a_j \rangle
+
+        Note that the matrix :math:`N` is hermitian and the matrix :math:`M` is symmetric. 
+        The mean displacements are stored as expectation values of the destruction operator
+        :math:`\alpha_i = \langle a_i \rangle`. 
+        
+        We also provide functions that give the symmetric ordered covariance matrices and the 
+        mean displacement for the quadrature operators :math:`q = a+a^\dagger` and 
+        :math:`p = i(a^\dagger -a)`. Note that with these conventions :math:`[q,p]=2 i`. 
+        
+        For vacuum one has :math:`N_{i,j}=M_{i,j}=alpha_i =0`. The quantities `N`, `M`, `\alpha` 
+        are stored in the variable ``nmat``, ``mmat``, ``mean`` respectively.
         """
         # Check validity
         if not isinstance(num_subsystems, int):

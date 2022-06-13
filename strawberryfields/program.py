@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,14 @@ import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 import strawberryfields.program_utils as pu
 
-from .program_utils import Command, RegRef, CircuitError, RegRefError, program_equivalence
+from .program_utils import (
+    Command,
+    RegRef,
+    CircuitError,
+    RegRefError,
+    program_equivalence,
+    remove_loss,
+)
 from .parameters import FreeParameter, ParameterError
 
 
@@ -65,7 +72,7 @@ from .parameters import FreeParameter, ParameterError
 __all__ = []
 
 
-ALLOWED_RUN_OPTIONS = ["shots"]
+ALLOWED_RUN_OPTIONS = ["shots", "crop"]
 
 
 class Program:
@@ -547,7 +554,7 @@ class Program:
             # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
             # should share the same register references. Program.circuit potentially
             # contains FreeParameters/MeasuredParameters, which contain RegRefs.
-            if name not in ("circuit", "reg_refs", "init_reg_refs"):
+            if name not in ("circuit", "reg_refs", "init_reg_refs", "free_params"):
                 setattr(p, name, copy.deepcopy(val))
 
         # link to the original source Program
@@ -557,34 +564,31 @@ class Program:
             p.source = self.source
         return p
 
-    def assert_number_of_modes(self, device):
+    def assert_modes(self, device):
         """Check that the number of modes in the program is valid for the given device.
 
+        .. note::
+
+            ``device.modes`` must be an integer with the allowed number of modes
+            for the target, or a dictionary containing the maximum number of allowed
+            measurements for the specified target.
+
         Args:
-            device (~strawberryfields.Device): Device specification object to use.
-                ``device.modes`` must be an integer, containing the allowed number of modes
-                for the target.
+            device (.strawberryfields.Device): device specification object to use
         """
         # Program subsystems may be created and destroyed during execution. The length
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
 
-        if modes_total > device.modes:
-            raise CircuitError(
-                f"This program contains {modes_total} modes, but the device '{device.target}' "
-                f"only supports a {device.modes}-mode program."
-            )
+        if isinstance(device.modes, int):
+            if modes_total > device.modes:
+                raise CircuitError(
+                    f"This program contains {modes_total} modes, but the device '{device.target}' "
+                    f"only supports a {device.modes}-mode program."
+                )
+            return
 
-    def assert_max_number_of_measurements(self, device):
-        """Check that the number of measurements in the circuit doesn't exceed the number of allowed
-        measurements according to the device specification.
-
-        Args:
-            device (~strawberryfields.Device): Device specification object to use.
-                ``device.modes`` must be a dictionary, containing the maximum number of allowed
-                measurements for the specified target.
-
-        """
+        # from here on `device.modes` is assumed to be a dictionary
         num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
 
         try:
@@ -701,15 +705,15 @@ class Program:
                 compiler = _get_compiler(compiler)
 
             if device.modes is not None:
-                if isinstance(device.modes, int):
-                    # check that the number of modes is correct, if device.modes
-                    # is provided as an integer
-                    self.assert_number_of_modes(device)
-                else:
-                    # check that the number of measurements is within the allowed
-                    # limits for each measurement type; device.modes will be a dictionary
-                    self.assert_max_number_of_measurements(device)
+                # check that the number of modes is correct, if device.modes is provided
+                # as an integer, or that the number of measurements is within the allowed
+                # limits for each measurement type, if `device.modes` is a dictionary
+                self.assert_modes(device)
 
+            # if a device layout exist and the device default compiler is the same as
+            # the requested compiler, initialize the circuit in the compiler class
+            if device.layout and device.default_compiler == compiler.short_name:
+                compiler.init_circuit(device.layout)
         else:
             compiler = _get_compiler(compiler)
             target = compiler.short_name
@@ -726,13 +730,17 @@ class Program:
         if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
+        compiled = self._linked_copy()
+
         seq = compiler.compile(seq, self.register)
 
         # create the compiled Program
-        compiled = self._linked_copy()
         compiled.circuit = seq
         compiled._target = target  # pylint: disable=protected-access
         compiled._compile_info = (device, compiler.short_name)  # pylint: disable=protected-access
+
+        # parameters are updated if necessary due to compiler changes
+        compiler.update_params(compiled, device)
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -741,6 +749,12 @@ class Program:
         # set backend options of the program
         backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
         compiled.backend_options.update(backend_options)
+
+        if kwargs.get("realistic_loss", False):
+            try:
+                compiler.add_loss(compiled, device)
+            except NotImplementedError:
+                warnings.warn(f"Compiler {compiler} does not support adding realistic loss.")
 
         # if device spec has allowed gate parameters, validate the applied gate parameters
         if device and device.gate_parameters:

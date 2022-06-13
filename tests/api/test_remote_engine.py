@@ -51,15 +51,13 @@ def job(connection, monkeypatch):
             return True
         return False
 
-    _details = {"status": "open"}
-
     job = xcc.Job(id_="123", connection=connection)
     job._details = {"status": "open"}
 
     result = {"output": [np.array([[1, 2], [3, 4]])], "foo": [np.array([5, 6])]}
 
     monkeypatch.setattr(xcc.Job, "submit", mock_return(job))
-    monkeypatch.setattr(xcc.Job, "result", result)
+    monkeypatch.setattr(xcc.Job, "get_result", mock_return(result))
     monkeypatch.setattr(xcc.Job, "clear", mock_return(None))
     monkeypatch.setattr(xcc.Job, "finished", finished)
     return job
@@ -284,7 +282,7 @@ class TestRemoteEngineIntegration:
         engine = sf.RemoteEngine("X8")
         device = engine.device
 
-        prog._compile_info = (device, device.compiler)
+        prog._compile_info = (device, device.compiler[0])
 
         compile_options = {"compiler": "Xunitary"}
         engine.run_async(prog, shots=10, compile_options=compile_options, recompile=True)
@@ -303,7 +301,7 @@ class TestRemoteEngineIntegration:
         engine = sf.RemoteEngine("X8")
         device = engine.device
 
-        prog._compile_info = (device, device.compiler)
+        prog._compile_info = (device, device.compiler[0])
 
         compile_options = {"compiler": "Xunitary"}
         engine.run(prog, shots=10, compile_options=compile_options, recompile=True)
@@ -326,7 +324,7 @@ class TestRemoteEngineIntegration:
         engine = sf.RemoteEngine("X8_01")
         device = engine.device
 
-        prog._compile_info = (device, device.compiler)
+        prog._compile_info = (device, device.compiler[0])
 
         engine.run_async(prog, shots=10)
 

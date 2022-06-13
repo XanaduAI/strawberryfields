@@ -23,7 +23,7 @@ import blackbird
 
 import strawberryfields.parameters as sfpar
 from strawberryfields.program import Program
-from strawberryfields.tdm.tdmprogram import TDMProgram, is_ptype
+from strawberryfields.tdm import TDMProgram, is_ptype
 from strawberryfields import ops
 
 

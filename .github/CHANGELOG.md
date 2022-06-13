@@ -1,22 +1,149 @@
-# Release 0.23.0 (development release)
+# Release 0.24.0 (development release)
 
-### New features
+<h3>New features since last release</h3>
 
-### Breaking changes
+<h3>Breaking Changes</h3>
 
-### Improvements
+<h3>Improvements</h3>
 
-### Bug fixes
+<h3>Bug fixes</h3>
 
-### Documentation
+<h3>Documentation</h3>
 
-### Contributors
+<h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
+
+# Release 0.23.0 (current release)
+
+<h3>New features since last release</h3>
+
+* Program Xanadu's new  Borealis hardware device via Strawberry Fields and Xanadu Cloud.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* GBS data visualization functions are added.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* A set of TDM compilers are added, including a Borealis compiler which compiles
+  and validates programs against the hardware specification and calibration certificate.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* A `remove_loss` utility function is added to the `program_utils` module, allowing
+  for the removal of `LossChannels` from Strawberry Fields programs.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* Cropping vacuum modes from TDM program results is now possible by passing
+  `crop=True` as a run option.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+  ```python
+  n, N = get_mode_indices(delays)
+  prog = sf.TDMProgram(N)
+
+  with prog.context(*gate_args) as (p, q):
+      ops.Sgate(p[0]) | q[n[0]]
+      for i in range(len(delays)):
+          ops.Rgate(p[2 * i + 1]) | q[n[i]]
+          ops.BSgate(p[2 * i + 2], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+      ops.MeasureX | q[0]
+
+  eng = sf.Engine("gaussian")
+  results = eng.run(prog, crop=True)
+  ```
+
+* Resulting samples from TDM jobs return only the non-empty mode measurements when
+  setting the `crop` option to `True` in the program `run_options` or as a keyword
+  argument in the engine `run` method.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* Realistic loss can be added to a Borealis circuit for local simulation
+  execution.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+  ```python
+  compile_options = {
+      "device": device,  # hardware device object needed
+      "realistic_loss": True,
+  }
+
+  eng = sf.Engine("gaussian")
+  results = eng.run(prog, compile_options=compile_options)
+  ```
+
+* Utility functions are added to allow for easier Borealis program and parameter
+  creation.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* Functions are added for analyzing GBS results for comparisons with classical
+  simulations.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+<h3>Improvements</h3>
+
+* A locked program can now be (un)rolled, and automatically restores the lock if
+  previously in place.
+  [(#703)](https://github.com/XanaduAI/strawberryfields/pull/703)
+
+* Rolling and unrolling now only happens in place, and no longer returns the
+  (un)rolled circuit.
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* `Program.assert_number_of_modes` and `Program.assert_max_number_of_measurements`
+  are combined into a single `assert_modes` method.
+  [(#709)](https://github.com/XanaduAI/strawberryfields/pull/709)
+
+* Job results can now be retrieved without converting integers to `np.int64` objects
+  by setting `integer_overflow_protection=False` (default `True`) when running a
+  program via `RemoteEngine.run()`.
+  [(#712)](https://github.com/XanaduAI/strawberryfields/pull/712)
+
+* The TDM module is refactored to contain `program.py`, with the `TDMProgram` class,
+  and `utils.py`, with various utility functions.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* The `Compiler` base class is updated to allow for setting a rigid circuit layout
+  to validate a program during compilation.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* The `Compiler` base class now contains methods that can be overwritten to provide
+  subclass compilers with loss-additions (e.g., to add realistic loss to a circuit) and program parameter updates.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+<h3>Bug fixes</h3>
+
+* Trying to unroll an already unrolled program with a different number of shots
+  works as expected.
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* Fixed bug with vacuum modes missing.
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* Validating parameters now works with nested parameter arrays.
+  [(#711)](https://github.com/XanaduAI/strawberryfields/pull/711)
+
+* Store correct rolled circuit before unrolling (fixes issue when rolled circuit
+  has changed due to e.g., compilation).
+  [(#710)](https://github.com/XanaduAI/strawberryfields/pull/710)
+
+<h3>Documentation</h3>
+
+* The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  is now used to style the Sphinx documentation.
+  [(#701)](https://github.com/XanaduAI/strawberryfields/pull/701)
+
+* The documentation on Gaussian circuit operations is fixed so that it's properly rendered.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Mikhail Andrenkov, Sebastian Duque, Luke Helt, Theodor Isacsson, Josh Izaac, Fabian Laudenbach
+
 ---
 
-# Release 0.22.0 (current release)
+# Release 0.22.0
 
 <h3>New features since last release</h3>
 

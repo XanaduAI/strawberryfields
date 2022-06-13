@@ -20,7 +20,9 @@ from strawberryfields.device import Device
 from strawberryfields.parameters import par_evaluate
 from strawberryfields.program_utils import list_to_DAG
 
-layout = inspect.cleandoc(
+pi = np.pi
+
+X8_layout = inspect.cleandoc(
     """
     name template_4x2_X8
     version 1.0
@@ -66,9 +68,9 @@ layout = inspect.cleandoc(
     """
 )
 
-test_spec = {
+X8_spec = {
     "target": "X8_01",
-    "layout": layout,
+    "layout": X8_layout,
     "modes": 8,
     "compiler": [],
     "gate_parameters": {
@@ -100,7 +102,80 @@ test_spec = {
 }
 
 
-X8_device = Device(spec=test_spec)
+X8_device = Device(spec=X8_spec)
+
+borealis_layout = inspect.cleandoc(
+    """
+    name template_borealis
+    version 1.0
+    target borealis (shots=1)
+    type tdm (temporal_modes=259, copies=1)
+
+    float array p0[1, 259] =
+        {s}
+    float array p1[1, 259] =
+        {r0}
+    float array p2[1, 259] =
+        {bs0}
+    float array p3[1, 259] =
+        {loop1_phase}
+    float array p4[1, 259] =
+        {r1}
+    float array p5[1, 259] =
+        {bs1}
+    float array p6[1, 259] =
+        {loop2_phase}
+    float array p7[1, 259] =
+        {r2}
+    float array p8[1, 259] =
+        {bs2}
+    float array p9[1, 259] =
+        {loop3_phase}
+
+
+    Sgate({s}, 0.0) | 43
+    Rgate({r0}) | 43
+    BSgate({bs0}, 1.5707963267948966) | [42, 43]
+    Rgate({loop0_phase}) | 43
+    Rgate({r1}) | 42
+    BSgate({bs1}, 1.5707963267948966) | [36, 42]
+    Rgate({loop1_phase}) | 42
+    Rgate({r2}) | 36
+    BSgate({bs2}, 1.5707963267948966) | [0, 36]
+    Rgate({loop2_phase}) | 36
+    MeasureFock() | 0
+    """
+)
+borealis_spec = {
+    "target": "borealis",
+    "layout": borealis_layout,
+    "modes": {"temporal_max": 331, "concurrent": 44, "spatial": 1},
+    "compiler": ["borealis"],
+    "compiler_default": "borealis",
+    "gate_parameters": {
+        "s": [[0, 2]],
+        "r0": [[-pi / 2, pi / 2]],
+        "bs0": [[0, pi / 2]],
+        "loop0_phase": [[-pi, pi]],
+        "r1": [[-pi / 2, pi / 2]],
+        "bs1": [[0, pi / 2]],
+        "loop1_phase": [[-pi, pi]],
+        "r2": [[-pi / 2, pi / 2]],
+        "bs2": [[0, pi / 2]],
+        "loop2_phase": [[-pi, pi]],
+    },
+}
+borealis_cert = {
+    "target": "borealis",
+    "finished_at": "2022-02-03T15:00:59.641616+00:00",
+    "loop_phases": [0.1, -0.1, 3],
+    "schmidt_number": 1.333,
+    "common_efficiency": 0.55,
+    "loop_efficiencies": [0.9, 0.8, 0.7],
+    "squeezing_parameters_mean": {"low": [0.1], "high": [0.5], "medium": [0.3]},
+    "relative_channel_efficiencies": [],
+}
+borealis_device = Device(spec=borealis_spec, cert=borealis_cert)
 
 
 def generate_X8_params(r, p):

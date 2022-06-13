@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
 from .gaussian_merge import GaussianMerge
 from .passive import Passive
+from .tdm import TDM, TD2, Borealis
 
 compilers = (
     Fock,
@@ -59,6 +60,9 @@ compilers = (
     Xunitary,
     GaussianMerge,
     Passive,
+    TDM,
+    TD2,
+    Borealis,
 )
 
 compiler_db = {c.short_name: c for c in compilers}

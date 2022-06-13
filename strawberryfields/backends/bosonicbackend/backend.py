@@ -775,7 +775,8 @@ class BosonicBackend(BaseBosonic):
         self.circuit.phase_shift(-phi, mode)
 
         if select is None:
-            val = self.circuit.homodyne(mode, shots=shots, **kwargs)[:, 0]
+            eps = kwargs.get("eps", 0.0002)
+            val = self.circuit.homodyne(mode, shots=shots, eps=eps)[:, 0]
         else:
             val = select * 2 / np.sqrt(2 * self.circuit.hbar)
             self.circuit.post_select_homodyne(mode, val)
@@ -783,7 +784,7 @@ class BosonicBackend(BaseBosonic):
 
         return np.array([val]).T * np.sqrt(2 * self.circuit.hbar) / 2
 
-    def measure_heterodyne(self, mode, shots=1, select=None):
+    def measure_heterodyne(self, mode, shots=1, select=None, **kwargs):
         if select is None:
             res = 0.5 * self.circuit.heterodyne(mode, shots=shots)
             return np.array([res[:, 0] + 1j * res[:, 1]]).T

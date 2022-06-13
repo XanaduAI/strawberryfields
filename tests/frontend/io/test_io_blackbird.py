@@ -22,7 +22,7 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields import io
 from strawberryfields.program import Program
-from strawberryfields.tdm.tdmprogram import TDMProgram
+from strawberryfields.tdm import TDMProgram
 from strawberryfields.parameters import (
     MeasuredParameter,
     FreeParameter,
