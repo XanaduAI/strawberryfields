@@ -16,8 +16,9 @@ import pytest
 
 import strawberryfields as sf
 from strawberryfields import ops
+from strawberryfields.program_utils import program_equivalence
 
-from conftest import program_equivalence, X8_spec, generate_X8_params
+from conftest import X8_device, generate_X8_params
 
 pytestmark = pytest.mark.frontend
 
@@ -28,36 +29,36 @@ class TestCompilation:
     def test_exact_template(self, tol):
         """Test compilation works for the exact circuit"""
         params = generate_X8_params(1, 0.3)
-        prog = X8_spec.create_program(**params)
-        prog2 = prog.compile(device=X8_spec, compiler="Xstrict")
+        prog = X8_device.create_program(**params)
+        prog2 = prog.compile(device=X8_device, compiler="Xstrict")
         assert program_equivalence(prog, prog2, atol=tol, rtol=0)
 
     def test_invalid_parameter(self, tol):
         """Test exception is raised with invalid parameter values"""
         params = generate_X8_params(1, 0.3)
-        prog = X8_spec.create_program(**params)
+        prog = X8_device.create_program(**params)
         prog.circuit[0].op.p = [0.5, 0]
 
         with pytest.raises(ValueError, match="has invalid value"):
-            prog.compile(device=X8_spec, compiler="Xstrict")
+            prog.compile(device=X8_device, compiler="Xstrict")
 
     def test_invalid_gate(self, tol):
         """Test exception is raised with invalid primitive"""
         params = generate_X8_params(1, 0.3)
-        prog = X8_spec.create_program(**params)
+        prog = X8_device.create_program(**params)
         prog.circuit[0].op.__class__ = sf.ops.CXgate
 
         with pytest.raises(
             sf.program_utils.CircuitError,
             match="CXgate cannot be used with the compiler",
         ):
-            prog.compile(device=X8_spec, compiler="Xstrict")
+            prog.compile(device=X8_device, compiler="Xstrict")
 
     def test_invalid_topology(self, tol):
         """Test exception is raised with invalid topology"""
         params = generate_X8_params(1, 0.3)
-        prog = X8_spec.create_program(**params)
+        prog = X8_device.create_program(**params)
         del prog.circuit[0]
 
         with pytest.raises(sf.program_utils.CircuitError, match="incompatible topology"):
-            prog.compile(device=X8_spec, compiler="Xstrict")
+            prog.compile(device=X8_device, compiler="Xstrict")

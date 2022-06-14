@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for space_unroll in tdmprogram.py"""
+r"""Unit tests for space_unroll in tdm/program.py"""
 
 import pytest
 import numpy as np
 import strawberryfields as sf
-from strawberryfields.tdm.tdmprogram import get_mode_indices
-from strawberryfields.ops import Sgate, Rgate, BSgate, LossChannel, MeasureFock
+from strawberryfields.tdm import get_mode_indices
+from strawberryfields.ops import Sgate, Rgate, BSgate
 from thewalrus.symplectic import reduced_state
 from thewalrus.quantum import is_pure_cov
 
@@ -223,26 +223,23 @@ def test_space_unrolling():
             Rgate(p[i + d]) | q[n[i]]
             BSgate(p[i], np.pi / 2) | (q[n[i + 1]], q[n[i]])
 
-    assert prog._is_space_unrolled == False
+    assert prog.is_unrolled == False
 
     prog.space_unroll()
 
     assert prog.timebins == 259
-    assert prog.num_subsystems == 259
+    vac_modes = prog.concurr_modes - 1
+    assert prog.num_subsystems == prog.timebins + vac_modes
 
     # check that the number of gates are correct.
-    assert sum([isinstance(cmd.op, Sgate) for cmd in prog.circuit]) == 216
-    assert (
-        sum([isinstance(cmd.op, Rgate) for cmd in prog.circuit]) == 259 - 43 + 259 - 42 + 259 - 36
-    )
-    assert (
-        sum([isinstance(cmd.op, BSgate) for cmd in prog.circuit]) == 259 - 43 + 259 - 42 + 259 - 36
-    )
+    assert [isinstance(cmd.op, Sgate) for cmd in prog.circuit].count(True) == prog.timebins
+    assert [isinstance(cmd.op, Rgate) for cmd in prog.circuit].count(True) == 259 * len(delays)
+    assert [isinstance(cmd.op, BSgate) for cmd in prog.circuit].count(True) == 259 * len(delays)
 
     prog.space_unroll()
 
     # space-unroll the program twice to check that it works
-    assert prog._is_space_unrolled == True
+    assert prog.is_unrolled == True
 
 
 def test_rolling_space_unrolled():
@@ -270,17 +267,17 @@ def test_rolling_space_unrolled():
     num_subsystems_pre_roll = prog.num_subsystems
     init_num_subsystems_pre_roll = prog.init_num_subsystems
 
-    assert prog._is_space_unrolled == False
+    assert prog.is_unrolled == False
 
     # space-unroll the program
     prog.space_unroll()
 
-    assert prog._is_space_unrolled == True
+    assert prog.is_unrolled == True
 
     # roll the program back up
     prog.roll()
 
-    assert prog._is_space_unrolled == False
+    assert prog.is_unrolled == False
     assert prog.num_subsystems == num_subsystems_pre_roll
     assert prog.init_num_subsystems == init_num_subsystems_pre_roll
 

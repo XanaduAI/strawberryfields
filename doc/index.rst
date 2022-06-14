@@ -8,12 +8,6 @@ Strawberry Fields Documentation
 .. raw:: html
 
     <style>
-        #right-column.card {
-            box-shadow: none!important;
-        }
-        #right-column.card:hover {
-            box-shadow: none!important;
-        }
         .breadcrumb {
             display: none;
         }
@@ -21,68 +15,45 @@ Strawberry Fields Documentation
             text-align: center;
             margin-bottom: 15px;
         }
+        p.lead.grey-text {
+            margin-bottom: 30px;
+        }
         .footer-relations {
             border-top: 0px;
         }
     </style>
-    <div class="row container-fluid">
-      <div class="col-lg-4 col-12 align-middle mb-2 text-center">
-          <img src="_static/laptop.png" class="img-fluid" alt="Responsive image" style="width:100%; max-width: 300px;"></img>
-      </div>
-      <div class="col-lg-8 col-12 align-middle mb-2">
-        <p class="lead grey-text">
-            Strawberry Fields is a full-stack Python library for designing, optimizing, and
-            utilizing photonic quantum computers.
-        </p>
-      </div>
-    </div>
-    <div style='clear:both'></div>
+
     <div class="container mt-2 mb-2">
+        <div class="row container-fluid">
+            <div class="col-lg-4 col-12 align-middle mb-2 text-center">
+                <img src="_static/laptop.png" class="img-fluid" alt="Responsive image" style="width:100%; max-width: 300px;"></img>
+            </div>
+            <div class="col-lg-8 col-12 align-middle mb-2">
+                <p class="lead grey-text">
+                    Strawberry Fields is a full-stack Python library for designing,
+                    optimizing, and utilizing photonic quantum computers.
+                </p>
+            </div>
+        </div>
         <div class="row mt-3">
-            <div class="col-lg-4 mb-2 adlign-items-stretch">
-                <a href="introduction/introduction.html">
-                    <div class="card rounded-lg" style="height:100%;">
-                        <div class="d-flex">
-                            <div>
-                                <h3 class="card-title pl-3 mt-4">
-                                Using SF
-                                </h3>
-                                <p class="mb-3 grey-text px-3">
-                                    Learn how to interact with a photonic quantum computer <i class="fas fa-angle-double-right"></i>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-lg-4 mb-2 align-items-stretch">
-                <a href="development/development_guide.html">
-                <div class="card rounded-lg" style="height:100%;">
-                    <div class="d-flex">
-                        <div>
-                            <h3 class="card-title pl-3 mt-4">
-                            Developing
-                            </h3>
-                            <p class="mb-3 grey-text px-3">How you can contribute to Strawberry Fields <i class="fas fa-angle-double-right"></i></p>
-                        </div>
-                    </div>
-                </div>
-            </a>
-            </div>
-            <div class="col-lg-4 mb-2 align-items-stretch">
-                <a href="code/sf.html">
-                <div class="card rounded-lg" style="height:100%;">
-                    <div class="d-flex">
-                        <div>
-                            <h3 class="card-title pl-3 mt-4">
-                            API
-                            </h3>
-                            <p class="mb-3 grey-text px-3">Explore the Strawberry Fields API <i class="fas fa-angle-double-right"></i></p>
-                        </div>
-                    </div>
-                </div>
-            </a>
-            </div>
+
+.. index-card::
+    :name: Using SF
+    :link: introduction/introduction.html
+    :description: Learn how to interact with a photonic quantum computer
+
+.. index-card::
+    :name: Developing
+    :link: development/development_guide.html
+    :description: How you can contribute to Strawberry Fields
+
+.. index-card::
+    :name: API
+    :link: code/sf.html
+    :description: Explore the Strawberry Fields API
+
+.. raw:: html
+
         </div>
     </div>
 

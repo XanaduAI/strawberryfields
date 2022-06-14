@@ -108,7 +108,7 @@ def _numer_safe_power(base, exponent, dtype=tf.complex64):
     if exponent == 0:
         return tf.ones_like(base, dtype)
 
-    return base ** exponent
+    return base**exponent
 
 
 def mix(pure_state, batched=False):
@@ -248,7 +248,7 @@ def phase_shifter_matrix(theta, cutoff, batched=False, dtype=tf.complex64):
 
 def kerr_interaction_matrix(kappa, cutoff, batched=False):
     """creates the single mode Kerr interaction matrix"""
-    coeffs = [tf.exp(1j * kappa * n ** 2) for n in range(cutoff)]
+    coeffs = [tf.exp(1j * kappa * n**2) for n in range(cutoff)]
     if batched:
         coeffs = tf.stack(coeffs, axis=1)
     output = tf.linalg.diag(coeffs)

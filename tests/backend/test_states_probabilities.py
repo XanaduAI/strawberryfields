@@ -19,10 +19,10 @@ from scipy.special import factorial as fac
 
 try:
     import tensorflow as tf
-except ImportError:
-    import unittest.mock as mock
 
-    tf = mock.Mock()
+    tf_available = True
+except:
+    tf_available = False
 
 
 MAG_ALPHAS = np.linspace(0, 0.8, 3)
@@ -41,7 +41,7 @@ class TestFockProbabilities:
 
         alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
@@ -59,7 +59,7 @@ class TestFockProbabilities:
 
         alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
@@ -84,14 +84,14 @@ class TestAllFockProbs:
 
         alpha = a * np.exp(1j * phi)
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         backend.prepare_coherent_state(np.abs(alpha), np.angle(alpha), 0)
         state = backend.state()
 
         probs = state.all_fock_probs(cutoff=cutoff)
-        if isinstance(probs, tf.Tensor):
+        if tf_available and isinstance(probs, tf.Tensor):
             probs = probs.numpy()
         probs = probs.flatten()
 
@@ -111,11 +111,11 @@ class TestAllFockProbs:
         alpha = a * np.exp(1j * phi)
 
         n = np.arange(cutoff)
-        ref_state1 = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(fac(n))
+        ref_state1 = np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(fac(n))
         ref_state2 = np.exp(-0.5 * np.abs(-alpha) ** 2) * (-alpha) ** n / np.sqrt(fac(n))
 
         ref_state = np.outer(ref_state1, ref_state2)
-        ref_probs = np.abs(np.reshape(ref_state ** 2, -1))
+        ref_probs = np.abs(np.reshape(ref_state**2, -1))
 
         if batch_size is not None:
             ref_probs = np.tile(ref_probs, batch_size)
@@ -127,7 +127,7 @@ class TestAllFockProbs:
         for n in range(cutoff):
             for m in range(cutoff):
                 probs = state.all_fock_probs(cutoff=cutoff)
-                if isinstance(probs, tf.Tensor):
+                if tf_available and isinstance(probs, tf.Tensor):
                     probs = probs.numpy()
 
                 assert np.allclose(probs.flatten(), ref_probs, atol=tol, rtol=0)

@@ -1,8 +1,10 @@
-# Release 0.21.0 (development release)
+# Release 0.24.0 (development release)
 
 <h3>New features since last release</h3>
 
 <h3>Breaking Changes</h3>
+
+<h3>Improvements</h3>
 
 <h3>Bug fixes</h3>
 
@@ -12,14 +14,381 @@
 
 This release contains contributions from (in alphabetical order):
 
-# Release 0.20.0 (current release)
+
+# Release 0.23.0 (current release)
 
 <h3>New features since last release</h3>
 
-* The generic multimode Gaussian gate ``Ggate`` is now available in the ``sf.ops``
-  module with the backend choice of ``tf``. The N mode ``Ggate`` can be parametrized by a real
-  symplectic matrix `S` (size `2N * 2N`) and a diplacement vector `d` (size `N`). You can also
-  obtain the gradients of the Ggate gate via TensorFlow's ``tape.gradient``
+* Program Xanadu's new  Borealis hardware device via Strawberry Fields and Xanadu Cloud.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* GBS data visualization functions are added.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* A set of TDM compilers are added, including a Borealis compiler which compiles
+  and validates programs against the hardware specification and calibration certificate.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* A `remove_loss` utility function is added to the `program_utils` module, allowing
+  for the removal of `LossChannels` from Strawberry Fields programs.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* Cropping vacuum modes from TDM program results is now possible by passing
+  `crop=True` as a run option.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+  ```python
+  n, N = get_mode_indices(delays)
+  prog = sf.TDMProgram(N)
+
+  with prog.context(*gate_args) as (p, q):
+      ops.Sgate(p[0]) | q[n[0]]
+      for i in range(len(delays)):
+          ops.Rgate(p[2 * i + 1]) | q[n[i]]
+          ops.BSgate(p[2 * i + 2], np.pi / 2) | (q[n[i + 1]], q[n[i]])
+      ops.MeasureX | q[0]
+
+  eng = sf.Engine("gaussian")
+  results = eng.run(prog, crop=True)
+  ```
+
+* Resulting samples from TDM jobs return only the non-empty mode measurements when
+  setting the `crop` option to `True` in the program `run_options` or as a keyword
+  argument in the engine `run` method.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* Realistic loss can be added to a Borealis circuit for local simulation
+  execution.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+  ```python
+  compile_options = {
+      "device": device,  # hardware device object needed
+      "realistic_loss": True,
+  }
+
+  eng = sf.Engine("gaussian")
+  results = eng.run(prog, compile_options=compile_options)
+  ```
+
+* Utility functions are added to allow for easier Borealis program and parameter
+  creation.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* Functions are added for analyzing GBS results for comparisons with classical
+  simulations.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+<h3>Improvements</h3>
+
+* A locked program can now be (un)rolled, and automatically restores the lock if
+  previously in place.
+  [(#703)](https://github.com/XanaduAI/strawberryfields/pull/703)
+
+* Rolling and unrolling now only happens in place, and no longer returns the
+  (un)rolled circuit.
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* `Program.assert_number_of_modes` and `Program.assert_max_number_of_measurements`
+  are combined into a single `assert_modes` method.
+  [(#709)](https://github.com/XanaduAI/strawberryfields/pull/709)
+
+* Job results can now be retrieved without converting integers to `np.int64` objects
+  by setting `integer_overflow_protection=False` (default `True`) when running a
+  program via `RemoteEngine.run()`.
+  [(#712)](https://github.com/XanaduAI/strawberryfields/pull/712)
+
+* The TDM module is refactored to contain `program.py`, with the `TDMProgram` class,
+  and `utils.py`, with various utility functions.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* The `Compiler` base class is updated to allow for setting a rigid circuit layout
+  to validate a program during compilation.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+* The `Compiler` base class now contains methods that can be overwritten to provide
+  subclass compilers with loss-additions (e.g., to add realistic loss to a circuit) and program parameter updates.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+<h3>Bug fixes</h3>
+
+* Trying to unroll an already unrolled program with a different number of shots
+  works as expected.
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* Fixed bug with vacuum modes missing.
+  [(#702)](https://github.com/XanaduAI/strawberryfields/pull/702)
+
+* Validating parameters now works with nested parameter arrays.
+  [(#711)](https://github.com/XanaduAI/strawberryfields/pull/711)
+
+* Store correct rolled circuit before unrolling (fixes issue when rolled circuit
+  has changed due to e.g., compilation).
+  [(#710)](https://github.com/XanaduAI/strawberryfields/pull/710)
+
+<h3>Documentation</h3>
+
+* The centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  is now used to style the Sphinx documentation.
+  [(#701)](https://github.com/XanaduAI/strawberryfields/pull/701)
+
+* The documentation on Gaussian circuit operations is fixed so that it's properly rendered.
+  [(#714)](https://github.com/XanaduAI/strawberryfields/pull/714)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Mikhail Andrenkov, Sebastian Duque, Luke Helt, Theodor Isacsson, Josh Izaac, Fabian Laudenbach
+
+---
+
+# Release 0.22.0
+
+<h3>New features since last release</h3>
+
+* `Device.layout` and `Device.gate_parameters` may now return `None`. This can happen
+  when a remote simulator device is used.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+
+* A new interferometer decomposition method is implemented following the proposal of the paper
+  [_Simple factorization of unitary transformations_](https://doi.org/10.1103/PhysRevA.97.022328).
+  [(#665)](https://github.com/XanaduAI/strawberryfields/pull/665)
+
+  ```python
+  import numpy as np
+
+  import strawberryfields as sf
+  from strawberryfields import ops
+
+  U = np.array([[-0.39302099+0.28732291j,  0.83734522+0.24866248j],
+                [ 0.00769051+0.87345344j, -0.3847068 +0.29836325j]])
+
+  prog = sf.Program(2)
+
+  with prog.context as q:
+      ops.Interferometer(U, mesh="sun_compact") | q
+  ```
+
+* A `Device.certificate` method is added which returns the hardware device certificate.
+  [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
+
+  ```pycon
+  >>> import strawberryfields as sf
+  >>> eng = sf.RemoteEngine("X8")
+  >>> print(eng.device.certificate)
+  {'target': 'X8_01' ... }
+  ```
+
+* Setting `shots=None` in the engine or program run options will not execute any measurements
+  applied on the circuit.
+  [(#682)](https://github.com/XanaduAI/strawberryfields/pull/682)
+
+  ```python
+  import strawberryfields as sf
+  from strawberryfields import ops
+
+  prog = sf.Program(1)
+  eng = sf.Engine("gaussian")
+
+  with prog.context as q:
+      ops.Sgate(0.5) | q[0]
+      ops.MeasureFock() | q
+
+  results = eng.run(prog, shots=None)
+
+  # samples will output an empty list []
+  print(results.samples)
+
+  # the resulting Gaussian state is still accessible
+  # via its vector of means and covariance matrix
+  print(results.state.means())
+  print(results.state.cov())
+  ```
+
+* There's a `program_equivalence` function in `strawberryfields/program_utils.py` which checks
+  Strawberry Fields programs for equivalence.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+* An equality operator is implemented for `strawberryfields.Program`, checking that the exact same
+  gates and respective parameters, are applied in order.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+  ```python
+  import strawberryfields as sf
+  from strawberryfields import ops
+
+  prog_1 = sf.Program(1)
+  prog_2 = sf.Program(1)
+
+  with prog.context as q:
+      ops.Sgate(0.42) | q[0]
+      ops.MeasureFock() | q
+
+  with prog.context as q:
+      ops.Sgate(0.42) | q[0]
+      ops.MeasureFock() | q
+
+  assert prog_1 == prog_2
+  ```
+
+* A `Program.equivalence` convenience method is added which calls the `program_equivalence`
+  utility function.
+  [(#686)](https://github.com/XanaduAI/strawberryfields/pull/686)
+
+  ```python
+  prog_1 = sf.Program(1)
+  prog_2 = sf.Program(1)
+
+  with prog.context as q:
+      ops.Sgate(1.1) | q[0]
+      ops.MeasureFock() | q
+
+  with prog.context as q:
+      ops.Sgate(0.42) | q[0]
+      ops.MeasureFock() | q
+
+  assert prog_1.equivalence(prog_2, compare_params=False)
+  ```
+
+* A `Device.validate_target` static method is added which checks that the target in the layout is the same as
+  the target field in the specification. This check is also performed at `Device` initialization.
+  [(#687)](https://github.com/XanaduAI/strawberryfields/pull/687)
+
+* Tests are run in random order and the seed for NumPy's and Python's random number generators are
+  set by `pytest-randomly`.
+  [(#692)](https://github.com/XanaduAI/strawberryfields/pull/692)
+
+* Adds support for Python 3.10.
+  [#695](https://github.com/XanaduAI/strawberryfields/pull/695)
+
+<h3>Breaking Changes</h3>
+
+* `DeviceSpec` is renamed to `Device`, which now also contains more than only the device specification.
+  [(#679)](https://github.com/XanaduAI/strawberryfields/pull/679)
+
+  ```pycon
+  >>> import strawberryfields as sf
+  >>> eng = sf.RemoteEngine("X8")
+  >>> isinstance(eng.device, sf.Device)
+  True
+  >>> print(eng.device.target)
+  X8_01
+  ```
+
+<h3>Bug fixes</h3>
+
+* It's now possible to show graphs using the plot apps layer when not run in notebooks.
+  [(#669)](https://github.com/XanaduAI/strawberryfields/pull/669)
+
+* `program.compile` now raises an error if the device specification contains gate parameters but no
+  circuit layout. Without a layout, the gate parameters cannot be validated against the device
+  specification.
+  [(#661)](https://github.com/XanaduAI/strawberryfields/pull/661)
+
+* The teleportation tutorial `examples/teleportation.py` now uses the correct value (now `phi = 0`
+  instead of `phi = np.pi / 2`) for the phase shift of the beamsplitters.
+  [(#674)](https://github.com/XanaduAI/strawberryfields/pull/674)
+
+* `Program.compile()` returns a deep copy of the program attributes, except for the circuit and
+  the register references.
+  [(#688)](https://github.com/XanaduAI/strawberryfields/pull/688)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Sebastian Duque, Theodor Isacsson, Jon Schlipf, Hossein Seifoory
+
+# Release 0.21.0
+
+<h3>New features since last release</h3>
+
+* A `Result.metadata` property is added to retrieve the metadata of a job result.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* A setter method for `Result.state` is added for setting a state for a local simulation if a state
+  has not previously been set.
+  [(#663)](https://github.com/XanaduAI/strawberryfields/pull/663)
+
+* Functions are now available to convert between XIR and Strawberry Fields programs.
+  [(#643)](https://github.com/XanaduAI/strawberryfields/pull/643)
+
+  For example,
+
+  ```python
+  prog = sf.Program(3)
+  eng = sf.Engine("gaussian")
+
+  with prog.context as q:
+      ops.Sgate(0, 0) | q[0]
+      ops.Sgate(1, 0) | q[1]
+      ops.BSgate(0.45, 0.0) | (q[0], q[2])
+      ops.MeasureFock() | q[0]
+
+  xir_prog = sf.io.to_xir(prog)
+  ```
+
+  resulting in the following XIR script
+
+  ```pycon
+  >>> print(xir_prog.serialize())
+  Sgate(0, 0) | [0];
+  Sgate(1, 0) | [1];
+  BSgate(0.45, 0.0) | [0, 2];
+  MeasureFock | [0];
+  ```
+
+<h3>Bug fixes</h3>
+
+* The `TDMProgram.compile_info` and `TDMProgram.target` fields are now set when
+  a `TDMProgram` is compiled using the "TDM" compiler.
+  [(#659)](https://github.com/XanaduAI/strawberryfields/pull/659)
+
+* Updates `Program.assert_max_number_of_measurements` to expect the maximum number
+  of measurements from the device specification as a flat dictionary entry instead
+  of a nested one.
+  [(#662)](https://github.com/XanaduAI/strawberryfields/pull/662)
+
+  ```python
+  "modes": {
+      "pnr_max": 20,
+      "homodyne_max": 1000,
+      "heterodyne_max": 1000,
+  }
+  ```
+
+  instead of
+
+  ```python
+  "modes": {
+      "max": {
+          "pnr": 20,
+          "homodyne": 1000,
+          "heterodyne": 1000,
+      }
+  }
+  ```
+
+<h3>Documentation</h3>
+
+* README has been ported to Markdown.
+  [(#664)](https://github.com/XanaduAI/strawberryfields/pull/664)
+
+<h3>Contributors</h3>
+
+This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson
+
+# Release 0.20.0
+
+<h3>New features since last release</h3>
+
+* The generic multimode Gaussian gate `Ggate` is now available in the `sf.ops`
+  module with the backend choice of `tf`. The N mode `Ggate` can be parametrized by a real
+  symplectic matrix `S` (size `2N * 2N`) and a displacement vector `d` (size `N`). You can also
+  obtain the gradients of the Ggate gate via TensorFlow's `tape.gradient`
   [(#599)](https://github.com/XanaduAI/strawberryfields/pull/599)
   [(#606)](https://github.com/XanaduAI/strawberryfields/pull/606)
 
@@ -411,7 +780,7 @@ Quesada, Antal Száva, Yuan Yao.
   modes = 4
   cutoff_dim = 6
 
-  # prepare an intial state with 4 photons in as many modes
+  # prepare an initial state with 4 photons in as many modes
   initial_state = np.zeros([cutoff_dim] * modes, dtype=complex)
   initial_state[1, 1, 1, 1] = 1
 
@@ -503,7 +872,7 @@ Quesada, Antal Száva, Yuan Yao.
 * `measure_threshold` in the `gaussian` backend now supports displaced Gaussian states.
   [(#615)](https://github.com/XanaduAI/strawberryfields/pull/615)
 
-* Speed improvements are addded to ``gaussian_unitary`` compiler.
+* Speed improvements are added to ``gaussian_unitary`` compiler.
   [(#603)](https://github.com/XanaduAI/strawberryfields/pull/603)
 
 * Adds native support in the Fock backend for the MZgate.
@@ -631,7 +1000,7 @@ Antal Száva, Federico Rueda, Yuan Yao.
       sf.ops.MSgate(r, phi=0, r_anc=1.2, eta_anc=1, avg=False) | q
 
   results = eng.run(prog)
-  ancilla_samples = results.ancilla_samples
+  ancillae_samples = results.ancillae_samples
 
   xvec = np.arange(-5, 5, 0.01)
   pvec = np.arange(-5, 5, 0.01)

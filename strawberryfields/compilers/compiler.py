@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,16 @@
 **Module name:** :mod:`strawberryfields.compilers.compiler`
 """
 
-from typing import Set, Dict
 import abc
+import sympy as sym
+from typing import Sequence, Set, Dict, Optional
 
 import networkx as nx
 import blackbird
 from blackbird.utils import to_DiGraph
 
 import strawberryfields.program_utils as pu
+from strawberryfields.program_utils import CircuitError, Command, RegRef
 
 
 class Compiler(abc.ABC):
@@ -42,6 +44,12 @@ class Compiler(abc.ABC):
 
     short_name = ""
     """str: short name of the circuit class"""
+
+    _layout = None
+    """str: layout of the circuit"""
+
+    _graph = None
+    """DiGraph: circuit graph"""
 
     @property
     @abc.abstractmethod
@@ -86,7 +94,7 @@ class Compiler(abc.ABC):
         """
 
     @property
-    def graph(self):
+    def graph(self) -> Optional[nx.DiGraph]:
         """The allowed circuit topologies or connectivity of the class, modelled as a directed
         acyclic graph.
 
@@ -98,49 +106,77 @@ class Compiler(abc.ABC):
         """
         if self.circuit is None:
             return None
+        if self._graph is not None:
+            return self._graph
 
         # returned DAG has all parameters set to 0
         bb = blackbird.loads(self.circuit)
+        topology = to_DiGraph(bb)
 
-        if bb.is_template():
-            params = bb.parameters
-            kwargs = {p: 0 for p in params}
-
-            # initialize the topology with all template
-            # parameters set to zero
-            topology = to_DiGraph(bb(**kwargs))
-
-        else:
-            topology = to_DiGraph(bb)
-
+        self._set_graph(topology)
         return topology
 
+    @classmethod
+    def _set_graph(cls, topology: nx.DiGraph) -> None:
+        """Sets the graph attribute in the class."""
+        cls._graph = topology
+
     @property
-    def circuit(self):
+    def circuit(self) -> Optional[str]:
         """A rigid circuit template that defines this circuit specification.
 
-        This property is optional. If arbitrary topologies are allowed in the circuit class,
-        **do not define this property**. In such a case, it will simply return ``None``.
+        If arbitrary topologies are allowed in the circuit class, this function
+        will simply return ``None``.
 
-        If a backend device expects a specific template for the recieved Blackbird
+        If a backend device expects a specific template for the received Blackbird
         script, this method will return the serialized Blackbird circuit in string
         form.
 
         Returns:
-            Union[str, None]: Blackbird program or template representing the circuit
+            Union[str, None]: Blackbird circuit or template representing the circuit
         """
-        return None
+        return self._layout
 
-    def compile(self, seq, registers):
+    @classmethod
+    def init_circuit(cls, layout: str) -> None:
+        """Sets the circuit in the compiler class.
+
+        Args:
+            layout (str): the circuit layout for the target device
+        """
+        if cls._layout:
+            # if the exact same circuit is set (apart from newlines) then return
+            if cls._layout.replace("\n", "") != layout.replace("\n", ""):
+                raise CircuitError(
+                    f"Circuit already set in compiler {cls.short_name}. Device layout incompatible "
+                    "with compiler layout. Call the compiler's 'reset_circuit' method, or use a "
+                    "different device layout."
+                )
+            return
+
+        if not isinstance(layout, str):
+            raise TypeError("Layout must be a string representing the Blackbird circuit.")
+
+        cls._layout = layout
+
+    @classmethod
+    def reset_circuit(cls) -> None:
+        """Resets the ``circuit`` and ``graph`` class attributes."""
+        cls._layout = None
+        cls._graph = None
+
+    def compile(self, seq: Sequence[Command], registers: Sequence[RegRef]) -> Sequence[Command]:
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
 
         Args:
             seq (Sequence[Command]): quantum circuit to modify
-            registers (Sequence[RegRefs]): quantum registers
+            registers (Sequence[RegRef]): quantum registers
+
         Returns:
-            List[Command]: modified circuit
+            Sequence[Command]: modified circuit
+
         Raises:
             CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
@@ -152,26 +188,45 @@ class Compiler(abc.ABC):
             # relabel the DAG nodes to integers, with attributes
             # specifying the operation name. This allows them to be
             # compared, rather than using Command objects.
-            mapping = {i: n.op.__class__.__name__ for i, n in enumerate(DAG.nodes())}
+            mapping_name, mapping_args, mapping_modes = {}, {}, {}
+            for i, n in enumerate(DAG.nodes()):
+                mapping_name[i] = n.op.__class__.__name__
+                mapping_args[i] = n.op.p
+                mapping_modes[i] = tuple(m.ind for m in n.reg)
+
             circuit = nx.convert_node_labels_to_integers(DAG)
-            nx.set_node_attributes(circuit, mapping, name="name")
+            nx.set_node_attributes(circuit, mapping_name, name="name")
+            nx.set_node_attributes(circuit, mapping_args, name="args")
+            nx.set_node_attributes(circuit, mapping_modes, name="modes")
 
             def node_match(n1, n2):
-                """Returns True if both nodes have the same name"""
-                return n1["name"] == n2["name"]
+                """Returns True if both nodes have the same name and modes"""
+                return n1["name"] == n2["name"] and n1["modes"] == n2["modes"]
+
+            GM = nx.algorithms.isomorphism.DiGraphMatcher(self.graph, circuit, node_match)
 
             # check if topology matches
-            if not nx.is_isomorphic(circuit, self.graph, node_match):
-                # TODO: try and compile the program to match the topology
-                # TODO: add support for parameter range matching/compilation
+            if not GM.is_isomorphic():
                 raise pu.CircuitError(
                     "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(self.short_name)
                 )
 
+            # check if hard-coded parameters match
+            G1nodes = self.graph.nodes().data()
+            G2nodes = circuit.nodes().data()
+
+            for n1, n2 in GM.mapping.items():
+                for x, y in zip(G1nodes[n1]["args"], G2nodes[n2]["args"]):
+                    if x != y and not (isinstance(x, sym.Symbol) or isinstance(y, sym.Expr)):
+                        raise CircuitError(
+                            "Program cannot be used with the compiler '{}' "
+                            "due to incompatible parameter values.".format(self.short_name)
+                        )
+
         return seq
 
-    def decompose(self, seq):
+    def decompose(self, seq: Sequence[Command]) -> Sequence[Command]:
         """Recursively decompose all gates in a given sequence, as allowed
         by the circuit specification.
 
@@ -244,6 +299,27 @@ class Compiler(abc.ABC):
                 # )
 
         return compiled
+
+    def update_params(self, program, device) -> None:
+        """Updates and checks parameters in the program circuit.
+
+        Child classes can override this method with compiler specific logic. If no parameters need
+        to be updated, and are separately checked, this method should not be overridden and be left
+        empty.
+
+        Args:
+            program (.Program): Program containing the circuit and gate parameters
+            device (.DeviceSpec): device specification containing the valid parameter values
+        """
+        # unless overridden by subclass, no parameters need to be updated
+        return None
+
+    def add_loss(self, program, device):
+        """Adds realistic loss to circuit.
+
+        Child classes which are hardware compilers should override this method with device specific
+        loss added to the circuit."""
+        raise NotImplementedError
 
 
 class Range:

@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,19 +20,20 @@ One can think of each BaseEngine instance as a separate quantum computation.
 import abc
 import collections.abc
 import time
+import warnings
 from typing import Any, Dict, Optional
 
 import numpy as np
 import xcc
 
-from strawberryfields.devicespec import DeviceSpec
+from strawberryfields.device import Device
 from strawberryfields.result import Result
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
-from strawberryfields.tdm.tdmprogram import TDMProgram
+from strawberryfields.tdm import TDMProgram, reshape_samples
 
-from .backends import load_backend
+from .backends import load_backend, BosonicBackend
 from .backends.base import BaseBackend, NotApplicableError
 from ._version import __version__
 
@@ -197,7 +198,7 @@ class BaseEngine(abc.ABC):
             print_fn (function): optional custom function to use for string printing.
         """
         for k, r in enumerate(self.run_progs):
-            print_fn("Run {}:".format(k))
+            print_fn(f"Run {k}:")
             r.print(print_fn)
 
     @abc.abstractmethod
@@ -221,6 +222,9 @@ class BaseEngine(abc.ABC):
             commands that were applied to the backend, the samples returned from the backend, and
             the samples as a dictionary with the measured modes as keys
         """
+        # `_run_program` is called in `BaseEngine._run` but should never be called
+        # from a `BaseEngine` object, in which case an error should be raised.
+        raise NotImplementedError("'run_program' method must be implemented on child class")
 
     def _run(self, program, *, args, compile_options, **kwargs):
         """Execute the given programs by sending them to the backend.
@@ -247,6 +251,8 @@ class BaseEngine(abc.ABC):
         Returns:
             Result: results of the computation
         """
+        # pop modes so that it's not passed on to the backend API calls via 'op.apply'
+        modes = kwargs.pop("modes")
 
         if not isinstance(program, collections.abc.Sequence):
             program = [program]
@@ -258,6 +264,25 @@ class BaseEngine(abc.ABC):
 
         prev = self.run_progs[-1] if self.run_progs else None  # previous program segment
         for p in program:
+
+            if self.backend.compiler:
+                default_compiler = getattr(
+                    compile_options.get("device"), "default_compiler", self.backend.compiler
+                )
+                compile_options.setdefault("compiler", default_compiler)
+
+            # compile the program for the correct backend if a compiler or a device exists
+            if "compiler" in compile_options or "device" in compile_options:
+                p = p.compile(**compile_options)
+
+            received_rolled = False  # whether a TDMProgram had a rolled circuit
+            if isinstance(p, TDMProgram):
+                tdm_options = self.get_tdm_options(p, **kwargs)
+                # pop modes so that it's not passed on to the backend API calls via 'op.apply'
+                modes = tdm_options.pop("modes")
+                received_rolled = tdm_options.pop("received_rolled")
+                kwargs.update(tdm_options)
+
             if prev is None:
                 # initialize the backend
                 self._init_backend(p.init_num_subsystems)
@@ -265,7 +290,7 @@ class BaseEngine(abc.ABC):
                 # there was a previous program segment
                 if not p.can_follow(prev):
                     raise RuntimeError(
-                        "Register mismatch: program {}, '{}'.".format(len(self.run_progs), p.name)
+                        f"Register mismatch: program {len(self.run_progs)}, '{p.name}'."
                     )
 
                 # Copy the latest measured values in the RegRefs of p.
@@ -276,20 +301,67 @@ class BaseEngine(abc.ABC):
 
             # bind free parameters to their values
             p.bind_params(args)
-
-            # compile the program for the correct backend
-            target = self.backend.compiler
-            if target is not None:
-                p = p.compile(compiler=target, **compile_options)
             p.lock()
 
             _, self.samples, self.samples_dict = self._run_program(p, **kwargs)
             self.run_progs.append(p)
 
+            if isinstance(p, TDMProgram) and received_rolled:
+                p.roll()
+
             prev = p
 
-        samples = {"output": [self.samples], **self.samples_dict}
-        return Result(samples)
+        ancillae_samples = None
+        if isinstance(self.backend, BosonicBackend):
+            ancillae_samples = self.backend.ancillae_samples_dict.copy()
+
+        samples = {"output": [self.samples]}
+        result = Result(samples, samples_dict=self.samples_dict, ancillae_samples=ancillae_samples)
+
+        # if `modes`` is empty (i.e. `modes==[]`) return no state, else return state with
+        # selected modes (all if `modes==None`)
+        if modes is None or modes:
+            # state object requested
+            # session and feed_dict are needed by TF backend both during simulation (if program
+            # contains measurements) and state object construction.
+            result.state = self.backend.state(modes=modes, **kwargs)
+
+        return result
+
+    @staticmethod
+    def get_tdm_options(program, **kwargs):
+        """Retrieves the shots and modes for the TDM program and (space)unrolls it if necessary."""
+        # priority order for the shots value should be kwargs > run_options > 1
+        shots = kwargs.get("shots", program.run_options.get("shots", 1))
+
+        # setting shots >1 for a TDM program corresponds to further unrolling the program,
+        # meaning that we still only need to execute it once
+        tdm_options = {"modes": None, "shots": 1 if shots else None, "received_rolled": False}
+        if program.is_unrolled:
+            tdm_options["received_rolled"] = True
+
+        # if a tdm program is input in a rolled state, then unroll it
+        if kwargs.get("space_unroll", False):
+            if program.space_unrolled_circuit is None:
+                program.space_unroll(shots=shots or 1)
+        else:
+            # if `space_unroll != True`, only unroll it iff it isn't already unrolled
+            if not program.is_unrolled:
+                program.unroll(shots=shots or 1)
+
+        if program.space_unrolled_circuit is not None:
+            if kwargs.get("crop", False):
+                tdm_options["modes"] = range(program.get_crop_value(), program.timebins)
+            else:
+                tdm_options["modes"] = range(0, program.timebins)
+        elif kwargs.get("crop", False):
+            warnings.warn(
+                "Cropping the state is only possible for space unrolled circuits, which "
+                "can be done by executing `Program.space_unroll()` prior to running the "
+                "circuit. Note, this might cause a significant performance hit if sampling!"
+            )
+
+        return tdm_options
 
 
 class LocalEngine(BaseEngine):
@@ -336,7 +408,7 @@ class LocalEngine(BaseEngine):
         return super().__new__(cls)
 
     def __str__(self):
-        return self.__class__.__name__ + "({})".format(self.backend_name)
+        return self.__class__.__name__ + f"({self.backend_name})"
 
     def reset(self, backend_options=None):
         backend_options = backend_options or {}
@@ -374,19 +446,28 @@ class LocalEngine(BaseEngine):
             except NotApplicableError:
                 # command is not applicable to the current backend type
                 raise NotApplicableError(
-                    "The operation {} cannot be used with {}.".format(cmd.op, self.backend)
+                    f"The operation {cmd.op} cannot be used with {self.backend}."
                 ) from None
 
             except NotImplementedError:
                 # command not directly supported by backend API
                 raise NotImplementedError(
-                    "The operation {} has not been implemented in {} for the arguments {}.".format(
-                        cmd.op, self.backend, kwargs
-                    )
+                    f"The operation {cmd.op} has not been implemented in {self.backend} for the "
+                    f"arguments {kwargs}."
                 ) from None
 
         # combine the samples sorted by mode, and cast correctly to array or tensor
         samples, samples_dict = self._combine_and_sort_samples(samples_dict)
+
+        if isinstance(prog, TDMProgram) and samples_dict:
+            samples_dict = reshape_samples(samples_dict, prog.measured_modes, prog.N, prog.timebins)
+            # crop vacuum modes arriving at the detector before the first computational mode
+            if kwargs.get("crop", False):
+                samples_dict[0] = samples_dict[0][:, prog.get_crop_value() :]
+
+            # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
+            samples = np.array(list(samples_dict.values())).transpose(1, 0, 2)
+
         return applied, samples, samples_dict
 
     def _combine_and_sort_samples(self, samples_dict):
@@ -426,29 +507,15 @@ class LocalEngine(BaseEngine):
 
         Keyword Args:
             shots (int): number of times the program measurement evaluation is repeated
+            crop (bool): Crop vacuum modes present before the first computational modes.
+                This option crops samples from ``Result.samples`` and ``Result.samples_dict``.
+                If the program is space unrolled the state in `Result.state` is also cropped.
             modes (None, Sequence[int]): Modes to be returned in the ``Result.state`` :class:`.BaseState` object.
                 ``None`` returns all the modes (default). An empty sequence means no state object is returned.
 
         Returns:
             Result: results of the computation
         """
-        # pylint: disable=import-outside-toplevel
-        from strawberryfields.tdm.tdmprogram import reshape_samples
-
-        received_rolled_circuit = False
-        if isinstance(program, TDMProgram):
-            # priority order for the shots value should be kwargs > run_options > 1
-            shots = kwargs.get("shots", program.run_options.get("shots", 1))
-            # if a tdm program is input in a rolled state, then unroll it
-            if not program.is_unrolled:
-                received_rolled_circuit = True
-                program.unroll(shots=shots)
-
-            # Shots >1 for a TDM program simply corresponds to creating
-            # multiple copies of the program, and appending them to run sequentially.
-            # As a result, we set the backend shots to 1 for the Gaussian backend.
-            kwargs["shots"] = 1
-
         args = args or {}
         compile_options = compile_options or {}
         temp_run_options = {}
@@ -473,8 +540,9 @@ class LocalEngine(BaseEngine):
         temp_run_options.setdefault("shots", 1)
         temp_run_options.setdefault("modes", None)
 
-        # avoid unexpected keys being sent to Operations
-        eng_run_keys = ["eval", "session", "feed_dict", "shots"]
+        # avoid unexpected keys being sent to Operations (note, "modes" shouldn't be passed, but is
+        # needed in `BaseEngine.run()`; it's popped before being passed on to Operations)
+        eng_run_keys = ["eval", "session", "feed_dict", "shots", "crop", "space_unroll", "modes"]
         eng_run_options = {
             key: temp_run_options[key] for key in temp_run_options.keys() & eng_run_keys
         }
@@ -485,7 +553,7 @@ class LocalEngine(BaseEngine):
 
         # check that post-selection and feed-forwarding is not used together with shots > 1
         for p in program_lst:
-            for c in p.circuit:
+            for c in p.circuit or []:
                 try:
                     if c.op.select and eng_run_options["shots"] > 1:
                         raise NotImplementedError(
@@ -499,37 +567,9 @@ class LocalEngine(BaseEngine):
                         "Feed-forwarding of measurements cannot be used together with multiple shots."
                     )
 
-        result = super()._run(
-            program, args=args, compile_options=compile_options, **eng_run_options
+        return super()._run(
+            program_lst, args=args, compile_options=compile_options, **eng_run_options
         )
-
-        if isinstance(program, TDMProgram):
-            if isinstance(result.samples_dict, dict) and result.samples_dict:
-                samples_dict = reshape_samples(
-                    result.samples_dict,
-                    program.measured_modes,
-                    program.N,
-                    program.timebins,
-                )
-                # transpose the samples so that they have shape `(shots, spatial modes, timebins)`
-                result._result = {
-                    "output": [np.array(list(samples_dict.values())).transpose(1, 0, 2)]
-                }
-                result._result.update(samples_dict)
-            if received_rolled_circuit:
-                # if the tdm circuit is received in a rolled state, and unrolled
-                # for execution, roll it back again
-                program.roll()
-        modes = temp_run_options["modes"]
-
-        if modes is None or modes:
-            # state object requested
-            # session and feed_dict are needed by TF backend both during simulation (if program
-            # contains measurements) and state object construction.
-            result._state = self.backend.state(**temp_run_options)
-            if self.backend_name == "bosonic":
-                result._ancilla_samples = self.backend.ancillae_samples_dict.copy()
-        return result
 
 
 class RemoteEngine:
@@ -567,7 +607,7 @@ class RemoteEngine:
     """
 
     POLLING_INTERVAL_SECONDS = 1
-    DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_01"}
+    DEFAULT_TARGETS = {"X8": "X8_01", "X12": "X12_02"}
 
     def __init__(
         self,
@@ -576,7 +616,7 @@ class RemoteEngine:
         backend_options: Optional[Dict[str, Any]] = None,
     ):
         self._target = self.DEFAULT_TARGETS.get(target, target)
-        self._spec = None
+        self._device = None
         self._connection = connection
         self._backend_options = backend_options or {}
         self.log = create_logger(__name__)
@@ -614,22 +654,20 @@ class RemoteEngine:
         )
 
     @property
-    def device_spec(self) -> DeviceSpec:
-        """The specification of the target device.
+    def device(self) -> Device:
+        """The representation of the target device.
 
         Returns:
-            DeviceSpec: the device specification
+            .strawberryfields.Device: the target device representation
 
         Raises:
             requests.exceptions.RequestException: if there was an issue fetching
-                the device specifications from the Xanadu Cloud
+                the device specifications or the device certificate from the Xanadu Cloud
         """
-        if self._spec is None:
-            target = self.target
-            connection = self.connection
-            device = xcc.Device(target=target, connection=connection)
-            self._spec = DeviceSpec(spec=device.specification)
-        return self._spec
+        if self._device is None:
+            device = xcc.Device(target=self.target, connection=self.connection)
+            self._device = Device(spec=device.specification, cert=device.certificate)
+        return self._device
 
     def run(
         self, program: Program, *, compile_options=None, recompile=False, **kwargs
@@ -651,6 +689,11 @@ class RemoteEngine:
         Keyword Args:
             shots (Optional[int]): The number of shots for which to run the job. If this
                 argument is not provided, the shots are derived from the given ``program``.
+            integer_overflow_protection (Optional[bool]): Whether to enable the
+                conversion of integral job results into ``np.int64`` objects.
+                By default, integer overflow protection is enabled. For more
+                information, see `xcc.Job.get_result
+                <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html#xcc.Job.get_result>`_.
 
         Returns:
             strawberryfields.Result, None: the job result if successful, and ``None`` otherwise
@@ -688,7 +731,16 @@ class RemoteEngine:
 
         if job.status == "complete":
             self.log.info(f"The remote job {job.id} has been completed.")
-            return Result(job.result)
+
+            integer_overflow_protection = kwargs.get("integer_overflow_protection", True)
+            result = job.get_result(integer_overflow_protection=integer_overflow_protection)
+            output = result.get("output")
+
+            # crop vacuum modes arriving at the detector before the first computational mode
+            if output and isinstance(program, TDMProgram) and kwargs.get("crop", False):
+                output[0] = output[0][:, :, program.get_crop_value() :]
+
+            return Result(result)
 
         message = f"The remote job {job.id} has failed with status {job.status}: {job.metadata}."
         self.log.info(message)
@@ -720,7 +772,7 @@ class RemoteEngine:
         compile_options = compile_options or {}
         kwargs.update(self._backend_options)
 
-        device = self.device_spec
+        device = self.device
         compiler_name = compile_options.get("compiler", device.default_compiler)
 
         program_is_compiled = program.compile_info is not None
@@ -730,14 +782,15 @@ class RemoteEngine:
             # program was compiled but recompilation was not allowed by the
             # user
 
-            if (
+            if program.compile_info and (
                 program.compile_info[0].target != device.target
                 or program.compile_info[0]._spec != device._spec
             ):
+                compile_target = program.compile_info[0].target
                 # program was compiled for a different device
                 raise ValueError(
                     "Cannot use program compiled with "
-                    f"{program._compile_info[0].target} for target {self.target}. "
+                    f"{compile_target} for target {self.target}. "
                     'Pass the "recompile=True" keyword argument '
                     f"to compile with {compiler_name}."
                 )
@@ -758,7 +811,7 @@ class RemoteEngine:
             self.log.info(msg)
             program = program.compile(device=device, **compile_options)
 
-        else:
+        elif program.compile_info[1][0] == "X":
             # validating program
             msg = (
                 f"Program previously compiled for {device.target} using {program.compile_info[1]}. "
@@ -767,8 +820,14 @@ class RemoteEngine:
             self.log.info(msg)
             program = program.compile(device=device, compiler="Xstrict")
 
-        # update the run options if provided
-        run_options = {**program.run_options, **kwargs}
+        # Update and filter the run options if provided.
+        # Forwarding the boolean `crop` run option to the hardware will result in undesired
+        # behaviour as og-tdm also uses that keyword arg, hence it is removed.
+        temp_run_options = {**program.run_options, **kwargs}
+        skip_run_keys = ["crop"]
+        run_options = {
+            key: temp_run_options[key] for key in temp_run_options.keys() - skip_run_keys
+        }
 
         if "shots" not in run_options:
             raise ValueError("Number of shots must be specified.")
@@ -791,9 +850,7 @@ class RemoteEngine:
         return job
 
     def __repr__(self):
-        return "<{}: target={}, connection={}>".format(
-            self.__class__.__name__, self.target, self._connection
-        )
+        return f"<{self.__class__.__name__}: target={self.target}, connection={self._connection}>"
 
     def __str__(self):
         return self.__repr__()

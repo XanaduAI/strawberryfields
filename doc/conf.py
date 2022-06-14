@@ -14,7 +14,6 @@
 # serve to show the default.
 
 import sys, os, re
-from unittest.mock import MagicMock, PropertyMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -29,7 +28,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(".")), "doc"))
 needs_sphinx = "1.5"
 
 # Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
+# extensions coming with Sphinx (named "sphinx.ext.*") or your custom
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
@@ -46,7 +45,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_automodapi.automodapi",
     "sphinx_copybutton",
-    "m2r",
+    "m2r2"
 ]
 
 
@@ -54,12 +53,6 @@ intersphinx_mapping = {
     "photonics": ("https://strawberryfields.ai/photonics", None),
     "xcc": ("https://xanadu-cloud-client.readthedocs.io/en/stable/", None),
 }
-
-source_suffix = [".rst", ".md"]
-
-from glob import glob
-import shutil
-import warnings
 
 autosummary_generate = True
 autosummary_imported_members = False
@@ -73,11 +66,10 @@ mathjax_path = (
 )
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates", "xanadu_theme"]
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-# source_suffix = ['.rst', '.md']
 source_suffix = ".rst"
 
 # The master toctree document.
@@ -85,9 +77,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Strawberry Fields"
-copyright = """Nathan Killoran, Josh Izaac, Nicolás Quesada, Ville Bergholm, Matthew Amy, and Christian Weedbrook. <br>
-"Strawberry Fields: A Software Platform for Photonic Quantum Computing", Quantum, 3, 129 (2019).<br>
-&copy; Copyright 2019, Xanadu Quantum Technologies Inc."""
+copyright = "2022, Xanadu Quantum Technologies"
 author = "Xanadu Inc."
 
 # The version info for the project you're documenting, acts as replacement for
@@ -111,7 +101,7 @@ language = None
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
-# today = ''
+#today = ""
 # Else, today_fmt is used as the format for a strftime call.
 today_fmt = "%Y-%m-%d"
 
@@ -123,8 +113,8 @@ exclude_patterns = ["_build"]
 # documents.
 # default_role = None
 
-# If true, '()' will be appended to :func: etc. cross-reference text.
-# add_function_parentheses = True
+# If true, "()" will be appended to :func: etc. cross-reference text.
+#add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -151,7 +141,7 @@ todo_include_todos = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# html_theme = 'nature'
+# html_theme = "nature"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -159,7 +149,6 @@ todo_include_todos = True
 # html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -187,9 +176,9 @@ html_static_path = ["_static"]
 # directly to the root of the documentation.
 # html_extra_path = []
 
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# If not "", a "Last updated on:" timestamp is inserted at every page bottom,
 # using the given strftime format.
-# html_last_updated_fmt = '%b %d, %Y'
+#html_last_updated_fmt = "%b %d, %Y"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -197,24 +186,10 @@ html_static_path = ["_static"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
-#
-# This is required for the alabaster theme
-# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-# html_sidebars = {
-#    '**': [
-#        'about.html',
-#        'navigation.html',
-#        'relations.html',  # needs 'show_related': True theme option to display
-#        'searchbox.html',
-#        'donate.html',
-#    ]
-# }
 html_sidebars = {
-    "**": [
-        "logo-text.html",
+    "**" : [
         "searchbox.html",
         "globaltoc.html",
-        # 'sourcelink.html'
     ]
 }
 
@@ -243,57 +218,27 @@ html_sidebars = {
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
-# html_use_opensearch = ''
+#html_use_opensearch = ""
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
 
 # Language to be used for generating the HTML full-text search index.
 # Sphinx supports the following languages:
-#   'da', 'de', 'en', 'es', 'fi', 'fr', 'h', 'it', 'ja'
-#   'nl', 'no', 'pt', 'ro', 'r', 'sv', 'tr'
-# html_search_language = 'en'
+#   "da", "de", "en", "es", "fi", "fr", "h", "it", "ja"
+#   "nl", "no", "pt", "ro", "r", "sv", "tr"
+#html_search_language = "en"
 
 # A dictionary with options for the search language support, empty by default.
-# Now only 'ja' uses this config value
-# html_search_options = {'type': 'default'}
+# Now only "ja" uses this config value
+#html_search_options = {"type": "default"}
 
 # The name of a javascript file (relative to the configuration directory) that
 # implements a search results scorer. If empty, the default will be used.
-# html_search_scorer = 'scorer.js'
+#html_search_scorer = "scorer.js"
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "Strawberryfieldsdoc"
-
-# # -- Xanadu theme ---------------------------------------------------------
-html_theme = "xanadu_theme"
-html_theme_path = ["."]
-
-# Register the theme as an extension to generate a sitemap.xml
-# extensions.append("guzzle_sphinx_theme")
-
-# xanadu theme options (see theme.conf for more information)
-html_theme_options = {
-    # Set the path to a special layout to include for the homepage
-    # "homepage": "special_index.html",
-    # Set the name of the project to appear in the left sidebar.
-    "project_nav_name": "Strawberry Fields",
-    "touch_icon": "_static/logo_new.png",
-    # Set GA account ID to enable tracking
-    "google_analytics_account": "UA-116279123-2",
-    # colors
-    "navigation_button": "#b13a59",
-    "navigation_button_hover": "#712b3d",
-    "toc_caption": "#b13a59",
-    "toc_hover": "#b13a59",
-    "table_header_bg": "#ffdce5",
-    "table_header_border": "#b13a59",
-    "download_button": "#b13a59",
-}
-
-edit_on_github_project = "XanaduAI/strawberryfields"
-edit_on_github_branch = "master/doc"
-
+htmlhelp_basename = "StrawberryFieldsdoc"
 
 # the order in which autodoc lists the documented members
 autodoc_member_order = "bysource"
@@ -301,11 +246,64 @@ autodoc_member_order = "bysource"
 # inheritance_diagram graphviz attributes
 inheritance_node_attrs = dict(color="lightskyblue1", style="filled")
 
+# -- Xanadu theme ---------------------------------------------------------
+html_theme = "xanadu"
 
-from custom_directives import CustomGalleryItemDirective, DetailsDirective
+# xanadu theme options (see theme.conf for more information)
+html_theme_options = {
+    "navbar_wordmark_path": "_static/sf_wordmark.png",
+    "navbar_logo_colour": "#b13a59",
 
+    "navbar_home_link": "https://strawberryfields.ai",
 
-def setup(app):
-    app.add_directive("customgalleryitem", CustomGalleryItemDirective)
-    app.add_directive("details", DetailsDirective)
-    app.add_stylesheet("xanadu_gallery.css")
+    "navbar_left_links": [
+        {
+            "name": "Quantum Photonics",
+            "href": "https://strawberryfields.ai/photonics/",
+        },
+        {
+            "name": "Install",
+            "href": "install.html",
+        },
+        {
+            "name": "Documentation",
+            "href": "index.html",
+            "active": True,
+        }
+    ],
+
+    "navbar_right_links": [
+        {
+            "name": "FAQ",
+            "href": "https://strawberryfields.ai/faq.html",
+            "icon": "fas fa-question",
+        },
+        {
+            "name": "Support",
+            "href": "https://discuss.pennylane.ai/",
+            "icon": "fab fa-discourse",
+        },
+        {
+            "name": "GitHub",
+            "href": "https://github.com/XanaduAI/strawberryfields",
+            "icon": "fab fa-github",
+        }
+    ],
+
+    "extra_copyrights": [
+        "TensorFlow, the TensorFlow logo, and any related marks are trademarks "
+        "of Google Inc."
+    ],
+
+    "google_analytics_tracking_id": "UA-116279123-2",
+
+    "prev_next_button_colour": "#b13a59",
+    "prev_next_button_hover_colour": "#712b3d",
+    "toc_marker_colour": "#b13a59",
+    "table_header_background_colour": "#ffdce5",
+    "border_colour": "#b13a59",
+    "text_accent_colour": "#b13a59",
+}
+
+edit_on_github_project = "XanaduAI/strawberryfields"
+edit_on_github_branch = "master/doc"

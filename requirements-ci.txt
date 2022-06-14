@@ -8,7 +8,6 @@ quantum-blackbird
 python-dateutil
 thewalrus>=0.17.0
 toml
-appdirs
 numba
 requests
 urllib3

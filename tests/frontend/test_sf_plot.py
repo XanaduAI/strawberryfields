@@ -77,7 +77,7 @@ def create_example_fock_chart(state, modes, cutoff):
     second_x = 0.76
     domain = [0.0, 0.49]
     domain2 = [0.51, 1.0]
-    xlabels = [fr"$|{i}\rangle$" for i in range(0, cutoff, 1)]
+    xlabels = [rf"$|{i}\rangle$" for i in range(0, cutoff, 1)]
 
     # mean photon as latex
     mean_photon_text1 = "$\\langle \\hat{n} \\rangle=" + f"{mean[0]}" + "$"

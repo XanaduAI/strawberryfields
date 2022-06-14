@@ -25,12 +25,11 @@ from strawberryfields.backends.states import BaseFockState, BaseGaussianState
 try:
     import tensorflow as tf
 except:
-    backends = ["fock", "tf"]
-else:
     backends = ["fock"]
+else:
+    backends = ["fock", "tf"]
 
-# make test deterministic
-np.random.seed(42)
+
 A = 0.1234
 B = -0.543
 
@@ -101,7 +100,7 @@ class TestChannelApplication:
         state = eng.run(prog).state
         mean_photon, var = state.mean_photon(0)
         assert np.allclose(mean_photon, nbar, atol=tol, rtol=0)
-        assert np.allclose(var, nbar ** 2 + nbar, atol=tol, rtol=0)
+        assert np.allclose(var, nbar**2 + nbar, atol=tol, rtol=0)
 
     @pytest.mark.backends("gaussian")
     @pytest.mark.parametrize("M", range(1, 5))

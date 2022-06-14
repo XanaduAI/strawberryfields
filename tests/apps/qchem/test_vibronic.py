@@ -71,7 +71,7 @@ class TestGBSParams:
         correctly reconstruct the input Duschinsky matrix"""
         sigma = np.diag(np.exp(self.S))
         J = self.U2 @ sigma @ self.U1
-        Ud = np.diag(self.wp ** -0.5) @ J @ np.diag(self.w ** 0.5)
+        Ud = np.diag(self.wp**-0.5) @ J @ np.diag(self.w**0.5)
         assert np.allclose(Ud, self.Ud)
 
     def test_invalid_temperature(self):

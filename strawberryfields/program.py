@@ -1,4 +1,4 @@
-# Copyright 2019 Xanadu Quantum Technologies Inc.
+# Copyright 2019-2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ import warnings
 import networkx as nx
 
 import blackbird as bb
-from blackbird.utils import match_template
+from blackbird.utils import match_template, TemplateError
 
 import strawberryfields as sf
 
@@ -62,7 +62,14 @@ import strawberryfields.circuitdrawer as sfcd
 from strawberryfields.compilers import Compiler, compiler_db
 import strawberryfields.program_utils as pu
 
-from .program_utils import Command, RegRef, CircuitError, RegRefError
+from .program_utils import (
+    Command,
+    RegRef,
+    CircuitError,
+    RegRefError,
+    program_equivalence,
+    remove_loss,
+)
 from .parameters import FreeParameter, ParameterError
 
 
@@ -70,7 +77,7 @@ from .parameters import FreeParameter, ParameterError
 __all__ = []
 
 
-ALLOWED_RUN_OPTIONS = ["shots"]
+ALLOWED_RUN_OPTIONS = ["shots", "crop"]
 
 
 class Program:
@@ -128,6 +135,13 @@ class Program:
             ops.MeasureFock() | q
 
     The currently active register references can be accessed using the :meth:`~Program.register` method.
+
+    .. note::
+
+            The ``Program`` equality operation (e.g., ``prog_1 == prog_2``) does not account for
+            logically equivalent programs where the order of operations or modes do not matter. It
+            simply checks that the operations and parameters are identically applied. For a more
+            thorough check, use the ``Program.equivalence()`` method instead.
 
     Args:
         num_subsystems (int, Program): Initial number of modes (subsystems) in the quantum register.
@@ -202,6 +216,58 @@ class Program:
             int: number of Commands in the program
         """
         return len(self.circuit)
+
+    def __eq__(self, prog):
+        """Equality operator for programs."""
+        # is the targets differ, the programs are not equal
+        if self.target != prog.target:
+            return False
+
+        # if the registers differ, the programs are not equal
+        if self.register != prog.register:
+            return False
+
+        # NOTE: If two programs have been compiled by different compilers (or only one has been
+        # compiled), they are still considered to be equal, even if their targets differ. Similarly,
+        # two programs with different names can still be considered equal.
+
+        for self_cmd, prog_cmd in zip(self.circuit, prog.circuit):
+            names_eq = self_cmd.op.__class__ == prog_cmd.op.__class__
+            param_eq = all(p1 == p2 for p1, p2 in zip(self_cmd.op.p, prog_cmd.op.p))
+            modes_eq = all(m1 == m2 for m1, m2 in zip(self_cmd.reg, prog_cmd.reg))
+
+            if not all((names_eq, param_eq, modes_eq)):
+                return False
+
+        return True
+
+    def equivalence(self, prog, **kwargs):
+        """Checks if two programs are equivalent.
+
+        This function converts the program lists into directed acyclic graphs,
+        and runs the NetworkX ``is_isomorphic`` graph function in order
+        to determine if the two programs are equivalent.
+
+        .. note::
+
+            This method is a convenience method, wrapping the :func:`.program_equivalence`
+            function in the program utils module.
+
+        Args:
+            prog (strawberryfields.program.Program): quantum program to check equivalence with
+
+        Keyword args:
+            compare_params (bool): Set to ``False`` to turn of comparing program parameters;
+                equivalency will only take into account the operation order.
+            atol (float): the absolute tolerance parameter for checking quantum operation
+                parameter equality
+            rtol (float): the relative tolerance parameter for checking quantum operation
+                parameter equality
+
+        Returns:
+            bool: returns ``True`` if two quantum programs are equivalent
+        """
+        return program_equivalence(self, prog, **kwargs)
 
     def print(self, print_fn=print):
         """Print the program contents using Blackbird syntax.
@@ -487,7 +553,15 @@ class Program:
             Program: a copy of the Program
         """
         self.lock()
-        p = copy.copy(self)  # shares RegRefs with the source
+        p = copy.copy(self)
+
+        for name, val in self.__dict__.items():
+            # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
+            # should share the same register references. Program.circuit potentially
+            # contains FreeParameters/MeasuredParameters, which contain RegRefs.
+            if name not in ("circuit", "reg_refs", "init_reg_refs", "free_params"):
+                setattr(p, name, copy.deepcopy(val))
+
         # link to the original source Program
         if self.source is None:
             p.source = self
@@ -495,44 +569,46 @@ class Program:
             p.source = self.source
         return p
 
-    def assert_number_of_modes(self, device):
+    def assert_modes(self, device):
         """Check that the number of modes in the program is valid for the given device.
 
+        .. note::
+
+            ``device.modes`` must be an integer with the allowed number of modes
+            for the target, or a dictionary containing the maximum number of allowed
+            measurements for the specified target.
+
         Args:
-            device (~strawberryfields.DeviceSpec): Device specification object to use.
-                ``device.modes`` must be an integer, containing the allowed number of modes
-                for the target.
+            device (.strawberryfields.Device): device specification object to use
         """
         # Program subsystems may be created and destroyed during execution. The length
         # of the program registers represents the total number of modes that has ever existed.
         modes_total = len(self.reg_refs)
 
-        if modes_total > device.modes:
-            raise CircuitError(
-                f"This program contains {modes_total} modes, but the device '{device.target}' "
-                f"only supports a {device.modes}-mode program."
-            )
+        if isinstance(device.modes, int):
+            if modes_total > device.modes:
+                raise CircuitError(
+                    f"This program contains {modes_total} modes, but the device '{device.target}' "
+                    f"only supports a {device.modes}-mode program."
+                )
+            return
 
-    def assert_max_number_of_measurements(self, device):
-        """Check that the number of measurements in the circuit doesn't exceed the number of allowed
-        measurements according to the device specification.
-
-        Args:
-            device (~strawberryfields.DeviceSpec): Device specification object to use.
-                ``device.modes`` must be a dictionary, containing the maximum number of allowed
-                measurements for the specified target.
-
-        """
+        # from here on `device.modes` is assumed to be a dictionary
         num_pnr, num_homodyne, num_heterodyne = 0, 0, 0
 
         try:
-            max_pnr = device.modes["max"]["pnr"]
-            max_homodyne = device.modes["max"]["homodyne"]
-            max_heterodyne = device.modes["max"]["heterodyne"]
+            max_pnr = device.modes["pnr_max"]
+            max_homodyne = device.modes["homodyne_max"]
+            max_heterodyne = device.modes["heterodyne_max"]
         except (KeyError, TypeError) as e:
+            device_modes = device.modes
+            if isinstance(device.modes, dict):
+                device_modes = set(device.modes.keys())
+
             raise KeyError(
-                "Device specification must contain an entry for the maximum allowed number "
-                "of measurments. Have you specified the correct target?"
+                "Expected keys for the maximum allowed number of PNR ('pnr_max'), homodyne "
+                "('homodyne_max'), and heterodyne ('heterodyne_max') measurements. Got keys "
+                f"{device_modes}"
             ) from e
 
         for c in self.circuit:
@@ -585,7 +661,7 @@ class Program:
 
         >>> prog2 = prog.compile(compiler="gbs")
 
-        For a hardware device a :class:`~.DeviceSpec` object, and optionally a specified compile strategy,
+        For a hardware device a :class:`~.Device` object, and optionally a specified compile strategy,
         must be supplied. If no compile strategy is supplied the default compiler from the device
         specification is used.
 
@@ -594,17 +670,19 @@ class Program:
         >>> prog2 = prog.compile(device=device, compiler="Xcov")
 
         Args:
-            device (~strawberryfields.DeviceSpec): device specification object to use for
+            device (~strawberryfields.Device): device specification object to use for
                 program compilation
             compiler (str, ~strawberryfields.compilers.Compiler): Compiler name or compile strategy
                 to use. If a device is specified, this overrides the compile strategy specified by
-                the hardware :class:`~.DevicSpec`.
+                the hardware :class:`~.Device`.
 
         Keyword Args:
             optimize (bool): If True, try to optimize the program by merging and canceling gates.
                 The default is False.
             warn_connected (bool): If True, the user is warned if the quantum circuit is not weakly
                 connected. The default is True.
+            shots (int): Number of times the program measurement evaluation is repeated. Passed
+                along to the compiled program's ``run_options``.
 
         Returns:
             Program: compiled program
@@ -632,15 +710,15 @@ class Program:
                 compiler = _get_compiler(compiler)
 
             if device.modes is not None:
-                if isinstance(device.modes, int):
-                    # check that the number of modes is correct, if device.modes
-                    # is provided as an integer
-                    self.assert_number_of_modes(device)
-                else:
-                    # check that the number of measurements is within the allowed
-                    # limits for each measurement type; device.modes will be a dictionary
-                    self.assert_max_number_of_measurements(device)
+                # check that the number of modes is correct, if device.modes is provided
+                # as an integer, or that the number of measurements is within the allowed
+                # limits for each measurement type, if `device.modes` is a dictionary
+                self.assert_modes(device)
 
+            # if a device layout exist and the device default compiler is the same as
+            # the requested compiler, initialize the circuit in the compiler class
+            if device.layout and device.default_compiler == compiler.short_name:
+                compiler.init_circuit(device.layout)
         else:
             compiler = _get_compiler(compiler)
             target = compiler.short_name
@@ -657,13 +735,17 @@ class Program:
         if kwargs.get("optimize", False):
             seq = pu.optimize_circuit(seq)
 
+        compiled = self._linked_copy()
+
         seq = compiler.compile(seq, self.register)
 
         # create the compiled Program
-        compiled = self._linked_copy()
         compiled.circuit = seq
-        compiled._target = target
-        compiled._compile_info = (device, compiler.short_name)
+        compiled._target = target  # pylint: disable=protected-access
+        compiled._compile_info = (device, compiler.short_name)  # pylint: disable=protected-access
+
+        # parameters are updated if necessary due to compiler changes
+        compiler.update_params(compiled, device)
 
         # Get run options of compiled program.
         run_options = {k: kwargs[k] for k in ALLOWED_RUN_OPTIONS if k in kwargs}
@@ -673,14 +755,31 @@ class Program:
         backend_options = {k: kwargs[k] for k in kwargs if k not in ALLOWED_RUN_OPTIONS}
         compiled.backend_options.update(backend_options)
 
-        # validate gate parameters
-        if device is not None and device.gate_parameters:
+        if kwargs.get("realistic_loss", False):
+            try:
+                compiler.add_loss(compiled, device)
+            except NotImplementedError:
+                warnings.warn(f"Compiler {compiler} does not support adding realistic loss.")
+
+        # if device spec has allowed gate parameters, validate the applied gate parameters
+        if device and device.gate_parameters:
+            if not device.layout:
+                raise ValueError(
+                    "Gate parameters cannot be validated. Device specification is missing a "
+                    "circuit layout."
+                )
             bb_device = bb.loads(device.layout)
-            bb_compiled = sf.io.to_blackbird(compiled)
+            # if there is no target in the layout, set the device target in the Blackbird program
+            if bb_device.target["name"] is None:
+                bb_device._target["name"] = device.target  # pylint: disable=protected-access
+
+            lossless_compiled = compiled._linked_copy()
+            lossless_compiled.circuit = remove_loss(compiled.circuit)
+            bb_compiled = sf.io.to_blackbird(lossless_compiled)
 
             try:
                 user_parameters = match_template(bb_device, bb_compiled)
-            except bb.utils.TemplateError as e:
+            except TemplateError as e:
                 raise CircuitError(
                     "Program cannot be used with the compiler '{}' "
                     "due to incompatible topology.".format(compiler.short_name)

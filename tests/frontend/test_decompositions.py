@@ -14,6 +14,8 @@
 r"""Unit tests for the Strawberry Fields decompositions module"""
 import pytest
 
+from strawberryfields.utils.random_numbers_matrices import random_interferometer
+
 pytestmark = pytest.mark.frontend
 
 import networkx as nx
@@ -25,10 +27,6 @@ from strawberryfields import decompositions as dec
 from strawberryfields.utils import random_interferometer as haar_measure
 
 N_SAMPLES = 10
-
-
-# fix the seed to make the test deterministic
-np.random.seed(42)
 
 
 def omega(n):
@@ -798,3 +796,163 @@ class TestBlochMessiahDecomposition:
         assert np.allclose(O1.T @ O @ O1, O, atol=tol, rtol=0)
         assert np.allclose(O2.T @ O @ O2, O, atol=tol, rtol=0)
         assert np.allclose(S @ O @ S.T, O, atol=tol, rtol=0)
+
+
+class TestSUnFactorization:
+    """tests for the SU(n) factorization"""
+
+    def _embed_su2(self, n, i, j, params):
+        """Embed the SU(2) transformation given by params into modes i and j
+        of an SU(n) matrix
+            SU_ij(3) = [ e^(i(a+g)/2) cos(b/2)   -e^(i(a-g)/2) sin(b/2)
+                        e^(-i(a-g)/2) sin(b/2)   e^(-i(a-g)/2) cos(b/2) ]
+        Returns the full n-dimensional matrix.
+        """
+        a, b, g = params[0], params[1], params[2]
+
+        # Create SU(2) element and scaled by loss if desired.
+        Rij = np.array(
+            [
+                [
+                    np.exp(1j * (a + g) / 2) * np.cos(b / 2),
+                    -np.exp(1j * (a - g) / 2) * np.sin(b / 2),
+                ],
+                [
+                    np.exp(-1j * (a - g) / 2) * np.sin(b / 2),
+                    np.exp(-1j * (a + g) / 2) * np.cos(b / 2),
+                ],
+            ]
+        )
+
+        # Stuff it into modes i and j of SU(n)
+        full_Rij = np.identity(n, dtype=complex)
+        full_Rij[i : j + 1, i : j + 1] = Rij
+
+        return full_Rij
+
+    def _sun_reconstruction(self, n, parameters):
+        """Reconstruct an SU(n) matrix using a list of transformations given as
+        tuples ("i,j", [a, b, g])
+
+        Args:
+            n (int): dimension of the unitary special matrix
+            parameters (list(tuple)): sequence of tranformation parameters with the
+                form ("i,j", [a, b, g]) where i,j are the indices of the modes and
+                a,b,g the SU(2) transformation parameters.
+
+        Returns:
+            array[complex]: the reconstructed SU(n) matrix
+        """
+        U = np.identity(n, dtype=complex)
+
+        for modes, params in parameters:
+            # Get the indices of the modes
+            md1, md2 = int(modes[0]), int(modes[1])
+
+            if md1 not in range(n) or md2 not in range(n):
+                raise ValueError(
+                    f"Mode combination {md1},{md2}  is invalid for a system of dimension {n}."
+                )
+
+            if md2 != md1 + 1:
+                raise ValueError(
+                    f"Mode combination {md1},{md2} is invalid.\n"
+                    + "Currently only transformations on adjacent modes are implemented."
+                )
+
+            # Compute the next transformation and multiply
+            next_trans = self._embed_su2(n, md1, md2, params)
+            U = U @ next_trans
+
+        return U
+
+    def test_unitary_validation(self, tol):
+        """Test that an exception is raised if not unitary"""
+        A = np.random.random([5, 5]) + 1j * np.random.random([5, 5])
+        with pytest.raises(ValueError, match="The input matrix is not unitary."):
+            dec.sun_compact(A, tol)
+
+    def test_unitary_size(self, tol):
+        """test n=2 unitaries are not decomposed"""
+
+        U = random_interferometer(2)
+        with pytest.raises(
+            ValueError, match="Input matrix for decomposition must be at least 3x3."
+        ):
+            dec.sun_compact(U, tol)
+
+    @pytest.mark.parametrize("SU_matrix", [True, False])
+    def test_global_phase(self, SU_matrix, tol):
+        """test factorized phase from unitary matrix"""
+        n = 3
+        # Generate a random SU(n) matrix.
+        U = random_interferometer(n)
+        det = np.linalg.det(U)
+        if SU_matrix:
+            U /= det ** (1 / n)
+
+        # get result from factorization
+        _, global_phase = dec.sun_compact(U, tol)
+
+        if SU_matrix:
+            assert global_phase is None
+        else:
+            expected_phase = np.angle(det)
+            assert np.allclose(global_phase, expected_phase, atol=tol)
+
+    @pytest.mark.parametrize("n", range(3, 8))
+    def test_SU_reconstruction(self, n, tol):
+        """test numerical reconstruction of Special Unitary matrix equals the original matrix"""
+
+        # Generate a random SU(n) matrix.
+        U = random_interferometer(n)
+        SU_expected = U / np.linalg.det(U) ** (1 / n)
+
+        # get result from factorization
+        factorization_params, global_phase = dec.sun_compact(SU_expected, tol)
+
+        SU_reconstructed = self._sun_reconstruction(n, factorization_params)
+
+        assert global_phase is None
+        assert np.allclose(SU_expected, SU_reconstructed, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("n", range(3, 8))
+    def test_interferometer_reconstruction(self, n, tol):
+        """test numerical reconstruction of Unitary matrix equals the original matrix"""
+
+        U = random_interferometer(n)
+
+        factorization_params, phase = dec.sun_compact(U, tol)
+        det = np.exp(1j * phase) ** (1 / n)
+        SU_reconstructed = self._sun_reconstruction(n, factorization_params)
+        U_reconstructed = det * SU_reconstructed
+
+        assert np.allclose(U_reconstructed, U)
+
+    @pytest.mark.parametrize("phase", np.linspace(0, 2 * np.pi, 5))
+    @pytest.mark.parametrize(
+        "n,permutation",
+        [
+            (3, np.array([0, 1, 2])),
+            (4, np.array([0, 1, 2, 3])),
+            (4, np.array([2, 3, 0, 1])),
+            (5, np.array([0, 1, 2, 3, 4])),
+            (5, np.array([3, 1, 0, 2, 4])),
+        ],
+    )
+    def test_embeded_unitary(self, n, permutation, phase, tol):
+        """test factorization of U(n-1) transformations embeded on U(n) transformation"""
+
+        # Embed U(4) on n=5 matrix
+        U = np.zeros((n, n), dtype=complex)
+        U[0, 0] = np.exp(1j * phase)
+        U4 = random_interferometer(n - 1)
+        U[1:, 1:] = U4
+
+        # permute rows
+        U = U[permutation, :]
+
+        factorization_params, _ = dec.sun_compact(U, tol)
+        _, first_params = factorization_params[0]
+
+        assert first_params == [0.0, 0.0, 0.0]

@@ -316,6 +316,12 @@ class Measurement(Operation):
             shots (int): Number of independent evaluations to perform.
                 Only applies to Measurements.
         """
+        # Do not apply any measurement operation in the circuit
+        # if `shots` is set to None
+        _shots = kwargs.get("shots", 1)
+        if _shots is None:
+            return None
+
         values = super().apply(reg, backend, **kwargs)
 
         # store the results in the register reference objects
@@ -914,10 +920,10 @@ class Catstate(Preparation):
 
         # normalization constant
         temp = pf.exp(-0.5 * pf.Abs(alpha) ** 2)
-        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp ** 4))
+        N = temp / pf.sqrt(2 * (1 + pf.cos(theta) * temp**4))
 
         # coherent states
-        c1 = (alpha ** l) / np.sqrt(ssp.factorial(l))
+        c1 = (alpha**l) / np.sqrt(ssp.factorial(l))
         c2 = ((-alpha) ** l) / np.sqrt(ssp.factorial(l))
 
         # add them up with a relative phase
@@ -1462,8 +1468,8 @@ class MSgate(Channel):
             return None
 
         s = np.sqrt(sf.hbar / 2)
-        ancilla_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
-        return ancilla_val / s
+        ancillae_val = backend.mb_squeeze_single_shot(*reg, r, phi, r_anc, eta_anc)
+        return ancillae_val / s
 
 
 class PassiveChannel(Channel):
@@ -1732,7 +1738,7 @@ class Pgate(Gate):
     def _decompose(self, reg, **kwargs):
         # into a squeeze and a rotation
         temp = self.p[0] / 2
-        r = pf.acosh(pf.sqrt(1 + temp ** 2))
+        r = pf.acosh(pf.sqrt(1 + temp**2))
         theta = pf.atan(temp)
         phi = -np.pi / 2 * pf.sign(temp) - theta
         return [Command(Sgate(r, phi), reg), Command(Rgate(theta), reg)]
@@ -2498,6 +2504,33 @@ def _triangular_compact_cmds(reg, phases):
     return cmds
 
 
+def _sun_compact_cmds(reg, parameters, global_phase):
+    cmds = []
+    n = len(reg)
+
+    if global_phase is not None:
+        cmds += [Command(Rgate(global_phase / n), mode) for mode in reg]
+
+    for modes, params in parameters:
+
+        md1, md2 = modes[0], modes[1]
+        a, b, g = params[0], params[1], params[2]
+
+        if md2 != md1 + 1:
+            raise ValueError(
+                f"Mode combination {md1},{md2} is invalid.\n"
+                + "Currently only transformations on adjacent modes are implemented."
+            )
+
+        cmds += [Command(Rgate(a / 2), reg[md1]), Command(Rgate(-a / 2), reg[md2])]
+        cmds.append(Command(BSgate(b / 2, 0), (reg[md1], reg[md2])))
+        cmds += [Command(Rgate(g / 2), reg[md1]), Command(Rgate(-g / 2), reg[md2])]
+
+    # note cmds have to be reversed as they are build in matrix multiplication order,
+    # which is in opposite order to gate application
+    return cmds[::-1]
+
+
 class Interferometer(Decomposition):
     r"""Apply a linear interferometer to the specified qumodes.
 
@@ -2613,6 +2646,7 @@ class Interferometer(Decomposition):
             "triangular",
             "rectangular_compact",
             "triangular_compact",
+            "sun_compact",
         }
 
         if mesh not in allowed_meshes:
@@ -2637,6 +2671,10 @@ class Interferometer(Decomposition):
         elif mesh == "triangular_compact":
             phases = dec.triangular_compact(self.p[0], rtol=tol, atol=tol)
             cmds = _triangular_compact_cmds(reg, phases)
+
+        elif mesh == "sun_compact":
+            parameters, global_phase = dec.sun_compact(self.p[0], rtol=tol, atol=tol)
+            cmds = _sun_compact_cmds(reg, parameters, global_phase)
 
         elif not self.identity or not drop_identity:
             decomp_fn = getattr(dec, mesh)

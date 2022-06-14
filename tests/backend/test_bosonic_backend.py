@@ -240,7 +240,7 @@ class TestBosonicCatStates:
         norm = 1 / np.sqrt(2 + 2 * np.exp(-2 * abs(alpha_complex) ** 2))
         psi = np.exp(-((x - disp) ** 2) / (2 * sf.hbar))
         psi += np.exp(-((x + disp) ** 2) / (2 * sf.hbar))
-        psi *= norm * np.exp(-alpha_complex.imag ** 2) / (np.pi * sf.hbar) ** 0.25
+        psi *= norm * np.exp(-alpha_complex.imag**2) / (np.pi * sf.hbar) ** 0.25
 
         assert np.allclose(marginal, abs(psi) ** 2)
 
@@ -670,9 +670,9 @@ class TestBosonicPrograms:
         assert samples_dict == {}
 
         # Check ancilla samples exist for the second mode
-        ancilla_samples = backend.ancillae_samples_dict
-        assert 1 in ancilla_samples.keys()
-        assert len(ancilla_samples[1]) == 2
+        ancillae_samples = backend.ancillae_samples_dict
+        assert 1 in ancillae_samples.keys()
+        assert len(ancillae_samples[1]) == 2
 
     @pytest.mark.parametrize("alpha", ALPHA_VALS)
     @pytest.mark.parametrize("phi", PHI_VALS)

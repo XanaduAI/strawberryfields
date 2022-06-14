@@ -25,8 +25,6 @@ from strawberryfields.program_utils import MergeFailure, RegRefError, CircuitErr
 from strawberryfields import utils
 
 
-# make test deterministic
-np.random.seed(42)
 a = np.random.random()
 b = np.random.random()
 

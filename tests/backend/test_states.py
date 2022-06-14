@@ -73,7 +73,7 @@ class TestBackendStateCreation:
         probs = np.array([state.fock_prob([i]) for i in range(cutoff)]).T
 
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n))
         ref_probs = np.abs(ref_state) ** 2
 
         if batch_size is not None:
@@ -137,9 +137,9 @@ class TestBaseStateMeanPhotonNumber:
         mean_ex = magnitude_squared + np.sinh(r) ** 2
         var_ex = (
             -magnitude_squared
-            + magnitude_squared ** 2
+            + magnitude_squared**2
             + 2 * magnitude_squared * np.cosh(2 * r)
-            - np.exp(-1j * phi) * a ** 2 * np.cosh(r) * np.sinh(r)
+            - np.exp(-1j * phi) * a**2 * np.cosh(r) * np.sinh(r)
             - np.exp(1j * phi) * np.conj(a) ** 2 * np.cosh(r) * np.sinh(r)
             + np.sinh(r) ** 4
             - (magnitude_squared + np.conj(np.sinh(r)) * np.sinh(r)) ** 2
@@ -163,7 +163,7 @@ class TestBaseStateMeanPhotonNumber:
         mean_photon, var = state.mean_photon(0)
 
         mean_ex = np.abs(a) ** 2 + nbar
-        var_ex = nbar ** 2 + nbar + np.abs(a) ** 2 * (1 + 2 * nbar)
+        var_ex = nbar**2 + nbar + np.abs(a) ** 2 * (1 + 2 * nbar)
         assert np.allclose(mean_photon, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
@@ -184,7 +184,7 @@ class TestBaseFockKetDensityMatrix:
         rdm = state.reduced_dm(0, cutoff=cutoff)
 
         n = np.arange(cutoff)
-        ket = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))
+        ket = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n))
         rdm_exact = np.outer(ket, ket.conj())
 
         if batch_size is not None:
@@ -207,7 +207,7 @@ class TestBaseFockKetDensityMatrix:
         ket = np.sum(state.ket(cutoff=cutoff), axis=-1)
 
         n = np.arange(cutoff)
-        expected = np.exp(-0.5 * np.abs(a) ** 2) * a ** n / np.sqrt(fac(n))
+        expected = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n))
 
         if batch_size is not None:
             ket = np.tile(ket, [batch_size, 1])
@@ -229,7 +229,7 @@ class TestBaseFockKetDensityMatrix:
         assert np.allclose(rho1, rho2, atol=tol, rtol=0)
 
         n = np.arange(cutoff)
-        expected = np.diag((r ** n) / ((1 + r) ** (n + 1)))
+        expected = np.diag((r**n) / ((1 + r) ** (n + 1)))
 
         if batch_size is not None:
             expected = np.tile(expected, [batch_size, 1]).reshape(-1, cutoff, cutoff)
@@ -364,26 +364,26 @@ class TestNumberExpectation:
             magnitude_squared = np.abs(a) ** 2
             squared_term = (
                 -magnitude_squared
-                + magnitude_squared ** 2
+                + magnitude_squared**2
                 + 2 * magnitude_squared * np.cosh(2 * r)
-                - 2 * np.real(np.exp(-1j * phi) * a ** 2 * np.cosh(r) * np.sinh(r))
+                - 2 * np.real(np.exp(-1j * phi) * a**2 * np.cosh(r) * np.sinh(r))
                 + np.sinh(r) ** 4
                 + np.cosh(r) * np.sinh(r) * np.sinh(2 * r)
             )
             return squared_term
 
         res = state.number_expectation([0, 1])
-        var = squared_term(a0, r0, phi0) * squared_term(a1, r1, phi1) - n0 ** 2 * n1 ** 2
+        var = squared_term(a0, r0, phi0) * squared_term(a1, r1, phi1) - n0**2 * n1**2
         assert np.allclose(res[0], n0 * n1, atol=tol, rtol=0)
         assert np.allclose(res[1], var, atol=tol, rtol=0)
 
         res = state.number_expectation([0])
-        var = squared_term(a0, r0, phi0) - n0 ** 2
+        var = squared_term(a0, r0, phi0) - n0**2
         assert np.allclose(res[0], n0, atol=tol, rtol=0)
         assert np.allclose(res[1], var, atol=tol, rtol=0)
 
         res = state.number_expectation([1])
-        var = squared_term(a1, r1, phi1) - n1 ** 2
+        var = squared_term(a1, r1, phi1) - n1**2
         assert np.allclose(res[0], n1, atol=tol, rtol=0)
         assert np.allclose(res[1], var, atol=tol, rtol=0)
 
@@ -409,7 +409,7 @@ class TestNumberExpectation:
         nbar = np.sinh(r) ** 2
 
         res = state.number_expectation([2, 0])
-        assert np.allclose(res[0], 2 * nbar ** 2 + nbar, atol=tol, rtol=0)
+        assert np.allclose(res[0], 2 * nbar**2 + nbar, atol=tol, rtol=0)
 
         res = state.number_expectation([0])
         assert np.allclose(res[0], nbar, atol=tol, rtol=0)
@@ -439,14 +439,14 @@ class TestNumberExpectation:
         res = state.number_expectation([0])
 
         mean0 = np.abs(a0) ** 2 + nbar0
-        var0 = nbar0 ** 2 + nbar0 + np.abs(a0) ** 2 * (1 + 2 * nbar0)
+        var0 = nbar0**2 + nbar0 + np.abs(a0) ** 2 * (1 + 2 * nbar0)
         assert np.allclose(res[0], mean0, atol=tol, rtol=0)
         assert np.allclose(res[1], var0, atol=tol, rtol=0.01)
 
         res = state.number_expectation([1])
 
         mean1 = np.abs(a1) ** 2 + nbar1
-        var1 = nbar1 ** 2 + nbar1 + np.abs(a1) ** 2 * (1 + 2 * nbar1)
+        var1 = nbar1**2 + nbar1 + np.abs(a1) ** 2 * (1 + 2 * nbar1)
         assert np.allclose(res[0], mean1, atol=tol, rtol=0)
         assert np.allclose(res[1], var1, atol=tol, rtol=0.01)
 
@@ -455,7 +455,7 @@ class TestNumberExpectation:
         expected_mean = mean0 * mean1
         assert np.allclose(res[0], expected_mean, atol=tol, rtol=0)
 
-        expected_var = mean0 ** 2 * var1 + mean1 ** 2 * var0 + var0 * var1
+        expected_var = mean0**2 * var1 + mean1**2 * var0 + var0 * var1
         assert np.allclose(res[1], expected_var, atol=tol, rtol=0.01)
 
     @pytest.mark.backends("fock", "tf")
@@ -478,19 +478,19 @@ class TestNumberExpectation:
         nbar = np.sinh(r) ** 2
         assert np.allclose(
             state.number_expectation([0, 1, 2, 3])[0],
-            (2 * nbar ** 2 + nbar) ** 2,
+            (2 * nbar**2 + nbar) ** 2,
             atol=tol,
             rtol=0,
         )
         assert np.allclose(
             state.number_expectation([0, 1, 3])[0],
-            nbar * (2 * nbar ** 2 + nbar),
+            nbar * (2 * nbar**2 + nbar),
             atol=tol,
             rtol=0,
         )
         assert np.allclose(
             state.number_expectation([3, 1, 2])[0],
-            nbar * (2 * nbar ** 2 + nbar),
+            nbar * (2 * nbar**2 + nbar),
             atol=tol,
             rtol=0,
         )

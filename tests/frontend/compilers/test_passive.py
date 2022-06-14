@@ -31,8 +31,6 @@ from thewalrus.symplectic import interferometer
 
 pytestmark = pytest.mark.frontend
 
-np.random.seed(42)
-
 
 @pytest.mark.parametrize("depth", [1, 3, 6])
 @pytest.mark.parametrize("width", [5, 10, 15])
@@ -72,7 +70,7 @@ def test_all_passive_gates(hbar, tol):
         ops.sMZgate(0.11, -2.1) | (q[0], q[3])
         ops.Interferometer(np.array([[np.exp(1j * 2)]])) | q[1]
         ops.BSgate(0.8, 0.4) | (q[1], q[3])
-        ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
+        ops.Interferometer(0.5**0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
         ops.PassiveChannel(0.1 * np.ones((3, 3))) | (q[3], q[1], q[0])
 
     cov = eng.run(circuit).state.cov()
@@ -87,7 +85,7 @@ def test_all_passive_gates(hbar, tol):
         ops.sMZgate(0.11, -2.1) | (q[0], q[3])
         ops.Interferometer(np.array([[np.exp(1j * 2)]])) | q[1]
         ops.BSgate(0.8, 0.4) | (q[1], q[3])
-        ops.Interferometer(0.5 ** 0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
+        ops.Interferometer(0.5**0.5 * np.fft.fft(np.eye(2))) | (q[0], q[2])
         ops.PassiveChannel(0.1 * np.ones((3, 3))) | (q[3], q[1], q[0])
 
     compiled_circuit = circuit.compile(compiler="passive")
@@ -147,7 +145,7 @@ def test_one_mode_gate(M, tol):
 @pytest.mark.parametrize("M", range(4, 8))
 def test_two_mode_gate(M, tol):
     """test _apply_two_mode_gate transforms operations correctly"""
-    T = np.arange(M ** 2, dtype=np.complex128).reshape((M, M))
+    T = np.arange(M**2, dtype=np.complex128).reshape((M, M))
     G = np.random.random((2, 2)) + 1j * np.random.random((2, 2))
 
     _apply_two_mode_gate(G, T, M - 4, M - 2)
@@ -155,7 +153,7 @@ def test_two_mode_gate(M, tol):
     G_expand = np.eye(M, dtype=np.complex128)
     modes = [M - 4, M - 2]
     G_expand[np.ix_(modes, modes)] = G
-    T1 = G_expand @ np.arange(M ** 2).reshape((M, M))
+    T1 = G_expand @ np.arange(M**2).reshape((M, M))
 
     assert np.allclose(T, T1, atol=tol, rtol=0)
 

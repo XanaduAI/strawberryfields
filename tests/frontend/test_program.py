@@ -27,8 +27,6 @@ from strawberryfields.parameters import ParameterError, FreeParameter
 from strawberryfields.compilers.compiler import Compiler
 
 
-# make test deterministic
-np.random.seed(42)
 A = np.random.random()
 
 
@@ -61,6 +59,192 @@ def permute_gates():
 
 class TestProgram:
     """Tests the Program class."""
+
+    def test_eq_operator(self):
+        """Equality operator check."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        # should be equivalent
+        assert prog_1 == prog_2
+        assert prog_2 == prog_1
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equal
+        assert prog_1 == prog_2
+        assert prog_2 == prog_1
+
+    def test_neq_operator(self):
+        """Not-equal operator check."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Sgate(4.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should NOT be equal
+        assert prog_1 != prog_2
+        assert prog_2 != prog_1
+
+    def test_neq_operator_equivalent(self):
+        """Not-equal operator check with equivalent circuit."""
+        prog_1 = sf.Program(3)
+        prog_2 = sf.Program(3)
+
+        with prog_1.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.Sgate(0.2) | q[2]
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.Sgate(0.2) | q[2]  # moved up one step
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should NOT be equal
+        assert prog_1 != prog_2
+        assert prog_2 != prog_1
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence(self, compare_params):
+        """Identical, but different, programs are equal."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2)
+        assert prog_2.equivalence(prog_1)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert prog_2.equivalence(prog_1, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_same_prog(self, prog, compare_params):
+        """Same program equivalence."""
+        assert prog.equivalence(prog)
+
+        with prog.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog.equivalence(prog, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_different_gates(self, compare_params):
+        """Programs with different circuits differ."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.MeasureFock() | q[1]
+
+        # should NOT be equivalent
+        assert not prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert not prog_2.equivalence(prog_1, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_different_params(self, compare_params):
+        """Programs with different parameters differ."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(1) | q[0]  # different parameter
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        if compare_params:
+            # should NOT be equivalent
+            assert not prog_1.equivalence(prog_2, compare_params=compare_params)
+            assert not prog_2.equivalence(prog_1, compare_params=compare_params)
+        else:
+            # should be equivalent
+            assert prog_1.equivalence(prog_2, compare_params=compare_params)
+            assert prog_2.equivalence(prog_1, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_eq_symmetric_bsgate(self, compare_params):
+        """Mode order doesn't matter in programs with symmetric beamsplitter."""
+        prog_1 = sf.Program(2)
+        prog_2 = sf.Program(2)
+
+        with prog_1.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate(np.pi / 4, np.pi / 2) | (q[0], q[1])  # symmetric beamsplitter
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate(np.pi / 4, np.pi / 2) | (q[1], q[0])  # symmetric beamsplitter
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert prog_2.equivalence(prog_1, compare_params=compare_params)
+
+    @pytest.mark.parametrize("compare_params", [True, False])
+    def test_equivalence_different_circuits(self, compare_params):
+        """Programs with different, but equivalent, circuits."""
+        prog_1 = sf.Program(3)
+        prog_2 = sf.Program(3)
+
+        with prog_1.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.Sgate(0.2) | q[2]
+            ops.MeasureFock() | q[1]
+
+        with prog_2.context as q:
+            ops.Sgate(0.2) | q[0]
+            ops.Sgate(0.2) | q[2]  # moved up one step, but still equivalent
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        # should be equivalent
+        assert prog_1.equivalence(prog_2, compare_params=compare_params)
+        assert prog_2.equivalence(prog_1, compare_params=compare_params)
 
     def test_with_block(self, prog):
         """Gate application using a with block."""
@@ -206,7 +390,7 @@ class TestProgram:
         assert y.val is None
 
     def test_assert_number_of_modes(self):
-        """Check that the correct error is raised when calling `prog.assert_number_of_modes`
+        """Check that the correct error is raised when calling `prog.assert_modes`
         with the incorrect number of modes."""
         device_dict = {
             "target": "abc",
@@ -215,7 +399,7 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["DummyCompiler"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -226,7 +410,7 @@ class TestProgram:
             program.CircuitError,
             match="program contains 3 modes, but the device 'abc' only supports a 2-mode program",
         ):
-            prog.assert_number_of_modes(spec)
+            prog.assert_modes(device)
 
     @pytest.mark.parametrize(
         "measure_op, measure_name",
@@ -239,9 +423,30 @@ class TestProgram:
             (ops.MeasureHeterodyne(select=0), "heterodyne"),  # MeasureHeterodyne
         ],
     )
-    def test_assert_max_number_of_measurements(self, measure_op, measure_name):
+    def test_assert_modes_dict(self, measure_op, measure_name):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect number of measurements in the circuit."""
+        # set maximum number of measurements to 2, and measure 3 in prog below
+        device_dict = {
+            "target": "simulon_gaussian",
+            "modes": {"pnr_max": 2, "homodyne_max": 2, "heterodyne_max": 2},
+            "layout": "",
+            "gate_parameters": {},
+            "compiler": ["gaussian"],
+        }
+        device = sf.Device(spec=device_dict)
+
+        prog = sf.Program(3)
+        with prog.context as q:
+            for reg in q:
+                measure_op | reg
+
+        with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
+            prog.assert_modes(device)
+
+    def test_keyerror_assert_modes_dict(self):
+        """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
+        with an incorrect device spec modes entry."""
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "target": "simulon_gaussian",
@@ -250,35 +455,36 @@ class TestProgram:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
             for reg in q:
-                measure_op | reg
+                ops.MeasureFock() | reg
 
-        with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
-            prog.assert_max_number_of_measurements(spec)
+        match = "Expected keys for the maximum allowed number of PNR"
+        with pytest.raises(KeyError, match=match):
+            prog.assert_modes(device)
 
-    def test_assert_max_number_of_measurements_wrong_entry(self):
+    def test_assert_modes_dict_wrong_entry(self):
         """Check that the correct error is raised when calling `prog.assert_number_of_measurements`
         with the incorrect type of device spec mode entry."""
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": 2,
+            "modes": "pnr",
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.S2gate(0.6) | [q[1], q[2]]
 
-        with pytest.raises(KeyError, match="Have you specified the correct target?"):
-            prog.assert_max_number_of_measurements(spec)
+        with pytest.raises(KeyError, match="Expected keys for the maximum allowed number of PNR"):
+            prog.assert_modes(device)
 
     def test_has_post_selection(self):
         """Check that the ``has_post_selection`` property behaves as expected when it uses
@@ -325,6 +531,25 @@ class TestProgram:
         assert prog_1.has_post_selection is False
         assert prog_2.has_feed_forward is False
         assert prog_2.has_post_selection is False
+
+    def test_linked_copy(self, prog):
+        """Check that the ``_linked_copy`` method copies a program correctly."""
+
+        with prog.context as q:
+            ops.Fock(2) | q[0]
+            ops.BSgate() | (q[0], q[1])
+            ops.MeasureFock() | q[1]
+
+        prog_copy = prog._linked_copy()
+
+        # registers should be the same
+        for i, regref in prog_copy.reg_refs.items():
+            assert regref is prog.reg_refs[i]
+
+        for i, cmd in enumerate(prog_copy.circuit):
+            assert cmd is prog.circuit[i]
+
+        assert prog_copy.source is prog
 
 
 class TestRegRefs:
@@ -525,7 +750,7 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -536,7 +761,7 @@ class TestValidation:
             program.CircuitError,
             match="program contains 3 modes, but the device 'simulon_gaussian' only supports a 2-mode program",
         ):
-            new_prog = prog.compile(device=spec, compiler=DummyCompiler())
+            new_prog = prog.compile(device=device, compiler=DummyCompiler())
 
     # TODO: move this test into an integration tests folder (a similar test for the
     # `prog.assert_number_of_measurements` method can be found above), named `test_assert_number_of_measurements`.
@@ -565,12 +790,12 @@ class TestValidation:
         # set maximum number of measurements to 2, and measure 3 in prog below
         device_dict = {
             "target": "simulon_gaussian",
-            "modes": {"max": {"pnr": 2, "homodyne": 2, "heterodyne": 2}},
+            "modes": {"pnr_max": 2, "homodyne_max": 2, "heterodyne_max": 2},
             "layout": "",
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -578,12 +803,12 @@ class TestValidation:
                 measure_op | reg
 
         with pytest.raises(program.CircuitError, match=f"contains 3 {measure_name} measurements"):
-            prog.compile(device=spec, compiler=DummyCompiler())
+            prog.compile(device=device, compiler=DummyCompiler())
 
     def test_run_optimizations(self):
         """Test that circuit is optimized when optimize is True"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
 
             interactive = True
@@ -597,7 +822,6 @@ class TestValidation:
             "gate_parameters": {},
             "compiler": ["gaussian"],
         }
-        spec = sf.DeviceSpec(spec=device_dict)
 
         prog = sf.Program(3)
         with prog.context as q:
@@ -605,7 +829,7 @@ class TestValidation:
             ops.Rgate(0.4) | q[0]
 
         new_prog = prog.compile(
-            compiler=DummyCircuit(),
+            compiler=DummyCompiler(),
             optimize=True,
         )
         assert new_prog.circuit[0].__str__() == "Rgate(0.7) | (q[0])"
@@ -631,30 +855,106 @@ class TestValidation:
             },
         }
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit with 2 modes"""
 
             interactive = True
             primitives = {"S2gate"}
             decompositions = set()
 
-        spec = sf.DeviceSpec(spec=device_dict)
+        device = sf.Device(spec=device_dict)
 
         prog = sf.Program(2)
         with prog.context as q:
             ops.S2gate(1.5) | q  # invalid value 1.5
 
         with pytest.raises(ValueError, match="has invalid value"):
-            new_prog = prog.compile(
-                device=spec,
-                compiler=DummyCircuit(),
+            prog.compile(
+                device=device,
+                compiler=DummyCompiler(),
             )
+
+    def test_missing_layout(self):
+        """Test that an error is raised if the device spec is missing a layout when compiled"""
+        device_dict = {
+            "target": None,
+            "layout": None,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        class DummyCompiler(Compiler):
+            """A circuit with 2 modes"""
+
+            interactive = True
+            primitives = {"S2gate"}
+            decompositions = set()
+
+        device = sf.Device(spec=device_dict)
+
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.S2gate(0.6) | [q[0], q[1]]
+
+        with pytest.raises(ValueError, match="missing a circuit layout"):
+            new_prog = prog.compile(
+                device=device,
+                compiler=DummyCompiler(),
+            )
+
+    @pytest.mark.parametrize("gate_params", [None, {}])
+    def test_missing_gate_parameters(self, gate_params):
+        """Test that an error is raised if the device spec is missing gate parameters when compiled"""
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": gate_params,  # no gate_parameters, so any value is valid
+        }
+
+        class DummyCompiler(Compiler):
+            """A circuit with 2 modes"""
+
+            interactive = True
+            primitives = {"S2gate"}
+            decompositions = set()
+
+        device = sf.Device(spec=device_dict)
+
+        prog = sf.Program(2)
+        with prog.context as q:
+            ops.S2gate(123) | q
+
+        new_prog = prog.compile(
+            device=device,
+            compiler=DummyCompiler(),
+        )
+
+        assert len(new_prog) == 1
+        assert device.gate_parameters == gate_params
+
+        # test gates are correct
+        circuit = new_prog.circuit
+        assert circuit[0].op.__class__.__name__ == "S2gate"
 
     def test_no_decompositions(self):
         """Test that no decompositions take
         place if the circuit spec doesn't support it."""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             """A circuit spec with no decompositions"""
 
             modes = None
@@ -671,7 +971,7 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
             ops.MZgate(0.1, 0.6) | [q[0], q[1]]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # check compiled program only has three gates
         assert len(new_prog) == 3
@@ -686,7 +986,7 @@ class TestValidation:
         """Test that S2gate decomposition take
         place if the circuit spec requests it."""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -700,7 +1000,7 @@ class TestValidation:
             ops.S2gate(0.6) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # check compiled program now has 5 gates
         # the S2gate should decompose into two BS and two Sgates
@@ -718,7 +1018,7 @@ class TestValidation:
         """Test that decompositions take
         place if the circuit spec requests it."""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -739,7 +1039,7 @@ class TestValidation:
             ops.MZgate(0.6, 0.7) | [q[0], q[1]]
             ops.Interferometer(U) | [q[0], q[1]]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # check compiled program now has 5 gates
         # the MZgate should decompose into two BS and two Rgates
@@ -757,7 +1057,7 @@ class TestValidation:
         """Test that an exception is raised if the circuit spec
         requests a decomposition that doesn't exist"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -772,7 +1072,7 @@ class TestValidation:
             ops.Interferometer(U) | [q[0], q[1]]
 
         with pytest.raises(NotImplementedError, match="No decomposition available: Rgate"):
-            new_prog = prog.compile(compiler=DummyCircuit())
+            new_prog = prog.compile(compiler=DummyCompiler())
 
     def test_invalid_primitive(self):
         """Test that an exception is raised if the program
@@ -838,7 +1138,7 @@ class TestValidation:
     def test_topology_validation(self):
         """Test compilation properly matches the circuit spec topology"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -870,7 +1170,7 @@ class TestValidation:
             ops.BSgate(-0.32) | (q[0], q[1])
             ops.MeasureFock() | q[0]
 
-        new_prog = prog.compile(compiler=DummyCircuit())
+        new_prog = prog.compile(compiler=DummyCompiler())
 
         # no exception should be raised; topology correctly validated
         assert len(new_prog) == 5
@@ -878,7 +1178,7 @@ class TestValidation:
     def test_invalid_topology(self):
         """Test compilation raises exception if toplogy not matched"""
 
-        class DummyCircuit(Compiler):
+        class DummyCompiler(Compiler):
             modes = None
             remote = False
             local = True
@@ -912,7 +1212,7 @@ class TestValidation:
             ops.MeasureFock() | q[0]
 
         with pytest.raises(program.CircuitError, match="incompatible topology"):
-            new_prog = prog.compile(compiler=DummyCircuit())
+            new_prog = prog.compile(compiler=DummyCompiler())
 
 
 class TestGBS:

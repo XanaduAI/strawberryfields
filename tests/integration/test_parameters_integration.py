@@ -45,7 +45,7 @@ def test_free_parameters(setup_eng, tol):
     x = prog.params("x")  # free parameter
     with prog.context as q:
         ops.Dgate(x) | q
-        ops.Sgate(-1.2 * x * pf.sin(x ** 2 - 0.1)) | q
+        ops.Sgate(-1.2 * x * pf.sin(x**2 - 0.1)) | q
 
     with pytest.raises(ParameterError, match="Unknown free parameter"):
         eng.run(prog, args={"foo": 1.0})
@@ -74,10 +74,10 @@ def eng_prog_params(batch_size, setup_eng):
     """Engine and Program instances, and an attached set of Operation parameters."""
 
     def func1(x):
-        return abs(2 * x ** 2 - 3 * x + 1)
+        return abs(2 * x**2 - 3 * x + 1)
 
     def func2(x, y):
-        return abs(2 * x * y - y ** 2 + 0.5)
+        return abs(2 * x * y - y**2 + 0.5)
 
     eng, prog = setup_eng(2)
     r = prog.register
@@ -128,7 +128,8 @@ def test_parameters_with_operations(eng_prog_params, G):
         except pu.CircuitError as err:
             # record Compiler-forbidden op/backend combinations here
             warnings.warn(str(err))
-        eng.reset()
+        else:
+            eng.reset()
 
     sig = inspect.signature(G.__init__)
     n_args = len(sig.parameters) - 1  # number of parameters __init__ takes, minus self

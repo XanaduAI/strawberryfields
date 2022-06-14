@@ -4,16 +4,14 @@ title: '[replace with a short descriptive title for your request]'
 labels: "enhancement"
 
 body:
-  - type: markdown
-    id: posting a feature request
-    attributes:
-      value: |
-          ## Before posting a feature request
-          Search existing GitHub issues to make sure the request does not already exist:
-          https://github.com/XanaduAI/strawberryfields/issues
   - type: checkboxes
     id: terms
     attributes:
+      label: |
+        Before posting a feature request
+      description: |
+        Search existing GitHub issues to make sure the request does not already exist:
+        https://github.com/XanaduAI/strawberryfields/issues
       options:
         - label: I have searched exisisting GitHub issues to make sure the feature request does not already exist.
           required: true

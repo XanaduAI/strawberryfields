@@ -86,7 +86,7 @@ class TestFockRepresentation:
             numer_state = state.dm()
 
         n = np.arange(cutoff)
-        ref_state = np.exp(-0.5 * r ** 2) * (r * np.exp(1j * p)) ** n / np.sqrt(fac(n))
+        ref_state = np.exp(-0.5 * r**2) * (r * np.exp(1j * p)) ** n / np.sqrt(fac(n))
 
         if not pure:
             ref_state = np.outer(ref_state, np.conj(ref_state))

@@ -95,7 +95,7 @@ which is responsible for executing the program on a specified backend
 
 .. code-block:: python3
 
-    # intialize the fock backend with a
+    # initialize the fock backend with a
     # Fock cutoff dimension (truncation) of 5
     eng = sf.Engine("fock", backend_options={"cutoff_dim": 5})
 
@@ -234,7 +234,7 @@ the mathematical functions in the :data:`strawberryfields.math` namespace.
         ops.Sgate(1 - sf.math.sin(q[0].par)) | q[1]  # measured parameter
         ops.MeasureFock()    | q[1]
 
-    # intialize the Fock backend
+    # initialize the Fock backend
     eng = sf.Engine('fock', backend_options={'cutoff_dim': 5})
 
     # run the program, with the free parameter 'a' bound to the value 0.9
@@ -297,34 +297,29 @@ Related tutorials
 For more details and guides on creating and simulating photonic quantum
 circuits, see the following tutorials.
 
-.. customgalleryitem::
-    :tooltip: Building photonic quantum circuits
+.. gallery-item::
     :description: :doc:`demos/run_blackbird`
+    :figure: _static/code.png
 
-.. customgalleryitem::
-    :tooltip: Quantum teleportation
+.. gallery-item::
     :description: :doc:`Basic tutorial: teleportation <demos/run_teleportation>`
-    :figure: /_static/teleport.png
+    :figure: _static/teleport.png
 
-.. customgalleryitem::
-    :tooltip: Making photonic measurements
+.. gallery-item::
     :description: :doc:`Measurements and post-selection <demos/run_post_selection>`
-    :figure: /_static/bs_measure.png
+    :figure: _static/bs_measure.png
 
-.. customgalleryitem::
-    :tooltip: Optimization and machine learning with TensorFlow
+.. gallery-item::
     :description: :doc:`demos/run_tutorial_machine_learning`
-    :figure: /_static/TF.png
+    :figure: _static/TF.png
 
-.. customgalleryitem::
-    :tooltip: Simulate massive time-domain quantum systems
+.. gallery-item::
     :description: :doc:`demos/run_time_domain`
-    :figure: /_static/oneloop.svg
+    :figure: _static/oneloop.svg
 
-.. customgalleryitem::
-    :tooltip: Introduction to the bosonic backend
+.. gallery-item::
     :description: :doc:`demos/run_intro_bosonic`
-    :figure: /_static/cats.png
+    :figure: _static/cats.png
 
 .. raw:: html
 

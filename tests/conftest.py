@@ -20,8 +20,6 @@ import pytest
 
 import numpy as np
 
-np.random.seed(42)
-
 import strawberryfields as sf
 from strawberryfields.engine import LocalEngine
 from strawberryfields.program import Program
@@ -143,7 +141,7 @@ def backend(monkeypatch):
             "measure_homodyne",
             lambda phi, modes, select, shots: np.array([[5]]),
         )
-        m.setattr(dummy_backend, "state", lambda modes, shots: None)
+        m.setattr(dummy_backend, "state", lambda modes, shots, crop=False: None)
         m.setattr(dummy_backend, "reset", lambda: None)
         dummy_backend.two_mode_squeeze = lambda r, phi, mode1, mode2: None
         dummy_backend.get_cutoff_dim = lambda: 6

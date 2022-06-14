@@ -45,7 +45,7 @@ ALPHA = 0.5
 def coherent_state(alpha, cutoff):
     """Returns the Fock representation of the coherent state |alpha> up to dimension given by cutoff"""
     n = np.arange(cutoff)
-    return np.exp(-0.5 * np.abs(alpha) ** 2) * alpha ** n / np.sqrt(factorial(n))
+    return np.exp(-0.5 * np.abs(alpha) ** 2) * alpha**n / np.sqrt(factorial(n))
 
 
 def _vac_ket(cutoff):
@@ -363,8 +363,8 @@ class TestGradient:
             mean, var = state.mean_photon(0)
 
         # test the mean and variance of the photon number is correct
-        assert np.allclose(mean, ALPHA ** 2, atol=tol, rtol=0)
-        assert np.allclose(var, ALPHA ** 2, atol=tol, rtol=0)
+        assert np.allclose(mean, ALPHA**2, atol=tol, rtol=0)
+        assert np.allclose(var, ALPHA**2, atol=tol, rtol=0)
 
         # test the gradient of the variance is correct
         grad = tape.gradient(var, [a])
@@ -399,14 +399,14 @@ class TestGradient:
             mean, var = state.mean_photon(0)
 
         # test the mean and variance of the photon number is correct
-        mean_ex = a ** 2 + n
-        var_ex = n ** 2 + n + a ** 2 * (1 + 2 * n)
+        mean_ex = a**2 + n
+        var_ex = n**2 + n + a**2 * (1 + 2 * n)
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
         # test the gradient of the variance is correct
         grad = tape.gradient(var, [a, n])
-        grad_ex = [2 * a * (1 + 2 * n), 2 * n + 1 + 2 * a ** 2]
+        grad_ex = [2 * a * (1 + 2 * n), 2 * n + 1 + 2 * a**2]
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
 
     def test_coherent_ket_gradient(self, setup_eng, cutoff, tol, pure, batch_size):
@@ -434,11 +434,11 @@ class TestGradient:
             state = eng.run(prog, args={"alpha": a}).state
             res = tf.cast(state.ket()[2], dtype=tf.float64)
 
-        res_ex = np.exp(-0.5 * a ** 2) * a ** 2 / np.sqrt(2)
+        res_ex = np.exp(-0.5 * a**2) * a**2 / np.sqrt(2)
         assert np.allclose(res, res_ex, atol=tol, rtol=0)
 
         grad = tape.gradient(res, [a])
-        grad_ex = -a * (a ** 2 - 2) * np.exp(-(a ** 2) / 2) / np.sqrt(2)
+        grad_ex = -a * (a**2 - 2) * np.exp(-(a**2) / 2) / np.sqrt(2)
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
 
     def test_coherent_dm_gradient(self, setup_eng, cutoff, tol, batch_size):
@@ -463,11 +463,11 @@ class TestGradient:
             state = eng.run(prog, args={"alpha": a}).state
             res = tf.cast(state.dm()[2, 2], dtype=tf.float64)
 
-        res_ex = (np.exp(-0.5 * a ** 2) * a ** 2 / np.sqrt(2)) ** 2
+        res_ex = (np.exp(-0.5 * a**2) * a**2 / np.sqrt(2)) ** 2
         assert np.allclose(res, res_ex, atol=tol, rtol=0)
 
         grad = tape.gradient(res, [a])
-        grad_ex = -(a ** 3) * (a ** 2 - 2) * np.exp(-(a ** 2))
+        grad_ex = -(a**3) * (a**2 - 2) * np.exp(-(a**2))
         assert np.allclose(grad, grad_ex, atol=tol, rtol=0)
 
     def test_displaced_squeezed_mean_photon_gradient(self, setup_eng, cutoff, tol, batch_size):
@@ -502,7 +502,7 @@ class TestGradient:
             mean, _ = state.mean_photon(0)
 
         # test the mean and variance of the photon number is correct
-        mean_ex = a ** 2 + tf.sinh(r) ** 2
+        mean_ex = a**2 + tf.sinh(r) ** 2
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
 
         # test the gradient of the mean is correct

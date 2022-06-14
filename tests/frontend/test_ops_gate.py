@@ -27,8 +27,6 @@ from strawberryfields.program_utils import MergeFailure, RegRefError
 from strawberryfields.parameters import par_evaluate
 
 
-# make test deterministic
-np.random.seed(42)
 A = np.random.random()
 B = np.random.random()
 C = np.random.random()

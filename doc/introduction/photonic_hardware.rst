@@ -6,9 +6,9 @@ photonic hardware or to be run on a cloud simulator via the Xanadu Cloud.
 
 .. warning::
 
-    An API key is required to access the Xanadu Cloud platform. If you do not
-    have a Xanadu Cloud API key, you can request hardware access `via the sign
-    up form on the Xanadu website <https://xanadu.ai/access>`__.
+    An API key is required to communicate with the hardware locally.
+    Set up a `Xanadu Cloud <https://cloud.xanadu.ai>`__ account for free, and generate
+    your `cloud API key <https://strawberryfields.ai/photonics/demos/tutorial_X8.html#configuring-your-credentials>`__.
 
 Configuring your account
 ------------------------
@@ -64,9 +64,10 @@ array([[0, 0, 1, 0, 1, 0, 1, 0],
 Further details on the :class:`xcc.Job` class can be found in the
 `Xanadu Cloud Client documentation <https://xanadu-cloud-client.readthedocs.io/en/stable/api/xcc.Job.html>`_.
 
-Alternatively, if you have your quantum program available as a Blackbird script,
-you can submit the Blackbird script file to be executed remotely using
-the Xanadu Cloud Client command line interface:
+Alternatively, if you have your `compiled <../code/sf_compilers.html>`__
+quantum program available as a Blackbird script, you can submit the Blackbird
+script file to be executed remotely using the Xanadu Cloud Client command line
+interface:
 
 .. code-block:: console
 
@@ -111,14 +112,25 @@ Tutorials
 For more details on submitting jobs to photonic hardware, check out the following
 tutorials.
 
-.. customgalleryitem::
-    :tooltip: Submit quantum jobs to the X8 photonic chip
-    :description: :doc:`demos/tutorial_X8`
-    :figure: /_static/chip.png
+.. gallery-item::
+    :description: `Borealis quickstart <https://strawberryfields.ai/photonics/demos/tutorial_borealis_quickstart.html>`__
+    :figure: _static/borealis_3d.png
 
-.. customgalleryitem::
-    :tooltip: Characterize the squeezing of the X8 chip
+.. gallery-item::
+    :description: `Operating Borealis --- Beginner <https://strawberryfields.ai/photonics/demos/tutorial_borealis_beginner.html>`__
+    :figure: _static/borealis_schematic_simple.png
+
+.. gallery-item::
+    :description: `Operating Borealis --- Advanced <https://strawberryfields.ai/photonics/demos/tutorial_borealis_beginner.html>`__
+    :figure: _static/borealis_schematic_advanced.png
+
+.. gallery-item::
+    :description: :doc:`demos/tutorial_X8`
+    :figure: _static/chip.png
+
+.. gallery-item::
     :description: :doc:`demos/squeezer_tests`
+    :figure: _static/code.png
 
 .. raw:: html
 
