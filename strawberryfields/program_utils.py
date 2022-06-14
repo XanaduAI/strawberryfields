@@ -498,9 +498,9 @@ def validate_gate_parameters(compiled, device=None):
     """Validates gate parameters against a device spec.
 
     Args:
-        compiled (sf.Program): program to validate
+        compiled (sf.Program, blackbird.BlackbirdProgram): program to validate
         device (sf.Device): Device containing device specification. If ``None``, the device is
-            extracted from the compile info (if program is compiled).
+            extracted from the compile info (if program is a compiled ``sf.Program`` object).
 
     Returns:
         gate_parameters (dict): validated gate parameters for the job as extracted from
@@ -513,22 +513,25 @@ def validate_gate_parameters(compiled, device=None):
             specification layout
     """
     if not device:
-        cinfo = compiled._compile_info  # pylint: disable=protected-access
-        if not cinfo:
+        if isinstance(compiled, bb.BlackbirdProgram):
+            raise ValueError("A device is required when validating a Blackbird program")
+
+        if not compiled._compile_info:  # pylint: disable=protected-access
             raise ValueError("Program not compiled. A device is required to validate the circuit.")
-        device, short_name = cinfo
+        device, _ = compiled._compile_info  # pylint: disable=protected-access
 
     bb_device = bb.loads(device.layout)
     # if there is no target in the layout, set the device target in the Blackbird program
     if bb_device.target["name"] is None:
         bb_device._target["name"] = device.target  # pylint: disable=protected-access
 
-    lossless_compiled = compiled._linked_copy()  # pylint: disable=protected-access
-    lossless_compiled.circuit = remove_loss(compiled.circuit)
-    bb_compiled = sfio.to_blackbird(lossless_compiled)
+    if not isinstance(compiled, bb.BlackbirdProgram):
+        lossless_compiled = compiled._linked_copy()  # pylint: disable=protected-access
+        lossless_compiled.circuit = remove_loss(compiled.circuit)
+        compiled = sfio.to_blackbird(lossless_compiled)
 
     try:
-        user_parameters = match_template(bb_device, bb_compiled)
+        user_parameters = match_template(bb_device, compiled)
     except TemplateError as e:
         raise CircuitError(
             "Program cannot be matched with the device layout due to incompatible topology."
