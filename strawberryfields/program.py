@@ -764,7 +764,7 @@ class Program:
                     "circuit layout."
                 )
 
-            pu.validate_blackbird_job(compiled)
+            pu.validate_gate_parameters(compiled)
 
         return compiled
 
