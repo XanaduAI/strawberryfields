@@ -887,7 +887,9 @@ class TestValidation:
 
         mock_prog = bb.loads(mock_layout.format(squeezing_amplitude_0=42))
 
-        with pytest.raises(ValueError, match="device is required when validating a Blackbird program"):
+        with pytest.raises(
+            ValueError, match="device is required when validating a Blackbird program"
+        ):
             validate_gate_parameters(mock_prog)
 
     def test_unknown_circuit_spec(self):
