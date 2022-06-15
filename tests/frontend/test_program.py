@@ -25,6 +25,9 @@ from strawberryfields import program
 from strawberryfields import ops
 from strawberryfields.parameters import ParameterError, FreeParameter
 from strawberryfields.compilers.compiler import Compiler
+from strawberryfields.program_utils import validate_gate_parameters
+
+import blackbird as bb
 
 
 A = np.random.random()
@@ -706,8 +709,188 @@ class TestOptimizer:
 
 
 class TestValidation:
-    """Test for Program circuit validation within
-    the compile() method."""
+    """Test for Program circuit validation within the compile() method."""
+
+    def test_validate_gate_parameters_sf_program(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with an ``sf.Program``"""
+
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        mock_prog = sf.Program(2)
+        with mock_prog.context as q:
+            ops.S2gate(1) | q
+
+        device = sf.Device(spec=device_dict)
+
+        assert validate_gate_parameters(mock_prog, device)
+
+    def test_validate_gate_parameters_sf_program_compiled(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with a compiled ``sf.Program``
+        when no device is passed"""
+
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        mock_prog = sf.Program(2)
+        with mock_prog.context as q:
+            ops.S2gate(1) | q
+
+        device = sf.Device(spec=device_dict)
+
+        mock_prog._compile_info = (device, "compiler")
+
+        assert validate_gate_parameters(mock_prog)
+
+    def test_validate_gate_parameters_sf_program_not_compiled_no_device(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with a not compiled ``sf.Program``
+        when no device is passed"""
+        mock_prog = sf.Program(2)
+        with mock_prog.context as q:
+            ops.S2gate(1) | q
+
+        with pytest.raises(ValueError, match="device is required to validate the circuit"):
+            validate_gate_parameters(mock_prog)
+
+    def test_validate_gate_parameters_bb_program(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with a ``BlackbirdProgram``"""
+
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        mock_prog = bb.loads(mock_layout.format(squeezing_amplitude_0=1))
+        device = sf.Device(spec=device_dict)
+
+        assert validate_gate_parameters(mock_prog, device)
+
+    def test_validate_gate_parameters_sf_program_invalid_param(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with an ``sf.Program``
+        when a parameter value is invalid"""
+
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        mock_prog = sf.Program(2)
+        with mock_prog.context as q:
+            ops.S2gate(42) | q
+
+        device = sf.Device(spec=device_dict)
+
+        with pytest.raises(ValueError, match="has invalid value 42"):
+            validate_gate_parameters(mock_prog, device)
+
+    def test_validate_gate_parameters_bb_program_invalid_param(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with a ``BlackbirdProgram``
+        when a parameter value is invalid"""
+
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        device_dict = {
+            "target": None,
+            "layout": mock_layout,
+            "modes": 2,
+            "compiler": ["DummyCompiler"],
+            "gate_parameters": {
+                "squeezing_amplitude_0": [0, 1],
+            },
+        }
+
+        mock_prog = bb.loads(mock_layout.format(squeezing_amplitude_0=42))
+        device = sf.Device(spec=device_dict)
+
+        with pytest.raises(ValueError, match="has invalid value 42"):
+            validate_gate_parameters(mock_prog, device)
+
+    def test_validate_gate_parameters_bb_program_no_device(self):
+        """Test the ``.sf.program_utils.validate_gate_parameters`` function with a ``BlackbirdProgram``
+        when a parameter value is invalid"""
+
+        mock_layout = textwrap.dedent(
+            """\
+            name mock
+            version 1.0
+
+            S2gate({squeezing_amplitude_0}, 0.0) | [0, 1]
+            """
+        )
+
+        mock_prog = bb.loads(mock_layout.format(squeezing_amplitude_0=42))
+
+        with pytest.raises(
+            ValueError, match="device is required when validating a Blackbird program"
+        ):
+            validate_gate_parameters(mock_prog)
 
     def test_unknown_circuit_spec(self):
         """Test an unknown compile target."""
