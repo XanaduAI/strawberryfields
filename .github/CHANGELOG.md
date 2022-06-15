@@ -6,6 +6,10 @@
 
 <h3>Improvements</h3>
 
+* Circuit and parameter validation is extracted from the `sf.Program` class and is
+  instead accessible via the `sf.program_utils.validate_gate_parameters` function.
+  [(#720)](https://github.com/XanaduAI/strawberryfields/pull/720)
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
@@ -13,6 +17,8 @@
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
+
+Theodor Isacsson
 
 
 # Release 0.23.0 (current release)
@@ -1395,7 +1401,7 @@ Nicolas Quesada, Antal Száva.
 This release contains contributions from (in alphabetical order):
 
 Juan Miguel Arrazola, Tom Bromley, Theodor Isacsson, Josh Izaac, Soran Jahangiri, Nathan Killoran,
-Fabian Laudenbach, Nicolás Quesada, Antal Száva, ‪Ilan Tzitrin.
+Fabian Laudenbach, Nicolás Quesada, Antal Száva, Ilan Tzitrin.
 
 # Release 0.15.1
 
