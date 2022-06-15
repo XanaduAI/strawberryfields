@@ -63,7 +63,6 @@ from .program_utils import (
     CircuitError,
     RegRefError,
     program_equivalence,
-    remove_loss,
 )
 from .parameters import FreeParameter, ParameterError
 
