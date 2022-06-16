@@ -17,7 +17,7 @@ sphinx-autodoc-typehints==1.10.3
 sphinx-copybutton==0.4.0
 sphinx-automodapi==0.13
 sphinxcontrib-bibtex==0.4.2
-tensorflow==2.6.3
+tensorflow==2.7.2
 thewalrus==0.18.0
 toml==0.10.2
 xanadu-sphinx-theme==0.1.0
