@@ -463,13 +463,6 @@ class TestGradient:
     def test_displaced_squeezed_mean_photon_gradient(self, setup_eng, cutoff, tol, batch_size):
         """Test whether the gradient of the mean photon number of a displaced squeezed
         state is correct.
-
-        .. note::
-
-            As this test contains multiple gates being applied to the program,
-            this test will fail in TensorFlow 2.1 due to the bug discussed in
-            https://github.com/tensorflow/tensorflow/issues/37307, if `tf.einsum` is being used
-            in ``tfbackend/ops.py`` rather than _einsum_v1.
         """
         if batch_size is not None:
             pytest.skip(
@@ -612,67 +605,3 @@ class TestGradient:
             r_grad, 2 * (np.sinh(R) - np.sinh(R) ** 3) / np.cosh(R) ** 5, atol=tol, rtol=0
         )
         assert np.allclose(phi_grad, 0.0, atol=tol, rtol=0)
-
-
-@pytest.mark.xfail(
-    reason="If this test passes, then the _einsum_v1 patch is no longer needed.",
-    strict=True,
-    raises=AssertionError,
-)
-def test_einsum_complex_gradients(tol):
-    """Integration test to check the complex gradient
-    when using einsum in TensorFlow version 2.1+.
-
-    With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
-    the replacement tf.einsum introduced a bug; the computed einsum
-    value is correct when applied to complex tensors, but the returned
-    gradient is incorrect. For more details, see
-    https://github.com/tensorflow/tensorflow/issues/37307.
-
-    This test is expected to fail, confirming that the complex einsum
-    gradient bug is still occuring. If this test passes, it means that
-    the bug has been fixed.
-    """
-    import sys
-
-    del sys.modules["tensorflow"]
-    tf = pytest.importorskip("tensorflow", minversion="2.1")
-
-    # import the legacy einsum implementation
-    from tensorflow.python.ops.special_math_ops import _einsum_v1
-
-    def f0(h):
-        """Sum reduction of complex matrix h@h performed using matmul"""
-        return tf.abs(tf.reduce_sum(tf.matmul(h, h)))
-
-    def f1(h):
-        """Sum reduction of complex matrix h@h performed using tf.einsum"""
-        return tf.abs(tf.reduce_sum(tf.einsum("ab,bc->ac", h, h)))
-
-    def f2(h):
-        """Sum reduction of complex matrix h@h performed using _einsum_v1"""
-        return tf.abs(tf.reduce_sum(_einsum_v1("ab,bc->ac", h, h)))
-
-    # Create a real 2x2 variable A; this is the variable we will be differentiating
-    # the cost function with respect to.
-    A = tf.Variable([[0.16513085, 0.9014813], [0.6309742, 0.4345461]], dtype=tf.float32)
-
-    # constant complex tensor
-    B = tf.constant([[0.51010704, 0.44353175], [0.4085331, 0.9924923]], dtype=tf.float32)
-
-    grads = []
-
-    for f in (f0, f1, f2):
-        with tf.GradientTape() as tape:
-            # Create a complex tensor C = A + B*1j
-            C = tf.cast(A, dtype=tf.complex64) + 1j * tf.cast(B, dtype=tf.complex64)
-            loss = f(C)
-
-        # compute the gradient
-        grads.append(tape.gradient(loss, A))
-
-    # gradient of f0 and f2 should agree
-    assert np.allclose(grads[0], grads[2], atol=tol, rtol=0)
-
-    # gradient of f0 and f1 should fail
-    assert np.allclose(grads[0], grads[1], atol=tol, rtol=0)
