@@ -1290,7 +1290,7 @@ def _build_staircase(U, rtol=1e-12, atol=1e-12):
     return transformations, running_prod
 
 
-def _su2_parameters(U, tol=1e-11):
+def _su2_parameters(U, tol=1e-10):
     r"""Compute and return the parameters ``[a, b, g]`` of an :math:`\mathrm{SU}(2)` matrix.
 
     Args:

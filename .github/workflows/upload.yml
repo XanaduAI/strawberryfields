@@ -6,6 +6,10 @@ on:
 jobs:
   upload:
     runs-on: ubuntu-latest
+
+    env:
+      SYMPY_USE_CACHE: "no"
+
     steps:
       - uses: actions/checkout@v2
 
@@ -27,7 +31,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest tests --tb=native
+          python -m pytest tests -p no:warnings --randomly-seed=42 --tb=native
 
       - name: Publish
         uses: pypa/gh-action-pypi-publish@master
