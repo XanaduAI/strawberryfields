@@ -25,6 +25,7 @@ from thewalrus.quantum import adj_scaling
 from thewalrus.symplectic import sympmat, xpxp_to_xxpp
 from thewalrus.decompositions import blochmessiah as blochmessiah_tw
 
+
 def takagi(N, tol=1e-13, rounding=13):
     r"""Autonne-Takagi decomposition of a complex symmetric (not Hermitian!) matrix.
 
