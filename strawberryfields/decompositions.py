@@ -20,7 +20,7 @@ from itertools import groupby
 from collections import defaultdict
 
 import numpy as np
-from scipy.linalg import block_diag, sqrtm, polar, schur
+from scipy.linalg import block_diag, sqrtm, schur
 from thewalrus.quantum import adj_scaling
 from thewalrus.symplectic import sympmat, xpxp_to_xxpp
 from thewalrus.decompositions import blochmessiah as blochmessiah_tw
