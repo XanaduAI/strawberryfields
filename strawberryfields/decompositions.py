@@ -21,7 +21,7 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.linalg import block_diag, sqrtm, schur
-from thewalrus.quantum import adj_scaling
+from thewalrus.quantum import adj_scaling, is_symplectic
 from thewalrus.symplectic import sympmat, xpxp_to_xxpp
 from thewalrus.decompositions import blochmessiah as blochmessiah_tw
 
@@ -1008,7 +1008,7 @@ def bloch_messiah(S, tol=1e-10):
 
     n = n // 2
     omega = sympmat(n)
-    if np.linalg.norm(np.transpose(S) @ omega @ S - omega) >= tol:
+    if is_symplectic(S, atol=tol):
         raise ValueError("The input matrix is not symplectic")
 
     return blochmessiah_tw(S)
