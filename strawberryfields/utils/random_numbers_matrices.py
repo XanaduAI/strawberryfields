@@ -110,6 +110,10 @@ def random_interferometer(N, real=False):
     Returns:
         array: random :math:`N\times N` unitary distributed with the Haar measure
     """
+    if N == 1:
+        if real:
+            return np.array([[2 * (np.random.binomial(1, 0.5) - 0.5)]])
+        return np.array([[np.exp(1j * 2 * np.pi * np.random.rand())]])
     if real:
         return sp.stats.ortho_group.rvs(N)
     return sp.stats.unitary_group.rvs(N)
