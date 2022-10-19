@@ -266,14 +266,9 @@ class TestInitialStates:
 # Random matrix tests
 # ===================================================================================
 
-
+@pytest.mark.parametrize("modes", [1,2,3])
 class TestRandomMatrices:
     """Unit tests for random matrices"""
-
-    @pytest.fixture
-    def modes(self):
-        """Number of modes to use when creating matrices"""
-        return 3
 
     @pytest.mark.parametrize("pure_state", [True, False])
     @pytest.mark.parametrize("block_diag", [True, False])
