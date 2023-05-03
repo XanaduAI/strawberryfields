@@ -22,24 +22,13 @@ import networkx as nx
 import numpy as np
 import scipy as sp
 from scipy.linalg import qr, block_diag
+from thewalrus.symplectic import sympmat as omega
 
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import random_interferometer as haar_measure
 
 N_SAMPLES = 10
 
-
-def omega(n):
-    """Returns the symplectic matrix for n modes"""
-    idm = np.identity(n)
-    O = np.concatenate(
-        (
-            np.concatenate((0 * idm, idm), axis=1),
-            np.concatenate((-idm, 0 * idm), axis=1),
-        ),
-        axis=0,
-    )
-    return O
 
 
 class TestTakagi:
