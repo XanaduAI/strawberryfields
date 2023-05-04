@@ -2934,7 +2934,7 @@ class GaussianTransform(Decomposition):
         transformation (:math:`S = O_1 Z`).
     """
 
-    def __init__(self, S, vacuum=False, tol=1e-10):
+    def __init__(self, S, vacuum=False):
         super().__init__([S])
         self.ns = S.shape[0] // 2
         self.vacuum = (
