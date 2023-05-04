@@ -16,15 +16,13 @@ This module implements common shared matrix decompositions that are
 used to perform gate decompositions.
 """
 
-from itertools import groupby
 from collections import defaultdict
 
 import numpy as np
-from scipy.linalg import block_diag, sqrtm, polar, schur
 from thewalrus.quantum import adj_scaling
-from thewalrus.symplectic import sympmat, xpxp_to_xxpp
-from thewalrus.decompositions import takagi, bloch_messiah, williamson
-
+from thewalrus.symplectic import sympmat
+from thewalrus.decompositions import takagi, williamson
+from thewalrus.decompositions import blockmessiah as bloch_messiah
 
 def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
