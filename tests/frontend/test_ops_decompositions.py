@@ -115,7 +115,6 @@ def _two_mode_squeezing(r, phi, modes, num_modes):
         array: symplectic transformation matrix
     """
 
-
     return expand(two_mode_squeezing(r, phi), modes, num_modes)
 
 

@@ -30,7 +30,6 @@ from strawberryfields.utils import random_interferometer as haar_measure
 N_SAMPLES = 10
 
 
-
 class TestGraphEmbed:
     """graph_embed tests"""
 
