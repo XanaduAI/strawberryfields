@@ -65,7 +65,7 @@ def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e
     if make_traceless:
         A = A - np.trace(A) * np.identity(n) / n
 
-    s, U = takagi(A, tol=atol)
+    s, U = takagi(A)
     sc = np.sqrt(1.0 + 1.0 / max_mean_photon)
     vals = -np.arctanh(s / (s[0] * sc))
     return vals, U
@@ -109,7 +109,7 @@ def graph_embed(A, mean_photon_per_mode=1.0, make_traceless=False, rtol=1e-05, a
 
     scale = adj_scaling(A, n * mean_photon_per_mode)
     A = scale * A
-    s, U = takagi(A, tol=atol)
+    s, U = takagi(A)
     vals = -np.arctanh(s)
     return vals, U
 
