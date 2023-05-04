@@ -20,7 +20,7 @@ import pytest
 import numpy as np
 from thewalrus.quantum import Amat
 from thewalrus.symplectic import expand, rotation, beam_splitter, squeezing, two_mode_squeezing
-
+from thewalrus.decompositions import blochmessiah
 import strawberryfields as sf
 from strawberryfields.parameters import par_evaluate, FreeParameter
 from strawberryfields import decompositions as dec
@@ -479,7 +479,7 @@ class TestGaussianTransform:
         n = 3
         S = random_symplectic(n, passive=False)
 
-        O1, Sq, O2 = dec.bloch_messiah(S)
+        O1, Sq, O2 = blochmessiah(S)
         X1 = O1[:n, :n]
         P1 = O1[n:, :n]
         X2 = O2[:n, :n]
@@ -560,7 +560,7 @@ class TestGaussianTransform:
         n = 3
         S = random_symplectic(n, passive=False)
 
-        O1, _, _ = dec.bloch_messiah(S)
+        O1, _, _ = blochmessiah(S)
         X1 = O1[:n, :n]
         P1 = O1[n:, :n]
         # X2 = O2[:n, :n]

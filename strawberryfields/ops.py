@@ -26,6 +26,7 @@ from scipy.linalg import block_diag
 import scipy.special as ssp
 
 from thewalrus.symplectic import xxpp_to_xpxp
+from thewalrus.decompositions import blochmessiah, williamson
 
 import strawberryfields as sf
 import strawberryfields.program_utils as pu
@@ -2954,7 +2955,7 @@ class GaussianTransform(Decomposition):
             self.U1 = X1 + 1j * P1
         else:
             # transformation is active, do Bloch-Messiah
-            O1, smat, O2 = dec.bloch_messiah(S, tol=tol)
+            O1, smat, O2 = blochmessiah(S)
             X1 = O1[:N, :N]
             P1 = O1[N:, :N]
             X2 = O2[:N, :N]
@@ -3072,7 +3073,7 @@ class Gaussian(Preparation, Decomposition):
         self.p_disp = r[self.ns :]
 
         # needed only if decomposed
-        th, self.S = dec.williamson(V, tol=tol)
+        th, self.S = williamson(V, rtol=tol)
         self.pure = np.abs(np.linalg.det(V) - 1.0) < tol
         self.nbar = 0.5 * (np.diag(th)[: self.ns] - 1.0)
 

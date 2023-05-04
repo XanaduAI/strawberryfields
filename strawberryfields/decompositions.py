@@ -21,8 +21,7 @@ from collections import defaultdict
 import numpy as np
 from thewalrus.quantum import adj_scaling
 from thewalrus.symplectic import sympmat
-from thewalrus.decompositions import takagi, williamson
-from thewalrus.decompositions import blockmessiah as bloch_messiah
+from thewalrus.decompositions import takagi
 
 def graph_embed_deprecated(A, max_mean_photon=1.0, make_traceless=False, rtol=1e-05, atol=1e-08):
     r"""Embed a graph into a Gaussian state.
