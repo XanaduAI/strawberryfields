@@ -207,7 +207,7 @@ class GaussianBackend(BaseGaussian):
     def thermal_loss(self, T, nbar, mode):
         self.circuit.thermal_loss(T, nbar, mode)
 
-    def measure_fock(self, modes, shots=1, select=None, **kwargs):
+    def measure_fock(self, modes, shots=1, select=None, cutoff=5, **kwargs):
         if select is not None:
             raise NotImplementedError(
                 "Gaussian backend currently does not support " "postselection"
@@ -230,9 +230,9 @@ class GaussianBackend(BaseGaussian):
 
         # check we are sampling from a gaussian state with zero mean
         if allclose(mu, zeros_like(mu)):
-            samples = hafnian_sample_state(reduced_cov, shots)
+            samples = hafnian_sample_state(reduced_cov, shots, cutoff=cutoff)
         else:
-            samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
+            samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean, cutoff=cutoff)
 
         return samples
 
