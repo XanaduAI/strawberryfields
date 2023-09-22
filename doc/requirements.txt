@@ -7,7 +7,7 @@ m2r2==0.3.1
 mistune==0.8.4
 numba==0.53.1
 networkx==2.6.3
-numpy==1.19.2
+numpy==1.22.0
 plotly==4.4.1
 protobuf<4.21.0  # remove when fix is released
 quantum-blackbird==0.4.0
