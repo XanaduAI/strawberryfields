@@ -10,6 +10,8 @@
   instead accessible via the `sf.program_utils.validate_gate_parameters` function.
   [(#720)](https://github.com/XanaduAI/strawberryfields/pull/720)
 
+* Removes redundant decompositions already available in `thewalrus`
+
 <h3>Bug fixes</h3>
 
 <h3>Documentation</h3>
@@ -18,7 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson
+Theodor Isacsson, Nicolas Quesada
 
 
 # Release 0.23.0 (current release)

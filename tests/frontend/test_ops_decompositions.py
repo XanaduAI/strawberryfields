@@ -19,7 +19,8 @@ import pytest
 
 import numpy as np
 from thewalrus.quantum import Amat
-
+from thewalrus.symplectic import expand, rotation, beam_splitter, squeezing, two_mode_squeezing
+from thewalrus.decompositions import blochmessiah
 import strawberryfields as sf
 from strawberryfields.parameters import par_evaluate, FreeParameter
 from strawberryfields import decompositions as dec
@@ -81,11 +82,8 @@ def _rotation(phi, mode, num_modes):
     Returns:
         array[float]: transformation matrix
     """
-    c = np.cos(phi)
-    s = np.sin(phi)
-    S = np.array([[c, -s], [s, c]])
 
-    return expand(S, mode, num_modes)
+    return expand(rotation(phi), mode, num_modes)
 
 
 def _squeezing(r, phi, mode, num_modes):
@@ -100,14 +98,8 @@ def _squeezing(r, phi, mode, num_modes):
     Returns:
         array: symplectic transformation matrix
     """
-    cp = np.cos(phi)
-    sp = np.sin(phi)
-    ch = np.cosh(r)
-    sh = np.sinh(r)
 
-    S = np.array([[ch - cp * sh, -sp * sh], [-sp * sh, ch + cp * sh]])
-
-    return expand(S, mode, num_modes)
+    return expand(squeezing(r, phi), mode, num_modes)
 
 
 def _two_mode_squeezing(r, phi, modes, num_modes):
@@ -122,21 +114,8 @@ def _two_mode_squeezing(r, phi, modes, num_modes):
     Returns:
         array: symplectic transformation matrix
     """
-    cp = np.cos(phi)
-    sp = np.sin(phi)
-    ch = np.cosh(r)
-    sh = np.sinh(r)
 
-    S = np.array(
-        [
-            [ch, cp * sh, 0, sp * sh],
-            [cp * sh, ch, sp * sh, 0],
-            [0, sp * sh, ch, -cp * sh],
-            [sp * sh, 0, -cp * sh, ch],
-        ]
-    )
-
-    return expand(S, modes, num_modes)
+    return expand(two_mode_squeezing(r, phi), modes, num_modes)
 
 
 def _beamsplitter(theta, phi, modes, num_modes):
@@ -151,21 +130,8 @@ def _beamsplitter(theta, phi, modes, num_modes):
     Returns:
         array[float]: transformation matrix
     """
-    cp = np.cos(phi)
-    sp = np.sin(phi)
-    ct = np.cos(theta)
-    st = np.sin(theta)
 
-    S = np.array(
-        [
-            [ct, -cp * st, 0, -st * sp],
-            [cp * st, ct, -st * sp, 0],
-            [0, st * sp, ct, -cp * st],
-            [st * sp, 0, cp * st, ct],
-        ]
-    )
-
-    return expand(S, modes, num_modes)
+    return expand(beam_splitter(theta, phi), modes, num_modes)
 
 
 class TestDecompositions:
@@ -513,7 +479,7 @@ class TestGaussianTransform:
         n = 3
         S = random_symplectic(n, passive=False)
 
-        O1, Sq, O2 = dec.bloch_messiah(S)
+        O1, Sq, O2 = blochmessiah(S)
         X1 = O1[:n, :n]
         P1 = O1[n:, :n]
         X2 = O2[:n, :n]
@@ -594,7 +560,7 @@ class TestGaussianTransform:
         n = 3
         S = random_symplectic(n, passive=False)
 
-        O1, _, _ = dec.bloch_messiah(S)
+        O1, _, _ = blochmessiah(S)
         X1 = O1[:n, :n]
         P1 = O1[n:, :n]
         # X2 = O2[:n, :n]
