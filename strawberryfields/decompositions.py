@@ -20,9 +20,10 @@ from itertools import groupby
 from collections import defaultdict
 
 import numpy as np
-from scipy.linalg import block_diag, sqrtm, polar, schur
-from thewalrus.quantum import adj_scaling
+from scipy.linalg import block_diag, sqrtm, schur
+from thewalrus.quantum import adj_scaling, is_symplectic
 from thewalrus.symplectic import sympmat, xpxp_to_xxpp
+from thewalrus.decompositions import blochmessiah as blochmessiah_tw
 
 
 def takagi(N, tol=1e-13, rounding=13):
@@ -974,7 +975,7 @@ def williamson(V, tol=1e-11):
     return Db, np.linalg.inv(S).T
 
 
-def bloch_messiah(S, tol=1e-10, rounding=9):
+def bloch_messiah(S, tol=1e-10):
     r"""Bloch-Messiah decomposition of a symplectic matrix.
 
     See :ref:`bloch_messiah`.
@@ -988,21 +989,10 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
 
     where :math:`I` is the identity matrix and :math:`0` is the zero matrix.
 
-    As in the Takagi decomposition, the singular values of N are considered
-    equal if they are equal after np.round(values, rounding).
-
-    If S is a passive transformation, then return the S as the first passive
-    transformation, and set the the squeezing and second unitary matrices to
-    identity. This choice is not unique.
-
-    For more info see:
-    https://math.stackexchange.com/questions/1886038/finding-euler-decomposition-of-a-symplectic-matrix
-
     Args:
         S (array[float]): symplectic matrix
         tol (float): the tolerance used when checking if the matrix is symplectic:
             :math:`|S^T\Omega S-\Omega| \leq tol`
-        rounding (int): the number of decimal places to use when rounding the singular values
 
     Returns:
         tuple[array]: Returns the tuple ``(ut1, st1, vt1)``. ``ut1`` and ``vt1`` are symplectic orthogonal,
@@ -1018,56 +1008,10 @@ def bloch_messiah(S, tol=1e-10, rounding=9):
 
     n = n // 2
     omega = sympmat(n)
-    if np.linalg.norm(np.transpose(S) @ omega @ S - omega) >= tol:
+    if is_symplectic(S, atol=tol):
         raise ValueError("The input matrix is not symplectic")
 
-    if np.linalg.norm(np.transpose(S) @ S - np.eye(2 * n)) >= tol:
-
-        u, sigma = polar(S, side="left")
-        ss, uss = takagi(sigma, tol=tol, rounding=rounding)
-
-        # Apply a permutation matrix so that the squeezers appear in the order
-        # s_1,...,s_n, 1/s_1,...1/s_n
-        perm = np.array(list(range(0, n)) + list(reversed(range(n, 2 * n))))
-
-        pmat = np.identity(2 * n)[perm, :]
-        ut = uss @ pmat
-
-        # Apply a second permutation matrix to permute s
-        # (and their corresonding inverses) to get the canonical symplectic form
-        qomega = np.transpose(ut) @ (omega) @ ut
-        st = pmat @ np.diag(ss) @ pmat
-
-        # Identifying degenerate subspaces
-        result = []
-        for _k, g in groupby(np.round(np.diag(st), rounding)[:n]):
-            result.append(list(g))
-
-        stop_is = list(np.cumsum([len(res) for res in result]))
-        start_is = [0] + stop_is[:-1]
-
-        # Rotation matrices (not permutations) based on svd.
-        # See Appendix B2 of Serafini's book for more details.
-        u_list, v_list = [], []
-
-        for start_i, stop_i in zip(start_is, stop_is):
-            x = qomega[start_i:stop_i, n + start_i : n + stop_i].real
-            u_svd, _s_svd, v_svd = np.linalg.svd(x)
-            u_list = u_list + [u_svd]
-            v_list = v_list + [v_svd.T]
-
-        pmat1 = block_diag(*(u_list + v_list))
-
-        st1 = pmat1.T @ pmat @ np.diag(ss) @ pmat @ pmat1
-        ut1 = uss @ pmat @ pmat1
-        v1 = np.transpose(ut1) @ u
-
-    else:
-        ut1 = S
-        st1 = np.eye(2 * n)
-        v1 = np.eye(2 * n)
-
-    return ut1.real, st1.real, v1.real
+    return blochmessiah_tw(S)
 
 
 def sun_compact(U, rtol=1e-12, atol=1e-12):
