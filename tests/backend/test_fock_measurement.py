@@ -37,6 +37,45 @@ class TestGaussianRepresentation:
             "Fock measurement has not been updated.",
         ):
             backend.measure_fock([0, 1], shots=5)
+    
+    def test_fock_measurements(self, setup_backend, cutoff, batch_size, pure, tol):
+        """Tests if Fock measurements results on a variety of multi-mode Fock states are correct."""
+        state_preps = [n for n in range(cutoff)] + [
+            cutoff - n for n in range(cutoff)
+        ]  # [0, 1, 2, ..., cutoff-1, cutoff, cutoff-1, ..., 2, 1]
+
+        singletons = [(0,), (1,), (2,)]
+        pairs = [(0, 1), (0, 2), (1, 2)]
+        triples = [(0, 1, 2)]
+        mode_choices = singletons + pairs + triples
+
+        backend = setup_backend(3)
+
+        for idx in range(NUM_REPEATS):
+            backend.reset(pure=pure)
+
+            n = [
+                state_preps[idx % cutoff],
+                state_preps[(idx + 1) % cutoff],
+                state_preps[(idx + 2) % cutoff],
+            ]
+            n = np.array(n)
+            meas_modes = np.array(
+                mode_choices[idx % len(mode_choices)]
+            )  # cycle through mode choices
+
+            backend.prepare_fock_state(n[0], 0)
+            backend.prepare_fock_state(n[1], 1)
+            backend.prepare_fock_state(n[2], 2)
+
+            meas_result = backend.measure_fock(meas_modes)
+            ref_result = n[meas_modes]
+
+            if batch_size is not None:
+                ref_result = np.array([[i] * batch_size for i in ref_result]).T.reshape(
+                    (batch_size, 1, ref_result.shape[0])
+                )
+            assert np.allclose(meas_result, ref_result, atol=tol, rtol=0)
 
 
 @pytest.mark.backends("fock", "tf")
