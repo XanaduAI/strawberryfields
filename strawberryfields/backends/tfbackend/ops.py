@@ -33,6 +33,10 @@ from string import ascii_lowercase as indices
 from string import ascii_letters as indices_full
 
 import tensorflow as tf
+
+# only used for `conditional_state`; remove when working with `tf.einsum`
+from tensorflow.python.ops.special_math_ops import _einsum_v1
+
 import numpy as np
 from scipy.special import factorial
 from scipy.linalg import expm
@@ -56,19 +60,6 @@ from thewalrus._hermite_multidimensional import (
     grad_hermite_multidimensional as grad_gaussian_gate_tw,
 )
 from thewalrus.symplectic import is_symplectic, sympmat
-
-# With TF 2.1+, the legacy tf.einsum was renamed to _einsum_v1, while
-# the replacement tf.einsum introduced the bug. This try-except block
-# will dynamically patch TensorFlow versions where _einsum_v1 exists, to make it the
-# default einsum implementation.
-#
-# For more details, see https://github.com/tensorflow/tensorflow/issues/37307
-try:
-    from tensorflow.python.ops.special_math_ops import _einsum_v1
-
-    tf.einsum = _einsum_v1
-except ImportError:
-    pass
 
 max_num_indices = len(indices)
 
@@ -1510,7 +1501,9 @@ def conditional_state(system, projector, mode, state_is_pure, batched=False):
     einsum_args = [system, tf.math.conj(projector)]
     if not state_is_pure:
         einsum_args.append(projector)
-    cond_state = tf.einsum(eqn, *einsum_args)
+
+    # does not work with `tf.einsum`; are the `einsum_args` shapes wrong?
+    cond_state = _einsum_v1(eqn, *einsum_args)
     if not batched:
         cond_state = tf.squeeze(cond_state, 0)  # drop fake batch dimension
     return cond_state

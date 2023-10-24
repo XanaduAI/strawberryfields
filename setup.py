@@ -23,7 +23,7 @@ requirements = [
     "numba",
     "numpy>=1.17.4",
     "python-dateutil>=2.8.0",
-    "quantum-blackbird>=0.3.0",
+    "quantum-blackbird>=0.4.0",
     "requests>=2.22.0",
     "scipy>=1.0.0",
     "sympy>=1.5",
