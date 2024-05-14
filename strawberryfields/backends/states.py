@@ -1010,8 +1010,8 @@ class BaseGaussianState(BaseState):
         self._alpha /= np.sqrt(2 * self._hbar)
 
         self._pure = (
-            np.abs(np.linalg.det(self._cov) - (self._hbar / 2) ** (2 * self._modes))
-            < self.EQ_TOLERANCE
+            np.abs(np.linalg.det(self._cov)) / (self._hbar / 2) ** (2 * self._modes)
+            == 1.0
         )
 
         self._basis = "gaussian"
