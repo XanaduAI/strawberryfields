@@ -16,7 +16,7 @@ import pytest
 
 import numpy as np
 from scipy.stats import multivariate_normal
-from scipy.integrate import simps
+from scipy.integrate import simpson
 from scipy.linalg import block_diag
 
 from thewalrus.symplectic import rotation as R
@@ -79,8 +79,8 @@ class TestSingleModePolyQuadratureExpectations:
             poly = func(X, P, XP)
             PDF = multivariate_normal.pdf(grid, mu, cov)
 
-            Ex = simps(simps(poly * PDF, P[0]), X.T[0])
-            ExSq = simps(simps(poly**2 * PDF, P[0]), X.T[0])
+            Ex = simpson(simpson(poly * PDF, x=P[0]), x=X.T[0])
+            ExSq = simpson(simpson(poly**2 * PDF, x=P[0]), x=X.T[0])
 
             var = ExSq - Ex**2 + correction
 
