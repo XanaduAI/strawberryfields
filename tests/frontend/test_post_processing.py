@@ -207,7 +207,7 @@ class TestInputValidation:
     # Arbitrary sequences that are considered to have invalid types during the
     # input checks
     invalid_type_modes_sequences = [
-        np.array([list([0]), list([1, 2])]),
+        np.array([list([0]), list([1, 2])], dtype=object),
     ]
 
     @pytest.mark.parametrize("modes", invalid_type_modes_sequences)
