@@ -26,28 +26,30 @@ feats = [
     [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
     [[0.1, 0.2, 0.3, 0.4], [0.4, 0.1, 0.2, 0.3], [0.3, 0.4, 0.1, 0.2], [0.2, 0.3, 0.4, 0.1]],
 ]
-feats = np.array([np.array(f) for f in feats])
+feats = np.array([np.array(f) for f in feats], dtype=object)
 
 ps = [[1.0, 2.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0, 4.0]]
-ps = np.array([np.array(p) for p in ps])
+ps = np.array([np.array(p) for p in ps], dtype=object)
 
 weights_f = np.array(
     [
         np.exp(-np.array([0.5, 0.4])),
         np.exp(-np.array([1.4, 1.1, 1.1])),
         np.exp(-np.array([3.0, 2.4, 2.2, 2.4])),
-    ]
+    ],
+    dtype=object,
 )
 weights = np.array(
     [
         np.exp(-np.array([1.0, 2.0])),
         np.exp(-np.array([1.0, 2.0, 3.0])),
         np.exp(-np.array([1.0, 2.0, 3.0, 4.0])),
-    ]
+    ],
+    dtype=object,
 )
 
-jacobian_f = np.array([np.zeros((d, d)) for d in range(2, 5)])
-jacobian = np.array([np.zeros((d, d)) for d in range(2, 5)])
+jacobian_f = np.array([np.zeros((d, d)) for d in range(2, 5)], dtype=object)
+jacobian = np.array([np.zeros((d, d)) for d in range(2, 5)], dtype=object)
 
 for i in range(3):
     jacobian[i] = -np.diag(weights[i])

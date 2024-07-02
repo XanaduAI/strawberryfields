@@ -12,13 +12,15 @@
 
 <h3>Bug fixes</h3>
 
+* Calls `scipy.integrate.simpson` instead of `scipy.integrate.simps` to be compatible with `scipy==1.14.0` and explicitly states `dtype=object` when creating ragged `numpy` arrays to be compatible with `numpy==1.26.4`. [#748](https://github.com/XanaduAI/strawberryfields/pull/748)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson
+Luke Helt, Theodor Isacsson
 
 
 # Release 0.23.0 (current release)

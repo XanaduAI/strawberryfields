@@ -24,7 +24,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
-from scipy.integrate import simps
+from scipy.integrate import simpson
 
 from thewalrus.symplectic import rotation as _R
 from thewalrus.symplectic import xpxp_to_xxpp
@@ -427,7 +427,6 @@ class BaseState(abc.ABC):
         raise NotImplementedError
 
     def p_quad_values(self, mode, xvec, pvec):
-
         r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
 
         Args:
@@ -443,12 +442,11 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(pvec)):
-            res = simps(W[i, : len(xvec)], xvec)
+            res = simpson(W[i, : len(xvec)], x=xvec)
             y.append(res)
         return np.array(y)
 
     def x_quad_values(self, mode, xvec, pvec):
-
         r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
 
         Args:
@@ -464,7 +462,7 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(xvec)):
-            res = simps(W[: len(pvec), i], pvec)
+            res = simpson(W[: len(pvec), i], x=pvec)
             y.append(res)
         return np.array(y)
 
@@ -1627,7 +1625,6 @@ class BaseBosonicState(BaseState):
 
         wigner = 0
         for i, weight_i in enumerate(weights):
-
             if X.shape == P.shape:
                 arr = np.array([X - means[i, 0], P - means[i, 1]])
                 arr = arr.squeeze()

@@ -21,11 +21,11 @@ with open("strawberryfields/_version.py") as f:
 requirements = [
     "networkx>=2.0",
     "numba",
-    "numpy>=1.17.4",
+    "numpy>=1.17.4,<2",
     "python-dateutil>=2.8.0",
     "quantum-blackbird>=0.4.0",
     "requests>=2.22.0",
-    "scipy>=1.0.0",
+    "scipy>=1.14.0",
     "sympy>=1.5",
     "thewalrus>=0.18.0",
     "toml",
