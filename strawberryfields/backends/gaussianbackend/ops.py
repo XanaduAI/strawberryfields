@@ -19,8 +19,8 @@ import numpy as np
 def chop_in_blocks(m, idtodelete):
     """
     Splits a (symmetric) matrix into 3 blocks, A, B, C
-    Blocks A and B are diagonal blocks and C is the offdiagonal block
-    idtodelete specifies which indices go into B.
+    Blocks A and C are diagonal blocks and B is the offdiagonal block
+    idtodelete specifies which indices go into C.
     """
     A = np.copy(m)
     A = np.delete(A, idtodelete, axis=0)
