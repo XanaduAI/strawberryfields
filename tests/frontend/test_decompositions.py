@@ -351,7 +351,7 @@ class TestTriangularDecomposition:
         n = 20
         U = np.identity(n)
 
-        tlist, diags, _ = dec.triangular(U)
+        _, diags, tlist = dec.triangular(U)
 
         qrec = np.diag(diags)
 
@@ -373,7 +373,7 @@ class TestTriangularDecomposition:
         n = 20
         U = haar_measure(n)
 
-        tlist, diags, _ = dec.triangular(U)
+        _, diags, tlist = dec.triangular(U)
 
         qrec = np.diag(diags)
 

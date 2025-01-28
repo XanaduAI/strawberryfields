@@ -612,7 +612,7 @@ def triangular(V, tol=1e-11):
             :math:`|VV^\dagger-I| \leq` tol
 
     Returns:
-        tuple[array]: returns a tuple of the form ``(tlist,np.diag(localV), None)``
+        tuple[array]: returns a tuple of the form ``(None,np.diag(localV), tlist)``
             where:
 
             * ``tlist``: list containing ``[n,m,theta,phi,n_size]`` of the T unitaries needed
@@ -630,7 +630,7 @@ def triangular(V, tol=1e-11):
             tlist.append(nullT(nsize - j - 1, nsize - i - 2, localV))
             localV = T(*tlist[-1]) @ localV
 
-    return list(reversed(tlist)), np.diag(localV), None
+    return None, np.diag(localV), tlist
 
 
 def M(n, sigma, delta, m):

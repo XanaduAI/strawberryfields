@@ -2664,26 +2664,29 @@ class Interferometer(Decomposition):
             decomp_fn = getattr(dec, mesh)
             BS1, R, BS2 = decomp_fn(self.p[0], tol=tol)
 
-            for n, m, theta, phi, _ in BS1:
-                theta = theta if np.abs(theta) >= _decomposition_tol else 0
-                phi = phi if np.abs(phi) >= _decomposition_tol else 0
 
-                if "symmetric" in mesh:
-                    # Mach-Zehnder interferometers
-                    cmds.append(
-                        Command(
-                            MZgate(np.mod(theta, 2 * np.pi), np.mod(phi, 2 * np.pi)),
-                            (reg[n], reg[m]),
+            if BS1 is not None:
+
+                for n, m, theta, phi, _ in BS1:
+                    theta = theta if np.abs(theta) >= _decomposition_tol else 0
+                    phi = phi if np.abs(phi) >= _decomposition_tol else 0
+
+                    if "symmetric" in mesh:
+                        # Mach-Zehnder interferometers
+                        cmds.append(
+                            Command(
+                                MZgate(np.mod(theta, 2 * np.pi), np.mod(phi, 2 * np.pi)),
+                                (reg[n], reg[m]),
+                            )
                         )
-                    )
 
-                else:
-                    # Clements style beamsplitters
-                    if not (drop_identity and phi == 0):
-                        cmds.append(Command(Rgate(phi), reg[n]))
+                    else:
+                        # Clements style beamsplitters
+                        if not (drop_identity and phi == 0):
+                            cmds.append(Command(Rgate(phi), reg[n]))
 
-                    if not (drop_identity and theta == 0):
-                        cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
+                        if not (drop_identity and theta == 0):
+                            cmds.append(Command(BSgate(theta, 0), (reg[n], reg[m])))
 
             for n, expphi in enumerate(R):
                 # local phase shifts
