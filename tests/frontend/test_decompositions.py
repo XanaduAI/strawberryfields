@@ -355,7 +355,7 @@ class TestTriangularDecomposition:
 
         qrec = np.diag(diags)
 
-        for i in tlist:
+        for i in reversed(tlist):
             qrec = dec.Ti(*i) @ qrec
 
         assert np.allclose(U, qrec, atol=tol, rtol=0)
