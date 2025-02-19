@@ -24,7 +24,11 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
-from scipy.integrate import simps
+# support old scipy & new where simps was renamed to simpson
+try:
+    from scipy.integrate import simps
+except ImportError:
+    from scipy.integrate import simpson as simps
 
 from thewalrus.symplectic import rotation as _R
 from thewalrus.symplectic import xpxp_to_xxpp
