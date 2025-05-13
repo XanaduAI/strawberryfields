@@ -56,7 +56,7 @@ import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
 import strawberryfields.program_utils as pu
-from strawberryfields.compilers import Compiler, compiler_db
+import strawberryfields.compilers
 
 from .parameters import FreeParameter, ParameterError
 from .program_utils import CircuitError, Command, RegRef, RegRefError, program_equivalence
@@ -680,10 +680,10 @@ class Program:
             raise ValueError("Either one or both of 'device' and 'compiler' must be specified")
 
         def _get_compiler(compiler_or_name):
-            if compiler_or_name in compiler_db:
-                return compiler_db[compiler_or_name]()
+            if compiler_or_name in strawberryfields.compilers.compiler_db:
+                return strawberryfields.compilers.compiler_db[compiler_or_name]()
 
-            if isinstance(compiler_or_name, Compiler):
+            if isinstance(compiler_or_name, strawberryfields.compilers.Compiler):
                 return compiler_or_name
 
             raise ValueError(f"Unknown compiler '{compiler_or_name}'.")
@@ -693,7 +693,7 @@ class Program:
 
             if compiler is None:
                 # get the default compiler from the device spec
-                compiler = compiler_db[device.default_compiler]()
+                compiler = strawberryfields.compilers.compiler_db[device.default_compiler]()
             else:
                 compiler = _get_compiler(compiler)
 
