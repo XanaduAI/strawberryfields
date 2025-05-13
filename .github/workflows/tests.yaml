@@ -56,7 +56,7 @@ jobs:
       - name: Install Strawberry Fields
         run: |
           pip install -r requirements-ci.txt
-          python3 setup.py bdist_wheel
+          python3 -m build --wheel
           pip install dist/strawberryfields*.whl
 
       - name: Run tests
