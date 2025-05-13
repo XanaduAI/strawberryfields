@@ -13,9 +13,7 @@
 # limitations under the License.
 
 # The module docstring is in strawberryfields/compiler/__init__.py
-"""
-**Module name:** :mod:`strawberryfields.compilers.compiler`
-"""
+"""**Module name:** :mod:`strawberryfields.compilers.compiler`"""
 
 import abc
 from typing import Dict, Optional, Sequence, Set
@@ -53,8 +51,8 @@ class Compiler(abc.ABC):
     @property
     @abc.abstractmethod
     def interactive(self) -> bool:
-        """Whether the circuits in the class can be executed interactively, that is,
-        the registers in the circuit are not reset between engine executions.
+        """Whether the circuits in the class can be executed interactively, that is, the
+        registers in the circuit are not reset between engine executions.
 
         Returns:
             bool: ``True`` if the circuit supports interactive use
@@ -63,8 +61,8 @@ class Compiler(abc.ABC):
     @property
     @abc.abstractmethod
     def primitives(self) -> Set[str]:
-        """The primitive set of quantum operations directly supported
-        by the circuit class.
+        """The primitive set of quantum operations directly supported by the circuit
+        class.
 
         Returns:
             set[str]: the names of the quantum primitives the circuit class supports
@@ -73,8 +71,8 @@ class Compiler(abc.ABC):
     @property
     @abc.abstractmethod
     def decompositions(self) -> Dict[str, Dict]:
-        """Quantum operations that are not quantum primitives for the
-        circuit class, but are supported via specified decompositions.
+        """Quantum operations that are not quantum primitives for the circuit class, but
+        are supported via specified decompositions.
 
         This should be of the form
 
@@ -94,8 +92,8 @@ class Compiler(abc.ABC):
 
     @property
     def graph(self) -> Optional[nx.DiGraph]:
-        """The allowed circuit topologies or connectivity of the class, modelled as a directed
-        acyclic graph.
+        """The allowed circuit topologies or connectivity of the class, modelled as a
+        directed acyclic graph.
 
         This property is optional; if arbitrary topologies are allowed in the circuit class,
         this will simply return ``None``.
@@ -164,7 +162,9 @@ class Compiler(abc.ABC):
         cls._layout = None
         cls._graph = None
 
-    def compile(self, seq: Sequence[pu.Command], registers: Sequence[pu.RegRef]) -> Sequence[pu.Command]:
+    def compile(
+        self, seq: Sequence[pu.Command], registers: Sequence[pu.RegRef]
+    ) -> Sequence[pu.Command]:
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
@@ -199,7 +199,7 @@ class Compiler(abc.ABC):
             nx.set_node_attributes(circuit, mapping_modes, name="modes")
 
             def node_match(n1, n2):
-                """Returns True if both nodes have the same name and modes"""
+                """Returns True if both nodes have the same name and modes."""
                 return n1["name"] == n2["name"] and n1["modes"] == n2["modes"]
 
             GM = nx.algorithms.isomorphism.DiGraphMatcher(self.graph, circuit, node_match)
@@ -226,8 +226,8 @@ class Compiler(abc.ABC):
         return seq
 
     def decompose(self, seq: Sequence[pu.Command]) -> Sequence[pu.Command]:
-        """Recursively decompose all gates in a given sequence, as allowed
-        by the circuit specification.
+        """Recursively decompose all gates in a given sequence, as allowed by the
+        circuit specification.
 
         This method follows the directives defined in the
         :attr:`~.Compiler.primitives` and :attr:`~.Compiler.decompositions`
@@ -314,8 +314,9 @@ class Compiler(abc.ABC):
     def add_loss(self, program, device):
         """Adds realistic loss to circuit.
 
-        Child classes which are hardware compilers should override this method with device specific
-        loss added to the circuit."""
+        Child classes which are hardware compilers should override this method with
+        device specific loss added to the circuit.
+        """
         raise NotImplementedError
 
 

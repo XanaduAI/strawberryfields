@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 with open("strawberryfields/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
@@ -42,8 +41,13 @@ info = {
     "url": "https://github.com/XanaduAI/StrawberryFields",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"strawberryfields": ["backends/data/*", "apps/data/feature_data/*",
-                                          "apps/data/sample_data/*"]},
+    "package_data": {
+        "strawberryfields": [
+            "backends/data/*",
+            "apps/data/feature_data/*",
+            "apps/data/sample_data/*",
+        ]
+    },
     "include_package_data": True,
     "description": "Open source library for continuous-variable quantum computation",
     "long_description": open("README.md", encoding="utf-8").read(),
@@ -51,7 +55,10 @@ info = {
     "provides": ["strawberryfields"],
     "install_requires": requirements,
     "command_options": {
-        "build_sphinx": {"version": ("setup.py", version), "release": ("setup.py", version)}
+        "build_sphinx": {
+            "version": ("setup.py", version),
+            "release": ("setup.py", version),
+        }
     },
 }
 
