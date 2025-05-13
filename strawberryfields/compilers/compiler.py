@@ -26,7 +26,6 @@ import sympy as sym
 from blackbird.utils import to_DiGraph
 
 import strawberryfields.program_utils as pu
-from strawberryfields.program_utils import CircuitError, Command, RegRef
 
 
 class Compiler(abc.ABC):
@@ -147,7 +146,7 @@ class Compiler(abc.ABC):
         if cls._layout:
             # if the exact same circuit is set (apart from newlines) then return
             if cls._layout.replace("\n", "") != layout.replace("\n", ""):
-                raise CircuitError(
+                raise pu.CircuitError(
                     f"Circuit already set in compiler {cls.short_name}. Device layout incompatible "
                     "with compiler layout. Call the compiler's 'reset_circuit' method, or use a "
                     "different device layout."
@@ -165,20 +164,20 @@ class Compiler(abc.ABC):
         cls._layout = None
         cls._graph = None
 
-    def compile(self, seq: Sequence[Command], registers: Sequence[RegRef]) -> Sequence[Command]:
+    def compile(self, seq: Sequence[pu.Command], registers: Sequence[pu.RegRef]) -> Sequence[pu.Command]:
         """Class-specific circuit compilation method.
 
         If additional compilation logic is required, child classes can redefine this method.
 
         Args:
-            seq (Sequence[Command]): quantum circuit to modify
-            registers (Sequence[RegRef]): quantum registers
+            seq (Sequence[strawberryfields.program_utils.Command]): quantum circuit to modify
+            registers (Sequence[strawberryfields.program_utils.RegRef]): quantum registers
 
         Returns:
-            Sequence[Command]: modified circuit
+            Sequence[strawberryfields.program_utils.Command]: modified circuit
 
         Raises:
-            CircuitError: the given circuit cannot be validated to belong to this circuit class
+            strawberryfields.program_utils.CircuitError: the given circuit cannot be validated to belong to this circuit class
         """
         # registers is not used here, but may be used if the method is overwritten pylint: disable=unused-argument
         if self.graph is not None:
@@ -187,7 +186,7 @@ class Compiler(abc.ABC):
 
             # relabel the DAG nodes to integers, with attributes
             # specifying the operation name. This allows them to be
-            # compared, rather than using Command objects.
+            # compared, rather than using pu.Command objects.
             mapping_name, mapping_args, mapping_modes = {}, {}, {}
             for i, n in enumerate(DAG.nodes()):
                 mapping_name[i] = n.op.__class__.__name__
@@ -219,20 +218,20 @@ class Compiler(abc.ABC):
             for n1, n2 in GM.mapping.items():
                 for x, y in zip(G1nodes[n1]["args"], G2nodes[n2]["args"]):
                     if x != y and not (isinstance(x, sym.Symbol) or isinstance(y, sym.Expr)):
-                        raise CircuitError(
+                        raise pu.CircuitError(
                             "Program cannot be used with the compiler '{}' "
                             "due to incompatible parameter values.".format(self.short_name)
                         )
 
         return seq
 
-    def decompose(self, seq: Sequence[Command]) -> Sequence[Command]:
+    def decompose(self, seq: Sequence[pu.Command]) -> Sequence[pu.Command]:
         """Recursively decompose all gates in a given sequence, as allowed
         by the circuit specification.
 
         This method follows the directives defined in the
         :attr:`~.Compiler.primitives` and :attr:`~.Compiler.decompositions`
-        class attributes to determine whether a command should be decomposed.
+        class attributes to determine whether a strawberryfields.program_utils.Command should be decomposed.
 
         The order of precedence to determine whether decomposition
         should be applied is as follows.
