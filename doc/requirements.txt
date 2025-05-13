@@ -19,7 +19,7 @@ sphinx-copybutton==0.4.0
 sphinx-automodapi==0.13
 sphinxcontrib-bibtex==0.4.2
 tensorflow==2.6.3
-thewalrus==0.21.0
+thewalrus==0.19.0
 toml==0.10.2
 xanadu-sphinx-theme==0.1.0
 xanadu-cloud-client>=0.2.1
