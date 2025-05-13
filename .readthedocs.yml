@@ -10,6 +10,6 @@ python:
         path: .
 
 build:
-  os: ubuntu-20.04
+  os: ubuntu-latest
   tools:
-    python: "3.8"
+    python: "3.10"
