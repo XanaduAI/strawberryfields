@@ -44,6 +44,7 @@ indices = string.ascii_lowercase
 
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
+
     # pylint: disable=too-many-public-methods
     EQ_TOLERANCE = 1e-10
 
@@ -999,6 +1000,7 @@ class BaseGaussianState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+
     # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, mode_names=None):
@@ -1436,6 +1438,7 @@ class BaseBosonicState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+
     # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, num_weights, mode_names=None):

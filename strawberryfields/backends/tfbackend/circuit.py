@@ -128,7 +128,8 @@ class Circuit:
 
     def _maybe_batch(self, param, convert_to_tensor=True):
         """Helper function to broadcast a param to the correct shape (if necessary) when working in batch mode. If param is not a scalar,
-        it will raise an exception if param's batch size is not equal to the circuit's batch size."""
+        it will raise an exception if param's batch size is not equal to the circuit's batch size.
+        """
         shape_err = False
         if convert_to_tensor:
             p = tf.convert_to_tensor(param)
@@ -933,9 +934,11 @@ class Circuit:
             # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
             inf_squeezed_vac = tf.convert_to_tensor(
                 [
-                    (-0.5) ** (m // 2) * np.sqrt(factorial(m)) / factorial(m // 2)
-                    if m % 2 == 0
-                    else 0.0
+                    (
+                        (-0.5) ** (m // 2) * np.sqrt(factorial(m)) / factorial(m // 2)
+                        if m % 2 == 0
+                        else 0.0
+                    )
                     for m in range(self._cutoff_dim)
                 ],
                 dtype=self._dtype,

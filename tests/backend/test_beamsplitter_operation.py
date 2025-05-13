@@ -119,12 +119,8 @@ class TestFockRepresentation:
         alpha_outB = r * alpha
 
         n = np.arange(cutoff)
-        ref_stateA = (
-            np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
-        )
-        ref_stateB = (
-            np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
-        )
+        ref_stateA = np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
+        ref_stateB = np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
 
         ref_state = np.einsum("i,j->ij", ref_stateA, ref_stateB)
 
@@ -167,12 +163,8 @@ class TestModeSubsets:
         alpha_outB = r * alpha
 
         n = np.arange(cutoff)
-        ref_stateA = (
-            np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
-        )
-        ref_stateB = (
-            np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
-        )
+        ref_stateA = np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
+        ref_stateB = np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
 
         numer_state = state.reduced_dm(list(modes))
 

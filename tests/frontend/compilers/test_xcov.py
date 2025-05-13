@@ -384,7 +384,8 @@ class TestXCompilation:
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_unitary_too_large(self, num_pairs):
         """Test exception raised if the unitary is applied to more
-        than just modes [0, 1, 2, 3, ..., num_pairs-1] and [num_pairs, num_pairs+1, ..., 2*num_pairs-1]."""
+        than just modes [0, 1, 2, 3, ..., num_pairs-1] and [num_pairs, num_pairs+1, ..., 2*num_pairs-1].
+        """
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(2 * num_pairs)
 

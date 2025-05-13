@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-r"""Unit test for Gaussian CPTP map
-"""
+r"""Unit test for Gaussian CPTP map"""
 
 
 import pytest
