@@ -18,7 +18,7 @@ This module implements the :class:`.Program` class which acts as a representatio
 Quantum circuit representation
 ------------------------------
 
-The :class:`.Command` instances in the circuit form a
+The :class:`.pu.Command` instances in the circuit form a
 `strict partially ordered set <http://en.wikipedia.org/wiki/Partially_ordered_set#Strict_and_non-strict_partial_orders>`_
 in the sense that the order in which the operations have to be executed is usually not completely fixed.
 For example, operations acting on different subsystems always commute with each other.
@@ -28,7 +28,7 @@ Each strict partial order corresponds to a
 and the transitive closure of any DAG is a strict partial order.
 Three different (but equivalent) representations of the circuit are used.
 
-* Initially, the circuit is represented as a Command queue (list), listing the Commands in
+* Initially, the circuit is represented as a pu.Command queue (list), listing the Commands in
   the temporal order they are applied.
 * The second representation, grid, essentially mimics a quantum circuit diagram.
   It is a mapping from subsystem indices to lists of Commands touching that subsystem,
@@ -59,7 +59,7 @@ import strawberryfields.program_utils as pu
 import strawberryfields.compilers
 
 from .parameters import FreeParameter, ParameterError
-from .program_utils import CircuitError, Command, RegRef, RegRefError, program_equivalence
+from . import program_utils as pu
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = []
@@ -140,9 +140,9 @@ class Program:
     def __init__(self, num_subsystems, name=None):
         #: str: program name
         self.name = name
-        #: list[Command]: Commands constituting the quantum circuit in temporal order
+        #: list[pu.Command]: pu.Commands constituting the quantum circuit in temporal order
         self.circuit = []
-        #: bool: if True, no more Commands can be appended to the Program
+        #: bool: if True, no more pu.Commands can be appended to the Program
         self.locked = False
         #: str, None: for compiled Programs, the short name of the target Compiler template, otherwise None
         self._target = None
@@ -163,11 +163,11 @@ class Program:
         self.backend_options = {}
 
         # create subsystem references
-        # Program keeps track of the state of the quantum register using a dictionary of :class:`RegRef` objects.
+        # Program keeps track of the state of the quantum register using a dictionary of :class:`pu.RegRef` objects.
         if isinstance(num_subsystems, numbers.Integral):
             #: int: initial number of subsystems
             self.init_num_subsystems = num_subsystems
-            #: dict[int, RegRef]: mapping from subsystem indices to corresponding RegRef objects
+            #: dict[int, pu.RegRef]: mapping from subsystem indices to corresponding RegRef objects
             self.reg_refs = {}
             #: set[int]: created subsystem indices that have not been used (operated on) yet
             self.unused_indices = set()
@@ -238,7 +238,7 @@ class Program:
 
         .. note::
 
-            This method is a convenience method, wrapping the :func:`.program_equivalence`
+            This method is a convenience method, wrapping the :func:`.pu.program_equivalence`
             function in the program utils module.
 
         Args:
@@ -255,7 +255,7 @@ class Program:
         Returns:
             bool: returns ``True`` if two quantum programs are equivalent
         """
-        return program_equivalence(self, prog, **kwargs)
+        return pu.program_equivalence(self, prog, **kwargs)
 
     def print(self, print_fn=print):
         """Print the program contents using Blackbird syntax.
@@ -301,7 +301,7 @@ class Program:
         """Enter the context for this program.
 
         Returns:
-            tuple[RegRef]: subsystem references
+            tuple[pu.RegRef]: subsystem references
         """
         if pu.Program_current_context is None:
             pu.Program_current_context = self
@@ -357,14 +357,14 @@ class Program:
             tuple[RegRef]: tuple of the newly added subsystem references
         """
         if self.locked:
-            raise CircuitError("The Program is locked, no new subsystems can be created.")
+            raise pu.CircuitError("The Program is locked, no new subsystems can be created.")
         if not isinstance(n, numbers.Integral) or n < 1:
             raise ValueError("Number of added subsystems {} is not a positive integer.".format(n))
 
         first_unassigned_index = len(self.reg_refs)
         # create a list of RegRefs
         inds = [first_unassigned_index + i for i in range(n)]
-        refs = tuple(RegRef(i) for i in inds)
+        refs = tuple(pu.RegRef(i) for i in inds)
         # add them to the index map
         for r in refs:
             self.reg_refs[r.ind] = r
@@ -380,11 +380,11 @@ class Program:
         in the Program context.
 
         Args:
-          refs (Sequence[RegRef]): subsystems to delete
+          refs (Sequence[pu.RegRef]): subsystems to delete
         """
         # NOTE: refs have already been through _test_regrefs() in append() and thus should be valid
         for r in refs:
-            # mark the RegRef as deleted
+            # mark the pu.RegRef as deleted
             r.active = False
             # self.reg_refs[r.ind].active = False
         # NOTE: deleted indices are *not* removed from self.unused_indices
@@ -394,16 +394,16 @@ class Program:
 
         When a Program is locked, no more Commands can be appended to it.
         The locking happens when the program is run, compiled, or a successor Program is constructed,
-        in order to ensure that the RegRef state of the Program does not change anymore.
+        in order to ensure that the pu.RegRef state of the Program does not change anymore.
         """
         self.locked = True
 
     def can_follow(self, prev):
         """Check whether this program can follow the given program.
 
-        This requires that the final RegRef state of the first program matches
-        the initial RegRef state of the second program, i.e., they have the same number
-        number of RegRefs, all with identical indices and activity states.
+        This requires that the final pu.RegRef state of the first program matches
+        the initial pu.RegRef state of the second program, i.e., they have the same number
+        number of pu.RegRefs, all with identical indices and activity states.
 
         Args:
             prev (Program): preceding program fragment
@@ -414,52 +414,52 @@ class Program:
         return self.init_reg_refs == prev.reg_refs
 
     def _index_to_regref(self, ind):
-        """Try to find a RegRef corresponding to a given subsystem index.
+        """Try to find a pu.RegRef corresponding to a given subsystem index.
 
         Args:
             ind (int): subsystem index
         Returns:
-            RegRef: corresponding register reference
+            pu.RegRef: corresponding register reference
         Raises:
-            .RegRefError: if the subsystem cannot be found, or is invalid
+            .pu.RegRefError: if the subsystem cannot be found, or is invalid
         """
         # index must be found in the dict
         if ind not in self.reg_refs:
-            raise RegRefError("Subsystem {} does not exist.".format(ind))
+            raise pu.RegRefError("Subsystem {} does not exist.".format(ind))
         return self.reg_refs[ind]
 
     def _test_regrefs(self, reg):
-        """Make sure reg is a valid selection of subsystems, convert them to RegRefs.
+        """Make sure reg is a valid selection of subsystems, convert them to pu.RegRefs.
 
         A register reference is valid if it is properly recorded in self.reg_refs
         and has not been deleted. The selection is valid if it contains only
-        valid RegRefs and no subsystem is repeated.
+        valid pu.RegRefs and no subsystem is repeated.
 
         Args:
-            reg (Iterable[int, RegRef]): subsystem references
+            reg (Iterable[int, pu.RegRef]): subsystem references
         Returns:
-            list[RegRef]: converted subsystem references
+            list[pu.RegRef]: converted subsystem references
         Raises:
-            .RegRefError: if an invalid subsystem reference is found
+            .pu.RegRefError: if an invalid subsystem reference is found
         """
         temp = []
         for rr in reg:
-            # must be either an integer or a RegRef
-            if isinstance(rr, RegRef):
-                # regref must be found in the dict values (the RegRefs are compared using __eq__, which, since we do not define it, defaults to "is")
+            # must be either an integer or a pu.RegRef
+            if isinstance(rr, pu.RegRef):
+                # regref must be found in the dict values (the pu.RegRefs are compared using __eq__, which, since we do not define it, defaults to "is")
                 if rr not in self.reg_refs.values():
-                    raise RegRefError("Unknown RegRef.")
+                    raise pu.RegRefError("Unknown RegRef.")
                 if self.reg_refs[rr.ind] is not rr:
-                    raise RegRefError("RegRef state has become inconsistent.")
+                    raise pu.RegRefError("RegRef state has become inconsistent.")
             elif isinstance(rr, numbers.Integral):
                 rr = self._index_to_regref(rr)
             else:
-                raise RegRefError("Subsystems can only be indexed using integers and RegRefs.")
+                raise pu.RegRefError("Subsystems can only be indexed using integers and RegRefs.")
 
             if not rr.active:
-                raise RegRefError("Subsystem {} has already been deleted.".format(rr.ind))
+                raise pu.RegRefError("Subsystem {} has already been deleted.".format(rr.ind))
             if rr in temp:
-                raise RegRefError("Trying to act on the same subsystem more than once.")
+                raise pu.RegRefError("Trying to act on the same subsystem more than once.")
             temp.append(rr)
         return temp
 
@@ -468,12 +468,12 @@ class Program:
 
         Args:
             op (Operation): quantum operation
-            reg (list[int, RegRef]): register subsystem(s) to apply it to
+            reg (list[int, pu.RegRef]): register subsystem(s) to apply it to
         Returns:
-            list[RegRef]: subsystem list as RegRefs
+            list[pu.RegRef]: subsystem list as pu.RegRefs
         """
         if self.locked:
-            raise CircuitError("The Program is locked, no more Commands can be appended to it.")
+            raise pu.CircuitError("The Program is locked, no more Commands can be appended to it.")
 
         # test that the target subsystem references are ok
         reg = self._test_regrefs(reg)
@@ -482,7 +482,7 @@ class Program:
         for rr in reg:
             # it's used now
             self.unused_indices.discard(rr.ind)
-        self.circuit.append(Command(op, reg))
+        self.circuit.append(pu.Command(op, reg))
         return reg
 
     def _is_select(self, op):
@@ -534,7 +534,7 @@ class Program:
     def _linked_copy(self):
         """Create a copy of the Program, linked to the original.
 
-        Both the original and the copy are :meth:`locked <lock>`, since they share their RegRefs.
+        Both the original and the copy are :meth:`locked <lock>`, since they share their pu.RegRefs.
         FreeParameters are also shared.
 
         Returns:
@@ -546,7 +546,7 @@ class Program:
         for name, val in self.__dict__.items():
             # Deep-copy all attributes except 'circuit' and 'reg_refs', since the programs
             # should share the same register references. Program.circuit potentially
-            # contains FreeParameters/MeasuredParameters, which contain RegRefs.
+            # contains FreeParameters/MeasuredParameters, which contain pu.RegRefs.
             if name not in ("circuit", "reg_refs", "init_reg_refs", "free_params"):
                 setattr(p, name, copy.deepcopy(val))
 
@@ -575,7 +575,7 @@ class Program:
 
         if isinstance(device.modes, int):
             if modes_total > device.modes:
-                raise CircuitError(
+                raise pu.CircuitError(
                     f"This program contains {modes_total} modes, but the device '{device.target}' "
                     f"only supports a {device.modes}-mode program."
                 )
@@ -609,17 +609,17 @@ class Program:
                 num_heterodyne += len(c.reg)
 
         if num_pnr > max_pnr:
-            raise CircuitError(
+            raise pu.CircuitError(
                 f"This program contains {num_pnr} fock measurements. "
                 f"A maximum of {max_pnr} fock measurements are supported."
             )
         if num_homodyne > max_homodyne:
-            raise CircuitError(
+            raise pu.CircuitError(
                 f"This program contains {num_homodyne} homodyne measurements. "
                 f"A maximum of {max_homodyne} homodyne measurements are supported."
             )
         if num_heterodyne > max_heterodyne:
-            raise CircuitError(
+            raise pu.CircuitError(
                 f"This program contains {num_heterodyne} heterodyne measurements. "
                 f"A maximum of {max_heterodyne} heterodyne measurements are supported."
             )
@@ -767,7 +767,7 @@ class Program:
         The simplifications are based on the algebraic properties of the gates,
         e.g., combining two consecutive gates of the same gate family.
 
-        Returns a copy of the program, sharing RegRefs with the original.
+        Returns a copy of the program, sharing pu.RegRefs with the original.
 
         See :func:`~strawberryfields.program_utils.optimize_circuit`.
 
@@ -862,7 +862,7 @@ class Program:
 
             if a not in self.free_params:
                 if self.locked:
-                    raise CircuitError(
+                    raise pu.CircuitError(
                         "The Program is locked, no more free parameters can be created."
                     )
                 p = FreeParameter(a)
