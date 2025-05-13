@@ -18,6 +18,7 @@ U(z) = \exp(0.5 (z^* \hat{a}^2 - z (\hat{a^\dagger}^2)))
 where \hat{a} is the photon annihilation operator.
 """
 import numpy as np
+
 # pylint: disable=too-many-arguments
 import pytest
 from scipy.special import factorial as fac

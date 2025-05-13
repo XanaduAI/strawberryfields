@@ -23,8 +23,7 @@ import strawberryfields as sf
 from strawberryfields import decompositions as dec
 from strawberryfields import ops
 from strawberryfields.parameters import FreeParameter, par_evaluate
-from strawberryfields.utils import (random_covariance, random_interferometer,
-                                    random_symplectic)
+from strawberryfields.utils import random_covariance, random_interferometer, random_symplectic
 
 pytestmark = pytest.mark.frontend
 

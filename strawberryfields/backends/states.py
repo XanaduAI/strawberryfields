@@ -20,20 +20,20 @@ from itertools import chain
 
 import numpy as np
 import scipy.integrate
+import thewalrus.quantum as twq
 from scipy.linalg import block_diag
 from scipy.special import factorial
 from scipy.stats import multivariate_normal
+from thewalrus.symplectic import rotation as _R
+from thewalrus.symplectic import xpxp_to_xxpp
+
+import strawberryfields as sf
 
 try:
     simps = scipy.integrate.simpson
 except AttribueError:  # scipy<1.0.0
     simps = scipy.integrate.simps
 
-import thewalrus.quantum as twq
-from thewalrus.symplectic import rotation as _R
-from thewalrus.symplectic import xpxp_to_xxpp
-
-import strawberryfields as sf
 
 indices = string.ascii_lowercase
 

@@ -17,11 +17,14 @@ import numpy as np
 import pytest
 
 import strawberryfields as sf
-from strawberryfields.parameters import (FreeParameter, MeasuredParameter,
-                                         ParameterError, par_evaluate)
+from strawberryfields.parameters import (
+    FreeParameter,
+    MeasuredParameter,
+    ParameterError,
+    par_evaluate,
+)
 from strawberryfields.parameters import par_funcs as pf
-from strawberryfields.parameters import (par_is_symbolic, par_regref_deps,
-                                         par_str)
+from strawberryfields.parameters import par_is_symbolic, par_regref_deps, par_str
 from strawberryfields.program_utils import RegRef
 
 pytestmark = pytest.mark.frontend

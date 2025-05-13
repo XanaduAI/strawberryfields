@@ -59,8 +59,7 @@ import strawberryfields.program_utils as pu
 from strawberryfields.compilers import Compiler, compiler_db
 
 from .parameters import FreeParameter, ParameterError
-from .program_utils import (CircuitError, Command, RegRef, RegRefError,
-                            program_equivalence)
+from .program_utils import CircuitError, Command, RegRef, RegRefError, program_equivalence
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = []

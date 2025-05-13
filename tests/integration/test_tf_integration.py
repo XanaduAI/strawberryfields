@@ -22,8 +22,7 @@ from scipy.special import factorial
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
-from strawberryfields.ops import (BSgate, Dgate, Fock, Ket, MeasureX, MZgate,
-                                  S2gate, Sgate, Thermal)
+from strawberryfields.ops import BSgate, Dgate, Fock, Ket, MeasureX, MZgate, S2gate, Sgate, Thermal
 
 # this test file is only supported by the TF backend
 pytestmark = pytest.mark.backends("tf")

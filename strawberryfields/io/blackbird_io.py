@@ -17,6 +17,7 @@ This module contains functions for loading and saving Strawberry Fields
 code.
 """
 import blackbird
+
 # pylint: disable=protected-access,too-many-nested-blocks
 import numpy as np
 

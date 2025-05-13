@@ -34,24 +34,23 @@ import numpy as np
 import tensorflow as tf
 from scipy.linalg import expm
 from scipy.special import factorial
+
 # only used for `conditional_state`; remove when working with `tf.einsum`
 from tensorflow.python.ops.special_math_ops import _einsum_v1
-from thewalrus._hermite_multidimensional import \
-    grad_hermite_multidimensional as grad_gaussian_gate_tw
-from thewalrus._hermite_multidimensional import \
-    hermite_multidimensional as gaussian_gate_tw
+from thewalrus._hermite_multidimensional import (
+    grad_hermite_multidimensional as grad_gaussian_gate_tw,
+)
+from thewalrus._hermite_multidimensional import hermite_multidimensional as gaussian_gate_tw
 from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import grad_beamsplitter as grad_beamsplitter_tw
 from thewalrus.fock_gradients import grad_displacement as grad_displacement_tw
 from thewalrus.fock_gradients import grad_mzgate as grad_mzgate_tw
 from thewalrus.fock_gradients import grad_squeezing as grad_squeezing_tw
-from thewalrus.fock_gradients import \
-    grad_two_mode_squeezing as grad_two_mode_squeezing_tw
+from thewalrus.fock_gradients import grad_two_mode_squeezing as grad_two_mode_squeezing_tw
 from thewalrus.fock_gradients import mzgate as mzgate_tw
 from thewalrus.fock_gradients import squeezing as squeezing_tw
-from thewalrus.fock_gradients import \
-    two_mode_squeezing as two_mode_squeezing_tw
+from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 from thewalrus.symplectic import is_symplectic, sympmat
 
 max_num_indices = len(indices)

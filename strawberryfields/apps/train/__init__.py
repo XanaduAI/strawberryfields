@@ -93,6 +93,10 @@ Related tutorials
 
 from strawberryfields.apps.train.cost import KL, Stochastic
 from strawberryfields.apps.train.embed import Exp, ExpFeatures
-from strawberryfields.apps.train.param import (VGBS, A_to_cov, prob_click,
-                                               prob_photon_sample,
-                                               rescale_adjacency)
+from strawberryfields.apps.train.param import (
+    VGBS,
+    A_to_cov,
+    prob_click,
+    prob_photon_sample,
+    rescale_adjacency,
+)

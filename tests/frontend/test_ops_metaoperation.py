@@ -21,8 +21,7 @@ import numpy as np
 import strawberryfields.program_utils as pu
 from strawberryfields import ops, utils
 from strawberryfields.program import Program
-from strawberryfields.program_utils import (CircuitError, MergeFailure,
-                                            RegRefError)
+from strawberryfields.program_utils import CircuitError, MergeFailure, RegRefError
 
 a = np.random.random()
 b = np.random.random()

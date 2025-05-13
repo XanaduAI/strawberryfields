@@ -15,6 +15,7 @@ r"""
 Unit tests for mbsqueezing operation in the bosonic backend.
 """
 import numpy as np
+
 # pylint: disable=too-many-arguments
 import pytest
 

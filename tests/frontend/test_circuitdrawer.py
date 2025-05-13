@@ -25,9 +25,11 @@ pytestmark = pytest.mark.frontend
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.circuitdrawer import Circuit as CircuitDrawer
-from strawberryfields.circuitdrawer import (ModeMismatchException,
-                                            NotDrawableException,
-                                            UnsupportedGateException)
+from strawberryfields.circuitdrawer import (
+    ModeMismatchException,
+    NotDrawableException,
+    UnsupportedGateException,
+)
 
 LINE_RETURN = "\n"
 WIRE_TERMINATOR = r"\\" + "\n"

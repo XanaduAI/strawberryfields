@@ -19,6 +19,7 @@ U(\alpha) = \exp(alpha \hat{a}^\dagger - \alpha^* \hat{a})
 where \hat{a}^\dagger is the photon creation operator.
 """
 import numpy as np
+
 # pylint: disable=too-many-arguments
 import pytest
 from scipy.special import factorial as fac

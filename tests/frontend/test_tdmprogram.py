@@ -19,9 +19,15 @@ import pytest
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.tdm import (TDMProgram, get_mode_indices, move_vac_modes,
-                                  random_bs, random_r, to_args_list,
-                                  vacuum_padding)
+from strawberryfields.tdm import (
+    TDMProgram,
+    get_mode_indices,
+    move_vac_modes,
+    random_bs,
+    random_r,
+    to_args_list,
+    vacuum_padding,
+)
 
 pytestmark = pytest.mark.frontend
 

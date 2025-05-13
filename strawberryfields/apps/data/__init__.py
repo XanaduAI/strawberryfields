@@ -70,6 +70,15 @@ these datasets inherit.
 import strawberryfields.apps.data.feature
 import strawberryfields.apps.data.sample
 from strawberryfields.apps.data.feature import MUTAG, QM9MC, QM9Exact
-from strawberryfields.apps.data.sample import (Formic, Mutag0, Mutag1, Mutag2,
-                                               Mutag3, PHat, Planted, Pyrrole,
-                                               TaceAs, Water)
+from strawberryfields.apps.data.sample import (
+    Formic,
+    Mutag0,
+    Mutag1,
+    Mutag2,
+    Mutag3,
+    PHat,
+    Planted,
+    Pyrrole,
+    TaceAs,
+    Water,
+)

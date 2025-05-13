@@ -22,11 +22,14 @@ from thewalrus.symplectic import sympmat
 
 tf = pytest.importorskip("tensorflow")
 
-from strawberryfields.backends.tfbackend.ops import (choi_trick, gaussian_gate,
-                                                     gaussian_gate_matrix,
-                                                     n_mode_gate,
-                                                     single_mode_gate,
-                                                     two_mode_gate)
+from strawberryfields.backends.tfbackend.ops import (
+    choi_trick,
+    gaussian_gate,
+    gaussian_gate_matrix,
+    n_mode_gate,
+    single_mode_gate,
+    two_mode_gate,
+)
 
 
 @pytest.mark.backends("tf", "fock")

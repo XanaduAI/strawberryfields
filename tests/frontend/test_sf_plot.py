@@ -23,8 +23,12 @@ from scipy.special import factorial as fac
 
 import strawberryfields as sf
 from strawberryfields.ops import BSgate, MeasureFock, Sgate, Vac
-from strawberryfields.plot import (barchart_default, generate_fock_chart,
-                                   generate_quad_chart, plot_wigner)
+from strawberryfields.plot import (
+    barchart_default,
+    generate_fock_chart,
+    generate_quad_chart,
+    plot_wigner,
+)
 
 pytestmark = pytest.mark.frontend
 

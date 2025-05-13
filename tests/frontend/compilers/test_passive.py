@@ -20,9 +20,11 @@ from thewalrus.symplectic import interferometer
 
 import strawberryfields as sf
 import strawberryfields.ops as ops
-from strawberryfields.compilers.passive import (_apply_one_mode_gate,
-                                                _apply_two_mode_gate,
-                                                _beam_splitter_passive)
+from strawberryfields.compilers.passive import (
+    _apply_one_mode_gate,
+    _apply_two_mode_gate,
+    _beam_splitter_passive,
+)
 from strawberryfields.utils import random_symplectic
 
 pytestmark = pytest.mark.frontend

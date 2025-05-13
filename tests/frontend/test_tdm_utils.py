@@ -23,12 +23,18 @@ import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.states import BaseGaussianState
 from strawberryfields.device import Device
-from strawberryfields.tdm import (borealis_gbs, get_mode_indices,
-                                  loop_phase_from_device,
-                                  make_phases_compatible,
-                                  make_squeezing_compatible, random_bs,
-                                  random_r, to_args_dict, to_args_list,
-                                  vacuum_padding)
+from strawberryfields.tdm import (
+    borealis_gbs,
+    get_mode_indices,
+    loop_phase_from_device,
+    make_phases_compatible,
+    make_squeezing_compatible,
+    random_bs,
+    random_r,
+    to_args_dict,
+    to_args_list,
+    vacuum_padding,
+)
 from strawberryfields.tdm.utils import full_compile, to_args_list
 
 pi = np.pi

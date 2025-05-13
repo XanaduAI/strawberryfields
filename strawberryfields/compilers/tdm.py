@@ -23,8 +23,7 @@ from blackbird.listener import is_ptype
 import strawberryfields.io as sio
 from strawberryfields.compilers.compiler import Compiler
 from strawberryfields.logger import create_logger
-from strawberryfields.ops import (BSgate, LossChannel, MeasureFock, Operation,
-                                  Rgate, Sgate)
+from strawberryfields.ops import BSgate, LossChannel, MeasureFock, Operation, Rgate, Sgate
 from strawberryfields.parameters import FreeParameter
 from strawberryfields.program_utils import CircuitError, Command
 

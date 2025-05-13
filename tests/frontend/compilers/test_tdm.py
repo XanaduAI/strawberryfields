@@ -24,8 +24,7 @@ import strawberryfields as sf
 from strawberryfields import Device, TDMProgram, ops
 from strawberryfields.compilers import compiler_db
 from strawberryfields.program_utils import CircuitError
-from strawberryfields.tdm.utils import (borealis_gbs, get_mode_indices,
-                                        random_bs, random_r)
+from strawberryfields.tdm.utils import borealis_gbs, get_mode_indices, random_bs, random_r
 
 pytestmark = pytest.mark.frontend
 

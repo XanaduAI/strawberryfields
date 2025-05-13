@@ -72,8 +72,7 @@ from .base import BaseBackend, BaseBosonic, BaseFock, BaseGaussian, ModeMap
 from .bosonicbackend import BosonicBackend
 from .fockbackend import FockBackend
 from .gaussianbackend import GaussianBackend
-from .states import (BaseBosonicState, BaseFockState, BaseGaussianState,
-                     BaseState)
+from .states import BaseBosonicState, BaseFockState, BaseGaussianState, BaseState
 
 # There is no import for the TFBackend to avoid TensorFlow being a direct
 # requirement of SF through a chain of imports
@@ -110,8 +109,7 @@ def load_backend(name):
     if name == "tf":
         # treat the tensorflow backend differently, to
         # isolate the import of TensorFlow
-        from .tfbackend import \
-            TFBackend  # pylint: disable=import-outside-toplevel
+        from .tfbackend import TFBackend  # pylint: disable=import-outside-toplevel
 
         return TFBackend()
 

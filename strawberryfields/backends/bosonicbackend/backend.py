@@ -26,8 +26,7 @@ from thewalrus.symplectic import xxpp_to_xpxp
 
 from strawberryfields.backends import BaseBosonic
 from strawberryfields.backends.base import NotApplicableError
-from strawberryfields.backends.bosonicbackend.bosoniccircuit import \
-    BosonicModes
+from strawberryfields.backends.bosonicbackend.bosoniccircuit import BosonicModes
 from strawberryfields.backends.states import BaseBosonicState
 from strawberryfields.program_utils import CircuitError
 
@@ -100,9 +99,16 @@ class BosonicBackend(BaseBosonic):
             NotApplicableError: if an op in the program does not apply to the bosonic backend
             NotImplementedError: if an op in the program is not implemented in the bosonic backend
         """
-        from strawberryfields.ops import (GKP, Bosonic, Catstate,
-                                          DensityMatrix, Fock, Ket, MSgate,
-                                          _New_modes)
+        from strawberryfields.ops import (
+            GKP,
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            Ket,
+            MSgate,
+            _New_modes,
+        )
 
         # If a circuit exists, initialize the circuit. This applies all non-Gaussian state-prep
         if prog.circuit:
@@ -181,8 +187,15 @@ class BosonicBackend(BaseBosonic):
             CircuitError: if any of the parameters for non-Gaussian state preparation
                 are symbolic
         """
-        from strawberryfields.ops import (GKP, Bosonic, Catstate,
-                                          DensityMatrix, Fock, Ket, _New_modes)
+        from strawberryfields.ops import (
+            GKP,
+            Bosonic,
+            Catstate,
+            DensityMatrix,
+            Fock,
+            Ket,
+            _New_modes,
+        )
 
         # _New_modes is what gets checked when New() is called in a program circuit.
         # It is included here since it could be used to instantiate a mode for non-Gaussian

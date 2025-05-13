@@ -14,8 +14,7 @@
 """Compiler for the general Gaussian Boson Sampling class of circuits."""
 
 import strawberryfields.ops as ops
-from strawberryfields.program_utils import (CircuitError, Command,
-                                            group_operations)
+from strawberryfields.program_utils import CircuitError, Command, group_operations
 
 from .gaussian import Gaussian
 

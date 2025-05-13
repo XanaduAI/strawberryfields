@@ -16,7 +16,17 @@
 algorithms in Strawberry Fields."""
 
 from .program import TDMProgram, is_ptype, reshape_samples, shift_by
-from .utils import (borealis_gbs, full_compile, get_mode_indices,
-                    loop_phase_from_device, make_phases_compatible,
-                    make_squeezing_compatible, move_vac_modes, random_bs,
-                    random_r, to_args_dict, to_args_list, vacuum_padding)
+from .utils import (
+    borealis_gbs,
+    full_compile,
+    get_mode_indices,
+    loop_phase_from_device,
+    make_phases_compatible,
+    make_squeezing_compatible,
+    move_vac_modes,
+    random_bs,
+    random_r,
+    to_args_dict,
+    to_args_list,
+    vacuum_padding,
+)

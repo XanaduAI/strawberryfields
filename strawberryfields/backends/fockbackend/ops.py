@@ -29,8 +29,7 @@ from thewalrus.fock_gradients import beamsplitter as beamsplitter_tw
 from thewalrus.fock_gradients import displacement as displacement_tw
 from thewalrus.fock_gradients import mzgate as mzgate_tw
 from thewalrus.fock_gradients import squeezing as squeezing_tw
-from thewalrus.fock_gradients import \
-    two_mode_squeezing as two_mode_squeezing_tw
+from thewalrus.fock_gradients import two_mode_squeezing as two_mode_squeezing_tw
 
 def_type = np.complex128
 indices = string.ascii_lowercase

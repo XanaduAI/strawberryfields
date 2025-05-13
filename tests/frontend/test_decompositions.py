@@ -14,8 +14,7 @@
 r"""Unit tests for the Strawberry Fields decompositions module"""
 import pytest
 
-from strawberryfields.utils.random_numbers_matrices import \
-    random_interferometer
+from strawberryfields.utils.random_numbers_matrices import random_interferometer
 
 pytestmark = pytest.mark.frontend
 
