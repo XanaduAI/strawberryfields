@@ -11,16 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r""" Tests for various multi mode state preparation operations"""
+r"""Tests for various multi mode state preparation operations."""
 import itertools
 
+import numpy as np
 import pytest
 
-import numpy as np
-
 from strawberryfields import ops
-from strawberryfields.utils import random_covariance, displaced_squeezed_state
-
+from strawberryfields.utils import displaced_squeezed_state, random_covariance
 
 MAG_ALPHAS = np.linspace(0, 0.8, 3)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 3, endpoint=False)
@@ -29,10 +27,10 @@ NBARS = np.linspace(0, 5)
 
 @pytest.mark.backends("tf", "fock")
 class TestFockBasisMultimode:
-    """Testing preparing multimode states on the Fock backends"""
+    """Testing preparing multimode states on the Fock backends."""
 
     def test_multimode_ket_mode_permutations(self, setup_backend, pure, cutoff, tol):
-        """Test multimode ket preparation when modes are permuted"""
+        """Test multimode ket preparation when modes are permuted."""
         backend = setup_backend(4)
 
         random_ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
@@ -53,7 +51,7 @@ class TestFockBasisMultimode:
     def test_compare_single_mode_and_multimode_ket_preparation(
         self, setup_backend, batch_size, pure, cutoff, tol
     ):
-        """Test single and multimode ket preparation"""
+        """Test single and multimode ket preparation."""
         backend = setup_backend(4)
 
         random_ket0 = np.random.uniform(-1, 1, cutoff) + 1j * np.random.uniform(-1, 1, cutoff)
@@ -93,8 +91,8 @@ class TestFockBasisMultimode:
     def test_compare_single_mode_and_multimode_dm_preparation(
         self, setup_backend, batch_size, pure, cutoff, tol
     ):
-        """Compare the results of a successive single mode preparations
-        and a multi mode preparation of a product state."""
+        """Compare the results of a successive single mode preparations and a multi mode
+        preparation of a product state."""
         backend = setup_backend(4)
         random_rho0 = np.random.normal(size=[cutoff] * 2) + 1j * np.random.normal(size=[cutoff] * 2)
         random_rho0 = np.dot(random_rho0.conj().T, random_rho0)
@@ -185,7 +183,8 @@ class TestFockBasisMultimode:
     def test_prepare_multimode_random_product_dm_state_on_different_modes(
         self, setup_backend, batch_size, pure, cutoff, tol
     ):
-        """Tests if a random multi mode dm state is correctly prepared on different modes."""
+        """Tests if a random multi mode dm state is correctly prepared on different
+        modes."""
         backend = setup_backend(4)
         N = 4
 
@@ -221,8 +220,8 @@ class TestFockBasisMultimode:
             assert np.all(random_rho.shape == dm.shape)
 
     def test_fast_state_prep_on_all_modes(self, setup_backend, batch_size, pure, cutoff, tol):
-        """Tests if a random multi mode ket state is correctly prepared with
-        the shortcut method on all modes."""
+        """Tests if a random multi mode ket state is correctly prepared with the
+        shortcut method on all modes."""
         backend = setup_backend(4)
         N = 4
         random_ket = np.random.normal(size=[cutoff] * N) + 1j * np.random.normal(size=[cutoff] * N)
@@ -244,7 +243,7 @@ class TestGaussianMultimode:
     """Tests for simulators that use the Gaussian representation."""
 
     def test_singlemode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test single mode Gaussian state preparation"""
+        """Test single mode Gaussian state preparation."""
         N = 4
         backend = setup_backend(N)
 
@@ -277,7 +276,7 @@ class TestGaussianMultimode:
             assert np.allclose(state.cov(), ex_V, atol=tol, rtol=0)
 
     def test_multimode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test multimode Gaussian state preparation"""
+        """Test multimode Gaussian state preparation."""
         N = 4
         backend = setup_backend(N)
 
@@ -310,7 +309,7 @@ class TestGaussianMultimode:
             assert np.allclose(state.cov(), ex_V, atol=tol, rtol=0)
 
     def test_full_mode_squeezed_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test full register Gaussian state preparation"""
+        """Test full register Gaussian state preparation."""
         N = 4
         backend = setup_backend(N)
 
@@ -327,7 +326,7 @@ class TestGaussianMultimode:
         assert np.allclose(state.cov(), cov * hbar / 2, atol=tol, rtol=0)
 
     def test_multimode_gaussian_random_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test multimode Gaussian state preparation on a random state"""
+        """Test multimode Gaussian state preparation on a random state."""
         N = 4
         backend = setup_backend(N)
 
@@ -409,12 +408,13 @@ def from_xp(n):
 @pytest.mark.backends("bosonic")
 class TestBosonicMultimode:
     """Tests for simulators that use the Bosonic representation.
-    This is the same test as TestGaussianMultimode, taking into
-    account the different basis ordering of the means and covs for
-    the bosonic backend."""
+
+    This is the same test as TestGaussianMultimode, taking into account the different
+    basis ordering of the means and covs for the bosonic backend.
+    """
 
     def test_singlemode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test single mode Gaussian state preparation"""
+        """Test single mode Gaussian state preparation."""
         N = 4
         backend = setup_backend(N)
 
@@ -447,7 +447,7 @@ class TestBosonicMultimode:
             assert np.allclose(state.covs(), np.array([ex_V]), atol=tol, rtol=0)
 
     def test_multimode_gaussian_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test multimode Gaussian state preparation"""
+        """Test multimode Gaussian state preparation."""
         N = 4
         backend = setup_backend(N)
 
@@ -468,10 +468,16 @@ class TestBosonicMultimode:
         # test Gaussian state is correct
         state = backend.state([1, 3])
         assert np.allclose(
-            state.means(), np.array([means[from_xp(2)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([means[from_xp(2)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.covs(), np.array([cov[from_xp(2), :][:, from_xp(2)]]) * hbar / 2, atol=tol, rtol=0
+            state.covs(),
+            np.array([cov[from_xp(2), :][:, from_xp(2)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
         )
 
         # test that displaced squeezed states are unchanged
@@ -482,11 +488,14 @@ class TestBosonicMultimode:
             state = backend.state([i])
             assert np.allclose(state.means(), np.array([ex_means[from_xp(1)]]), atol=tol, rtol=0)
             assert np.allclose(
-                state.covs(), np.array([ex_V[from_xp(1), :][:, from_xp(1)]]), atol=tol, rtol=0
+                state.covs(),
+                np.array([ex_V[from_xp(1), :][:, from_xp(1)]]),
+                atol=tol,
+                rtol=0,
             )
 
     def test_full_mode_squeezed_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test full register Gaussian state preparation"""
+        """Test full register Gaussian state preparation."""
         N = 4
         backend = setup_backend(N)
 
@@ -500,14 +509,20 @@ class TestBosonicMultimode:
         # test Gaussian state is correct
         state = backend.state()
         assert np.allclose(
-            state.means(), np.array([means[from_xp(4)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([means[from_xp(4)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.covs(), np.array([cov[from_xp(4), :][:, from_xp(4)]]) * hbar / 2, atol=tol, rtol=0
+            state.covs(),
+            np.array([cov[from_xp(4), :][:, from_xp(4)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
         )
 
     def test_multimode_gaussian_random_state(self, setup_backend, batch_size, pure, tol, hbar):
-        """Test multimode Gaussian state preparation on a random state"""
+        """Test multimode Gaussian state preparation on a random state."""
         N = 4
         backend = setup_backend(N)
 
@@ -522,16 +537,23 @@ class TestBosonicMultimode:
         # test Gaussian state is correct
         state = backend.state()
         assert np.allclose(
-            state.means(), np.array([means[from_xp(N)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([means[from_xp(N)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
-            state.covs(), np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2, atol=tol, rtol=0
+            state.covs(),
+            np.array([cov[from_xp(N), :][:, from_xp(N)]]) * hbar / 2,
+            atol=tol,
+            rtol=0,
         )
 
     def test_multimode_gaussian_random_state_with_replacement(
         self, setup_backend, batch_size, pure, tol, hbar
     ):
-        """Test multimode Gaussian state preparation on a random state with replacement"""
+        """Test multimode Gaussian state preparation on a random state with
+        replacement."""
         N = 4
         backend = setup_backend(N)
 
@@ -591,7 +613,10 @@ class TestBosonicMultimode:
         ex_cov[rows, cols] = cov2[rows2, cols2]
 
         assert np.allclose(
-            state.means(), np.array([ex_means[from_xp(4)]]) * np.sqrt(hbar / 2), atol=tol, rtol=0
+            state.means(),
+            np.array([ex_means[from_xp(4)]]) * np.sqrt(hbar / 2),
+            atol=tol,
+            rtol=0,
         )
         assert np.allclose(
             state.covs(),

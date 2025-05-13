@@ -14,24 +14,23 @@
 # pylint: disable=too-many-branches,too-many-statements
 """General interferometer compiler for the X class of circuits."""
 
-from collections import defaultdict
 import copy
+from collections import defaultdict
 
 import numpy as np
 from thewalrus.symplectic import expand
 
+import strawberryfields.ops as ops
 from strawberryfields.program_utils import CircuitError, Command, group_operations
 
-import strawberryfields.ops as ops
-
 from .compiler import Compiler
-from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
+from .gbs import GBS
 
 
 def list_duplicates(seq):
-    """Returns a generator representing the duplicated values in the sequence
-    mapped to the indices they appear at."""
+    """Returns a generator representing the duplicated values in the sequence mapped to
+    the indices they appear at."""
     tally = defaultdict(list)
     for i, item in enumerate(seq):
         tally[item].append(i)
@@ -78,6 +77,7 @@ class Xunitary(Compiler):
     >>> spec = eng.device_spec
     >>> prog.compile(device=spec, compiler="Xunitary")
     """
+
     short_name = "Xunitary"
     interactive = False
 
@@ -168,7 +168,10 @@ class Xunitary(Compiler):
                     phi = phi_new
 
                 i, j = mode
-                B.insert(indices[0], Command(ops.S2gate(r, phi), [registers[i], registers[j]]))
+                B.insert(
+                    indices[0],
+                    Command(ops.S2gate(r, phi), [registers[i], registers[j]]),
+                )
 
         meas_seq = [C[-1]]
         seq = GaussianUnitary().compile(C[:-1], registers)

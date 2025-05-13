@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r""" Tests for the file tfbackend/ops.py"""
-
-import pytest
+r"""Tests for the file tfbackend/ops.py."""
 
 import numpy as np
+import pytest
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 
@@ -24,12 +23,12 @@ from strawberryfields.backends.tfbackend.ops import reduced_density_matrix
 
 @pytest.mark.backends("tf")
 class TestTFOps:
-    """Testing for tfbackend/ops.py"""
+    """Testing for tfbackend/ops.py."""
 
     @pytest.mark.parametrize("num_modes", [2, 3, 4])
     def test_reduced_density_matrix_fock_states(self, num_modes, setup_backend, cutoff, tol):
         """Test the reduced_density_matrix returns the correct reduced density matrices
-        when prepared with initial fock states"""
+        when prepared with initial fock states."""
 
         zero_photon_state = np.zeros([cutoff])
         zero_photon_state[0] = 1.0
@@ -67,7 +66,8 @@ class TestTFOps:
         ],
     )
     def test_reduced_density_matrix_multiple_modes(self, setup_backend, cutoff, modes, einstr, tol):
-        """Test that reduced_density_matrix returns the correct reduced density matrices."""
+        """Test that reduced_density_matrix returns the correct reduced density
+        matrices."""
         state = np.zeros([cutoff, cutoff, cutoff])
         state[0, 0, 0] = 1 / np.sqrt(2)
         state[1, 1, 1] = 1 / np.sqrt(2)

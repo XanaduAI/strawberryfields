@@ -11,17 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the states.py Wigner method"""
-import pytest
-
+r"""Unit tests for the states.py Wigner method."""
 import numpy as np
+import pytest
 from scipy.stats import multivariate_normal
-
 from thewalrus.symplectic import rotation as rotm
 
-from strawberryfields import backends
-from strawberryfields import utils
-
+from strawberryfields import backends, utils
 
 A = 0.3 + 0.1j
 R = 0.23
@@ -41,20 +37,19 @@ GRID[:, :, 1] = P
 
 @pytest.fixture(autouse=True)
 def skip_if_batched(batch_size):
-    """Skip this test if in batch mode"""
+    """Skip this test if in batch mode."""
     if batch_size is not None:
         pytest.skip("Wigner tests skipped in batch mode")
 
 
 def wigner(GRID, mu, cov):
-    """Generate the PDF distribution of a normal distribution"""
+    """Generate the PDF distribution of a normal distribution."""
     mvn = multivariate_normal(mu, cov, allow_singular=True)
     return mvn.pdf(GRID)
 
 
 def test_vacuum(setup_backend, hbar, tol):
-    """Test Wigner function for a Vacuum state is a standard
-    normal Gaussian"""
+    """Test Wigner function for a Vacuum state is a standard normal Gaussian."""
     backend = setup_backend(1)
     state = backend.state()
     W = state.wigner(0, XVEC, XVEC)
@@ -68,8 +63,8 @@ def test_vacuum(setup_backend, hbar, tol):
 
 
 def test_vacuum_one_point(setup_backend, hbar, tol):
-    """Test Wigner function for a Vacuum state is a standard
-    normal Gaussian at a single point"""
+    """Test Wigner function for a Vacuum state is a standard normal Gaussian at a single
+    point."""
     backend = setup_backend(1)
     state = backend.state()
     vec = np.array([0])
@@ -89,8 +84,8 @@ def test_vacuum_one_point(setup_backend, hbar, tol):
 
 
 def test_squeezed_coherent(setup_backend, hbar, tol):
-    """Test Wigner function for a squeezed coherent state
-    matches the analytic result"""
+    """Test Wigner function for a squeezed coherent state matches the analytic
+    result."""
     backend = setup_backend(1)
     backend.prepare_coherent_state(np.abs(A), np.angle(A), 0)
     backend.squeeze(R, PHI, 0)
@@ -110,8 +105,8 @@ def test_squeezed_coherent(setup_backend, hbar, tol):
 
 
 def test_two_mode_squeezed(setup_backend, hbar, tol):
-    """Test Wigner function for a two mode squeezed state
-    matches the analytic result"""
+    """Test Wigner function for a two mode squeezed state matches the analytic
+    result."""
     backend = setup_backend(2)
     backend.prepare_squeezed_state(R, 0, 0)
     backend.prepare_squeezed_state(-R, 0, 1)
@@ -133,8 +128,7 @@ def test_two_mode_squeezed(setup_backend, hbar, tol):
 
 
 def fock_1_state_quad(setup_backend, hbar, tol):
-    """Test the quadrature probability distribution
-    functions for the |1> Fock state"""
+    """Test the quadrature probability distribution functions for the |1> Fock state."""
     backend = setup_backend(1)
     backend.prepare_fock_state(1, 0)
 
@@ -145,9 +139,7 @@ def fock_1_state_quad(setup_backend, hbar, tol):
 
     # Exact probability distribution
     def exact(a):
-        return (
-            0.5 * np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a**2) / hbar) * (4 / hbar) * (a**2)
-        )
+        return 0.5 * np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a**2) / hbar) * (4 / hbar) * (a**2)
 
     exact_x = np.array([exact(x) for x in XVEC])
     exact_p = np.array([exact(p) for p in XVEC])
@@ -157,8 +149,7 @@ def fock_1_state_quad(setup_backend, hbar, tol):
 
 
 def vacuum_state_quad(setup_backend, hbar, tol):
-    """Test the quadrature probability distribution
-    functions for the vacuum state"""
+    """Test the quadrature probability distribution functions for the vacuum state."""
     backend = setup_backend(1)
     backend.prepare_vacuum_state(0)
 
@@ -179,8 +170,8 @@ def vacuum_state_quad(setup_backend, hbar, tol):
 
 
 def coherent_state_quad(setup_backend, hbar, tol):
-    """Test the quadrature probability distribution
-    functions for the coherent state with alpha = 1"""
+    """Test the quadrature probability distribution functions for the coherent state
+    with alpha = 1."""
     backend = setup_backend(1)
     backend.prepare_coherent_state(1, 0)
 

@@ -11,18 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This module contains a compiler to reduce a sequence of passive gates into a single multimode linear passive operation"""
+"""This module contains a compiler to reduce a sequence of passive gates into a single
+multimode linear passive operation."""
 
 import numpy as np
-from strawberryfields.program_utils import Command
+
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate
+from strawberryfields.program_utils import Command
 
 from .compiler import Compiler
 
 
 def _apply_one_mode_gate(G, T, i):
-    """In-place applies a one mode gate G into the process matrix T in mode i
+    """In-place applies a one mode gate G into the process matrix T in mode i.
 
     Args:
         G (complex or float): one mode gate
@@ -38,7 +40,7 @@ def _apply_one_mode_gate(G, T, i):
 
 
 def _apply_two_mode_gate(G, T, i, j):
-    """In-place applies a two mode gate G into the process matrix T in modes i and j
+    """In-place applies a two mode gate G into the process matrix T in modes i and j.
 
     Args:
         G (array): 2x2 matrix for two mode gate
@@ -76,7 +78,7 @@ def _beam_splitter_passive(theta, phi):
 
 
 class Passive(Compiler):
-    """Compiler to write a sequence of passive operations as a single passive operation
+    """Compiler to write a sequence of passive operations as a single passive operation.
 
     This compiler checks whether the circuit can be implemented as a sequence of
     passive operations. If so, it arranges them in a single matrix, T. It then returns an PassiveChannel
@@ -129,9 +131,10 @@ class Passive(Compiler):
     }
 
     decompositions = {}
+
     # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
-        """Try to arrange a passive circuit into a single multimode passive operation
+        """Try to arrange a passive circuit into a single multimode passive operation.
 
         This method checks whether the circuit can be implemented as a sequence of passive gates.
         If the answer is yes it arranges them into a single operation.

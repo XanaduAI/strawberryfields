@@ -1,5 +1,4 @@
-r"""
-Tools for training variational GBS devices.
+r"""Tools for training variational GBS devices.
 
 .. currentmodule:: strawberryfields.apps.train
 
@@ -90,8 +89,8 @@ Related tutorials
 
     <div style='clear:both'></div>
     <br>
-
 """
+
 from strawberryfields.apps.train.cost import KL, Stochastic
 from strawberryfields.apps.train.embed import Exp, ExpFeatures
 from strawberryfields.apps.train.param import (

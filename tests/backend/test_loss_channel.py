@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+r"""Unit tests for the loss channel.
 
-r"""Unit tests for the loss channel
 Convention: The loss channel N(T) has the action
 N(T){|n><m|} = \sum_{l=0}^{min(m,n)} ((1-T)/T) ^ l * T^((n+m)/2) / l! * \sqrt(n!m!/((n-l)!(m-l)!))n-l><m-l|
 """
 
 
-import pytest
-
 import numpy as np
+import pytest
 from scipy.special import factorial
 
 LOSS_TS = np.linspace(0.0, 1.0, 3, endpoint=True)
@@ -58,8 +57,8 @@ class TestRepresentationIndependent:
 # thermal loss channels.
 @pytest.mark.backends("gaussian", "bosonic")
 class TestThermalLossChannel:
-    """Tests that make use of the Gaussian representation to test
-    thermal loss channels."""
+    """Tests that make use of the Gaussian representation to test thermal loss
+    channels."""
 
     @pytest.mark.parametrize("T", LOSS_TS)
     def test_thermal_loss_channel_with_vacuum(self, T, setup_backend, pure, tol):
@@ -113,7 +112,7 @@ class TestThermalLossChannel:
     @pytest.mark.parametrize("T", LOSS_TS)
     @pytest.mark.parametrize("nbar", MAG_ALPHAS)
     def test_thermal_loss_channel_on_squeezed_state(self, nbar, T, setup_backend, pure, tol, hbar):
-        """Tests thermal loss channel on a squeezed state"""
+        """Tests thermal loss channel on a squeezed state."""
         backend = setup_backend(1)
         r = 0.432
         backend.squeeze(r, 0, 0)
@@ -188,7 +187,8 @@ class TestFockRepresentation:
     def test_loss_channel_on_coherent_states(
         self, setup_backend, T, mag_alpha, phase_alpha, cutoff, tol
     ):
-        """Tests various loss channels on coherent states (result should be coherent state with amplitude weighted by sqrt(T)."""
+        """Tests various loss channels on coherent states (result should be coherent
+        state with amplitude weighted by sqrt(T)."""
 
         rootT_alpha = np.sqrt(T) * mag_alpha * np.exp(1j * phase_alpha)
 
@@ -202,8 +202,6 @@ class TestFockRepresentation:
         else:
             numer_state = s.dm()
         n = np.arange(cutoff)
-        ref_state = (
-            np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha**n / np.sqrt(factorial(n))
-        )
+        ref_state = np.exp(-0.5 * np.abs(rootT_alpha) ** 2) * rootT_alpha**n / np.sqrt(factorial(n))
         ref_state = np.outer(ref_state, np.conj(ref_state))
         assert np.allclose(numer_state, ref_state, atol=tol, rtol=0.0)

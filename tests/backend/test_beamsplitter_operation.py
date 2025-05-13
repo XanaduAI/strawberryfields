@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 r"""
 Unit tests for beamsplitter operations
 Convention: The beamsplitter operation transforms
@@ -23,11 +22,9 @@ Equivalently, we have t:=\cos(\theta) (t assumed real) and r:=\exp{i\phi}\sin(\t
 
 import itertools as it
 
-import pytest
-
 import numpy as np
+import pytest
 from scipy.special import factorial
-
 
 T_VALUES = np.linspace(-0.2, 1.0, 3, dtype=np.float64)
 PHASE_R = np.linspace(0, 2 * np.pi, 3, endpoint=False, dtype=np.float64)
@@ -42,8 +39,8 @@ class TestRepresentationIndependent:
     @pytest.mark.parametrize("t", T_VALUES)
     @pytest.mark.parametrize("r_phi", PHASE_R)
     def test_vacuum_beamsplitter(self, setup_backend, t, r_phi, tol):
-        """Tests beamsplitter operation in some limiting cases where the output
-        should be the vacuum in both modes."""
+        """Tests beamsplitter operation in some limiting cases where the output should
+        be the vacuum in both modes."""
         backend = setup_backend(2)
 
         backend.beamsplitter(np.arccos(t), r_phi, 0, 1)
@@ -53,11 +50,13 @@ class TestRepresentationIndependent:
     @pytest.mark.parametrize("mag_alpha", MAG_ALPHAS[1:])
     @pytest.mark.parametrize("r_phi", PHASE_R)
     def test_coherent_vacuum_interfered(self, setup_backend, t, mag_alpha, r_phi, tol):
-        r"""Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
-        have the correct fidelity with the expected coherent states outputs.
-        |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out>
-        and for each output mode,
-        |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>"""
+        r"""Tests if a range of beamsplitter output states (formed from a coherent state
+        interfering with vacuum) have the correct fidelity with the expected coherent
+        states outputs.
+
+        |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out> and for each
+        output mode, |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>
+        """
         phase_alpha = np.pi / 5
         alpha = mag_alpha * np.exp(1j * phase_alpha)
         r = np.exp(1j * r_phi) * np.sqrt(1.0 - np.abs(t) ** 2)
@@ -95,11 +94,12 @@ class TestFockRepresentation:
     def test_coherent_vacuum_interfered_fock_elements(
         self, setup_backend, mag_alpha, t, r_phi, cutoff, pure, tol
     ):
-        r"""Tests if a range of beamsplitter output states (formed from a coherent state interfering with vacuum)
-        have the correct Fock basis elements.
-        |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out>
-        and for each output mode,
-        |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>"""
+        r"""Tests if a range of beamsplitter output states (formed from a coherent state
+        interfering with vacuum) have the correct Fock basis elements.
+
+        |\psi_in> = |\alpha>|0> --> |t \alpha>|r \alpha> = |\psi_out> and for each
+        output mode, |\gamma> = exp(-0.5 |\gamma|^2) \sum_n \gamma^n / \sqrt{n!} |n>
+        """
 
         phase_alpha = np.pi / 5
         alpha = mag_alpha * np.exp(1j * phase_alpha)
@@ -119,12 +119,8 @@ class TestFockRepresentation:
         alpha_outB = r * alpha
 
         n = np.arange(cutoff)
-        ref_stateA = (
-            np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
-        )
-        ref_stateB = (
-            np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
-        )
+        ref_stateA = np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
+        ref_stateB = np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
 
         ref_state = np.einsum("i,j->ij", ref_stateA, ref_stateB)
 
@@ -167,12 +163,8 @@ class TestModeSubsets:
         alpha_outB = r * alpha
 
         n = np.arange(cutoff)
-        ref_stateA = (
-            np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
-        )
-        ref_stateB = (
-            np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
-        )
+        ref_stateA = np.exp(-0.5 * np.abs(alpha_outA) ** 2) * alpha_outA**n / np.sqrt(factorial(n))
+        ref_stateB = np.exp(-0.5 * np.abs(alpha_outB) ** 2) * alpha_outB**n / np.sqrt(factorial(n))
 
         numer_state = state.reduced_dm(list(modes))
 

@@ -11,14 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""
-Submodule for sample datasets and their base classes.
-"""
+r"""Submodule for sample datasets and their base classes."""
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
 
-import pkg_resources
 import numpy as np
+import pkg_resources
 import scipy
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/sample_data") + "/"
@@ -42,13 +40,15 @@ class SampleDataset(ABC):
     @property
     @abstractmethod
     def _data_filename(self) -> str:
-        """Base name of files containing the sample data stored in the ``./sample_data/`` directory.
+        """Base name of files containing the sample data stored in the
+        ``./sample_data/`` directory.
 
         Samples and corresponding adjacency matrix should both be provided as a
         ``scipy.sparse.csr_matrix`` saved in ``.npz`` format.
 
         For ``_data_filename = "example"``, the corresponding samples should be stored as
-        ``./sample_data/example.npz`` and the adjacency matrix as ``./sample_data/example_A.npz``."""
+        ``./sample_data/example.npz`` and the adjacency matrix as ``./sample_data/example_A.npz``.
+        """
         pass
 
     def __init__(self):

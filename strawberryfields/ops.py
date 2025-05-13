@@ -11,34 +11,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""
-This module defines and implements the Python-embedded quantum programming language
+r"""This module defines and implements the Python-embedded quantum programming language
 for continuous-variable (CV) quantum systems.
+
 The syntax is modeled after ProjectQ :cite:`projectq2016`.
 """
-from collections.abc import Sequence
 import copy
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
-
-from scipy.linalg import block_diag
 import scipy.special as ssp
-
+from scipy.linalg import block_diag
 from thewalrus.symplectic import xxpp_to_xpxp
 
 import strawberryfields as sf
-import strawberryfields.program_utils as pu
 import strawberryfields.decompositions as dec
-from .backends.states import BaseFockState, BaseGaussianState, BaseBosonicState
-from .program_utils import Command, RegRef, MergeFailure
-from .parameters import (
-    par_regref_deps,
-    par_str,
-    par_evaluate,
-    par_is_symbolic,
-    par_funcs as pf,
-)
+import strawberryfields.program_utils as pu
+
+from .backends.states import BaseBosonicState, BaseFockState, BaseGaussianState
+from .parameters import par_evaluate
+from .parameters import par_funcs as pf
+from .parameters import par_is_symbolic, par_regref_deps, par_str
+from .program_utils import Command, MergeFailure, RegRef
 
 # pylint: disable=abstract-method
 # pylint: disable=protected-access
@@ -52,7 +47,7 @@ _decomposition_tol = (
 
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
-    """User warning formatter"""
+    """User warning formatter."""
     # pylint: disable=unused-argument
     return "{}:{}: {}: {}\n".format(filename, lineno, category.__name__, message)
 
@@ -143,7 +138,8 @@ class Operation:
         return reg
 
     def merge(self, other):
-        """Merge the operation with another (acting on the exact same set of subsystems).
+        """Merge the operation with another (acting on the exact same set of
+        subsystems).
 
         .. note:: For subclass overrides: merge may return a newly created object,
            or self, or other, but it must never modify self or other
@@ -166,7 +162,8 @@ class Operation:
         raise NotImplementedError
 
     def decompose(self, reg, **kwargs):
-        """Decompose the operation into elementary operations supported by the backend API.
+        """Decompose the operation into elementary operations supported by the backend
+        API.
 
         See :mod:`strawberryfields.backends.base`.
 
@@ -205,7 +202,8 @@ class Operation:
         raise NotImplementedError("Missing direct implementation: {}".format(self))
 
     def apply(self, reg, backend, **kwargs):
-        """Ask a local backend to execute the operation on the current register state right away.
+        """Ask a local backend to execute the operation on the current register state
+        right away.
 
         Takes care of parameter evaluations and any pending formal
         transformations (like dagger) and then calls :meth:`Operation._apply`.
@@ -229,8 +227,8 @@ class Operation:
 
     @staticmethod
     def _check_for_complex_args(arguments, gate_info):
-        """Check if any of the input arguments are of complex type for an
-        operation that doesn't support complex inputs.
+        """Check if any of the input arguments are of complex type for an operation that
+        doesn't support complex inputs.
 
         Args:
             arguments (list): list of input arguments to check
@@ -251,9 +249,8 @@ class Operation:
 
 
 class Preparation(Operation):
-    """Abstract base class for operations that demolish
-    the previous state of the subsystem entirely.
-    """
+    """Abstract base class for operations that demolish the previous state of the
+    subsystem entirely."""
 
     def merge(self, other):
         # sequential preparation, only the last one matters
@@ -308,7 +305,8 @@ class Measurement(Operation):
         raise MergeFailure("For now, measurements cannot be merged with anything else.")
 
     def apply(self, reg, backend, **kwargs):
-        """Ask a backend to execute the operation on the current register state right away.
+        """Ask a backend to execute the operation on the current register state right
+        away.
 
         Like :func:`Operation.apply`, but also stores the measurement result in the RegRefs.
 
@@ -381,8 +379,7 @@ class Decomposition(Operation):
 class Transformation(Operation):
     """Abstract base class for transformations.
 
-    This class provides the base behaviour for operations which
-    act on existing states.
+    This class provides the base behaviour for operations which act on existing states.
     """
 
     # NOTE: At the moment this is an empty class, and only
@@ -400,8 +397,7 @@ class Transformation(Operation):
 class Channel(Transformation):
     """Abstract base class for quantum channels.
 
-    This class provides the base behaviour for non-unitary
-    maps and transformations.
+    This class provides the base behaviour for non-unitary maps and transformations.
     """
 
     # TODO decide how all Channels should treat the first parameter p[0]
@@ -470,7 +466,8 @@ class Gate(Transformation):
         return s
 
     def decompose(self, reg, **kwargs):
-        """Decompose the operation into elementary operations supported by the backend API.
+        """Decompose the operation into elementary operations supported by the backend
+        API.
 
         Like :func:`Operation.decompose`, but applies self.dagger.
         """
@@ -483,7 +480,8 @@ class Gate(Transformation):
         return seq
 
     def apply(self, reg, backend, **kwargs):
-        """Ask a backend to execute the operation on the current register state right away.
+        """Ask a backend to execute the operation on the current register state right
+        away.
 
         Like :func:`Operation.apply`, but takes into account the special nature of
         p[0] and applies self.dagger.
@@ -901,8 +899,8 @@ class Catstate(Preparation):
 
     @staticmethod
     def _create_ket(alpha, theta, cutoff_dim):
-        """Creates the statevector of the cat state determined by input
-        arguments and a cutoff dimension.
+        """Creates the statevector of the cat state determined by input arguments and a
+        cutoff dimension.
 
         alpha (complex): the displacement
         theta (float): argument of the cat state based on parity
@@ -958,7 +956,12 @@ class GKP(Preparation):
     """
 
     def __init__(
-        self, state=None, epsilon=0.2, ampl_cutoff=1e-12, representation="real", shape="square"
+        self,
+        state=None,
+        epsilon=0.2,
+        ampl_cutoff=1e-12,
+        representation="real",
+        shape="square",
     ):
         if state is None:
             state = [0, 0]
@@ -1025,6 +1028,7 @@ class Ket(Preparation):
             .. math::
                 \ket{\psi} = \sum_n c_n \ket{n}
     """
+
     ns = None
 
     def __init__(self, state):
@@ -1086,6 +1090,7 @@ class DensityMatrix(Preparation):
 
         .. math:: \braketT{n}{\text{Tr}_{01}[\rho]}{m} = \sum_{i}\sum_k \rho_{iikkmn}
     """
+
     ns = None
 
     def __init__(self, state):
@@ -1205,8 +1210,8 @@ class MeasureFock(Measurement):
 
 
 class MeasureThreshold(Measurement):
-    """Measures a set of modes with thresholded Fock-state measurements, i.e.,
-    measuring whether a mode contain zero or nonzero photons.
+    """Measures a set of modes with thresholded Fock-state measurements, i.e., measuring
+    whether a mode contain zero or nonzero photons.
 
     After measurement, the modes are reset to the vacuum state.
     """
@@ -1261,6 +1266,7 @@ class MeasureHomodyne(Measurement):
         :math:`\x_\phi` probability distribution over a specific range and number of bins,
         before taking a random sample.
     """
+
     ns = 1
 
     def __init__(self, phi, select=None):
@@ -1309,6 +1315,7 @@ class MeasureHeterodyne(Measurement):
 
            .. math:: \frac{1}{\pi} \ket{\alpha}\bra{\alpha}
     """
+
     ns = 1
 
     def __init__(self, select=None):
@@ -1457,7 +1464,7 @@ class MSgate(Channel):
 
 
 class PassiveChannel(Channel):
-    r"""Perform an arbitrary multimode passive operation
+    r"""Perform an arbitrary multimode passive operation.
 
     Args:
         T (array): an NxN matrix acting on a N mode state
@@ -1468,7 +1475,6 @@ class PassiveChannel(Channel):
 
         .. math::
             a^{\dagger}_i \to \sum_j T_{ij} a^{\dagger}_j
-
     """
 
     def __init__(self, T):
@@ -1855,8 +1861,7 @@ class Rgate(Gate):
 
 
 class BSgate(Gate):
-    r"""BSgate(theta=pi/4, phi=0.)
-    Beamsplitter gate.
+    r"""BSgate(theta=pi/4, phi=0.) Beamsplitter gate.
 
     .. math::
         B(\theta,\phi) = \exp\left(\theta (e^{i \phi} a_1 a_2^\dagger -e^{-i \phi} a_1^\dagger a_2) \right)
@@ -1932,6 +1937,7 @@ class BSgate(Gate):
         Alternatively, **symmetric beamsplitter** (one that does not distinguish between
         :math:`\a_1` and :math:`\a_2`) is obtained by setting :math:`\phi=\pi/2`.
     """
+
     ns = 2
 
     def __init__(self, theta=np.pi / 4, phi=0.0):
@@ -1985,8 +1991,8 @@ class MZgate(Gate):
             \end{array}\right).
 
     The last example corresponds to a 50/50 two-mode interferometer.
-
     """
+
     ns = 2
 
     def __init__(self, phi_in, phi_ex):
@@ -2007,7 +2013,8 @@ class MZgate(Gate):
 
 
 class sMZgate(Gate):
-    r"""Symmetric Mach-Zehnder interferometer"""
+    r"""Symmetric Mach-Zehnder interferometer."""
+
     ns = 2
 
     def __init__(self, phi_in, phi_ex):
@@ -2060,6 +2067,7 @@ class S2gate(Gate):
 
         where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
     """
+
     ns = 2
 
     def __init__(self, r, phi=0.0):
@@ -2132,6 +2140,7 @@ class CXgate(Gate):
             \sin(2 \theta) = \frac{-1}{\cosh r}, \ \cos(2 \theta)=-\tanh(r),
             \ \sinh(r) = -\frac{ s}{2}.
     """
+
     ns = 2
 
     def __init__(self, s=1):
@@ -2191,6 +2200,7 @@ class CZgate(Gate):
             \text{CZ}(s)^\dagger \hat{a}_1 \text{CZ}(s) &= \a_1+  i\frac{s}{2} (\ad_2 +  \a_2)\\
             \text{CZ}(s)^\dagger \hat{a}_2 \text{CZ}(s) &= \a_2+  i\frac{s}{2} (\ad_1 +  \a_1)\\
     """
+
     ns = 2
 
     def __init__(self, s=1):
@@ -2236,6 +2246,7 @@ class CKgate(Gate):
         .. math::
             CK(\kappa) = \exp{(i\kappa\hat{n}_1\hat{n_2})}.
     """
+
     ns = 2
 
     def __init__(self, kappa):
@@ -2312,7 +2323,6 @@ class Ggate(Gate):
         .. math::
             & cov = S*cov*S^T,\\
             & mean = mean + d.
-
     """
 
     def __init__(self, S, d):
@@ -2348,11 +2358,11 @@ class MetaOperation(Operation):
 
 
 class _Delete(MetaOperation):
-    """Deletes one or more existing modes.
-    Also accessible via the shortcut variable ``Del``.
+    """Deletes one or more existing modes. Also accessible via the shortcut variable
+    ``Del``.
 
-    The deleted modes are traced out.
-    After the deletion the state of the remaining subsystems may have to be described using a density operator.
+    The deleted modes are traced out. After the deletion the state of the remaining
+    subsystems may have to be described using a density operator.
     """
 
     ns = None
@@ -2614,6 +2624,7 @@ class Interferometer(Decomposition):
 
             .. math:: BS_{clements}(\theta, \phi) = BS(\theta, 0) R(\phi)
     """
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, U, mesh="rectangular", drop_identity=True, tol=1e-6):
@@ -3050,6 +3061,7 @@ class Gaussian(Preparation, Decomposition):
         a symplectic transformation :math:`S` acting on the vacuum. It follows that the
         original covariance matrix can therefore be recovered simply via :math:`V=\frac{\hbar}{2}SS^T`.
     """
+
     # pylint: disable=too-many-instance-attributes
     ns = None
 

@@ -11,20 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This module contains a compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form."""
+"""This module contains a compiler to arrange a Gaussian quantum circuit into the
+canonical Symplectic form."""
 
 import numpy as np
-from strawberryfields.program_utils import Command
-from strawberryfields import ops
-from strawberryfields.parameters import par_evaluate
 from thewalrus.symplectic import (
+    beam_splitter,
     expand,
+    interferometer,
     rotation,
     squeezing,
     two_mode_squeezing,
-    interferometer,
-    beam_splitter,
 )
+
+from strawberryfields import ops
+from strawberryfields.parameters import par_evaluate
+from strawberryfields.program_utils import Command
+
 from .compiler import Compiler
 
 
@@ -84,7 +87,8 @@ def _apply_symp_two_mode_gate(S_G, S, r, i, j):
 
 
 class GaussianUnitary(Compiler):
-    """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic form.
+    """Compiler to arrange a Gaussian quantum circuit into the canonical Symplectic
+    form.
 
     This compiler checks whether the circuit can be implemented as a sequence of
     Gaussian operations. If so, it arranges them in the canonical order with displacement at the end.
@@ -154,6 +158,7 @@ class GaussianUnitary(Compiler):
         "Zgate": {},
         "Fouriergate": {},
     }
+
     # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.
@@ -204,7 +209,10 @@ class GaussianUnitary(Compiler):
                     )
                 elif name == "Sgate":
                     Snet, rnet = _apply_symp_one_mode_gate(
-                        squeezing(params[0], params[1]), Snet, rnet, dict_indices[modes[0]]
+                        squeezing(params[0], params[1]),
+                        Snet,
+                        rnet,
+                        dict_indices[modes[0]],
                     )
                 elif name == "S2gate":
                     Snet, rnet = _apply_symp_two_mode_gate(
@@ -230,7 +238,9 @@ class GaussianUnitary(Compiler):
                         )
                     else:
                         S = expand(
-                            interferometer(U), [dict_indices[mode] for mode in modes], nmodes
+                            interferometer(U),
+                            [dict_indices[mode] for mode in modes],
+                            nmodes,
                         )
                         Snet = S @ Snet
                         rnet = S @ rnet
@@ -243,7 +253,11 @@ class GaussianUnitary(Compiler):
                         )
                     elif S_G.shape == (4, 4):
                         Snet, rnet = _apply_symp_two_mode_gate(
-                            S_G, Snet, rnet, dict_indices[modes[0]], dict_indices[modes[1]]
+                            S_G,
+                            Snet,
+                            rnet,
+                            dict_indices[modes[0]],
+                            dict_indices[modes[1]],
                         )
                     else:
                         S = expand(S_G, [dict_indices[mode] for mode in modes], nmodes)
@@ -274,7 +288,10 @@ class GaussianUnitary(Compiler):
                     exp_sigma = np.exp(1j * (params[0] + params[1]) / 2)
                     delta = (params[0] - params[1]) / 2
                     U = exp_sigma * np.array(
-                        [[np.sin(delta), np.cos(delta)], [np.cos(delta), -np.sin(delta)]]
+                        [
+                            [np.sin(delta), np.cos(delta)],
+                            [np.cos(delta), -np.sin(delta)],
+                        ]
                     )
                     Snet, rnet = _apply_symp_two_mode_gate(
                         interferometer(U),

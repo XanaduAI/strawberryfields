@@ -220,9 +220,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_expected, atol=tol, rtol=0)
 
         # var(ax+bp) = a**2 var(x)+b**2 var(p)+2ab cov(x,p)
-        var_expected = (
-            cov[0, 0] * d[0] ** 2 + cov[1, 1] * d[3] ** 2 + 2 * d[0] * d[3] * cov[0, 1]
-        )
+        var_expected = cov[0, 0] * d[0] ** 2 + cov[1, 1] * d[3] ** 2 + 2 * d[0] * d[3] * cov[0, 1]
         assert np.allclose(var, var_expected, atol=tol, rtol=0)
 
     def test_n_thermal(self, setup_backend, tol, hbar, pure):
@@ -360,9 +358,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-    def test_arbitrary_quadratic(
-        self, setup_backend, tol, pure, sample_normal_expectations, hbar
-    ):
+    def test_arbitrary_quadratic(self, setup_backend, tol, pure, sample_normal_expectations, hbar):
         """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x
         + c4 p + k) on a displaced squeezed state."""
         backend = setup_backend(3)
@@ -421,9 +417,7 @@ class TestMultiModePolyQuadratureExpectations:
                       [ 0.7020327 ,  0.20772833,  0.51704656,  0.77103581,  0.2383589 ,-0.96494418]])
 
         # fmt:on
-        d = np.array(
-            [0.71785224, -0.80064627, 0.08799823, 0.76189805, 0.99665321, -0.60777437]
-        )
+        d = np.array([0.71785224, -0.80064627, 0.08799823, 0.76189805, 0.99665321, -0.60777437])
         k = 0.123
 
         a_list = [0.044 + 0.023j, 0.0432 + 0.123j, -0.12 + 0.04j]
@@ -435,12 +429,8 @@ class TestMultiModePolyQuadratureExpectations:
 
         # squeeze and displace each mode
         for i, (a_, r_, phi_) in enumerate(zip(a_list, r_list, phi_list)):
-            backend.prepare_displaced_squeezed_state(
-                np.abs(a_), np.angle(a_), r_, phi_, i
-            )
-            mu[2 * i : 2 * i + 2] = (
-                R(qphi).T @ np.array([a_.real, a_.imag]) * np.sqrt(2 * hbar)
-            )
+            backend.prepare_displaced_squeezed_state(np.abs(a_), np.angle(a_), r_, phi_, i)
+            mu[2 * i : 2 * i + 2] = R(qphi).T @ np.array([a_.real, a_.imag]) * np.sqrt(2 * hbar)
             cov[2 * i : 2 * i + 2, 2 * i : 2 * i + 2] = (
                 R(qphi).T @ utils.squeezed_cov(r_, phi_, hbar=hbar) @ R(qphi)
             )

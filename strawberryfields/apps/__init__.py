@@ -11,22 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This package contains the modules that make up the
-Strawberry Fields application layer.
+"""This package contains the modules that make up the Strawberry Fields application
+layer.
 
 .. currentmodule:: strawberryfields.apps
 .. autosummary::
     :toctree: api
 
-	clique
-	data
-	plot
-	points
-	qchem
-	sample
-	similarity
-	subgraph
-	train
+        clique
+        data
+        plot
+        points
+        qchem
+        sample
+        similarity
+        subgraph
+        train
 """
 
 import strawberryfields.apps.clique

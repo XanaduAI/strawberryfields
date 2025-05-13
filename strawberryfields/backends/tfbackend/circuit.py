@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 TensorFlow backend proper
 ======================
@@ -35,18 +34,20 @@ from itertools import product
 from string import ascii_lowercase as indices
 
 import numpy as np
-from scipy.special import factorial
 import tensorflow as tf
+from scipy.special import factorial
 
 from . import ops
 
 
 class Circuit:
-    """Base class for representing and operating on a collection of
-    CV quantum optics modes in the Fock basis.
-    The modes are initialized in the (multimode) vacuum state,
-    using the Fock representation with given cutoff_dim.
-    The state of the modes is manipulated by calling the various methods."""
+    """Base class for representing and operating on a collection of CV quantum optics
+    modes in the Fock basis.
+
+    The modes are initialized in the (multimode) vacuum state, using the Fock
+    representation with given cutoff_dim. The state of the modes is manipulated by
+    calling the various methods.
+    """
 
     # pylint: disable=too-many-instance-attributes,too-many-public-methods
     def __init__(self, num_modes, cutoff_dim, pure, batch_size, dtype):
@@ -60,7 +61,7 @@ class Circuit:
         )
 
     def _make_vac_states(self, cutoff_dim):
-        """Make vacuum state tensors for the underlying graph"""
+        """Make vacuum state tensors for the underlying graph."""
         one = tf.cast([1.0], self._dtype)
         v = tf.scatter_nd([[0]], one, [cutoff_dim])
         self._single_mode_pure_vac = v
@@ -70,7 +71,7 @@ class Circuit:
             self._single_mode_mixed_vac = tf.stack([self._single_mode_mixed_vac] * self._batch_size)
 
     def _update_state(self, new_state):
-        """Helper function to update the state history and the current state"""
+        """Helper function to update the state history and the current state."""
         # pylint: disable=attribute-defined-outside-init
         self._state_history.append(new_state)
         self._state = new_state
@@ -96,9 +97,8 @@ class Circuit:
         return True
 
     def _replace_and_update(self, replacement, modes):
-        """
-        Helper function for replacing a mode, updating the state history,
-        and possibly setting circuit's state_is_pure variable to a new value.
+        """Helper function for replacing a mode, updating the state history, and
+        possibly setting circuit's state_is_pure variable to a new value.
 
         Expects replacement to be batched if self._batched.
         """
@@ -127,8 +127,12 @@ class Circuit:
             self._state_is_pure = False
 
     def _maybe_batch(self, param, convert_to_tensor=True):
-        """Helper function to broadcast a param to the correct shape (if necessary) when working in batch mode. If param is not a scalar,
-        it will raise an exception if param's batch size is not equal to the circuit's batch size."""
+        """Helper function to broadcast a param to the correct shape (if necessary) when
+        working in batch mode.
+
+        If param is not a scalar, it will raise an exception if param's batch size is
+        not equal to the circuit's batch size.
+        """
         shape_err = False
         if convert_to_tensor:
             p = tf.convert_to_tensor(param)
@@ -172,8 +176,11 @@ class Circuit:
         return broadcast_p
 
     def _check_incompatible_batches(self, *params):
-        """Helper function for verifying that all the params from a list have the same batch size. Only does something
-        when the circuit is running in batched mode."""
+        """Helper function for verifying that all the params from a list have the same
+        batch size.
+
+        Only does something when the circuit is running in batched mode.
+        """
         if self._batched:
             for idx, p in enumerate(params):
                 param_batch_size = p.shape.dims[0].value
@@ -203,9 +210,8 @@ class Circuit:
         self._num_modes += num_modes
 
     def reset(self, **kwargs):
-        r"""
-        Resets the state of the circuit to have all modes in vacuum.
-        If a keyword arg is not present, the corresponding parameter is unchanged.
+        r"""Resets the state of the circuit to have all modes in vacuum. If a keyword arg
+        is not present, the corresponding parameter is unchanged.
 
         Keyword Args:
             num_subsystems (int): sets the number of modes in the reset circuit.
@@ -257,9 +263,7 @@ class Circuit:
         self._update_state(vac)
 
     def prepare_vacuum_state(self, mode):
-        """
-        Traces out the state in 'mode' and replaces it with a vacuum state.
-        """
+        """Traces out the state in 'mode' and replaces it with a vacuum state."""
         if self._valid_modes(mode):
             if self._state_is_pure:
                 state = self._single_mode_pure_vac
@@ -268,9 +272,8 @@ class Circuit:
             self._replace_and_update(state, mode)
 
     def prepare_fock_state(self, n, mode):
-        """
-        Traces out the state in 'mode' and replaces it with a Fock state defined by n.
-        """
+        """Traces out the state in 'mode' and replaces it with a Fock state defined by
+        n."""
         if self._valid_modes(mode):
             n = self._maybe_batch(n, convert_to_tensor=False)
             fock_state = ops.fock_state(
@@ -283,9 +286,8 @@ class Circuit:
             self._replace_and_update(fock_state, mode)
 
     def prepare_coherent_state(self, r, phi, mode):
-        """
-        Traces out the state in 'mode' and replaces it with a coherent state defined by alpha=r exp(i phi).
-        """
+        """Traces out the state in 'mode' and replaces it with a coherent state defined
+        by alpha=r exp(i phi)."""
         if self._valid_modes(mode):
             r = self._maybe_batch(r)
             phi = self._maybe_batch(phi)
@@ -300,9 +302,8 @@ class Circuit:
             self._replace_and_update(coherent_state, mode)
 
     def prepare_squeezed_state(self, r, theta, mode):
-        """
-        Traces out the state in 'mode' and replaces it with a squeezed state defined by r and theta.
-        """
+        """Traces out the state in 'mode' and replaces it with a squeezed state defined
+        by r and theta."""
         if self._valid_modes(mode):
             r = self._maybe_batch(r)
             theta = self._maybe_batch(theta)
@@ -318,9 +319,8 @@ class Circuit:
             self._replace_and_update(squeezed_state, mode)
 
     def prepare_displaced_squeezed_state(self, r_d, phi_d, r_s, phi_s, mode):
-        """
-        Traces out the state in 'mode' and replaces it with a displaced squeezed state defined by alpha, r and theta.
-        """
+        """Traces out the state in 'mode' and replaces it with a displaced squeezed
+        state defined by alpha, r and theta."""
         if self._valid_modes(mode):
             r_d = self._maybe_batch(r_d)
             r_s = self._maybe_batch(r_s)
@@ -400,18 +400,14 @@ class Circuit:
             self._replace_and_update(state, modes)
 
     def prepare_thermal_state(self, nbar, mode):
-        """
-        Prepares the thermal state with mean photon nbar in the specified mode.
-        """
+        """Prepares the thermal state with mean photon nbar in the specified mode."""
         if self._valid_modes(mode):
             nbar = self._maybe_batch(nbar)
             thermal = ops.thermal_state(nbar, cutoff=self._cutoff_dim, dtype=self._dtype)
             self._replace_and_update(thermal, mode)
 
     def phase_shift(self, theta, mode):
-        """
-        Apply the phase-shift operator to the specified mode.
-        """
+        """Apply the phase-shift operator to the specified mode."""
         theta = self._maybe_batch(theta)
         new_state = ops.phase_shifter(
             theta,
@@ -425,9 +421,7 @@ class Circuit:
         self._update_state(new_state)
 
     def displacement(self, r, phi, mode):
-        """
-        Apply the displacement operator to the specified mode.
-        """
+        """Apply the displacement operator to the specified mode."""
         r = self._maybe_batch(r)
         phi = self._maybe_batch(phi)
         new_state = ops.displacement(
@@ -443,9 +437,7 @@ class Circuit:
         self._update_state(new_state)
 
     def squeeze(self, r, theta, mode):
-        """
-        Apply the single-mode squeezing operator to the specified mode.
-        """
+        """Apply the single-mode squeezing operator to the specified mode."""
         r = self._maybe_batch(r)
         theta = self._maybe_batch(theta)
         self._check_incompatible_batches(r, theta)
@@ -462,9 +454,7 @@ class Circuit:
         self._update_state(new_state)
 
     def beamsplitter(self, theta, phi, mode1, mode2):
-        """
-        Apply a beamsplitter operator to the two specified modes.
-        """
+        """Apply a beamsplitter operator to the two specified modes."""
         theta = self._maybe_batch(theta)
         phi = self._maybe_batch(phi)
         self._check_incompatible_batches(theta, phi)
@@ -482,9 +472,7 @@ class Circuit:
         self._update_state(new_state)
 
     def mzgate(self, phi_in, phi_ex, mode1, mode2):
-        """
-        Apply a MZ-gate operator to the two specified modes.
-        """
+        """Apply a MZ-gate operator to the two specified modes."""
         phi_in = self._maybe_batch(phi_in)
         phi_ex = self._maybe_batch(phi_ex)
         self._check_incompatible_batches(phi_in, phi_ex)
@@ -502,9 +490,7 @@ class Circuit:
         self._update_state(new_state)
 
     def two_mode_squeeze(self, r, phi, mode1, mode2):
-        """
-        Apply a two-mode squeezing operator to the two specified modes.
-        """
+        """Apply a two-mode squeezing operator to the two specified modes."""
         r = self._maybe_batch(r)
         phi = self._maybe_batch(phi)
         self._check_incompatible_batches(r, phi)
@@ -522,9 +508,7 @@ class Circuit:
         self._update_state(new_state)
 
     def kerr_interaction(self, kappa, mode):
-        """
-        Apply the Kerr interaction operator to the specified mode.
-        """
+        """Apply the Kerr interaction operator to the specified mode."""
         k = tf.cast(kappa, self._dtype)
         k = self._maybe_batch(k)
         new_state = ops.kerr_interaction(
@@ -533,20 +517,22 @@ class Circuit:
         self._update_state(new_state)
 
     def cross_kerr_interaction(self, kappa, mode1, mode2):
-        """
-        Apply the cross-Kerr interaction operator to the specified mode.
-        """
+        """Apply the cross-Kerr interaction operator to the specified mode."""
         k = tf.cast(kappa, self._dtype)
         k = self._maybe_batch(k)
         new_state = ops.cross_kerr_interaction(
-            k, mode1, mode2, self._state, self._cutoff_dim, self._state_is_pure, self._batched
+            k,
+            mode1,
+            mode2,
+            self._state,
+            self._cutoff_dim,
+            self._state_is_pure,
+            self._batched,
         )
         self._update_state(new_state)
 
     def cubic_phase(self, gamma, mode):
-        """
-        Apply the cubic phase operator to the specified mode.
-        """
+        """Apply the cubic phase operator to the specified mode."""
         g = tf.cast(gamma, self._dtype)
         g = self._maybe_batch(g)
         new_state = ops.cubic_phase(
@@ -562,9 +548,7 @@ class Circuit:
         self._update_state(new_state)
 
     def gaussian_gate(self, S, d, modes):
-        """
-        Apply the N-mode gaussian gates to the specified mode.
-        """
+        """Apply the N-mode gaussian gates to the specified mode."""
         self._batched = len(d.shape) == 2
         self._batch_size = d.shape[0] if self._batched else None
         new_state = ops.gaussian_gate(
@@ -580,9 +564,7 @@ class Circuit:
         self._update_state(new_state)
 
     def loss(self, T, mode):
-        """
-        Apply a loss channel  to the specified mode.
-        """
+        """Apply a loss channel  to the specified mode."""
         T = tf.cast(T, self._dtype)
         T = self._maybe_batch(T)
         new_state = ops.loss_channel(
@@ -609,9 +591,8 @@ class Circuit:
         return vac_component
 
     def measure_fock(self, modes, select=None, **kwargs):
-        """
-        Measures 'modes' in the Fock basis and updates remaining modes conditioned on this result.
-        After measurement, the states in 'modes' are reset to the vacuum.
+        """Measures 'modes' in the Fock basis and updates remaining modes conditioned on
+        this result. After measurement, the states in 'modes' are reset to the vacuum.
 
         Args:
             modes (Sequence[int]): which modes to measure (in increasing order).
@@ -708,7 +689,10 @@ class Circuit:
                     if m not in modes:
                         new_mode_idx = m - removed_ctr
                         reduced_state = ops.partial_trace(
-                            reduced_state, new_mode_idx, red_state_is_pure, self._batched
+                            reduced_state,
+                            new_mode_idx,
+                            red_state_is_pure,
+                            self._batched,
                         )
                         red_state_is_pure = False
                         removed_ctr += 1
@@ -758,7 +742,11 @@ class Circuit:
                 else:
                     f = fock_state[idx]
                 conditional_state = ops.conditional_state(
-                    conditional_state, f, mode, self._state_is_pure, batched=self._batched
+                    conditional_state,
+                    f,
+                    mode,
+                    self._state_is_pure,
+                    batched=self._batched,
                 )
 
             if self._state_is_pure:
@@ -816,10 +804,9 @@ class Circuit:
         return meas_result
 
     def measure_homodyne(self, phi, mode, select=None, **kwargs):
-        """
-            Measures 'modes' in the basis of quadrature eigenstates (rotated by phi)
-            and updates remaining modes conditioned on this result.
-            After measurement, the states in 'modes' are reset to the vacuum.
+        """Measures 'modes' in the basis of quadrature eigenstates (rotated by phi) and
+        updates remaining modes conditioned on this result. After measurement, the
+        states in 'modes' are reset to the vacuum.
 
             Args:
                 phi (float): phase angle of quadrature to measure
@@ -862,7 +849,13 @@ class Circuit:
             # rotate to homodyne basis
             # pylint: disable=invalid-unary-operand-type
             reduced_state = ops.phase_shifter(
-                -phi, 0, reduced_state, self._cutoff_dim, False, self._batched, self._dtype
+                -phi,
+                0,
+                reduced_state,
+                self._cutoff_dim,
+                False,
+                self._batched,
+                self._dtype,
             )
 
             # create pdf for homodyne measurement
@@ -904,7 +897,9 @@ class Circuit:
                 for n, m in number_state_indices
             ]
             hermite_matrix = tf.scatter_nd(
-                number_state_indices, terms, [self._cutoff_dim, self._cutoff_dim, num_bins]
+                number_state_indices,
+                terms,
+                [self._cutoff_dim, self._cutoff_dim, num_bins],
             )
             hermite_terms = tf.multiply(
                 tf.expand_dims(reduced_state, -1),
@@ -933,9 +928,11 @@ class Circuit:
             # only some modes were measured: put unmeasured modes in conditional state, while reseting measured modes to vac
             inf_squeezed_vac = tf.convert_to_tensor(
                 [
-                    (-0.5) ** (m // 2) * np.sqrt(factorial(m)) / factorial(m // 2)
-                    if m % 2 == 0
-                    else 0.0
+                    (
+                        (-0.5) ** (m // 2) * np.sqrt(factorial(m)) / factorial(m // 2)
+                        if m % 2 == 0
+                        else 0.0
+                    )
                     for m in range(self._cutoff_dim)
                 ],
                 dtype=self._dtype,
@@ -956,11 +953,21 @@ class Circuit:
                 self._dtype,
             )
             homodyne_eigenstate = ops.phase_shifter(
-                phi, 0, quad_eigenstate, self._cutoff_dim, True, self._batched, self._dtype
+                phi,
+                0,
+                quad_eigenstate,
+                self._cutoff_dim,
+                True,
+                self._batched,
+                self._dtype,
             )
 
             conditional_state = ops.conditional_state(
-                self._state, homodyne_eigenstate, mode, self._state_is_pure, batched=self._batched
+                self._state,
+                homodyne_eigenstate,
+                mode,
+                self._state_is_pure,
+                batched=self._batched,
             )
 
             # normalize
@@ -1017,40 +1024,40 @@ class Circuit:
 
     @property
     def num_modes(self):
-        """Number of modes in the circuit"""
+        """Number of modes in the circuit."""
         return self._num_modes
 
     @property
     def cutoff_dim(self):
-        """Circuit cutoff dimension"""
+        """Circuit cutoff dimension."""
         return self._cutoff_dim
 
     @property
     def state_is_pure(self):
-        """Returns true if the circuit state is pure"""
+        """Returns true if the circuit state is pure."""
         return self._state_is_pure
 
     @property
     def hbar(self):
-        """Returns the value of hbar circuit is initialised with"""
+        """Returns the value of hbar circuit is initialised with."""
         return self._hbar
 
     @property
     def batched(self):
-        """Returns True if the circuit is batched"""
+        """Returns True if the circuit is batched."""
         return self._batched
 
     @property
     def batch_size(self):
-        """Returns the batch size"""
+        """Returns the batch size."""
         return self._batch_size
 
     @property
     def dtype(self):
-        """Returns the circuit dtype"""
+        """Returns the circuit dtype."""
         return self._dtype
 
     @property
     def state(self):
-        """Returns the circuit state"""
+        """Returns the circuit state."""
         return tf.identity(self._state, name="State")

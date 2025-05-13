@@ -11,23 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the Xcov compiler"""
+r"""Unit tests for the Xcov compiler."""
 import textwrap
 
-import pytest
-import numpy as np
-
 import blackbird
+import numpy as np
+import pytest
+from thewalrus.symplectic import expand, two_mode_squeezing
 
 import strawberryfields as sf
 import strawberryfields.ops as ops
-
-from strawberryfields.program_utils import CircuitError, program_equivalence
-from strawberryfields.io import to_program
-from strawberryfields.utils import random_interferometer
 from strawberryfields.compilers import Compiler
-
-from thewalrus.symplectic import two_mode_squeezing, expand
+from strawberryfields.io import to_program
+from strawberryfields.program_utils import CircuitError, program_equivalence
+from strawberryfields.utils import random_interferometer
 
 pytestmark = pytest.mark.frontend
 
@@ -37,8 +34,7 @@ SQ_AMPLITUDE = 1
 
 
 class DummyCircuit(Compiler):
-    """Dummy circuit used to instantiate
-    the abstract base class"""
+    """Dummy circuit used to instantiate the abstract base class."""
 
     modes = 8
     remote = False
@@ -91,10 +87,10 @@ X8_CIRCUIT = textwrap.dedent(
 
 
 class TestXCompilation:
-    """Tests for compilation using the X8_01 circuit specification"""
+    """Tests for compilation using the X8_01 circuit specification."""
 
     def test_exact_template(self, tol):
-        """Test compilation works for the exact circuit"""
+        """Test compilation works for the exact circuit."""
         bb = blackbird.loads(X8_CIRCUIT)
         bb = bb(
             squeezing_amplitude_0=SQ_AMPLITUDE,
@@ -130,7 +126,7 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_not_all_modes_measured(self, num_pairs):
-        """Test exceptions raised if not all modes are measured"""
+        """Test exceptions raised if not all modes are measured."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(num_pairs)
         with prog.context as q:
@@ -144,8 +140,7 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_no_s2gates(self, num_pairs, tol):
-        """Test identity S2gates are inserted when no S2gates
-        are provided."""
+        """Test identity S2gates are inserted when no S2gates are provided."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(num_pairs)
 
@@ -169,8 +164,8 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_missing_s2gates(self, num_pairs, tol):
-        """Test identity S2gates are inserted when some (but not all)
-        S2gates are included."""
+        """Test identity S2gates are inserted when some (but not all) S2gates are
+        included."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(num_pairs)
         assert num_pairs > 3
@@ -198,7 +193,7 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_incorrect_s2gate_modes(self, num_pairs):
-        """Test exceptions raised if S2gates do not appear on correct modes"""
+        """Test exceptions raised if S2gates do not appear on correct modes."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(num_pairs)
         n_modes = 2 * num_pairs
@@ -220,7 +215,7 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_s2gate_repeated_modes_half_squeezing(self, num_pairs):
-        """Test that squeezing gates are correctly merged"""
+        """Test that squeezing gates are correctly merged."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(num_pairs)
 
@@ -238,8 +233,7 @@ class TestXCompilation:
         assert np.allclose(res.circuit[0].op.p[0], SQ_AMPLITUDE)
 
     def test_gates_compile(self):
-        """Test that combinations of MZgates, Rgates, and BSgates
-        correctly compile."""
+        """Test that combinations of MZgates, Rgates, and BSgates correctly compile."""
         prog = sf.Program(8)
 
         def unitary(q):
@@ -260,7 +254,7 @@ class TestXCompilation:
         prog.compile(compiler="Xcov")
 
     def test_no_unitary(self, tol):
-        """Test compilation works with no unitary provided"""
+        """Test compilation works with no unitary provided."""
         prog = sf.Program(8)
 
         with prog.context as q:
@@ -332,8 +326,8 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4])
     def test_interferometers(self, num_pairs, tol):
-        """Test that the compilation correctly decomposes the interferometer using
-        the rectangular_symmetric mesh"""
+        """Test that the compilation correctly decomposes the interferometer using the
+        rectangular_symmetric mesh."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(num_pairs)
 
@@ -383,8 +377,8 @@ class TestXCompilation:
 
     @pytest.mark.parametrize("num_pairs", [4, 5, 6, 7])
     def test_unitary_too_large(self, num_pairs):
-        """Test exception raised if the unitary is applied to more
-        than just modes [0, 1, 2, 3, ..., num_pairs-1] and [num_pairs, num_pairs+1, ..., 2*num_pairs-1]."""
+        """Test exception raised if the unitary is applied to more than just modes [0,
+        1, 2, 3, ..., num_pairs-1] and [num_pairs, num_pairs+1, ..., 2*num_pairs-1]."""
         prog = sf.Program(2 * num_pairs)
         U = random_interferometer(2 * num_pairs)
 
@@ -398,7 +392,7 @@ class TestXCompilation:
             res = prog.compile(compiler="Xcov")
 
     def test_error_odd_number_modes(self):
-        """Test that an error is raised if the number of modes provided is odd"""
+        """Test that an error is raised if the number of modes provided is odd."""
         prog = sf.Program(5)
 
         with pytest.raises(
@@ -407,8 +401,8 @@ class TestXCompilation:
             res = prog.compile(compiler="Xcov")
 
     def test_symplectic_smaller_than_program(self):
-        """Test that compilation correctly works if the provided gates act only
-        on a subset of program modes"""
+        """Test that compilation correctly works if the provided gates act only on a
+        subset of program modes."""
         prog = sf.Program(4)
 
         with prog.context as q:
@@ -426,7 +420,8 @@ class TestXCompilation:
         assert c.op.p[0].shape == (8, 8)
 
     def test_identity_program(self, tol):
-        """Test that compilation correctly works if the gate consists only of measurements"""
+        """Test that compilation correctly works if the gate consists only of
+        measurements."""
         prog = sf.Program(4)
 
         with prog.context as q:
@@ -442,7 +437,7 @@ class TestXCompilation:
         assert not res.circuit
 
     def test_nothing_happens_and_nothing_crashes(self):
-        """Test that even a program that does nothing compiles correctly"""
+        """Test that even a program that does nothing compiles correctly."""
         n_modes = 4
         squeezing_amplitudes = [0] * n_modes
         unitary = np.identity(n_modes)
