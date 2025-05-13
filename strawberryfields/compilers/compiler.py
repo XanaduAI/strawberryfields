@@ -18,11 +18,11 @@
 """
 
 import abc
-import sympy as sym
-from typing import Sequence, Set, Dict, Optional
+from typing import Dict, Optional, Sequence, Set
 
-import networkx as nx
 import blackbird
+import networkx as nx
+import sympy as sym
 from blackbird.utils import to_DiGraph
 
 import strawberryfields.program_utils as pu

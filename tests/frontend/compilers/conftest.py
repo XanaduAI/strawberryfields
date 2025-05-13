@@ -13,8 +13,8 @@
 # limitations under the License.
 import inspect
 
-import numpy as np
 import networkx as nx
+import numpy as np
 
 from strawberryfields.device import Device
 from strawberryfields.parameters import par_evaluate

@@ -21,13 +21,12 @@ from decimal import Decimal
 from typing import Iterable, List, Sequence
 
 import numpy as np
-
 import xir
 
 import strawberryfields.parameters as sfpar
+from strawberryfields import ops
 from strawberryfields.program import Program
 from strawberryfields.tdm import TDMProgram, is_ptype
-from strawberryfields import ops
 
 
 def get_expanded_statements(prog: xir.Program) -> Sequence[xir.Statement]:

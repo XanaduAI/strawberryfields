@@ -13,29 +13,23 @@
 # limitations under the License.
 r"""Unit tests for tdm/program.py"""
 import copy
-import pytest
 import inspect
 
 import numpy as np
+import pytest
+from thewalrus.quantum import photon_number_covmat, photon_number_mean_vector
 
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends.states import BaseGaussianState
 from strawberryfields.device import Device
-from strawberryfields.tdm import (
-    borealis_gbs,
-    get_mode_indices,
-    loop_phase_from_device,
-    make_phases_compatible,
-    make_squeezing_compatible,
-    random_bs,
-    random_r,
-    to_args_dict,
-    to_args_list,
-    vacuum_padding,
-)
+from strawberryfields.tdm import (borealis_gbs, get_mode_indices,
+                                  loop_phase_from_device,
+                                  make_phases_compatible,
+                                  make_squeezing_compatible, random_bs,
+                                  random_r, to_args_dict, to_args_list,
+                                  vacuum_padding)
 from strawberryfields.tdm.utils import full_compile, to_args_list
-from thewalrus.quantum import photon_number_covmat, photon_number_mean_vector
 
 pi = np.pi
 

@@ -16,17 +16,17 @@ Default parameters, environment variables, fixtures, and common routines for the
 """
 # pylint: disable=redefined-outer-name
 import os
-import pytest
 
 import numpy as np
+import pytest
 
 import strawberryfields as sf
-from strawberryfields.engine import LocalEngine
-from strawberryfields.program import Program
 from strawberryfields.backends.base import BaseBackend
+from strawberryfields.backends.bosonicbackend import BosonicBackend
 from strawberryfields.backends.fockbackend import FockBackend
 from strawberryfields.backends.gaussianbackend import GaussianBackend
-from strawberryfields.backends.bosonicbackend import BosonicBackend
+from strawberryfields.engine import LocalEngine
+from strawberryfields.program import Program
 
 try:
     import tensorflow as tf

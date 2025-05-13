@@ -36,18 +36,18 @@ In particular, for each backend supported by Strawberry Fields the database cont
 corresponding Compiler instance with the same short name, used to validate Programs to be
 executed on that backend.
 """
+from .bosonic import Bosonic
 from .compiler import Compiler, Ranges
+from .fock import Fock
+from .gaussian import Gaussian
+from .gaussian_merge import GaussianMerge
+from .gaussian_unitary import GaussianUnitary
+from .gbs import GBS
+from .passive import Passive
+from .tdm import TD2, TDM, Borealis
 from .xcov import Xcov
 from .xstrict import Xstrict
 from .xunitary import Xunitary
-from .fock import Fock
-from .gaussian import Gaussian
-from .bosonic import Bosonic
-from .gbs import GBS
-from .gaussian_unitary import GaussianUnitary
-from .gaussian_merge import GaussianMerge
-from .passive import Passive
-from .tdm import TDM, TD2, Borealis
 
 compilers = (
     Fock,

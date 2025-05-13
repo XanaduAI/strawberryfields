@@ -14,9 +14,8 @@
 
 r"""Unit tests for operations that prepare squeezed coherent states"""
 
-import pytest
-
 import numpy as np
+import pytest
 from scipy.special import factorial
 
 MAG_ALPHAS = np.linspace(0.1, 0.5, 2)

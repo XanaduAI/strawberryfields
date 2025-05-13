@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for engine.py"""
-import pytest
 import numpy as np
+import pytest
 
 tf = pytest.importorskip("tensorflow", minversion="2.0")
 import strawberryfields as sf

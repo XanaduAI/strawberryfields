@@ -16,7 +16,9 @@ This module provides tools to visualize the state in various interactive
 ways using Plot.ly.
 """
 from copy import copy, deepcopy
+
 import numpy as np
+
 from strawberryfields.backends.states import BaseGaussianState
 
 plotly_error = (

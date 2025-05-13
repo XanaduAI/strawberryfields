@@ -14,14 +14,15 @@
 r"""Unit tests for the Strawberry Fields decompositions module"""
 import pytest
 
-from strawberryfields.utils.random_numbers_matrices import random_interferometer
+from strawberryfields.utils.random_numbers_matrices import \
+    random_interferometer
 
 pytestmark = pytest.mark.frontend
 
 import networkx as nx
 import numpy as np
 import scipy as sp
-from scipy.linalg import qr, block_diag
+from scipy.linalg import block_diag, qr
 
 from strawberryfields import decompositions as dec
 from strawberryfields.utils import random_interferometer as haar_measure

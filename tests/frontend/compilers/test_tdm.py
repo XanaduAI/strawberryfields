@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the Xcov compiler"""
+import copy
 import inspect
 import logging
-import pytest
-import copy
 
 import numpy as np
+import pytest
+from conftest import borealis_device
 
 import strawberryfields as sf
-from strawberryfields.compilers import compiler_db
 from strawberryfields import Device, TDMProgram, ops
+from strawberryfields.compilers import compiler_db
 from strawberryfields.program_utils import CircuitError
-from strawberryfields.tdm.utils import borealis_gbs, get_mode_indices, random_bs, random_r
-
-from conftest import borealis_device
+from strawberryfields.tdm.utils import (borealis_gbs, get_mode_indices,
+                                        random_bs, random_r)
 
 pytestmark = pytest.mark.frontend
 

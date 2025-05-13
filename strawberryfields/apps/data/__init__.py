@@ -67,22 +67,9 @@ these datasets inherit.
         feature
 """
 
-import strawberryfields.apps.data.sample
 import strawberryfields.apps.data.feature
-from strawberryfields.apps.data.sample import (
-    Planted,
-    TaceAs,
-    PHat,
-    Mutag0,
-    Mutag1,
-    Mutag2,
-    Mutag3,
-    Formic,
-    Water,
-    Pyrrole,
-)
-from strawberryfields.apps.data.feature import (
-    MUTAG,
-    QM9Exact,
-    QM9MC,
-)
+import strawberryfields.apps.data.sample
+from strawberryfields.apps.data.feature import MUTAG, QM9MC, QM9Exact
+from strawberryfields.apps.data.sample import (Formic, Mutag0, Mutag1, Mutag2,
+                                               Mutag3, PHat, Planted, Pyrrole,
+                                               TaceAs, Water)

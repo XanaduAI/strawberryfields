@@ -17,6 +17,7 @@ Unit tests for strawberryfields.apps.train.embed
 # pylint: disable=no-self-use,unused-argument
 import numpy as np
 import pytest
+
 from strawberryfields.apps.train import embed
 
 pytestmark = pytest.mark.apps

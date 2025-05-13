@@ -19,6 +19,7 @@ import tensorflow as tf
 from scipy.special import factorial
 
 from strawberryfields.backends.states import BaseFockState
+
 from .ops import ladder_ops, phase_shifter_matrix, reduced_density_matrix
 
 

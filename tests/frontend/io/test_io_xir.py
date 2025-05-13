@@ -12,25 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the XIR IO module"""
-import pytest
 import inspect
 from decimal import Decimal
 
 import numpy as np
+import pytest
 import xir
 
-from strawberryfields.io.xir_io import _listr
-
 import strawberryfields as sf
-from strawberryfields import ops
-from strawberryfields import io
+from strawberryfields import io, ops
+from strawberryfields.io.xir_io import _listr
+from strawberryfields.parameters import FreeParameter
+from strawberryfields.parameters import par_funcs as pf
 from strawberryfields.program import Program
 from strawberryfields.tdm import TDMProgram
-from strawberryfields.parameters import (
-    par_funcs as pf,
-    FreeParameter,
-)
-
 
 pytestmark = pytest.mark.frontend
 

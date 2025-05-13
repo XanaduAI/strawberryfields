@@ -14,10 +14,8 @@
 
 r"""Unit tests for non-Gaussian gates"""
 
-import pytest
-
 import numpy as np
-
+import pytest
 from scipy.linalg import expm
 
 KAPPAS = np.linspace(0, 2 * np.pi, 7)

@@ -22,6 +22,7 @@ import numpy as np
 import tensorflow as tf
 
 from strawberryfields.backends import BaseFock, ModeMap
+
 from .circuit import Circuit
 from .ops import mix, partial_trace, reorder_modes
 from .states import FockStateTF

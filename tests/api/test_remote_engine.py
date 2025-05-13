@@ -24,8 +24,8 @@ import xcc
 
 import strawberryfields as sf
 from strawberryfields.device import Device
-from strawberryfields.result import Result
 from strawberryfields.engine import RemoteEngine
+from strawberryfields.result import Result
 
 from .conftest import mock_return
 

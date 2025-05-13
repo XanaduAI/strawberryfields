@@ -13,8 +13,9 @@
 # limitations under the License.
 """Compiler for the general Gaussian Boson Sampling class of circuits."""
 
-from strawberryfields.program_utils import CircuitError, Command, group_operations
 import strawberryfields.ops as ops
+from strawberryfields.program_utils import (CircuitError, Command,
+                                            group_operations)
 
 from .gaussian import Gaussian
 

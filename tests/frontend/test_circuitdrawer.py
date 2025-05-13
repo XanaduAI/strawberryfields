@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the circuit drawer"""
-import sys
-import os
 import datetime
 import difflib
+import os
+import sys
 from textwrap import dedent
 
 import pytest
@@ -24,14 +24,10 @@ pytestmark = pytest.mark.frontend
 
 import strawberryfields as sf
 from strawberryfields import ops
-
 from strawberryfields.circuitdrawer import Circuit as CircuitDrawer
-from strawberryfields.circuitdrawer import (
-    UnsupportedGateException,
-    NotDrawableException,
-    ModeMismatchException,
-)
-
+from strawberryfields.circuitdrawer import (ModeMismatchException,
+                                            NotDrawableException,
+                                            UnsupportedGateException)
 
 LINE_RETURN = "\n"
 WIRE_TERMINATOR = r"\\" + "\n"

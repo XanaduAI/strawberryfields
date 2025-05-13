@@ -125,10 +125,10 @@ from typing import Generator, Union
 import networkx as nx
 import numpy as np
 from scipy.special import factorial
+from sympy.utilities.iterables import multiset_permutations
 
 import strawberryfields as sf
 from strawberryfields.backends import BaseGaussianState
-from sympy.utilities.iterables import multiset_permutations
 
 
 def sample_to_orbit(sample: list) -> list:

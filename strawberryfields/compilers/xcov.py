@@ -20,13 +20,13 @@ from thewalrus.quantum import Amat
 from thewalrus.symplectic import expand
 
 import strawberryfields as sf
+import strawberryfields.ops as ops
 from strawberryfields.decompositions import takagi
 from strawberryfields.program_utils import CircuitError, Command
-import strawberryfields.ops as ops
 
 from .compiler import Compiler
-from .gbs import GBS
 from .gaussian_unitary import GaussianUnitary
+from .gbs import GBS
 
 
 class Xcov(Compiler):

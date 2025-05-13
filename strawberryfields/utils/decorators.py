@@ -20,7 +20,6 @@ an operation itself within a :class:`~.Program` context.
 import collections
 from inspect import signature
 
-
 __all__ = [
     "operation",
 ]

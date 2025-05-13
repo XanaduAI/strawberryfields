@@ -13,21 +13,17 @@
 # limitations under the License.
 r"""Unit tests for the GaussianUnitary class"""
 
-import pytest
 import numpy as np
+import pytest
+from scipy.stats import unitary_group
+from thewalrus.symplectic import interferometer
 
 import strawberryfields as sf
 import strawberryfields.ops as ops
+from strawberryfields.compilers.passive import (_apply_one_mode_gate,
+                                                _apply_two_mode_gate,
+                                                _beam_splitter_passive)
 from strawberryfields.utils import random_symplectic
-from strawberryfields.compilers.passive import (
-    _apply_one_mode_gate,
-    _apply_two_mode_gate,
-    _beam_splitter_passive,
-)
-
-from scipy.stats import unitary_group
-
-from thewalrus.symplectic import interferometer
 
 pytestmark = pytest.mark.frontend
 

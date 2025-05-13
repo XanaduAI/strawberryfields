@@ -16,14 +16,14 @@
 # pylint: disable=too-many-branches,too-many-locals,too-many-public-methods
 
 import copy
-import string
 import numbers
+import string
 from itertools import product
 
 import numpy as np
-from numpy import sqrt, pi
-from scipy.special import factorial as bang
 from numba import jit
+from numpy import pi, sqrt
+from scipy.special import factorial as bang
 
 from . import ops
 

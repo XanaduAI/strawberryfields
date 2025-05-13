@@ -16,9 +16,8 @@ r"""
 Unit tests for Mach-Zehnder Interferometer operations
 """
 
-import pytest
-
 import numpy as np
+import pytest
 
 PHI_IN = np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64)
 PHI_EX = np.linspace(0, 2 * np.pi, 4, endpoint=False, dtype=np.float64)

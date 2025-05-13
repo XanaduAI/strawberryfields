@@ -13,12 +13,11 @@
 # limitations under the License.
 r"""Unit tests for the Xstrict compiler"""
 import pytest
+from conftest import X8_device, generate_X8_params
 
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.program_utils import program_equivalence
-
-from conftest import X8_device, generate_X8_params
 
 pytestmark = pytest.mark.frontend
 

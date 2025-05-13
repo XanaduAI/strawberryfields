@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the IO module"""
-import pytest
 import textwrap
 
-import numpy as np
 import blackbird
+import numpy as np
+import pytest
 
 import strawberryfields as sf
-from strawberryfields import ops
-from strawberryfields import io
+from strawberryfields import io, ops
 
 pytestmark = pytest.mark.frontend
 

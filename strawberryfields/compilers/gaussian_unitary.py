@@ -15,14 +15,8 @@
 canonical Symplectic form."""
 
 import numpy as np
-from thewalrus.symplectic import (
-    beam_splitter,
-    expand,
-    interferometer,
-    rotation,
-    squeezing,
-    two_mode_squeezing,
-)
+from thewalrus.symplectic import (beam_splitter, expand, interferometer,
+                                  rotation, squeezing, two_mode_squeezing)
 
 from strawberryfields import ops
 from strawberryfields.parameters import par_evaluate

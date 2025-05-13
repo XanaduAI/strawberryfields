@@ -14,11 +14,9 @@
 r"""
 Unit tests for mbsqueezing operation in the bosonic backend.
 """
+import numpy as np
 # pylint: disable=too-many-arguments
 import pytest
-
-import numpy as np
-
 
 PHASE = np.linspace(0, 2 * np.pi, 3, endpoint=False)
 MAG = np.linspace(0.0, 1, 5, endpoint=False)

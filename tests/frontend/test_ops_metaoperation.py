@@ -19,11 +19,10 @@ pytestmark = pytest.mark.frontend
 import numpy as np
 
 import strawberryfields.program_utils as pu
-from strawberryfields import ops
+from strawberryfields import ops, utils
 from strawberryfields.program import Program
-from strawberryfields.program_utils import MergeFailure, RegRefError, CircuitError
-from strawberryfields import utils
-
+from strawberryfields.program_utils import (CircuitError, MergeFailure,
+                                            RegRefError)
 
 a = np.random.random()
 b = np.random.random()

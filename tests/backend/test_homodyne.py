@@ -15,7 +15,6 @@
 r"""Unit tests for homodyne measurements."""
 import numpy as np
 
-
 N_MEAS = 300  # number of homodyne measurements to perform
 NUM_STDS = 10.0
 std_10 = NUM_STDS / np.sqrt(N_MEAS)

@@ -13,9 +13,8 @@
 # limitations under the License.
 
 r"""Unit tests for add_mode and del_mode functions"""
-import pytest
-
 import numpy as np
+import pytest
 
 NUM_REPEATS = 10
 

@@ -15,8 +15,8 @@ r"""Integration tests for the utils.py module"""
 
 # pylint: disable=pointless-statement,expression-not-assigned,no-self-use
 
-import pytest
 import numpy as np
+import pytest
 
 try:
     import tensorflow as tf
@@ -28,11 +28,9 @@ except ImportError:
 import strawberryfields as sf
 import strawberryfields.ops as ops
 import strawberryfields.utils as utils
-
-from strawberryfields.backends.fockbackend.ops import squeezing as sq_U
-from strawberryfields.backends.fockbackend.ops import displacement as disp_U
 from strawberryfields.backends.fockbackend.ops import beamsplitter as bs_U
-
+from strawberryfields.backends.fockbackend.ops import displacement as disp_U
+from strawberryfields.backends.fockbackend.ops import squeezing as sq_U
 
 ALPHA = np.linspace(-0.15, 0.2, 4) + np.linspace(-0.2, 0.1, 4) * 1j
 R = np.linspace(0, 0.21, 4)

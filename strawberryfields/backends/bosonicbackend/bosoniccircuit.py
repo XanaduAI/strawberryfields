@@ -15,9 +15,10 @@
 """Bosonic circuit operations"""
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import itertools as it
+
 import numpy as np
-from scipy.linalg import block_diag
 import thewalrus.symplectic as symp
+from scipy.linalg import block_diag
 
 from strawberryfields.backends.bosonicbackend import ops
 

@@ -17,8 +17,9 @@ Unit tests for backends.bosonicbackend.bosoniccircuit.py.
 """
 
 import numpy as np
-import strawberryfields.backends.bosonicbackend.bosoniccircuit as circuit
 import pytest
+
+import strawberryfields.backends.bosonicbackend.bosoniccircuit as circuit
 
 pytestmark = pytest.mark.bosonic
 

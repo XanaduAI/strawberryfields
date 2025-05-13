@@ -15,17 +15,16 @@
 # pylint: disable=no-self-use
 
 r"""Unit tests for the Strawberry Fields decompositions within the ops module"""
-import pytest
-
 import numpy as np
+import pytest
 from thewalrus.quantum import Amat
 
 import strawberryfields as sf
-from strawberryfields.parameters import par_evaluate, FreeParameter
 from strawberryfields import decompositions as dec
-from strawberryfields.utils import random_interferometer, random_symplectic, random_covariance
 from strawberryfields import ops
-
+from strawberryfields.parameters import FreeParameter, par_evaluate
+from strawberryfields.utils import (random_covariance, random_interferometer,
+                                    random_symplectic)
 
 pytestmark = pytest.mark.frontend
 

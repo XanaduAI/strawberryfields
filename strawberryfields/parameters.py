@@ -95,10 +95,10 @@ What we cannot do at the moment:
 
 import collections.abc
 import functools
-import types
 import linecache
-import blackbird
+import types
 
+import blackbird
 import numpy as np
 import sympy
 import sympy.functions as sf

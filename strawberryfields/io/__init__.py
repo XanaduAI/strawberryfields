@@ -16,18 +16,17 @@ This module contains functions for loading and saving Strawberry Fields :class:`
 and converting from/to Blackbird and XIR scripts to Strawberry Fields code.
 """
 import os
-
-from typing import Union, TextIO
 from pathlib import Path
+from typing import TextIO, Union
 
-import xir
 import blackbird
+import xir
 
 from strawberryfields.program import Program
 
-from .blackbird_io import to_blackbird, from_blackbird, from_blackbird_to_tdm
-from .xir_io import to_xir, from_xir, from_xir_to_tdm
+from .blackbird_io import from_blackbird, from_blackbird_to_tdm, to_blackbird
 from .utils import generate_code
+from .xir_io import from_xir, from_xir_to_tdm, to_xir
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["to_blackbird", "to_xir", "to_program", "loads", "generate_code"]

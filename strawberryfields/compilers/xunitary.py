@@ -21,7 +21,8 @@ import numpy as np
 from thewalrus.symplectic import expand
 
 import strawberryfields.ops as ops
-from strawberryfields.program_utils import CircuitError, Command, group_operations
+from strawberryfields.program_utils import (CircuitError, Command,
+                                            group_operations)
 
 from .compiler import Compiler
 from .gaussian_unitary import GaussianUnitary

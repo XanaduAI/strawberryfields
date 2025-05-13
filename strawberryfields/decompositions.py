@@ -16,11 +16,11 @@ This module implements common shared matrix decompositions that are
 used to perform gate decompositions.
 """
 
-from itertools import groupby
 from collections import defaultdict
+from itertools import groupby
 
 import numpy as np
-from scipy.linalg import block_diag, sqrtm, polar, schur
+from scipy.linalg import block_diag, polar, schur, sqrtm
 from thewalrus.quantum import adj_scaling
 from thewalrus.symplectic import sympmat, xpxp_to_xxpp
 

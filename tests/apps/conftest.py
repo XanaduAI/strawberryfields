@@ -14,8 +14,8 @@
 r"""
 conftest.py file for use in pytest
 """
-import numpy as np
 import networkx as nx
+import numpy as np
 import pytest
 
 pytestmark = pytest.mark.apps

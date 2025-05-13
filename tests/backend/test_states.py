@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the states.py submodule"""
-import pytest
-
 import numpy as np
+import pytest
 from scipy.special import factorial as fac
 
-from strawberryfields import backends
-from strawberryfields import utils
-
+from strawberryfields import backends, utils
 
 a = 0.3 + 0.1j
 r = 0.23

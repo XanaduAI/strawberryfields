@@ -17,10 +17,11 @@ Unit tests for backends.bosonicbackend.backend.py.
 """
 
 import numpy as np
-import strawberryfields as sf
-import strawberryfields.backends.bosonicbackend.backend as bosonic
 import pytest
 import sympy
+
+import strawberryfields as sf
+import strawberryfields.backends.bosonicbackend.backend as bosonic
 
 pytestmark = pytest.mark.bosonic
 

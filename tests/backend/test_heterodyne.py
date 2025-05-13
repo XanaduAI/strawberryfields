@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for heterodyne measurements."""
-import pytest
-
 import numpy as np
+import pytest
 
 mag_alphas = np.linspace(0, 0.8, 4)
 phase_alphas = np.linspace(0, 2 * np.pi, 7, endpoint=False)

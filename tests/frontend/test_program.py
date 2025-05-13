@@ -13,22 +13,19 @@
 # limitations under the License.
 r"""Unit tests for program.py"""
 import textwrap
+
 import pytest
 
 pytestmark = pytest.mark.frontend
 
+import blackbird as bb
 import numpy as np
 
 import strawberryfields as sf
-
-from strawberryfields import program
-from strawberryfields import ops
-from strawberryfields.parameters import ParameterError, FreeParameter
+from strawberryfields import ops, program
 from strawberryfields.compilers.compiler import Compiler
+from strawberryfields.parameters import FreeParameter, ParameterError
 from strawberryfields.program_utils import validate_gate_parameters
-
-import blackbird as bb
-
 
 A = np.random.random()
 

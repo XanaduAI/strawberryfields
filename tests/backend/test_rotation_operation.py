@@ -18,9 +18,8 @@ U(\theta) = \exp(i * \theta \hat{n})
 where \hat{n} is the number operator. For positive \theta, this corresponds
 to a clockwise rotation of the state in phase space."""
 
-import pytest
-
 import numpy as np
+import pytest
 
 SHIFT_THETAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)
 

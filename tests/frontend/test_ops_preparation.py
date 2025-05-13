@@ -18,10 +18,9 @@ pytestmark = pytest.mark.frontend
 
 import numpy as np
 
-from strawberryfields import ops
+from strawberryfields import ops, utils
 from strawberryfields.program import Program
 from strawberryfields.program_utils import MergeFailure, RegRefError
-from strawberryfields import utils
 
 
 @pytest.mark.parametrize(

@@ -18,8 +18,8 @@ import inspect
 
 import pytest
 
-from strawberryfields.device import Device
 from strawberryfields.compilers import Ranges
+from strawberryfields.device import Device
 
 pytestmark = pytest.mark.api
 

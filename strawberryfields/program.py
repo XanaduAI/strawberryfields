@@ -51,21 +51,16 @@ using the functions :func:`list_to_grid`, :func:`grid_to_DAG` and :func:`DAG_to_
 import copy
 import numbers
 import warnings
+
 import networkx as nx
 
 import strawberryfields.circuitdrawer as sfcd
-from strawberryfields.compilers import Compiler, compiler_db
 import strawberryfields.program_utils as pu
+from strawberryfields.compilers import Compiler, compiler_db
 
-from .program_utils import (
-    Command,
-    RegRef,
-    CircuitError,
-    RegRefError,
-    program_equivalence,
-)
 from .parameters import FreeParameter, ParameterError
-
+from .program_utils import (CircuitError, Command, RegRef, RegRefError,
+                            program_equivalence)
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = []

@@ -19,13 +19,11 @@ import pytest
 
 import strawberryfields as sf
 from strawberryfields.ops import *
-from strawberryfields.utils.post_processing import (
-    samples_expectation,
-    samples_variance,
-    all_fock_probs_pnr,
-    _check_modes,
-    _check_samples,
-)
+from strawberryfields.utils.post_processing import (_check_modes,
+                                                    _check_samples,
+                                                    all_fock_probs_pnr,
+                                                    samples_expectation,
+                                                    samples_variance)
 
 # pylint: disable=bad-continuation,no-self-use,pointless-statement
 

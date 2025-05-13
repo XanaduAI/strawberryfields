@@ -14,8 +14,8 @@
 """Utility functions for the io module."""
 from __future__ import annotations
 
-from typing import List, Union
 from numbers import Number
+from typing import List, Union
 
 import numpy as np
 

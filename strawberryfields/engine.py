@@ -27,15 +27,15 @@ import numpy as np
 import xcc
 
 from strawberryfields.device import Device
-from strawberryfields.result import Result
 from strawberryfields.io import to_blackbird
 from strawberryfields.logger import create_logger
 from strawberryfields.program import Program
+from strawberryfields.result import Result
 from strawberryfields.tdm import TDMProgram, reshape_samples
 
-from .backends import load_backend, BosonicBackend
-from .backends.base import BaseBackend, NotApplicableError
 from ._version import __version__
+from .backends import BosonicBackend, load_backend
+from .backends.base import BaseBackend, NotApplicableError
 
 # for automodapi, do not include the classes that should appear under the top-level strawberryfields namespace
 __all__ = ["BaseEngine", "LocalEngine", "BosonicEngine"]

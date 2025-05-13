@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the states.py fock probabilities methods"""
-import pytest
-
 import numpy as np
+import pytest
 from scipy.special import factorial as fac
 
 try:

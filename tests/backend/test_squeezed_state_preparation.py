@@ -17,11 +17,9 @@ Convention: The squeezing unitary is fixed to be
 U(z) = \exp(0.5 (z^* \hat{a}^2 - z (\hat{a^\dagger}^2)))
 where \hat{a} is the photon annihilation operator."""
 
-import pytest
-
 import numpy as np
+import pytest
 from scipy.special import factorial
-
 
 SQZ_R = np.linspace(0.0, 0.1, 5)
 SQZ_THETA = np.linspace(0, 2 * np.pi, 3, endpoint=False)

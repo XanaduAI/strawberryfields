@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the CircuitSpec class"""
+import inspect
+
 import pytest
 import sympy
-import inspect
 
 from strawberryfields.compilers.compiler import Compiler
 from strawberryfields.program_utils import CircuitError
-
 
 pytestmark = pytest.mark.frontend
 

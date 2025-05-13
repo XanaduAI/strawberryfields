@@ -15,13 +15,13 @@
 This module contains a class that represents a device on the Xanadu Cloud.
 """
 import re
-from typing import Generator, Iterable, Sequence, Mapping, Any, Optional
+from typing import Any, Generator, Iterable, Mapping, Optional, Sequence
 
 import blackbird
 from blackbird.error import BlackbirdSyntaxError
 
-from strawberryfields.io import to_program
 from strawberryfields.compilers import Ranges
+from strawberryfields.io import to_program
 
 
 class Device:

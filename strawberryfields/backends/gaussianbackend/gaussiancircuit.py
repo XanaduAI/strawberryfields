@@ -15,7 +15,7 @@
 # pylint: disable=duplicate-code,attribute-defined-outside-init
 import numpy as np
 from thewalrus.quantum import Xmat
-from thewalrus.symplectic import xxpp_to_xpxp, xpxp_to_xxpp
+from thewalrus.symplectic import xpxp_to_xxpp, xxpp_to_xpxp
 
 from . import ops
 

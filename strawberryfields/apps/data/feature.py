@@ -16,8 +16,9 @@ Submodule for feature vector datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
-import pkg_resources
+
 import numpy as np
+import pkg_resources
 
 DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/feature_data") + "/"
 

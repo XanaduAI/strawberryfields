@@ -13,8 +13,8 @@
 # limitations under the License.
 r"""Unit tests for the GaussianMerge class"""
 
-import pytest
 import numpy as np
+import pytest
 
 import strawberryfields as sf
 import strawberryfields.ops as ops

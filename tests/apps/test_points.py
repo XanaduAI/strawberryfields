@@ -13,10 +13,10 @@
 # limitations under the License.
 r"""Tests for the the point process functions"""
 
-import pytest
 import numpy as np
-from strawberryfields.apps.points import rbf_kernel, sample
+import pytest
 
+from strawberryfields.apps.points import rbf_kernel, sample
 
 pytestmark = pytest.mark.apps
 

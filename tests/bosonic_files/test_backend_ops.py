@@ -16,9 +16,9 @@ r"""
 Unit tests for backends.bosonicbackend.ops.py .
 """
 
+import numpy as np
 import pytest
 
-import numpy as np
 import strawberryfields.backends.bosonicbackend.ops as ops
 
 pytestmark = pytest.mark.bosonic

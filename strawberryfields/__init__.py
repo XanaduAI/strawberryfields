@@ -21,17 +21,16 @@ and backend components (all found within the :mod:`strawberryfields.backends` su
     :width: 90%
     :target: javascript:void(0);
 """
-from . import apps
+from . import apps, tdm
 from ._version import __version__
+from .device import Device
 from .engine import Engine, LocalEngine, RemoteEngine
 from .io import load, save
 from .parameters import par_funcs as math
+from .plot import plot_fock, plot_quad, plot_wigner
 from .program import Program
-from .tdm import TDMProgram
-from .plot import plot_wigner, plot_fock, plot_quad
-from . import tdm
-from .device import Device
 from .result import Result
+from .tdm import TDMProgram
 
 __all__ = [
     "Engine",
@@ -90,15 +89,16 @@ def about():
         TensorFlow version:        2.5.1
     """
     # pylint: disable=import-outside-toplevel
-    import sys
-    import platform
     import os
+    import platform
+    import sys
+
+    import blackbird
+    import networkx
     import numpy
     import scipy
     import sympy
-    import networkx
     import thewalrus
-    import blackbird
     import xcc
 
     # a QuTiP-style infobox

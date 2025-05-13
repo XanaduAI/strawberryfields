@@ -14,20 +14,14 @@
 r"""Unit tests for tdm/program.py"""
 from collections.abc import Iterable
 
-import pytest
 import numpy as np
+import pytest
 
 import strawberryfields as sf
 from strawberryfields import ops
-from strawberryfields.tdm import (
-    TDMProgram,
-    move_vac_modes,
-    get_mode_indices,
-    random_bs,
-    random_r,
-    vacuum_padding,
-    to_args_list,
-)
+from strawberryfields.tdm import (TDMProgram, get_mode_indices, move_vac_modes,
+                                  random_bs, random_r, to_args_list,
+                                  vacuum_padding)
 
 pytestmark = pytest.mark.frontend
 

@@ -13,13 +13,14 @@
 # limitations under the License.
 r"""Unit tests for space_unroll in tdm/program.py"""
 
-import pytest
 import numpy as np
-import strawberryfields as sf
-from strawberryfields.tdm import get_mode_indices
-from strawberryfields.ops import Sgate, Rgate, BSgate
-from thewalrus.symplectic import reduced_state
+import pytest
 from thewalrus.quantum import is_pure_cov
+from thewalrus.symplectic import reduced_state
+
+import strawberryfields as sf
+from strawberryfields.ops import BSgate, Rgate, Sgate
+from strawberryfields.tdm import get_mode_indices
 
 pytestmark = pytest.mark.frontend
 

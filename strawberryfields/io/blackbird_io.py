@@ -16,15 +16,14 @@ This module contains functions for loading and saving Strawberry Fields
 :class:`~.Program` objects from/to Blackbird scripts and Strawberry Fields
 code.
 """
+import blackbird
 # pylint: disable=protected-access,too-many-nested-blocks
 import numpy as np
 
-import blackbird
-
 import strawberryfields.parameters as sfpar
+from strawberryfields import ops
 from strawberryfields.program import Program
 from strawberryfields.tdm import TDMProgram, is_ptype
-from strawberryfields import ops
 
 
 def from_blackbird(bb: blackbird.BlackbirdProgram) -> Program:

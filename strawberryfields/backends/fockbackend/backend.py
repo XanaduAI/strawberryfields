@@ -16,6 +16,7 @@
 
 import string
 from cmath import phase
+
 import numpy as np
 
 from strawberryfields.backends import BaseFock, ModeMap

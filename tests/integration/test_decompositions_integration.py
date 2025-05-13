@@ -12,27 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Unit tests for the Strawberry Fields decompositions within the ops module"""
-import pytest
-
 import numpy as np
-from scipy.linalg import qr, block_diag
-
+import pytest
+from scipy.linalg import block_diag, qr
 from thewalrus.symplectic import rotation as rot
 from thewalrus.symplectic import xpxp_to_xxpp, xxpp_to_xpxp
 
 import strawberryfields as sf
 from strawberryfields import decompositions as dec
-from strawberryfields.utils import (
-    random_interferometer,
-    random_symplectic,
-    random_covariance,
-    squeezed_state,
-)
 from strawberryfields import ops
-
+from strawberryfields.utils import random_covariance
+from strawberryfields.utils import random_interferometer
 from strawberryfields.utils import random_interferometer as haar_measure
+from strawberryfields.utils import random_symplectic, squeezed_state
 from strawberryfields.utils.program_functions import extract_unitary
-
 
 u1 = random_interferometer(3)
 u2 = random_interferometer(3)

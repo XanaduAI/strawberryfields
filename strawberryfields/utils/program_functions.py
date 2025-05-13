@@ -26,8 +26,8 @@ except ImportError:
 import numpy as np
 
 from strawberryfields.engine import LocalEngine
+from strawberryfields.ops import Channel, Gate, Ket
 from strawberryfields.program_utils import Command
-from strawberryfields.ops import Gate, Channel, Ket
 
 __all__ = [
     "is_unitary",

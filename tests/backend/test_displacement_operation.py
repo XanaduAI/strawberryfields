@@ -18,12 +18,10 @@ Convention: The displacement unitary is fixed to be
 U(\alpha) = \exp(alpha \hat{a}^\dagger - \alpha^* \hat{a})
 where \hat{a}^\dagger is the photon creation operator.
 """
+import numpy as np
 # pylint: disable=too-many-arguments
 import pytest
-
-import numpy as np
 from scipy.special import factorial as fac
-
 
 MAG_ALPHAS = np.linspace(0, 0.8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)

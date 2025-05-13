@@ -16,7 +16,7 @@ This module provides a class that represents the result of a quantum computation
 """
 
 import warnings
-from typing import Mapping, Optional, List
+from typing import List, Mapping, Optional
 
 import numpy as np
 

@@ -15,7 +15,8 @@
 """Gaussian backend"""
 import warnings
 
-from numpy import empty, concatenate, array, identity, sqrt, vstack, zeros_like, allclose, ix_
+from numpy import (allclose, array, concatenate, empty, identity, ix_, sqrt,
+                   vstack, zeros_like)
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 from thewalrus.symplectic import xxpp_to_xpxp
 

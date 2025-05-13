@@ -18,15 +18,14 @@ within the :class:`~.Program` class.
 
 from collections.abc import Sequence
 
+import blackbird as bb
 import networkx as nx
 import numpy as np
+from blackbird.utils import TemplateError, match_template
 
-import blackbird as bb
 import strawberryfields.io as sfio
 
-from blackbird.utils import match_template, TemplateError
 from .parameters import MeasuredParameter, par_evaluate
-
 
 __all__ = [
     "Program_current_context",

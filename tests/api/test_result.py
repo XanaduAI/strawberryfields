@@ -16,8 +16,8 @@ Unit tests for strawberryfields.result
 """
 import numpy as np
 import pytest
-from strawberryfields.backends.states import BaseGaussianState
 
+from strawberryfields.backends.states import BaseGaussianState
 from strawberryfields.result import Result
 
 pytestmark = pytest.mark.api

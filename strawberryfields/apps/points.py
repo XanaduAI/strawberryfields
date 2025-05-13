@@ -51,7 +51,8 @@ function.
 
 import numpy as np
 import scipy
-from thewalrus.csamples import generate_thermal_samples, rescale_adjacency_matrix_thermal
+from thewalrus.csamples import (generate_thermal_samples,
+                                rescale_adjacency_matrix_thermal)
 
 
 def rbf_kernel(R: np.ndarray, sigma: float) -> np.ndarray:

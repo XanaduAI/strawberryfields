@@ -12,21 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Integration tests for the frontend engine.py module with the backends"""
-import os
 import numbers
-import pytest
+import os
 
 import numpy as np
+import pytest
 
 import strawberryfields as sf
 from strawberryfields import ops
 from strawberryfields.backends import BaseFock, FockBackend, GaussianBackend
 from strawberryfields.backends.states import BaseState
 
-
 try:
-    from strawberryfields.backends.tfbackend import TFBackend
     import tensorflow as tf
+
+    from strawberryfields.backends.tfbackend import TFBackend
 except (ImportError, ValueError):
     eng_backend_params = [("gaussian", GaussianBackend), ("fock", FockBackend)]
 else:

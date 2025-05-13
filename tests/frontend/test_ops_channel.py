@@ -19,10 +19,8 @@ pytestmark = pytest.mark.frontend
 import numpy as np
 
 import strawberryfields as sf
-
-from strawberryfields import ops
+from strawberryfields import ops, utils
 from strawberryfields.program_utils import MergeFailure
-from strawberryfields import utils
 
 a = np.random.random()
 b = np.random.random()

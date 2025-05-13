@@ -14,10 +14,8 @@
 
 r"""Unit tests for various state preparation operations"""
 
-import pytest
-
 import numpy as np
-
+import pytest
 
 MAG_ALPHAS = np.linspace(0, 0.8, 4)
 PHASE_ALPHAS = np.linspace(0, 2 * np.pi, 7, endpoint=False)

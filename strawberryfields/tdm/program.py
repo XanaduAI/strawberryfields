@@ -18,14 +18,15 @@ This module implements the :class:`.TDMProgram` class which acts as a representa
 # pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 
 import itertools
-from operator import itemgetter
 from collections.abc import Iterable
 from functools import reduce
+from operator import itemgetter
 
 import numpy as np
+
 from strawberryfields import ops
+from strawberryfields.parameters import FreeParameter, par_is_symbolic
 from strawberryfields.program import Program
-from strawberryfields.parameters import par_is_symbolic, FreeParameter
 from strawberryfields.program_utils import CircuitError
 
 

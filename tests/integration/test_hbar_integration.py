@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""Integration tests to make sure hbar values are set correctly in returned results"""
-import pytest
-
 import numpy as np
+import pytest
 
 import strawberryfields as sf
 from strawberryfields import ops
-
 
 N_MEAS = 200
 NUM_STDS = 10.0
