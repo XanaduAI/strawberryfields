@@ -37,14 +37,14 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
@@ -57,7 +57,7 @@ jobs:
         run: |
           pip install -r requirements-ci.txt
           python3 setup.py bdist_wheel
-          pip install dist/StrawberryFields*.whl
+          pip install dist/strawberryfields*.whl
 
       - name: Run tests
         run: python3 -m pytest tests --cov=strawberryfields --cov-report=term-missing --cov-report=xml -p no:warnings --randomly-seed=42 --tb=native -m "$OPTIONS"

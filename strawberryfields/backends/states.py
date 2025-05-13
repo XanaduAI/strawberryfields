@@ -24,7 +24,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
-from scipy.integrate import simpson
+import scipy.integrate
 
 from thewalrus.symplectic import rotation as _R
 from thewalrus.symplectic import xpxp_to_xxpp
@@ -32,6 +32,12 @@ from thewalrus.symplectic import xpxp_to_xxpp
 import thewalrus.quantum as twq
 
 import strawberryfields as sf
+
+try:
+    simpson = scipy.integrate.simpson
+except AttributeError:  # scipy<2
+    simpson = scipy.integrate.simps
+
 
 indices = string.ascii_lowercase
 

@@ -10,5 +10,6 @@ thewalrus>=0.17.0
 toml
 numba
 requests
+setuptools
 urllib3
 plotly

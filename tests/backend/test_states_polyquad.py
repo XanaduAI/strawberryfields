@@ -16,7 +16,7 @@ import pytest
 
 import numpy as np
 from scipy.stats import multivariate_normal
-from scipy.integrate import simpson
+import scipy.integrate
 from scipy.linalg import block_diag
 
 from thewalrus.symplectic import rotation as R
@@ -24,6 +24,11 @@ from thewalrus.symplectic import xpxp_to_xxpp
 
 from strawberryfields import backends
 from strawberryfields import utils
+
+try:
+    simpson = scipy.integrate.simpson
+except AttributeError:  # scipy<2
+    simpson = scipy.integrate.simps
 
 # some tests require a higher cutoff for accuracy
 CUTOFF = 12
