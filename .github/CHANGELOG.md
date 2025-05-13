@@ -12,7 +12,8 @@
 
 <h3>Bug fixes</h3>
 
-* Calls `scipy.integrate.simpson` instead of `scipy.integrate.simps` to be compatible with `scipy==1.14.0` and explicitly states `dtype=object` when creating ragged `numpy` arrays to be compatible with `numpy==1.26.4`. [#748](https://github.com/XanaduAI/strawberryfields/pull/748)
+* Updates `scipy.integrate.simps` to `scipy.integrate.simpson` when using newer scipy versions, such that SF continues working. Also makes numpy usage explicit about the creation of ragged numpy arrays. This patch furthermore fixes a number of CI issues, to get most test pipelines passing again. 
+[#757](https://github.com/XanaduAI/strawberryfields/pull/757)
 
 <h3>Documentation</h3>
 
@@ -20,7 +21,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luke Helt, Theodor Isacsson
+Leonhard Neuhaus, Luke Helt, Theodor Isacsson
 
 
 # Release 0.23.0 (current release)
