@@ -11,19 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""Unit tests for the poly_quad_expectations method in the states.py submodule"""
-import pytest
-
+r"""Unit tests for the poly_quad_expectations method in the states.py submodule."""
 import numpy as np
+import pytest
 from scipy.stats import multivariate_normal
-from scipy.integrate import simps
-from scipy.linalg import block_diag
 
+try:
+    simps = scipy.integrate.simpson
+except AttribueError:  # scipy<1.0.0
+    simps = scipy.integrate.simps
+from scipy.linalg import block_diag
 from thewalrus.symplectic import rotation as R
 from thewalrus.symplectic import xpxp_to_xxpp
 
-from strawberryfields import backends
-from strawberryfields import utils
+from strawberryfields import backends, utils
 
 # some tests require a higher cutoff for accuracy
 CUTOFF = 12
@@ -36,11 +37,11 @@ qphi = 0.78
 
 @pytest.mark.backends("fock", "gaussian")
 class TestSingleModePolyQuadratureExpectations:
-    """Test single mode poly_quad_expectation methods"""
+    """Test single mode poly_quad_expectation methods."""
 
     @pytest.fixture
     def gaussian_state(self, hbar):
-        """A test Gaussian state to use in testing"""
+        """A test Gaussian state to use in testing."""
         # quadrature rotation
 
         # construct the expected vector of means and covariance matrix
@@ -51,8 +52,8 @@ class TestSingleModePolyQuadratureExpectations:
 
     @pytest.fixture
     def sample_normal_expectations(self, gaussian_state):
-        """Returns the expectation value E(f) and the variance var(f)
-        for some normal distribution X~N(mu, cov).
+        """Returns the expectation value E(f) and the variance var(f) for some normal
+        distribution X~N(mu, cov).
 
         Args:
             mu (array): means vector
@@ -65,7 +66,7 @@ class TestSingleModePolyQuadratureExpectations:
         """
 
         def _sample(func, correction=0, mu=None, cov=None):
-            """wrapped function"""
+            """Wrapped function."""
             if mu is None:
                 mu = gaussian_state[0]
 
@@ -219,11 +220,13 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_expected, atol=tol, rtol=0)
 
         # var(ax+bp) = a**2 var(x)+b**2 var(p)+2ab cov(x,p)
-        var_expected = cov[0, 0] * d[0] ** 2 + cov[1, 1] * d[3] ** 2 + 2 * d[0] * d[3] * cov[0, 1]
+        var_expected = (
+            cov[0, 0] * d[0] ** 2 + cov[1, 1] * d[3] ** 2 + 2 * d[0] * d[3] * cov[0, 1]
+        )
         assert np.allclose(var, var_expected, atol=tol, rtol=0)
 
     def test_n_thermal(self, setup_backend, tol, hbar, pure):
-        """Test expectation and variance of the number operator on a thermal state"""
+        """Test expectation and variance of the number operator on a thermal state."""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
@@ -243,7 +246,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(var, nbar * (nbar + 1), atol=tol, rtol=0)
 
     def test_n_squeeze(self, setup_backend, tol, hbar, pure):
-        """Test expectation and variance of the number operator on a squeezed state"""
+        """Test expectation and variance of the number operator on a squeezed state."""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
@@ -307,7 +310,7 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
     def test_xp_vacuum(self, setup_backend, tol, sample_normal_expectations, hbar):
-        """Test that the correct result is returned for E(xp) on the vacuum state"""
+        """Test that the correct result is returned for E(xp) on the vacuum state."""
         backend = setup_backend(3)
 
         # set quadratic coefficient
@@ -333,7 +336,8 @@ class TestSingleModePolyQuadratureExpectations:
     def test_xp_displaced_squeezed(
         self, setup_backend, tol, pure, sample_normal_expectations, hbar
     ):
-        """Test that the correct result is returned for E(xp) on a displaced squeezed state"""
+        """Test that the correct result is returned for E(xp) on a displaced squeezed
+        state."""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
@@ -356,8 +360,11 @@ class TestSingleModePolyQuadratureExpectations:
         assert np.allclose(mean, mean_ex, atol=tol, rtol=0)
         assert np.allclose(var, var_ex, atol=tol, rtol=0)
 
-    def test_arbitrary_quadratic(self, setup_backend, tol, pure, sample_normal_expectations, hbar):
-        """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x + c4 p + k) on a displaced squeezed state"""
+    def test_arbitrary_quadratic(
+        self, setup_backend, tol, pure, sample_normal_expectations, hbar
+    ):
+        """Test that the correct result is returned for E(c0 x^2 + c1 p^2 + c2 xp + c3 x
+        + c4 p + k) on a displaced squeezed state."""
         backend = setup_backend(3)
         backend.reset(cutoff_dim=CUTOFF, pure=pure)
 
@@ -396,10 +403,11 @@ class TestSingleModePolyQuadratureExpectations:
 
 @pytest.mark.backends("fock", "gaussian")
 class TestMultiModePolyQuadratureExpectations:
-    """Test multi mode poly_quad_expectation methods"""
+    """Test multi mode poly_quad_expectation methods."""
 
     def test_three_mode_arbitrary(self, setup_backend, pure, hbar, tol):
-        """Test that the correct result is returned for an arbitrary quadratic polynomial"""
+        """Test that the correct result is returned for an arbitrary quadratic
+        polynomial."""
         backend = setup_backend(3)
         # increase the cutoff to 7 for accuracy
         backend.reset(cutoff_dim=7, pure=pure)
@@ -413,7 +421,9 @@ class TestMultiModePolyQuadratureExpectations:
                       [ 0.7020327 ,  0.20772833,  0.51704656,  0.77103581,  0.2383589 ,-0.96494418]])
 
         # fmt:on
-        d = np.array([0.71785224, -0.80064627, 0.08799823, 0.76189805, 0.99665321, -0.60777437])
+        d = np.array(
+            [0.71785224, -0.80064627, 0.08799823, 0.76189805, 0.99665321, -0.60777437]
+        )
         k = 0.123
 
         a_list = [0.044 + 0.023j, 0.0432 + 0.123j, -0.12 + 0.04j]
@@ -425,8 +435,12 @@ class TestMultiModePolyQuadratureExpectations:
 
         # squeeze and displace each mode
         for i, (a_, r_, phi_) in enumerate(zip(a_list, r_list, phi_list)):
-            backend.prepare_displaced_squeezed_state(np.abs(a_), np.angle(a_), r_, phi_, i)
-            mu[2 * i : 2 * i + 2] = R(qphi).T @ np.array([a_.real, a_.imag]) * np.sqrt(2 * hbar)
+            backend.prepare_displaced_squeezed_state(
+                np.abs(a_), np.angle(a_), r_, phi_, i
+            )
+            mu[2 * i : 2 * i + 2] = (
+                R(qphi).T @ np.array([a_.real, a_.imag]) * np.sqrt(2 * hbar)
+            )
             cov[2 * i : 2 * i + 2, 2 * i : 2 * i + 2] = (
                 R(qphi).T @ utils.squeezed_cov(r_, phi_, hbar=hbar) @ R(qphi)
             )

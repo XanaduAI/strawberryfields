@@ -11,25 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-r"""
-This module provides abstract base classes which represent the quantum state
-returned by a simulator backend via :class:`.Engine`.
-"""
+r"""This module provides abstract base classes which represent the quantum state
+returned by a simulator backend via :class:`.Engine`."""
 import abc
 import string
-from itertools import chain
 from copy import copy
+from itertools import chain
 
 import numpy as np
+import scipy.integrate
 from scipy.linalg import block_diag
-from scipy.stats import multivariate_normal
 from scipy.special import factorial
-from scipy.integrate import simps
+from scipy.stats import multivariate_normal
 
-from thewalrus.symplectic import rotation as _R
-from thewalrus.symplectic import xpxp_to_xxpp
+try:
+    simps = scipy.integrate.simpson
+except AttribueError:  # scipy<1.0.0
+    simps = scipy.integrate.simps
 
 import thewalrus.quantum as twq
+from thewalrus.symplectic import rotation as _R
+from thewalrus.symplectic import xpxp_to_xxpp
 
 import strawberryfields as sf
 
@@ -65,7 +67,9 @@ class BaseState(abc.ABC):
     @property
     def data(self):
         r"""Returns the underlying numerical (or symbolic) representation of the state.
-        The form of this data differs for different backends."""
+
+        The form of this data differs for different backends.
+        """
         return self._data
 
     @property
@@ -126,8 +130,8 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def ket(self, **kwargs):
-        r"""The numerical state vector for the quantum state in the Fock basis.
-        Note that if the state is mixed, this method returns None.
+        r"""The numerical state vector for the quantum state in the Fock basis. Note that
+        if the state is mixed, this method returns None.
 
         Keyword Args:
             cutoff (int): Specifies where to truncate the returned density matrix (default value is 10).
@@ -201,7 +205,8 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def all_fock_probs(self, **kwargs):
-        r"""Probabilities of all possible Fock basis states for the current circuit state.
+        r"""Probabilities of all possible Fock basis states for the current circuit
+        state.
 
         For example, in the case of 3 modes, this method allows the Fock state probability
         :math:`|\braketD{0,2,3}{\psi}|^2` to be returned via
@@ -242,8 +247,8 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def fidelity(self, other_state, mode, **kwargs):
-        r"""Fidelity of the reduced state in the specified mode with a user supplied state.
-        Note that this method only supports single-mode states.
+        r"""Fidelity of the reduced state in the specified mode with a user supplied
+        state. Note that this method only supports single-mode states.
 
         Args:
             other_state: a pure state vector array represented in the Fock basis (for Fock backends)
@@ -296,7 +301,8 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def quad_expectation(self, mode, phi=0, **kwargs):
-        r"""The :math:`\x_{\phi}` operator expectation values and variance for the specified mode.
+        r"""The :math:`\x_{\phi}` operator expectation values and variance for the
+        specified mode.
 
         The :math:`\x_{\phi}` operator is defined as follows,
 
@@ -324,8 +330,8 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def poly_quad_expectation(self, A, d=None, k=0, phi=0, **kwargs):
-        r"""The multi-mode expectation values and variance of arbitrary 2nd order polynomials
-        of quadrature operators.
+        r"""The multi-mode expectation values and variance of arbitrary 2nd order
+        polynomials of quadrature operators.
 
         An arbitrary 2nd order polynomial of quadrature operators over $N$ modes can always
         be written in the following form:
@@ -368,8 +374,8 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def number_expectation(self, modes):
-        r"""
-        Calculates the expectation value of the product of the number operators of the modes.
+        r"""Calculates the expectation value of the product of the number operators of
+        the modes.
 
         This method computes the analytic expectation value
         :math:`\langle \hat{n}_{i_0} \hat{n}_{i_1}\dots \hat{n}_{i_{N-1}}\rangle`
@@ -423,12 +429,13 @@ class BaseState(abc.ABC):
 
     @abc.abstractmethod
     def parity_expectation(self, modes):
-        """Calculates the expectation value of a product of parity operators acting on given modes"""
+        """Calculates the expectation value of a product of parity operators acting on
+        given modes."""
         raise NotImplementedError
 
     def p_quad_values(self, mode, xvec, pvec):
-
-        r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
+        r"""Calculates the discretized p-quadrature probability distribution of the
+        specified mode.
 
         Args:
             mode (int): the mode to calculate the p-quadrature probability values of
@@ -448,8 +455,8 @@ class BaseState(abc.ABC):
         return np.array(y)
 
     def x_quad_values(self, mode, xvec, pvec):
-
-        r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
+        r"""Calculates the discretized x-quadrature probability distribution of the
+        specified mode.
 
         Args:
             mode (int): the mode to calculate the x-quadrature probability values of
@@ -521,8 +528,9 @@ class BaseFockState(BaseState):
 
     @property
     def cutoff_dim(self):
-        r"""The numerical truncation of the Fock space used by the underlying state.
-        Note that a cutoff of D corresponds to the Fock states :math:`\{|0\rangle,\dots,|D-1\rangle\}`
+        r"""The numerical truncation of the Fock space used by the underlying state. Note
+        that a cutoff of D corresponds to the Fock states
+        :math:`\{|0\rangle,\dots,|D-1\rangle\}`
 
         Returns:
             int: the cutoff dimension
@@ -573,7 +581,8 @@ class BaseFockState(BaseState):
         return np.einsum(eqn, self.dm()).real
 
     def all_fock_probs(self, **kwargs):
-        r"""Probabilities of all possible Fock basis states for the current circuit state.
+        r"""Probabilities of all possible Fock basis states for the current circuit
+        state.
 
         For example, in the case of 3 modes, this method allows the Fock state probability
         :math:`|\braketD{0,2,3}{\psi}|^2` to be returned via
@@ -838,7 +847,7 @@ class BaseFockState(BaseState):
             p = p_
 
         def expand_dims(op, n, modes):
-            """Expand quadrature operator to act on nth mode"""
+            """Expand quadrature operator to act on nth mode."""
             I = np.identity(dim)
             allowed_indices = zip(indices[: 2 * modes : 2], indices[1 : 2 * modes : 2])
             ind = ",".join(a + b for a, b in allowed_indices)
@@ -940,7 +949,8 @@ class BaseFockState(BaseState):
         return mean, var
 
     def diagonal_expectation(self, modes, values):
-        """Calculates the expectation value of an operator that is diagonal in the number basis"""
+        """Calculates the expectation value of an operator that is diagonal in the
+        number basis."""
         if len(modes) != len(set(modes)):
             raise ValueError("There can be no duplicates in the modes specified.")
 
@@ -967,7 +977,8 @@ class BaseFockState(BaseState):
         return float(ps)
 
     def number_expectation(self, modes):
-        """Calculates the expectation value of a product of number operators acting on given modes"""
+        """Calculates the expectation value of a product of number operators acting on
+        given modes."""
         cutoff = self._cutoff
         values = np.arange(cutoff)
         mean = self.diagonal_expectation(modes, values)
@@ -1417,8 +1428,8 @@ class BaseGaussianState(BaseState):
 
 
 class BaseBosonicState(BaseState):
-    r"""Class for the representation of quantum states as linear combinations
-    of Gaussian functions in phase space.
+    r"""Class for the representation of quantum states as linear combinations of Gaussian
+    functions in phase space.
 
     Note that this class uses the basis ordering convention
 
@@ -1510,8 +1521,8 @@ class BaseBosonicState(BaseState):
         return self._weights
 
     def purity(self):
-        r"""Yields the purity of the state by calculating the integral over phase space of
-        the Wigner function multiplied with itself.
+        r"""Yields the purity of the state by calculating the integral over phase space
+        of the Wigner function multiplied with itself.
 
         Returns
             float: purity of the state
@@ -1532,7 +1543,8 @@ class BaseBosonicState(BaseState):
         return pur
 
     def reduced_bosonic(self, modes):
-        r"""Returns the weights, vectors of means and the covariance matrices of the specified modes.
+        r"""Returns the weights, vectors of means and the covariance matrices of the
+        specified modes.
 
         Args:
             modes (int of Sequence[int]): indices of the requested modes
