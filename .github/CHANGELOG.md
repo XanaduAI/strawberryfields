@@ -12,6 +12,11 @@
 
 <h3>Bug fixes</h3>
 
+* Scipy>=1.0.0 is supported as a dependency and broken imports related to newer
+  scipy versions are fixed.
+  [(#756)](https://github.com/XanaduAI/strawberryfields/pull/756)
+
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
