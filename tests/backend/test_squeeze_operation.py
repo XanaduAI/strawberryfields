@@ -36,7 +36,8 @@ def matrix_elem(n, r, m):
         return 0.0
 
     if r == 0.0:
-        return complex(n == m)  # delta function
+        # return complex(n == m)  # delta function
+        return np.complex(n == m)  # delta function
 
     k = np.arange(m % 2, min([m, n]) + 1, 2)
     res = np.sum(

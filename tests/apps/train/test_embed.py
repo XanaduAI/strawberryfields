@@ -26,10 +26,12 @@ feats = [
     [[0.1, 0.2, 0.3], [0.3, 0.1, 0.2], [0.2, 0.3, 0.1]],
     [[0.1, 0.2, 0.3, 0.4], [0.4, 0.1, 0.2, 0.3], [0.3, 0.4, 0.1, 0.2], [0.2, 0.3, 0.4, 0.1]],
 ]
-feats = np.array([np.array(f) for f in feats], dtype=object)
+feats = np.array([np.array(f) for f in feats])
+# feats = np.array([np.array(f) for f in feats], dtype=object)
 
 ps = [[1.0, 2.0], [1.0, 2.0, 3.0], [1.0, 2.0, 3.0, 4.0]]
-ps = np.array([np.array(p) for p in ps], dtype=object)
+ps = np.array([np.array(p) for p in ps])
+# ps = np.array([np.array(p) for p in ps], dtype=object)
 
 weights_f = np.array(
     [
