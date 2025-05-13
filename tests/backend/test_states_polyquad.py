@@ -18,7 +18,7 @@ from scipy.stats import multivariate_normal
 
 try:
     simps = scipy.integrate.simpson
-except AttribueError:  # scipy<1.0.0
+except AttributeError:  # scipy<1.0.0
     simps = scipy.integrate.simps
 from scipy.linalg import block_diag
 from thewalrus.symplectic import rotation as R

@@ -31,7 +31,7 @@ import strawberryfields as sf
 
 try:
     simps = scipy.integrate.simpson
-except AttribueError:  # scipy<1.0.0
+except AttributeError:  # scipy<1.0.0
     simps = scipy.integrate.simps
 
 
