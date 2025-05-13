@@ -11,6 +11,7 @@ numpy==1.19.2
 plotly==4.4.1
 protobuf<4.21.0  # remove when fix is released
 quantum-blackbird==0.4.0
+quantum-xir>=0.1.1
 scipy==1.7.1
 scikit-learn==1.0.2
 sphinx-autodoc-typehints==1.10.3
