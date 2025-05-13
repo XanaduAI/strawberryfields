@@ -137,7 +137,7 @@ class TestFockBasisMultimode:
         multi_mode_preparation_31_probs = np.array(backend.state(modes=[3, 1]).all_fock_probs())
 
         single_mode_vac = np.zeros((cutoff, cutoff), dtype=np.complex128)
-        single_mode_vac.itemset(0, 1.0 + 0.0j)
+        single_mode_vac[0] = 1.0 + 0.0j
 
         assert np.allclose(random_dm, single_mode_preparation_dm, atol=tol, rtol=0)
         assert np.allclose(multi_mode_preparation_dm, single_mode_preparation_dm, atol=tol, rtol=0)
