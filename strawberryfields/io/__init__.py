@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module contains functions for loading and saving Strawberry Fields :class:`~.Program` objects
+This module contains functions for loading and saving Strawberry Fields :class:`~.sfp.Program` objects
 and converting from/to Blackbird and XIR scripts to Strawberry Fields code.
 """
 import os
@@ -22,7 +22,7 @@ from typing import TextIO, Union
 import blackbird
 import xir
 
-from strawberryfields.program import Program
+import strawberryfields.program as sfp
 
 from .blackbird_io import from_blackbird, from_blackbird_to_tdm, to_blackbird
 from .utils import generate_code
@@ -32,14 +32,14 @@ from .xir_io import from_xir, from_xir_to_tdm, to_xir
 __all__ = ["to_blackbird", "to_xir", "to_program", "loads", "generate_code"]
 
 
-def to_program(prog: Union[blackbird.BlackbirdProgram, xir.Program]) -> Program:
+def to_program(prog: Union[blackbird.BlackbirdProgram, xir.Program]) -> sfp.Program:
     """Convert a Blackbird or an XIR program to a Strawberry Fields program.
 
     Args:
         prog (blackbird.BlackbirdProgram, xir.Program): the input program object
 
     Returns:
-        Program: corresponding Strawberry Fields program
+        sfp.Program: corresponding Strawberry Fields program
 
     Raises:
         ValueError: if the Blackbird program contains no quantum operations
@@ -63,7 +63,7 @@ def to_program(prog: Union[blackbird.BlackbirdProgram, xir.Program]) -> Program:
     raise TypeError(f"Cannot convert {type(prog)}' to Strawberry Fields Program")
 
 
-def save(f: Union[TextIO, str, Path], prog: Program, ir: str = "blackbird", **kwargs) -> None:
+def save(f: Union[TextIO, str, Path], prog: sfp.Program, ir: str = "blackbird", **kwargs) -> None:
     """Saves a quantum program to a Blackbird ``.xbb`` or an XIR ``.xir`` file.
 
     **Example:**
@@ -141,7 +141,7 @@ def save(f: Union[TextIO, str, Path], prog: Program, ir: str = "blackbird", **kw
             fid.close()
 
 
-def loads(s: str, ir: str = "blackbird") -> Program:
+def loads(s: str, ir: str = "blackbird") -> sfp.Program:
     """Load a quantum program from a string.
 
     Args:
@@ -149,7 +149,7 @@ def loads(s: str, ir: str = "blackbird") -> Program:
         ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
 
     Returns:
-        prog (Program): Strawberry Fields program
+        prog (sfp.Program): Strawberry Fields program
 
     Raises:
         ValueError: if an invalid IR name is passed
@@ -165,7 +165,7 @@ def loads(s: str, ir: str = "blackbird") -> Program:
     return to_program(prog)
 
 
-def load(f: Union[TextIO, str, Path], ir: str = "blackbird") -> Program:
+def load(f: Union[TextIO, str, Path], ir: str = "blackbird") -> sfp.Program:
     """Load a quantum program from a Blackbird .xbb or an XIR .xir file.
 
     **Example:**
@@ -201,7 +201,7 @@ def load(f: Union[TextIO, str, Path], ir: str = "blackbird") -> Program:
         ir (str): Intermediate representation language to use. Can be either "blackbird" or "xir".
 
     Returns:
-        prog (Program): Strawberry Fields program
+        prog (sfp.Program): Strawberry Fields program
 
     Raises:
         ValueError: if file is not a string, pathlib.Path, or file-like object

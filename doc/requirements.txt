@@ -21,3 +21,4 @@ tensorflow==2.6.3
 thewalrus==0.18.0
 toml==0.10.2
 xanadu-sphinx-theme==0.1.0
+setuptools
