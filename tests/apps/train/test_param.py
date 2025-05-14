@@ -287,11 +287,6 @@ class TestVGBS:
         assert np.allclose(gbs.n_mean(params), n_mean)
 
 
-@pytest.mark.xfail(
-    reason="This test broke when upgrading dependencies (numpy, scipy) in "
-    "https://github.com/XanaduAI/strawberryfields/pull/757, not sure why or "
-    "if it needs to be fixed"
-)
 @pytest.mark.usefixtures("adj", "params", "embedding")
 @pytest.mark.parametrize("dim", [7, 9])  # used in the adj fixture to determine number of modes
 @pytest.mark.parametrize("n_mean", [2, 3])
