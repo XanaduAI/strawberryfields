@@ -290,7 +290,8 @@ class TestVGBS:
     reason="This test broke when upgrading dependencies (numpy, scipy) in "
     "https://github.com/XanaduAI/strawberryfields/pull/757. This failure "
     "was however already reported in 2022 and never addressed "
-    "(https://github.com/XanaduAI/thewalrus/pull/338#issuecomment-1165711436)."
+    "(https://github.com/XanaduAI/thewalrus/pull/338#issuecomment-1165711436 "
+    "and https://github.com/XanaduAI/thewalrus/pull/400#issuecomment-2884716689).
 )
 @pytest.mark.usefixtures("adj", "params", "embedding")
 @pytest.mark.parametrize("dim", [7, 9])  # used in the adj fixture to determine number of modes
