@@ -92,7 +92,6 @@ Related tutorials
     <br>
 
 """
-
 from strawberryfields.apps.train.cost import KL, Stochastic
 from strawberryfields.apps.train.embed import Exp, ExpFeatures
 from strawberryfields.apps.train.param import (

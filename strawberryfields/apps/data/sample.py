@@ -48,8 +48,7 @@ class SampleDataset(ABC):
         ``scipy.sparse.csr_matrix`` saved in ``.npz`` format.
 
         For ``_data_filename = "example"``, the corresponding samples should be stored as
-        ``./sample_data/example.npz`` and the adjacency matrix as ``./sample_data/example_A.npz``.
-        """
+        ``./sample_data/example.npz`` and the adjacency matrix as ``./sample_data/example_A.npz``."""
         pass
 
     def __init__(self):

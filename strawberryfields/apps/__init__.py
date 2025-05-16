@@ -18,15 +18,15 @@ Strawberry Fields application layer.
 .. autosummary::
     :toctree: api
 
-        clique
-        data
-        plot
-        points
-        qchem
-        sample
-        similarity
-        subgraph
-        train
+	clique
+	data
+	plot
+	points
+	qchem
+	sample
+	similarity
+	subgraph
+	train
 """
 
 import strawberryfields.apps.clique
