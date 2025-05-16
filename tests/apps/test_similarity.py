@@ -373,8 +373,7 @@ class TestProbEventExact:
         constituent orbits of the given event are summed correctly. The test monkeypatches the fock_prob
         function so that the probability is the same for each sample permutation of all constituent orbits
         and is equal to 1/8. For a 4-mode graph, an event with ``photon_number = 2``, and
-        ``max_count_per_mode = 1`` contains orbit [1, 1] which has 6 possible sample permutations.
-        """
+        ``max_count_per_mode = 1`` contains orbit [1, 1] which has 6 possible sample permutations."""
         graph = nx.complete_graph(4)
         with monkeypatch.context() as m:
             m.setattr(
