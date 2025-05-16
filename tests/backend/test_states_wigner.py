@@ -145,7 +145,9 @@ def fock_1_state_quad(setup_backend, hbar, tol):
 
     # Exact probability distribution
     def exact(a):
-        return 0.5 * np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a**2) / hbar) * (4 / hbar) * (a**2)
+        return (
+            0.5 * np.sqrt(1 / (np.pi * hbar)) * np.exp(-1 * (a**2) / hbar) * (4 / hbar) * (a**2)
+        )
 
     exact_x = np.array([exact(x) for x in XVEC])
     exact_p = np.array([exact(p) for p in XVEC])

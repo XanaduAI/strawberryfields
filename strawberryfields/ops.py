@@ -1932,7 +1932,6 @@ class BSgate(Gate):
         Alternatively, **symmetric beamsplitter** (one that does not distinguish between
         :math:`\a_1` and :math:`\a_2`) is obtained by setting :math:`\phi=\pi/2`.
     """
-
     ns = 2
 
     def __init__(self, theta=np.pi / 4, phi=0.0):
