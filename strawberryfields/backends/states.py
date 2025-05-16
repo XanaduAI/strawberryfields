@@ -1001,7 +1001,6 @@ class BaseGaussianState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
-
     # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, mode_names=None):

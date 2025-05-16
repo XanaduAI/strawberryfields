@@ -154,7 +154,6 @@ class GaussianUnitary(Compiler):
         "Zgate": {},
         "Fouriergate": {},
     }
-
     # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a quantum circuit into the canonical Symplectic form.

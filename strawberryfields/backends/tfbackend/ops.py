@@ -89,7 +89,6 @@ class WarnOnlyOnce:
 
 ###################################################################
 
-
 # Helper functions:
 def _numer_safe_power(base, exponent, dtype=tf.complex64):
     """gives the desired behaviour of 0**0=1"""

@@ -129,7 +129,6 @@ class Passive(Compiler):
     }
 
     decompositions = {}
-
     # pylint: disable=too-many-branches, too-many-statements
     def compile(self, seq, registers):
         """Try to arrange a passive circuit into a single multimode passive operation

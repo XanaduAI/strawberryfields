@@ -78,7 +78,6 @@ class Xunitary(Compiler):
     >>> spec = eng.device_spec
     >>> prog.compile(device=spec, compiler="Xunitary")
     """
-
     short_name = "Xunitary"
     interactive = False
 
