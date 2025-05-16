@@ -6,7 +6,7 @@ tensorboard
 networkx
 quantum-blackbird
 python-dateutil
-thewalrus @ git+https://github.com/xanaduai/thewalrus@v0.22.0
+thewalrus>=0.22.0
 toml
 numba
 requests
