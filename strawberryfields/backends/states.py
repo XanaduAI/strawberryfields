@@ -44,7 +44,6 @@ indices = string.ascii_lowercase
 
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
-
     # pylint: disable=too-many-public-methods
     EQ_TOLERANCE = 1e-10
 
@@ -434,6 +433,7 @@ class BaseState(abc.ABC):
         raise NotImplementedError
 
     def p_quad_values(self, mode, xvec, pvec):
+
         r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
 
         Args:
@@ -454,6 +454,7 @@ class BaseState(abc.ABC):
         return np.array(y)
 
     def x_quad_values(self, mode, xvec, pvec):
+
         r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
 
         Args:
@@ -1438,7 +1439,6 @@ class BaseBosonicState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
-
     # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, num_weights, mode_names=None):
@@ -1634,6 +1634,7 @@ class BaseBosonicState(BaseState):
 
         wigner = 0
         for i, weight_i in enumerate(weights):
+
             if X.shape == P.shape:
                 arr = np.array([X - means[i, 0], P - means[i, 1]])
                 arr = arr.squeeze()

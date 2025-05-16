@@ -267,6 +267,7 @@ class VGBS:
             array:  the generated samples
         """
         cov = A_to_cov(A)
+
         if self.threshold:
             samples = thewalrus.samples.torontonian_sample_state(
                 cov, n_samples, hbar=sf.hbar, **kwargs
