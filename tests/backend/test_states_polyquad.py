@@ -16,8 +16,12 @@ import pytest
 
 import numpy as np
 from scipy.stats import multivariate_normal
-from scipy.integrate import simps
 from scipy.linalg import block_diag
+# support old scipy & new where simps was renamed to simpson
+try:
+    from scipy.integrate import simps
+except ImportError:
+    from scipy.integrate import simpson as simps
 
 from thewalrus.symplectic import rotation as R
 from thewalrus.symplectic import xpxp_to_xxpp
