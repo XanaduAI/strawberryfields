@@ -243,7 +243,10 @@ def to_blackbird(prog: Program, version: str = "1.0") -> blackbird.BlackbirdProg
             }
         )
         bb._var.update(
-            {f"{p.name}": np.array([prog.tdm_params[i]]) for i, p in enumerate(prog.loop_vars)}
+            {
+                f"{p.name}": np.array([prog.tdm_params[i]], dtype=object)
+                for i, p in enumerate(prog.loop_vars)
+            }
         )
 
     return bb

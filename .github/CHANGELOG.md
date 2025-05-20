@@ -12,13 +12,16 @@
 
 <h3>Bug fixes</h3>
 
+* Updates `scipy.integrate.simps` to `scipy.integrate.simpson` when using newer scipy versions, such that SF continues working. Also makes numpy usage explicit about the creation of ragged numpy arrays. This patch furthermore fixes a number of CI issues, to get most test pipelines passing again. 
+[#757](https://github.com/XanaduAI/strawberryfields/pull/757)
+
 <h3>Documentation</h3>
 
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):
 
-Theodor Isacsson
+Leonhard Neuhaus, Luke Helt, Theodor Isacsson
 
 
 # Release 0.23.0 (current release)

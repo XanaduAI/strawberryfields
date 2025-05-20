@@ -16,7 +16,7 @@ import pytest
 
 import numpy as np
 from scipy.stats import multivariate_normal
-from scipy.integrate import simps
+import scipy.integrate
 from scipy.linalg import block_diag
 
 from thewalrus.symplectic import rotation as R
@@ -24,6 +24,11 @@ from thewalrus.symplectic import xpxp_to_xxpp
 
 from strawberryfields import backends
 from strawberryfields import utils
+
+try:
+    simpson = scipy.integrate.simpson
+except AttributeError:  # scipy<2
+    simpson = scipy.integrate.simps
 
 # some tests require a higher cutoff for accuracy
 CUTOFF = 12
@@ -79,8 +84,8 @@ class TestSingleModePolyQuadratureExpectations:
             poly = func(X, P, XP)
             PDF = multivariate_normal.pdf(grid, mu, cov)
 
-            Ex = simps(simps(poly * PDF, P[0]), X.T[0])
-            ExSq = simps(simps(poly**2 * PDF, P[0]), X.T[0])
+            Ex = simpson(simpson(poly * PDF, x=P[0]), x=X.T[0])
+            ExSq = simpson(simpson(poly**2 * PDF, x=P[0]), x=X.T[0])
 
             var = ExSq - Ex**2 + correction
 

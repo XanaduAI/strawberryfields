@@ -1025,6 +1025,7 @@ class Ket(Preparation):
             .. math::
                 \ket{\psi} = \sum_n c_n \ket{n}
     """
+
     ns = None
 
     def __init__(self, state):
@@ -1086,6 +1087,7 @@ class DensityMatrix(Preparation):
 
         .. math:: \braketT{n}{\text{Tr}_{01}[\rho]}{m} = \sum_{i}\sum_k \rho_{iikkmn}
     """
+
     ns = None
 
     def __init__(self, state):
@@ -1261,6 +1263,7 @@ class MeasureHomodyne(Measurement):
         :math:`\x_\phi` probability distribution over a specific range and number of bins,
         before taking a random sample.
     """
+
     ns = 1
 
     def __init__(self, phi, select=None):
@@ -1309,6 +1312,7 @@ class MeasureHeterodyne(Measurement):
 
            .. math:: \frac{1}{\pi} \ket{\alpha}\bra{\alpha}
     """
+
     ns = 1
 
     def __init__(self, select=None):
@@ -1932,6 +1936,7 @@ class BSgate(Gate):
         Alternatively, **symmetric beamsplitter** (one that does not distinguish between
         :math:`\a_1` and :math:`\a_2`) is obtained by setting :math:`\phi=\pi/2`.
     """
+
     ns = 2
 
     def __init__(self, theta=np.pi / 4, phi=0.0):
@@ -1987,6 +1992,7 @@ class MZgate(Gate):
     The last example corresponds to a 50/50 two-mode interferometer.
 
     """
+
     ns = 2
 
     def __init__(self, phi_in, phi_ex):
@@ -2008,6 +2014,7 @@ class MZgate(Gate):
 
 class sMZgate(Gate):
     r"""Symmetric Mach-Zehnder interferometer"""
+
     ns = 2
 
     def __init__(self, phi_in, phi_ex):
@@ -2060,6 +2067,7 @@ class S2gate(Gate):
 
         where :math:`z=r e^{i \phi}` with :math:`r \geq 0` and :math:`\phi \in [0,2 \pi)`.
     """
+
     ns = 2
 
     def __init__(self, r, phi=0.0):
@@ -2132,6 +2140,7 @@ class CXgate(Gate):
             \sin(2 \theta) = \frac{-1}{\cosh r}, \ \cos(2 \theta)=-\tanh(r),
             \ \sinh(r) = -\frac{ s}{2}.
     """
+
     ns = 2
 
     def __init__(self, s=1):
@@ -2191,6 +2200,7 @@ class CZgate(Gate):
             \text{CZ}(s)^\dagger \hat{a}_1 \text{CZ}(s) &= \a_1+  i\frac{s}{2} (\ad_2 +  \a_2)\\
             \text{CZ}(s)^\dagger \hat{a}_2 \text{CZ}(s) &= \a_2+  i\frac{s}{2} (\ad_1 +  \a_1)\\
     """
+
     ns = 2
 
     def __init__(self, s=1):
@@ -2236,6 +2246,7 @@ class CKgate(Gate):
         .. math::
             CK(\kappa) = \exp{(i\kappa\hat{n}_1\hat{n_2})}.
     """
+
     ns = 2
 
     def __init__(self, kappa):
@@ -2614,6 +2625,7 @@ class Interferometer(Decomposition):
 
             .. math:: BS_{clements}(\theta, \phi) = BS(\theta, 0) R(\phi)
     """
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, U, mesh="rectangular", drop_identity=True, tol=1e-6):
@@ -3050,6 +3062,7 @@ class Gaussian(Preparation, Decomposition):
         a symplectic transformation :math:`S` acting on the vacuum. It follows that the
         original covariance matrix can therefore be recovered simply via :math:`V=\frac{\hbar}{2}SS^T`.
     """
+
     # pylint: disable=too-many-instance-attributes
     ns = None
 

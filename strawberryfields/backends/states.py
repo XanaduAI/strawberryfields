@@ -24,7 +24,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from scipy.stats import multivariate_normal
 from scipy.special import factorial
-from scipy.integrate import simps
+import scipy.integrate
 
 from thewalrus.symplectic import rotation as _R
 from thewalrus.symplectic import xpxp_to_xxpp
@@ -33,11 +33,18 @@ import thewalrus.quantum as twq
 
 import strawberryfields as sf
 
+try:
+    simpson = scipy.integrate.simpson
+except AttributeError:  # scipy<2
+    simpson = scipy.integrate.simps
+
+
 indices = string.ascii_lowercase
 
 
 class BaseState(abc.ABC):
     r"""Abstract base class for the representation of quantum states."""
+
     # pylint: disable=too-many-public-methods
     EQ_TOLERANCE = 1e-10
 
@@ -427,7 +434,6 @@ class BaseState(abc.ABC):
         raise NotImplementedError
 
     def p_quad_values(self, mode, xvec, pvec):
-
         r"""Calculates the discretized p-quadrature probability distribution of the specified mode.
 
         Args:
@@ -443,12 +449,11 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(pvec)):
-            res = simps(W[i, : len(xvec)], xvec)
+            res = simpson(W[i, : len(xvec)], x=xvec)
             y.append(res)
         return np.array(y)
 
     def x_quad_values(self, mode, xvec, pvec):
-
         r"""Calculates the discretized x-quadrature probability distribution of the specified mode.
 
         Args:
@@ -464,7 +469,7 @@ class BaseState(abc.ABC):
         W = self.wigner(mode, xvec, pvec)
         y = []
         for i in range(0, len(xvec)):
-            res = simps(W[: len(pvec), i], pvec)
+            res = simpson(W[: len(pvec), i], x=pvec)
             y.append(res)
         return np.array(y)
 
@@ -995,6 +1000,7 @@ class BaseGaussianState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+
     # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, mode_names=None):
@@ -1432,6 +1438,7 @@ class BaseBosonicState(BaseState):
         mode_names (Sequence): (optional) this argument contains a list providing mode names
             for each mode in the state
     """
+
     # pylint: disable=too-many-public-methods
 
     def __init__(self, state_data, num_modes, num_weights, mode_names=None):
