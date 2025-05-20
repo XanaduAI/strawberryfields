@@ -13,14 +13,14 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Install dependencies
         run: pip install black
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Run Black
         run: black -l 100 strawberryfields/ tests/ --check
