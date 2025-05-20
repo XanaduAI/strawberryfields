@@ -118,9 +118,7 @@ def coherent_state(r, phi, basis="fock", fock_dim=5, hbar=2.0):
     a = r * np.exp(1j * phi)
 
     if basis == "fock":
-        state = np.array(
-            [np.exp(-0.5 * r**2) * a**n / np.sqrt(fac(n)) for n in range(fock_dim)]
-        )
+        state = np.array([np.exp(-0.5 * r**2) * a**n / np.sqrt(fac(n)) for n in range(fock_dim)])
 
     elif basis == "gaussian":
         means = np.array([a.real, a.imag]) * np.sqrt(2 * hbar)
