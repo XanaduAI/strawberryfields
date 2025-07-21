@@ -16,8 +16,9 @@ Submodule for feature vector datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 DATA_PATH = Path(__file__).parent / "feature_data"
 
