@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  frontend:
+    name: Frontend (no TF)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install deps (minimal + plot)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . --no-deps
+          pip install -r requirements-dev.txt
+          pip install numpy scipy sympy networkx thewalrus requests python-dateutil toml urllib3 quantum-blackbird quantum-xir xanadu-cloud-client
+          pip install plotly kaleido pandas
+      - name: Run frontend tests (excluding TF)
+        run: |
+          pytest -q tests/frontend -k 'not tf'
+
+  tf-cpu:
+    name: TensorFlow CPU subset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install deps + TensorFlow CPU
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . --no-deps
+          pip install -r requirements-dev.txt
+          pip install numpy scipy sympy networkx thewalrus requests python-dateutil toml urllib3 quantum-blackbird quantum-xir xanadu-cloud-client
+          pip install 'tensorflow==2.16.*'
+      - name: Run TF-marked tests
+        env:
+          TF_CPP_MIN_LOG_LEVEL: '2'
+        run: |
+          python -c "import tensorflow as tf; print('TF', tf.__version__)"
+          pytest -q tests -k 'tf'
+
