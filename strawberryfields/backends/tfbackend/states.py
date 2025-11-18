@@ -336,13 +336,14 @@ class FockStateTF(BaseFockState):
             # Ket indices are lowercase; bra indices will be uppercase for kept modes
             indices_str = indices[: self.num_modes]
             indices_conj = list(indices_str)
+
             # Create output indices (interleaved ket/bra pairs for kept modes)
             output_indices = ""
             for mode in modes:
                 output_indices += indices_str[mode] + indices_str[mode].upper()
                 indices_conj[mode] = indices_str[mode].upper()
-
             indices_conj_str = "".join(indices_conj)
+
             einsum_eq = f"{indices_str},{indices_conj_str}->{output_indices}"
 
             # Compute reduced density matrix
