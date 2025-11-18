@@ -634,7 +634,7 @@ class BaseFockState(BaseState):
             # Ket indices are lowercase; bra indices will be uppercase for kept modes
             indices_str = indices[: self._modes]
             indices_conj = list(indices_str)
-            
+
             # Create output indices (interleaved ket/bra pairs for kept modes)
             output_indices = ""
             for mode in modes:
