@@ -626,6 +626,28 @@ class BaseFockState(BaseState):
                 "The number of specified modes cannot be larger than the number of subsystems."
             )
 
+        # For pure states, avoid constructing full density matrix
+        if self.is_pure:
+            ket = self.ket()
+
+            # Build einsum equation for partial trace
+            # Ket indices are lowercase; bra indices will be uppercase for kept modes
+            indices_str = indices[: self._modes]
+            indices_conj = list(indices_str)
+            # Create output indices (interleaved ket/bra pairs for kept modes)
+            output_indices = ""
+            for mode in modes:
+                output_indices += indices_str[mode] + indices_str[mode].upper()
+                indices_conj[mode] = indices_str[mode].upper()
+
+            indices_conj_str = "".join(indices_conj)
+            einsum_eq = f"{indices_str},{indices_conj_str}->{output_indices}"
+
+            # Compute reduced density matrix
+            rho_reduced = np.einsum(einsum_eq, ket, ket.conj())
+            return rho_reduced
+
+        # Original path for mixed states: use einsum on full density matrix
         # reduce rho down to specified subsystems
         keep_indices = indices[: 2 * len(modes)]
         trace_indices = indices[2 * len(modes) : len(modes) + self._modes]
