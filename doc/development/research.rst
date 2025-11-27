@@ -22,10 +22,7 @@ Strawberry Fields is an open-source library, with the up-to-date code available 
 - **Source Code:** https://github.com/XanaduAI/strawberryfields
 - **Issue Tracker:** https://github.com/XanaduAI/strawberryfields/issues
 
-We welcome contributions - simply fork the Strawberry Fields repository, and then make a
-`pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.  All contributers to Strawberry Fields will be listed as authors on the releases.
-
-We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects or applications built on Strawberry Fields.
+We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes, security patches, and documentation improvements only. Thank you for your understanding.
 
 Support
 --------
