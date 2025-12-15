@@ -13,8 +13,8 @@ as well as the following Python packages:
 * `NumPy <http://numpy.org/>`_ >= 1.17.4
 * `SciPy <http://scipy.org/>`_ >= 1.0.0
 * `NetworkX <http://networkx.github.io/>`_ >= 2.0
-* `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >= 0.2.0
-* `The Walrus <https://the-walrus.readthedocs.io>`_ >= 0.7.0
+* `Blackbird <https://quantum-blackbird.readthedocs.io>`_ >= 0.3.0
+* `The Walrus <https://the-walrus.readthedocs.io>`_ >= 0.18.0
 * `toml <https://pypi.org/project/toml/>`_
 
 If you currently do not have Python 3 installed, we recommend
@@ -250,6 +250,11 @@ from within the top-level directory. To then build the HTML documentation, run
 
 The documentation can be found in the :file:`doc/_build/html/` directory.
 
+Contributing to Strawberry Fields
+---------------------------------
+
+We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes,
+security patches, and documentation improvements only. Thank you for your understanding.
 
 Adding a new module to the docs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -293,7 +298,7 @@ a module:
 
 
 Submitting a pull request
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before submitting a pull request, please make sure the following is done:
 

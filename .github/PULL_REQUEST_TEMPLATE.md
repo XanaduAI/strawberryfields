@@ -1,6 +1,6 @@
 ### Before submitting
 
-We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes, 
+We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes,
 security patches, and documentation improvements only. Thank you for your understanding.
 
 Please complete the following checklist when submitting a PR:
