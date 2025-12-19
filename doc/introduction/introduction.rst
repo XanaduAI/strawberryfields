@@ -31,8 +31,9 @@ Users interested in applications of photonic quantum computers should check
 out the :doc:`applications` pages. Those wanting to dig deeper into the design
 of circuits can head to the :doc:`/introduction/circuits` page.
 
-Developers can head to the :doc:`/development/development_guide` to see how
-they can contribute to Strawberry Fields.
+While we are no longer accepting Pull Requests for new features at this time, fix- and
+improvement-minded developers can head to the :doc:`/development/development_guide` to
+see how they can contribute to Strawberry Fields.
 
 Quickstart guides
 -----------------

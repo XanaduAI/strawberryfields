@@ -4,7 +4,7 @@ Thank you for taking the time to contribute to Strawberry Fields!
 
 Strawberry Fields is a collaborative effort with the quantum photonics and quantum computation
 community - while we are not currently working on adding new features to Strawberry Fields,
-we invite you to make a fork of this repository to add improvements, test research ideas, or fit 
+we invite you to make a fork of this repository to add improvements, test research ideas, or fit
 Strawberry Fields into your workflow.
 
 ## How can I get involved in the community?
@@ -13,7 +13,7 @@ If you don't know where to start, start by checking out our
 [documentation](https://strawberryfields.readthedocs.io). Have a go working through some of the tutorials,
 and having a look at the Strawberry Fields API and code documentation to see how things work under the hood.
 
-To chat directly with the team designing and building Strawberry Fields, as well as members of our
+To chat directly with the team that designed and built Strawberry Fields, as well as members of our
 community - ranging from professors of quantum physics, to students, to those just interested in being a
 part of a rapidly growing industry - you can join our [Slack channel](https://u.strawberryfields.ai/slack).
 
@@ -27,11 +27,8 @@ It's up to you!
   [discussion forum](https://discuss.pennylane.ai/), respond to questions, and
   provide exciting updates of the projects/experiments you are investigating with Strawberry Fields.
 
-  You can even write your own Strawberry Fields tutorials, or blog about your simulation results.
-  Send us the link, and we may even add it to our Gallery or our documentation as an external resource!
-
-* **Report bugs or contribute to our documentation** - we are not accepting Pull Requests 
-  for new features at this time. We welcome contributions for bug fixes, security patches, and documentation 
+* **Report bugs or contribute to our documentation** - we are not accepting Pull Requests
+  for new features at this time. We welcome contributions for bug fixes, security patches, and documentation
   improvements only. Thank you for your understanding. If you run into any bugs, make a bug report on our
   [issue tracker](https://github.com/XanaduAI/strawberryfields/issues).
 
@@ -65,7 +62,7 @@ To submit a bug report, please work your way through the following checklist:
 
 ## Suggesting features, document additions, and enhancements
 
-We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes, security patches, 
+We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes, security patches,
 and documentation improvements only. Thank you for your understanding.
 
 * **For documentation additions**, point us towards any relevant equations/papers/preprints,
