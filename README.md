@@ -58,7 +58,7 @@
 
 ## Installation
 
-Strawberry Fields requires Python version 3.7, 3.8, 3.9, or 3.10. Installation of Strawberry Fields, as
+Strawberry Fields requires Python version 3.8, 3.9, or 3.10. Installation of Strawberry Fields, as
 well as all dependencies, can be done using pip:
 
 ```console
@@ -81,25 +81,15 @@ Next, read more about using Strawberry Fields with
 [photonic hardware](https://strawberryfields.ai/photonics/hardware/index.html), including code
 demonstrations and an overview of Xanadu's quantum photonic hardware.
 
-Developers can head to the
-[development guide](https://strawberryfields.readthedocs.io/en/stable/development/development_guide.html)
-to see how they can contribute to Strawberry Fields.
-
 
 ## Contributing to Strawberry Fields
 
-We welcome contributions — simply fork the Strawberry Fields repository, and then make a
-[pull request](https://help.github.com/articles/about-pull-requests/) containing your contribution.
-All contributors to Strawberry Fields will be listed as authors on the releases.
-
-We also encourage bug reports, suggestions for new features and enhancements, and even links to cool
-projects or applications built on Strawberry Fields.
+We are not accepting Pull Requests for new features at this time. We welcome contributions for bug fixes,
+security patches, and documentation improvements only. Thank you for your understanding.
 
 See our [contributions page](https://github.com/XanaduAI/strawberryfields/blob/master/.github/CONTRIBUTING.md)
 and [changelog](https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHANGELOG.md)
-for more details, and then check out some of the Strawberry Fields
-[challenges](https://github.com/XanaduAI/strawberryfields/blob/master/.github/CHALLENGES.md)
-for some inspiration.
+for more details.
 
 
 ## Authors

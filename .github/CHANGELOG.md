@@ -17,6 +17,10 @@
 
 <h3>Documentation</h3>
 
+* Modified `CONTRIBUTING.md`, `PULL_REQUEST_TEMPLATE.md`, `README.md`, and `research.rst`, to clarify that we are not accepting Pull Requests for new features at this time.
+
+* Deleted `CHALLENGES.md` since we're no longer accepting contributions for anything other than bug fixes and docs fixes.
+
 <h3>Contributors</h3>
 
 This release contains contributions from (in alphabetical order):

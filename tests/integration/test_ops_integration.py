@@ -416,7 +416,7 @@ class TestGaussianGateApplication:
         num_mode = 1
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
-        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        S = tf.Variable(random_symplectic(num_mode, scale=0.5), dtype=tf.complex128)
         d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
         with prog.context as q:
             ops.Ggate(S, d) | q
@@ -429,7 +429,7 @@ class TestGaussianGateApplication:
         num_mode = 2
         eng = sf.Engine("tf", backend_options={"cutoff_dim": 5})
         prog = sf.Program(num_mode)
-        S = tf.Variable(random_symplectic(num_mode), dtype=tf.complex128)
+        S = tf.Variable(random_symplectic(num_mode, scale=0.5), dtype=tf.complex128)
         d = tf.Variable(np.random.random(2 * num_mode), dtype=tf.complex128)
         with prog.context as q:
             sf.ops.Ggate(S, d) | q
