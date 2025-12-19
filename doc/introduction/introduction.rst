@@ -32,8 +32,8 @@ out the :doc:`applications` pages. Those wanting to dig deeper into the design
 of circuits can head to the :doc:`/introduction/circuits` page.
 
 While we are no longer accepting Pull Requests for new features at this time, fix- and
-improvement-minded developers can head to the :doc:`/development/development_guide` to
-see how they can contribute to Strawberry Fields.
+documentation improvement-minded developers can head to the
+:doc:`/development/development_guide` to see how they can contribute to Strawberry Fields.
 
 Quickstart guides
 -----------------
@@ -70,3 +70,4 @@ In the following sections you can learn more about the key features of Strawberr
 6. :doc:`data` details the built-in datasets of pre-generated photonic samples provided
    by Strawberry Fields, for various graphs used in optimization, machine learning, and chemistry
    applications.
+
