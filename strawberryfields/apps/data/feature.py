@@ -16,10 +16,11 @@ Submodule for feature vector datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
-import pkg_resources
+from pathlib import Path
+
 import numpy as np
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/feature_data") + "/"
+DATA_PATH = Path(__file__).parent / "feature_data"
 
 
 class FeatureDataset(ABC):
@@ -87,9 +88,9 @@ class FeatureDataset(ABC):
 
     def __init__(self):
         self.vectors = np.load(
-            f"{DATA_PATH}{self._data_filename}_{self.method}_fv.npy", allow_pickle=True
+            DATA_PATH / f"{self._data_filename}_{self.method}_fv.npy", allow_pickle=True
         )
-        self.adjs = np.load(DATA_PATH + self._data_filename + "_mat.npy", allow_pickle=True)
+        self.adjs = np.load(DATA_PATH / f"{self._data_filename}_mat.npy", allow_pickle=True)
         self.n_vectors, self.n_features = self.vectors.shape
 
     def __iter__(self):

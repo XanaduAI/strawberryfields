@@ -16,12 +16,12 @@ Submodule for sample datasets and their base classes.
 """
 # pylint: disable=unnecessary-pass
 from abc import ABC, abstractmethod
+from pathlib import Path
 
-import pkg_resources
 import numpy as np
 import scipy
 
-DATA_PATH = pkg_resources.resource_filename("strawberryfields", "apps/data/sample_data") + "/"
+DATA_PATH = Path(__file__).parent / "sample_data"
 
 
 class SampleDataset(ABC):
@@ -53,7 +53,7 @@ class SampleDataset(ABC):
         pass
 
     def __init__(self):
-        self.data = scipy.sparse.load_npz(DATA_PATH + self._data_filename + ".npz")
+        self.data = scipy.sparse.load_npz(DATA_PATH / f"{self._data_filename}.npz")
         self.n_samples, self.modes = self.data.shape
 
     def __iter__(self):
@@ -124,7 +124,7 @@ class GraphDataset(SampleDataset, ABC):
 
     def __init__(self):
         super().__init__()
-        self.adj = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_A.npz").toarray()
+        self.adj = scipy.sparse.load_npz(DATA_PATH / f"{self._data_filename}_A.npz").toarray()
 
 
 class Planted(GraphDataset):
@@ -333,11 +333,11 @@ class MoleculeDataset(SampleDataset, ABC):
 
     def __init__(self):
         super().__init__()
-        self.w = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_w.npz").toarray()[0]
-        self.wp = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_wp.npz").toarray()[0]
-        self.Ud = scipy.sparse.load_npz(DATA_PATH + self._data_filename + "_Ud.npz").toarray()
+        self.w = scipy.sparse.load_npz(DATA_PATH / f"{self._data_filename}_w.npz").toarray()[0]
+        self.wp = scipy.sparse.load_npz(DATA_PATH / f"{self._data_filename}_wp.npz").toarray()[0]
+        self.Ud = scipy.sparse.load_npz(DATA_PATH / f"{self._data_filename}_Ud.npz").toarray()
         self.delta = scipy.sparse.load_npz(
-            DATA_PATH + self._data_filename + "_delta.npz"
+            DATA_PATH / f"{self._data_filename}_delta.npz"
         ).toarray()[0]
 
     # pylint: disable=missing-docstring
@@ -409,14 +409,14 @@ class Water(SampleDataset):
             )
         index = self._times_to_indices[t]
 
-        all_data = np.load(DATA_PATH + "water.npz")["arr_0"]
+        all_data = np.load(DATA_PATH / "water.npz")["arr_0"]
 
         self.data = all_data[index]
         self.data = scipy.sparse.csr_matrix(self.data)
         self.n_samples, self.modes = self.data.shape
 
-        self.w = scipy.sparse.load_npz(DATA_PATH + "water_w.npz").toarray()[0]
-        self.U = scipy.sparse.load_npz(DATA_PATH + "water_U.npz").toarray()
+        self.w = scipy.sparse.load_npz(DATA_PATH / "water_w.npz").toarray()[0]
+        self.U = scipy.sparse.load_npz(DATA_PATH / "water_U.npz").toarray()
 
     n_mean = 1 / 3
     threshold = False
@@ -461,20 +461,20 @@ class Pyrrole(SampleDataset):
             )
         index = self._times_to_indices[t]
 
-        all_data = np.load(DATA_PATH + "pyrrole.npz")["arr_0"]
+        all_data = np.load(DATA_PATH / "pyrrole.npz")["arr_0"]
 
         self.data = all_data[index]
         self.data = scipy.sparse.csr_matrix(self.data)
         self.n_samples, self.modes = self.data.shape
 
-        self.ri = scipy.sparse.load_npz(DATA_PATH + "pyrrole_ri.npz").toarray()[0]
-        self.rf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_rf.npz").toarray()[0]
-        self.wi = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wi.npz").toarray()[0]
-        self.wf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_wf.npz").toarray()[0]
-        self.Li = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Li.npz").toarray()
-        self.Lf = scipy.sparse.load_npz(DATA_PATH + "pyrrole_Lf.npz").toarray()
-        self.m = scipy.sparse.load_npz(DATA_PATH + "pyrrole_m.npz").toarray()[0]
-        self.U = scipy.sparse.load_npz(DATA_PATH + "pyrrole_U.npz").toarray()
+        self.ri = scipy.sparse.load_npz(DATA_PATH / "pyrrole_ri.npz").toarray()[0]
+        self.rf = scipy.sparse.load_npz(DATA_PATH / "pyrrole_rf.npz").toarray()[0]
+        self.wi = scipy.sparse.load_npz(DATA_PATH / "pyrrole_wi.npz").toarray()[0]
+        self.wf = scipy.sparse.load_npz(DATA_PATH / "pyrrole_wf.npz").toarray()[0]
+        self.Li = scipy.sparse.load_npz(DATA_PATH / "pyrrole_Li.npz").toarray()
+        self.Lf = scipy.sparse.load_npz(DATA_PATH / "pyrrole_Lf.npz").toarray()
+        self.m = scipy.sparse.load_npz(DATA_PATH / "pyrrole_m.npz").toarray()[0]
+        self.U = scipy.sparse.load_npz(DATA_PATH / "pyrrole_U.npz").toarray()
 
     n_mean = 0.12599583
     threshold = False
