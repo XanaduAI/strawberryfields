@@ -439,7 +439,7 @@ class GaussianModes:
             raise ValueError("Cannot apply loss channel, mode does not exist")
 
         self.loss(T, k)
-        self.nmat += (1 - T) * nbar
+        self.nmat[k, k] += (1 - T) * nbar
 
     def init_thermal(self, population, mode):
         """Initializes a state of mode in a thermal state with the given population"""
