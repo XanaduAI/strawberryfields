@@ -67,11 +67,6 @@ Features
     :target: javascript:void(0);
 
 
-* Execute photonic quantum algorithms directly on `Xanadu's next-generation quantum hardware
-  <https://strawberryfields.ai/photonics/hardware/index.html>`__
-
-..
-
 * `High-level functions <https://strawberryfields.ai/photonics/applications.html>`__ for **solving
   practical problems** including **graph and network optimization**, **machine learning**, and
   **chemistry**
@@ -123,7 +118,6 @@ Strawberry Fields is **free** and **open source**, released under the Apache Lic
    :hidden:
 
    introduction/introduction
-   introduction/photonic_hardware
    introduction/circuits
    introduction/ops
    introduction/states

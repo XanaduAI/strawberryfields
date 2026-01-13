@@ -282,14 +282,6 @@ For the ``X``-series of chips, available compilers include:
     ~strawberryfields.compilers.Xunitary
     ~strawberryfields.compilers.Xcov
 
-.. raw:: html
-
-    </div>
-
-
-For more details on using Strawberry Fields with remote hardware, see the
-:doc:`photonic_hardware` guide.
-
 
 Related tutorials
 -----------------
