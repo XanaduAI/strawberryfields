@@ -4,6 +4,11 @@ Migration guides
 The migration guides below offer guidance for dealing with major breaking
 changes between Strawberry Fields releases.
 
+.. raw:: html
+
+    <h2 style="font-size:15px;color:white;background-color:#c30010;" >&nbsp;&nbsp;&nbsp;Xanadu's Quantum Cloud is no longer available. This material is maintained for reference purposes only.</h2>
+
+
 Version 0.20.0
 --------------
 
