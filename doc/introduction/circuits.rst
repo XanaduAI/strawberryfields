@@ -250,6 +250,10 @@ the mathematical functions in the :data:`strawberryfields.math` namespace.
 Compilation
 -----------
 
+.. raw:: html
+
+    <h2 style="font-size:15px;color:white;background-color:#c30010;" >&nbsp;&nbsp;&nbsp;Xanadu's Quantum Cloud is no longer available. This material is maintained for reference purposes only.</h2>
+
 The :class:`.Program` object also provides the :meth:`.Program.compile` method that
 automatically transforms your circuit into an :term:`equivalent circuit` with
 a particular layout or topology. For example, the ``gbs`` compile target will
