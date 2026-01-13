@@ -59,12 +59,7 @@ In the following sections you can learn more about the key features of Strawberr
 
 ..
 
-5. :doc:`photonic_hardware` gives an overview of building, submitting, and managing
-   remote jobs on both hardware and cloud simulators through Strawberry Fields.
-
-..
-
-6. :doc:`data` details the built-in datasets of pre-generated photonic samples provided
+5. :doc:`data` details the built-in datasets of pre-generated photonic samples provided
    by Strawberry Fields, for various graphs used in optimization, machine learning, and chemistry
    applications.
 
