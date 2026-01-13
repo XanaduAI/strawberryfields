@@ -14,9 +14,6 @@ In particular, Strawberry Fields allows for the following workflows:
   Provided simulators include highly optimized Gaussian, Fock, and Bosonic
   numeric backends, as well as a TensorFlow backend for backpropagation.
 
-* Compile and submit photonic circuits for remote execution on Xanadu's quantum hardware,
-  retrieve your results, and manage multiple jobs.
-
 * Use our high-level functions for graph and network optimization, machine learning, and
   chemistry applications --- all executable on near-term hardware.
 
