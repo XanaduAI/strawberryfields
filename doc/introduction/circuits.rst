@@ -244,7 +244,7 @@ the mathematical functions in the :data:`strawberryfields.math` namespace.
 
     When using the TensorFlow backend, all Tensor and Variable objects **must** be
     passed to gates by using a free parameter, and binding the Tensor/Variable
-    on engine execution. For more details, see :doc:`demos/run_tutorial_machine_learning`.
+    on engine execution.
 
 
 Compilation
@@ -285,39 +285,3 @@ For the ``X``-series of chips, available compilers include:
     ~strawberryfields.compilers.Xstrict
     ~strawberryfields.compilers.Xunitary
     ~strawberryfields.compilers.Xcov
-
-
-Related tutorials
------------------
-
-For more details and guides on creating and simulating photonic quantum
-circuits, see the following tutorials.
-
-.. gallery-item::
-    :description: :doc:`demos/run_blackbird`
-    :figure: _static/code.png
-
-.. gallery-item::
-    :description: :doc:`Basic tutorial: teleportation <demos/run_teleportation>`
-    :figure: _static/teleport.png
-
-.. gallery-item::
-    :description: :doc:`Measurements and post-selection <demos/run_post_selection>`
-    :figure: _static/bs_measure.png
-
-.. gallery-item::
-    :description: :doc:`demos/run_tutorial_machine_learning`
-    :figure: _static/TF.png
-
-.. gallery-item::
-    :description: :doc:`demos/run_time_domain`
-    :figure: _static/oneloop.svg
-
-.. gallery-item::
-    :description: :doc:`demos/run_intro_bosonic`
-    :figure: _static/cats.png
-
-.. raw:: html
-
-        <div style='clear:both'></div>
-        <br>
