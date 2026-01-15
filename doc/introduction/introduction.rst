@@ -21,8 +21,7 @@ Get started
 -----------
 
 Follow the `installation <../_static/install.html>`_ page to get Strawberry Fields up and
-running, then have a look at our quickstart guides, or jump over to the
-:doc:`tutorials <demonstrations>` to see what you can do with Strawberry Fields.
+running, then have a look at our quickstart guides.
 
 Users interested in applications of photonic quantum computers should check
 out the :doc:`applications` pages. Those wanting to dig deeper into the design

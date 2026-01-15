@@ -98,11 +98,6 @@ Measurements
 
 :html:`</div>`
 
-.. seealso::
-
-    See the :doc:`measurements and post-selection tutorial <demos/run_post_selection>`
-    for more details on applying measurements, post-selection, and classical processing.
-
 
 Channels
 --------
