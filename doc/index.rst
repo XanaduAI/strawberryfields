@@ -67,9 +67,8 @@ Features
     :target: javascript:void(0);
 
 
-* `High-level functions <https://strawberryfields.ai/photonics/applications.html>`__ for **solving
-  practical problems** including **graph and network optimization**, **machine learning**, and
-  **chemistry**
+* High-level functions for **solving practical problems** including **graph and network optimization**, 
+  **machine learning**, and **chemistry**
 
 ..
 
@@ -78,9 +77,7 @@ Features
 
 ..
 
-* `Train and optimize
-  <https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning>`__
-  your quantum programs with our end-to-end differentiable TensorFlow backend
+* Train and optimize your quantum programs with our end-to-end differentiable TensorFlow backend
 
 
 How to cite
