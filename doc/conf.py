@@ -50,7 +50,6 @@ extensions = [
 
 
 intersphinx_mapping = {
-    "photonics": ("https://strawberryfields.ai/photonics", None),
     "xcc": ("https://xanadu-cloud-client.readthedocs.io/en/stable/", None)
 }
 
@@ -251,13 +250,9 @@ html_theme_options = {
     "navbar_wordmark_path": "_static/sf_wordmark.png",
     "navbar_logo_colour": "#b13a59",
 
-    "navbar_home_link": "https://strawberryfields.ai",
+    "navbar_home_link": "https://xanadu.ai",
 
     "navbar_left_links": [
-        {
-            "name": "Quantum Photonics",
-            "href": "https://strawberryfields.ai/photonics/",
-        },
         {
             "name": "Install",
             "href": "install.html",
@@ -270,11 +265,6 @@ html_theme_options = {
     ],
 
     "navbar_right_links": [
-        {
-            "name": "FAQ",
-            "href": "https://strawberryfields.ai/faq.html",
-            "icon": "fas fa-question",
-        },
         {
             "name": "Support",
             "href": "https://discuss.pennylane.ai/",

@@ -32,7 +32,7 @@
 </p>
 
 <p align="center">
-  <a href="https://strawberryfields.ai">Strawberry Fields</a> is a full-stack Python library for
+  Strawberry Fields is a full-stack Python library for
  designing, simulating, and optimizing continuous-variable quantum optical circuits.
 </p>
 
