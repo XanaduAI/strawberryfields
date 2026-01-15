@@ -1,7 +1,5 @@
 <p align="center">
-  <a href="https://strawberryfields.ai">
-    <img width=80% src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/strawberry-fields-text.png">
-  </a>
+  <img width=80% src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/strawberry-fields-text.png">
 </p>
 
 <p align="center">
@@ -32,7 +30,7 @@
 </p>
 
 <p align="center">
-  Strawberry Fields is a full-stack Python library for
+ Strawberry Fields is a full-stack Python library for
  designing, simulating, and optimizing continuous-variable quantum optical circuits.
 </p>
 
@@ -42,18 +40,15 @@
 <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/StateLearning.gif" width="300px" align="right">
 
 
-* Execute photonic quantum algorithms directly on
-  [Xanadu's next-generation quantum hardware](https://strawberryfields.ai/photonics/hardware/index.html).
+* Execute photonic quantum algorithms directly on Xanadu's next-generation quantum hardware.
 
-* [High-level functions](https://strawberryfields.ai/photonics/applications.html) for **solving
-  practical problems** including **graph and network optimization**, **machine learning**, and
+* High-level functions for **solving practical problems** including **graph and network optimization**, **machine learning**, and
   **chemistry**.
 
 * Includes a suite of world-class simulators—based on cutting-edge algorithms—to compile and
   simulate photonic algorithms.
 
-* [Train and optimize](https://strawberryfields.ai/photonics/demonstrations.html#optimization-and-machine-learning)
-  your quantum programs with our end-to-end differentiable TensorFlow backend.
+* Train and optimize your quantum programs with our end-to-end differentiable TensorFlow backend.
 
 
 ## Installation
@@ -69,17 +64,7 @@ pip install strawberryfields
 ## Getting started
 
 To get started with writing your own Strawberry Fields code, begin with our [photonic circuit
-quickstart guides](https://strawberryfields.readthedocs.io/en/stable/introduction/introduction.html),
-before exploring our many [tutorials](https://strawberryfields.ai/photonics/demonstrations.html) and
-[applications](https://strawberryfields.ai/photonics/applications.html).
-
-<a href="https://strawberryfields.ai/photonics/demonstrations.html">
-  <img src="https://raw.githubusercontent.com/XanaduAI/strawberryfields/master/doc/_static/readme_panel1.png" width="900px">
-</a>
-
-Next, read more about using Strawberry Fields with
-[photonic hardware](https://strawberryfields.ai/photonics/hardware/index.html), including code
-demonstrations and an overview of Xanadu's quantum photonic hardware.
+quickstart guides](https://strawberryfields.readthedocs.io/en/stable/introduction/introduction.html).
 
 
 ## Contributing to Strawberry Fields
