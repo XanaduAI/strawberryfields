@@ -15,7 +15,17 @@
 """Gaussian backend"""
 import warnings
 
-from numpy import empty, concatenate, array, identity, sqrt, vstack, zeros_like, allclose, ix_
+from numpy import (
+    empty,
+    concatenate,
+    array,
+    identity,
+    sqrt,
+    vstack,
+    zeros_like,
+    allclose,
+    ix_,
+)
 from thewalrus.samples import hafnian_sample_state, torontonian_sample_state
 from thewalrus.symplectic import xxpp_to_xpxp
 
@@ -132,7 +142,8 @@ class GaussianBackend(BaseGaussian):
                 )
 
             raise NotImplementedError(
-                "Gaussian backend currently does not support " "shots != 1 for homodyne measurement"
+                "Gaussian backend currently does not support "
+                "shots != 1 for homodyne measurement"
             )
 
         # phi is the rotation of the measurement operator, hence the minus
@@ -149,7 +160,6 @@ class GaussianBackend(BaseGaussian):
         return array([[qs * sqrt(2 * self.circuit.hbar) / 2]])
 
     def measure_heterodyne(self, mode, shots=1, select=None, **kwargs):
-
         if shots != 1:
             if select is not None:
                 raise NotImplementedError(
@@ -180,7 +190,9 @@ class GaussianBackend(BaseGaussian):
         # make sure number of modes matches shape of r and V
         N = len(modes)
         if len(r) != 2 * N:
-            raise ValueError("Length of means vector must be twice the number of modes.")
+            raise ValueError(
+                "Length of means vector must be twice the number of modes."
+            )
         if V.shape != (2 * N, 2 * N):
             raise ValueError(
                 "Shape of covariance matrix must be [2N, 2N], where N is the number of modes."
@@ -231,6 +243,14 @@ class GaussianBackend(BaseGaussian):
         # check we are sampling from a gaussian state with zero mean
         if allclose(mu, zeros_like(mu)):
             samples = hafnian_sample_state(reduced_cov, shots)
+        elif "cutoff_dim" in kwargs:
+            cutoff = kwargs.get("cutoff_dim")
+            if not isinstance(cutoff, int):
+                raise ValueError(f"cutoff must be an integer, got {type(cutoff)}.")
+            else:
+                samples = hafnian_sample_state(
+                    reduced_cov, shots, cutoff=kwargs.get("cutoff_dim")
+                )
         else:
             samples = hafnian_sample_state(reduced_cov, shots, mean=reduced_mean)
 
@@ -257,7 +277,9 @@ class GaussianBackend(BaseGaussian):
         modes_idxs = concatenate([x_idxs, p_idxs])
         reduced_cov = cov[ix_(modes_idxs, modes_idxs)]
         reduced_mean = mean[modes_idxs]
-        samples = torontonian_sample_state(mu=reduced_mean, cov=reduced_cov, samples=shots)
+        samples = torontonian_sample_state(
+            mu=reduced_mean, cov=reduced_cov, samples=shots
+        )
 
         return samples
 
