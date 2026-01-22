@@ -177,18 +177,50 @@ class TestBaseFockKetDensityMatrix:
         This is supported by all backends, since it returns
         the reduced density matrix of a single mode."""
         backend = setup_backend(2)
-        backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
-        backend.prepare_coherent_state(0.1, 0, 1)
+
+        n = np.arange(cutoff)
+        ket0 = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n))
+        ket1 = np.exp(-0.5 * 0.1**2) * 0.1**n / np.sqrt(fac(n))
+
+        if isinstance(backend, backends.BaseFock):
+            # Fock-based: prepare full pure state at once
+            full_ket = np.outer(ket0, ket1)
+            backend.circuit.prepare_multimode(full_ket, modes=[0, 1])
+        else:
+            # Gaussian: use standard mode-by-mode preparation
+            backend.prepare_coherent_state(np.abs(a), np.angle(a), 0)
+            backend.prepare_coherent_state(0.1, 0, 1)
 
         state = backend.state()
         rdm = state.reduced_dm(0, cutoff=cutoff)
+        rdm_exact = np.outer(ket0, ket0.conj())
+
+        assert np.allclose(rdm, rdm_exact, atol=tol, rtol=0)
+
+    def test_rdm_multimode(self, setup_backend, tol, cutoff, batch_size):
+        """Test reduced density matrix for multiple modes from a coherent state."""
+        backend = setup_backend(3)
+        if not isinstance(backend, backends.BaseFock):
+            pytest.skip("Test only applies to Fock-based backends")
+
+        alpha0 = a
+        alpha1 = 0.1
+        alpha2 = 0.2 * np.exp(1j * 0.1)
 
         n = np.arange(cutoff)
-        ket = np.exp(-0.5 * np.abs(a) ** 2) * a**n / np.sqrt(fac(n))
-        rdm_exact = np.outer(ket, ket.conj())
+        ket0 = np.exp(-0.5 * np.abs(alpha0) ** 2) * alpha0**n / np.sqrt(fac(n))
+        ket1 = np.exp(-0.5 * np.abs(alpha1) ** 2) * alpha1**n / np.sqrt(fac(n))
+        ket2 = np.exp(-0.5 * np.abs(alpha2) ** 2) * alpha2**n / np.sqrt(fac(n))
 
-        if batch_size is not None:
-            np.tile(rdm_exact, [batch_size, 1])
+        # Prepare full pure state at once (avoids mixed state conversion)
+        state_ket = np.einsum("a,b,c->abc", ket0, ket1, ket2)
+        backend.circuit.prepare_multimode(state_ket, modes=[0, 1, 2])
+
+        state = backend.state()
+        rdm = state.reduced_dm([0, 2])
+
+        reduced_ket = np.outer(ket0, ket2)
+        rdm_exact = np.einsum("ab,cd->acbd", reduced_ket, reduced_ket.conj())
 
         assert np.allclose(rdm, rdm_exact, atol=tol, rtol=0)
 

@@ -6,6 +6,12 @@
 
 <h3>Improvements</h3>
 
+* Optimized `BaseFockState.reduced_dm()` and `FockStateTF.reduced_dm()` for pure states to
+  compute reduced density matrices directly from kets using einsum, reducing memory cost from
+  O(D^(2N)) to O(D^N + D^(2k)), where N is the number of modes, k is the number of kept modes,
+  and D is the cutoff dimension.
+  [(#760)](https://github.com/XanaduAI/strawberryfields/pull/760)
+
 * Circuit and parameter validation is extracted from the `sf.Program` class and is
   instead accessible via the `sf.program_utils.validate_gate_parameters` function.
   [(#720)](https://github.com/XanaduAI/strawberryfields/pull/720)

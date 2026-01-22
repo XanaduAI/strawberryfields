@@ -328,6 +328,30 @@ class FockStateTF(BaseFockState):
                 "The number of specified modes cannot " "be larger than the number of subsystems."
             )
 
+        # For pure states, avoid constructing full density matrix
+        if self.is_pure:
+            ket = self.ket(**kwargs)
+
+            # Build einsum equation for partial trace
+            # Ket indices are lowercase; bra indices will be uppercase for kept modes
+            indices_str = indices[: self.num_modes]
+            indices_conj = list(indices_str)
+
+            # Create output indices (interleaved ket/bra pairs for kept modes)
+            output_indices = ""
+            for mode in modes:
+                output_indices += indices_str[mode] + indices_str[mode].upper()
+                indices_conj[mode] = indices_str[mode].upper()
+            indices_conj_str = "".join(indices_conj)
+
+            einsum_eq = f"{indices_str},{indices_conj_str}->{output_indices}"
+
+            # Compute reduced density matrix
+            rho_reduced = tf.einsum(einsum_eq, ket, tf.math.conj(ket))
+            s = tf.identity(rho_reduced, name="reduced_density_matrix")
+            return s
+
+        # Original path for mixed states: use full density matrix
         reduced = self.dm(**kwargs)
         reduced = reduced_density_matrix(reduced, modes, False, batched=self.batched)
 
